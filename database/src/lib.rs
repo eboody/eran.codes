@@ -1,8 +1,10 @@
+mod schema;
+
 use dotenvy::dotenv;
 use sqlx::{PgPool, Result};
 
 #[allow(unused)]
-struct Database {
+pub struct Database {
     pool: PgPool,
 }
 
@@ -14,6 +16,8 @@ impl Database {
         let connection_string = std::env::var("DATABASE_URL").expect("DATABASE_URL not set");
 
         let pool = PgPool::connect(&connection_string).await?;
+
+        sqlx::migrate!().run(&pool).await?;
 
         Ok(Database { pool })
     }
