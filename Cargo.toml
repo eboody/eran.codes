@@ -1,0 +1,5 @@
+[workspace]
+members = [
+  "tonic_api",
+  "database"
+]
