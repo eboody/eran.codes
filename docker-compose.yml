@@ -1,0 +1,14 @@
+services:
+
+  db:
+    image: postgres
+    restart: always
+    environment:
+      POSTGRES_PASSWORD: Ebredm3!
+    ports:
+      - 5432:5432
+
+  tonic:
+    build: ./tonic_api
+    ports:
+      - "5001:5001"

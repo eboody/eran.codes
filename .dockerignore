@@ -1,0 +1,16 @@
+# Ignore everything
+*
+
+# Allow files/directories necessary for building the Rust project
+!/Cargo.toml
+!/Cargo.lock
+!/src
+!/target
+
+# If using a workspace, allow its members
+!/tonic_api
+!/database
+
+# Allow Dockerfile and .dockerignore
+!/Dockerfile
+!/.dockerignore

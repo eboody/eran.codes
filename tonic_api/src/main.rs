@@ -1,3 +1,6 @@
-fn main() {
+use database::models::*;
+
+#[tokio::main]
+async fn main() {
     println!("Hello, world!");
 }
