@@ -1,5 +1,6 @@
-# Eran's Online Store API
-This is a RESTful API for an online store, including customers, orders, and products. It provides endpoints for managing these entities and their relationships.
+# Eran can code
+This project contains various mini-projects to demonstrate that I am familiar with various technologies.
+I will be adding more to this so the following is temporary.
 
 ## Structure
 This project is divided into two main directories:
@@ -9,7 +10,6 @@ This project is divided into two main directories:
 
 ## Database
 Inside database/src/schema, there are modules for each of our entities. Each module provides a builder using the typestate pattern, ensuring that the entities are constructed in a valid state.
-
 ## HTTP Server
 The HTTP server in http_server/src implements the following endpoints:
 
