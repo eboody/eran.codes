@@ -1,7 +1,10 @@
+pub mod customer;
+pub mod order;
+pub mod product;
+
 use sqlx::{FromRow, PgPool};
 
 #[derive(FromRow, Debug)]
-#[allow(unused)]
 pub struct Technology {
     id: i32,
     name: String,

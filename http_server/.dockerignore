@@ -8,7 +8,7 @@
 !/target
 
 # If using a workspace, allow its members
-!/tonic_api
+!/server
 !/database
 
 # Allow Dockerfile and .dockerignore

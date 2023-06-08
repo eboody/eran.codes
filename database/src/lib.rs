@@ -1,11 +1,12 @@
 pub mod schema;
+use std::sync::Arc;
 
 use dotenvy::dotenv;
 use sqlx::{PgPool, Result};
 
 #[allow(unused)]
 pub struct Database {
-    pool: PgPool,
+    pool: Arc<PgPool>,
 }
 
 impl Database {
@@ -15,15 +16,15 @@ impl Database {
 
         let connection_string = std::env::var("DATABASE_URL").expect("DATABASE_URL not set");
 
-        let pool = PgPool::connect(&connection_string).await?;
+        let pool = Arc::new(PgPool::connect(&connection_string).await?);
 
-        sqlx::migrate!().run(&pool).await?;
+        sqlx::migrate!().run(pool.as_ref()).await?;
 
         Ok(Database { pool })
     }
 
-    pub fn get_pool(&self) -> &PgPool {
-        &self.pool
+    pub fn get_pool(&self) -> Arc<PgPool> {
+        Arc::clone(&self.pool)
     }
 
     #[allow(unused)]
@@ -31,7 +32,7 @@ impl Database {
         // Make a simple query to return the given parameter
         let row: (String,) = sqlx::query_as("SELECT $1")
             .bind(some_string)
-            .fetch_one(&self.pool)
+            .fetch_one(self.pool.as_ref())
             .await?;
 
         Ok(row.0)

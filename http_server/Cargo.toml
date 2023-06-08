@@ -1,5 +1,5 @@
 [package]
-name = "tonic_api"
+name = "http_server"
 version = "0.1.0"
 edition = "2021"
 
@@ -8,3 +8,6 @@ edition = "2021"
 [dependencies]
 tokio = { version = "1.28.2", features = ["macros", "rt-multi-thread"] }
 database = {path = "../database"}
+axum = "0.6.18"
+dotenvy = "0.15.7"
+sqlx = { version = "0.6.3", features = ["postgres", "runtime-tokio-native-tls"] }
