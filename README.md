@@ -1,5 +1,5 @@
 # Eran can code
-This project contains various mini-projects to demonstrate that I am familiar with various technologies.
+This project contains mini-projects to demonstrate that I am familiar with various technologies.
 I will be adding more to this so the following is temporary.
 
 ## Structure
