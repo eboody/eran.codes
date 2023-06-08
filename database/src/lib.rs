@@ -1,4 +1,4 @@
-mod schema;
+pub mod schema;
 
 use dotenvy::dotenv;
 use sqlx::{PgPool, Result};
@@ -20,6 +20,10 @@ impl Database {
         sqlx::migrate!().run(&pool).await?;
 
         Ok(Database { pool })
+    }
+
+    pub fn get_pool(&self) -> &PgPool {
+        &self.pool
     }
 
     #[allow(unused)]
