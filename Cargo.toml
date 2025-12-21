@@ -1,0 +1,21 @@
+[package]
+name = "eran_codes"
+version = "0.1.0"
+edition = "2024"
+
+[workspace]
+
+members = [
+    "crates/domain",
+    "crates/infra",
+    "crates/app",
+    "crates/http", "crates/utils",
+]
+
+[dependencies]
+infra = { path = "crates/infra" }
+domain = { path = "crates/domain" }
+app = { path = "crates/app" }
+http = { path = "crates/http" }
+
+tokio = { version = "1", features = ["macros", "rt-multi-thread", "time", "fs"] }
