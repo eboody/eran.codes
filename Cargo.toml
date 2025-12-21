@@ -9,7 +9,8 @@ members = [
     "crates/domain",
     "crates/infra",
     "crates/app",
-    "crates/http", "crates/utils", "crates/repo",
+    "crates/http",
+    "crates/utils",
 ]
 
 [dependencies]
@@ -18,4 +19,11 @@ domain = { path = "crates/domain" }
 app = { path = "crates/app" }
 http = { path = "crates/http" }
 
-tokio = { version = "1", features = ["macros", "rt-multi-thread", "time", "fs"] }
+[workspace.dependencies]
+tokio = { version = "1", features = [
+    "macros",
+    "rt-multi-thread",
+    "time",
+    "fs",
+] }
+nutype = "0.6.2"
