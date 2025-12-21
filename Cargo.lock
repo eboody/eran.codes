@@ -1624,6 +1624,11 @@ dependencies = [
 [[package]]
 name = "service"
 version = "0.1.0"
+dependencies = [
+ "derive_more",
+ "domain",
+ "infra",
+]
 
 [[package]]
 name = "sha1"

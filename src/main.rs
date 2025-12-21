@@ -33,6 +33,7 @@ async fn main() {
     dbg!("Application initialized successfully");
 
     let user_repo = repo::User::new(app_state.infra.db);
+
     let user_count = user_repo.count().await.expect("Failed to count users");
 
     println!("\nuser_count:\n{:#?}", user_count);

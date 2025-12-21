@@ -2,6 +2,7 @@
 name = "eran_codes"
 version = "0.1.0"
 edition = "2024"
+default-run = "eran_codes"
 
 [workspace]
 
@@ -30,5 +31,6 @@ tokio = { version = "1", features = [
 nutype = "0.6.2"
 
 [workspace.metadata.scripts]
-migrate = "cargo run --bin with_db -- sqlx migrate run --source crates/infra/migrations"
-prepare = "cargo run --bin with_db -- cargo sqlx prepare --workspace -- --all-targets"
+migrate = "cargo with-db sqlx migrate run --source crates/infra/migrations"
+prepare = "cargo with-db sqlx prepare --workspace -- --all-targets"
+b = "bacon run ."
