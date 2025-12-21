@@ -5,3 +5,4 @@ edition = "2024"
 
 [dependencies]
 nutype = { workspace = true }
+derive_more = { version = "2.1.0", features = ["from"] }

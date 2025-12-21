@@ -8,7 +8,7 @@ edition = "2024"
 members = [
     "crates/domain",
     "crates/infra",
-    "crates/app",
+    "crates/service",
     "crates/http",
     "crates/utils",
 ]
@@ -16,14 +16,15 @@ members = [
 [dependencies]
 infra = { path = "crates/infra" }
 domain = { path = "crates/domain" }
-app = { path = "crates/app" }
+service = { path = "crates/service" }
 http = { path = "crates/http" }
 
-[workspace.dependencies]
 tokio = { version = "1", features = [
     "macros",
     "rt-multi-thread",
     "time",
     "fs",
 ] }
+
+[workspace.dependencies]
 nutype = "0.6.2"

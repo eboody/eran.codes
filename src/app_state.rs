@@ -3,6 +3,7 @@ use crate::{
     error::{Error, Result},
 };
 
+#[allow(unused)]
 pub(crate) struct AppState {
     infra: infra::Infra,
 }

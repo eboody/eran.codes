@@ -1,5 +1,7 @@
+use crate::{error::Result, user};
+
 pub trait Repository {
-    fn get_by_id(&self, id: &UserId) -> Result<Option<User>, RepoError>;
-    fn get_by_email(&self, email: &Email) -> Result<Option<User>, RepoError>;
-    fn save(&self, user: &User) -> Result<(), RepoError>;
+    fn get_by_id(&self, id: &user::Id) -> Result<Option<user::Model>>;
+    fn get_by_email(&self, email: &user::Email) -> Result<Option<user::Model>>;
+    fn save(&self, user: &user::Model) -> Result<()>;
 }

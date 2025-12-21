@@ -4,6 +4,8 @@ version = "0.1.0"
 edition = "2024"
 
 [dependencies]
+domain = { path = "../domain" }
+
 sqlx = { version = "0.8.6", features = ["runtime-tokio-rustls", "postgres"] }
 utils = { path = "../utils" }
 reqwest = { version = "0.12", features = ["json", "rustls-tls"] }

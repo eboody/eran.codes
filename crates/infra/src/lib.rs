@@ -1,5 +1,6 @@
 pub mod config;
 pub mod error;
+mod repo;
 
 use sqlx::PgPool;
 
