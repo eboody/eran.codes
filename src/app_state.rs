@@ -3,7 +3,9 @@ use crate::{
     error::{Error, Result},
 };
 
-pub(crate) struct AppState {}
+pub(crate) struct AppState {
+    infra: infra::Infra,
+}
 
 impl AppState {
     pub async fn init(cfg: AppConfig) -> Result<Self> {
@@ -12,6 +14,6 @@ impl AppState {
 
         let infra = infra::Infra::init(cfg.infra).await.map_err(Error::Infra)?;
 
-        Ok(Self {})
+        Ok(Self { infra })
     }
 }

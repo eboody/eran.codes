@@ -24,7 +24,7 @@ async fn main() {
 
     // app_state holds the initialized state of the application like repositories and
     // services
-    let app_state = app_state::AppState::init(app_config.clone())
+    let _app_state = app_state::AppState::init(app_config.clone())
         .await
         .expect("Failed to initialize app state");
 

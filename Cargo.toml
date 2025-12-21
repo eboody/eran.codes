@@ -9,7 +9,7 @@ members = [
     "crates/domain",
     "crates/infra",
     "crates/app",
-    "crates/http", "crates/utils",
+    "crates/http", "crates/utils", "crates/repo",
 ]
 
 [dependencies]
