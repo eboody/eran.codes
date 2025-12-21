@@ -1,9 +1,9 @@
+mod error;
+
 use std::sync::Arc;
 
 use domain::user;
-
-// use infra::repo;
-use crate::error::Result;
+pub use error::{Error, Result};
 
 #[allow(unused)]
 #[derive(Clone)]

@@ -1,6 +1,8 @@
+mod error;
 mod repo;
 
 use bon::Builder;
+pub use error::{Error, Result};
 use nutype::nutype;
 pub use repo::Repository;
 

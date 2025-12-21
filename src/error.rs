@@ -5,7 +5,7 @@ use derive_more::From;
 
 #[derive(Debug, From)]
 pub enum Error {
-    Infra(infra::error::Error),
+    Infra(infra::Error),
     MissingEnv {
         key: &'static str,
     },

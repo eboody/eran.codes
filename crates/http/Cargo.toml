@@ -5,5 +5,8 @@ edition = "2024"
 
 [dependencies]
 service = { path = "../service" }
+serde = { version = "1.0.228", features = ["derive"] }
+derive_more = "2.1.0"
+tracing = "0.1.44"
 
 axum = "0.8.8"

@@ -1,6 +1,8 @@
+mod error;
 mod handlers;
 
 use axum::{Router, routing::get};
+pub use error::{Error, Result};
 
 #[derive(Clone)]
 pub struct State {

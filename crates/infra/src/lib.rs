@@ -1,10 +1,9 @@
 pub mod config;
-pub mod error;
+mod error;
+pub use error::{Error, Result};
 mod repo;
 pub use repo::*;
 use sqlx::PgPool;
-
-use crate::error::Result;
 
 // our infra layer holds shared resources like DB pools, HTTP clients, etc.
 pub struct Infra {
