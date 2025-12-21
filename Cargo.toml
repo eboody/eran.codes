@@ -28,3 +28,7 @@ tokio = { version = "1", features = [
 
 [workspace.dependencies]
 nutype = "0.6.2"
+
+[workspace.metadata.scripts]
+migrate = "sqlx migrate run --source crates/infra/migrations"
+prepare = "cargo sqlx prepare --workspace -- --all-targets"

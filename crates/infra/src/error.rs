@@ -1,7 +1,9 @@
 // infra/src/error.rs
 use std::fmt;
 
-#[derive(Debug)]
+use derive_more::From;
+
+#[derive(Debug, From)]
 pub enum Error {
     MissingEnv {
         key: &'static str,
@@ -14,6 +16,8 @@ pub enum Error {
     Io(std::io::Error),
     Pgsql(sqlx::Error),
     HttpClient(reqwest::Error),
+    #[from]
+    Migrate(sqlx::migrate::MigrateError),
 }
 
 pub type Result<T> = std::result::Result<T, Error>;
@@ -28,6 +32,7 @@ impl fmt::Display for Error {
             Error::Io(e) => write!(f, "io error: {e}"),
             Error::Pgsql(e) => write!(f, "postgresql error: {e}"),
             Error::HttpClient(e) => write!(f, "http client error: {e}"),
+            Error::Migrate(e) => write!(f, "database migration error: {e}"),
         }
     }
 }

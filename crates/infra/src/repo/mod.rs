@@ -1,4 +1,7 @@
+pub use SqlxUserRepository as User;
 use domain::user;
+
+use crate::error::Result;
 
 #[allow(unused)]
 pub struct SqlxUserRepository {
@@ -18,5 +21,20 @@ impl user::Repository for SqlxUserRepository {
 
     fn get_by_email(&self, email: &user::Email) -> domain::Result<Option<user::Model>> {
         todo!()
+    }
+}
+
+impl SqlxUserRepository {
+    pub fn new(pg: sqlx::PgPool) -> Self {
+        Self { pg }
+    }
+
+    pub async fn count(&self) -> Result<i64> {
+        let row = sqlx::query!("SELECT COUNT(*)::bigint AS count FROM users")
+            .fetch_one(&self.pg)
+            .await
+            .map_err(crate::error::Error::Pgsql)?;
+
+        Ok(row.count.unwrap_or(0))
     }
 }

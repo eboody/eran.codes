@@ -17,6 +17,8 @@ mod app_state;
 mod config;
 mod error;
 
+use infra::repo;
+
 #[tokio::main]
 async fn main() {
     // app_config instantiates the entire configuration for the application's components
@@ -24,9 +26,16 @@ async fn main() {
 
     // app_state holds the initialized state of the application like repositories and
     // services
-    let _app_state = app_state::AppState::init(app_config.clone())
+    let app_state = app_state::AppState::init(app_config.clone())
         .await
         .expect("Failed to initialize app state");
+
+    dbg!("Application initialized successfully");
+
+    let user_repo = repo::User::new(app_state.infra.db);
+    let user_count = user_repo.count().await.expect("Failed to count users");
+
+    println!("\nuser_count:\n{:#?}", user_count);
 
     // // Create repositories
     // let user_repo = UserRepository::new(db_pool.clone());

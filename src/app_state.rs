@@ -5,7 +5,7 @@ use crate::{
 
 #[allow(unused)]
 pub(crate) struct AppState {
-    infra: infra::Infra,
+    pub infra: infra::Infra,
 }
 
 impl AppState {

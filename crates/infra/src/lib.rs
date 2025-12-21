@@ -1,8 +1,10 @@
 pub mod config;
 pub mod error;
-mod repo;
+pub mod repo;
 
 use sqlx::PgPool;
+
+use crate::error::Result;
 
 // our infra layer holds shared resources like DB pools, HTTP clients, etc.
 pub struct Infra {
@@ -11,12 +13,14 @@ pub struct Infra {
 }
 
 impl Infra {
-    pub async fn init(cfg: config::InfraConfig) -> Result<Self, error::Error> {
+    pub async fn init(cfg: config::InfraConfig) -> Result<Self> {
         let pool = PgPool::connect(&cfg.database_url)
             .await
             .map_err(error::Error::Pgsql)?;
 
         pool.acquire().await.map_err(error::Error::Pgsql)?;
+
+        sqlx::migrate!().run(&pool).await?;
 
         let http_client = reqwest::Client::builder()
             .build()

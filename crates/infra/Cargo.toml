@@ -6,6 +6,12 @@ edition = "2024"
 [dependencies]
 domain = { path = "../domain" }
 
-sqlx = { version = "0.8.6", features = ["runtime-tokio-rustls", "postgres"] }
+derive_more = { version = "2.1.0", features = ["from"] }
+sqlx = { version = "0.8.6", features = [
+  "postgres",
+  "runtime-tokio",
+  "macros",
+  "migrate",
+] }
 utils = { path = "../utils" }
 reqwest = { version = "0.12", features = ["json", "rustls-tls"] }
