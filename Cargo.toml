@@ -19,6 +19,8 @@ infra = { path = "crates/infra" }
 domain = { path = "crates/domain" }
 service = { path = "crates/service" }
 http = { path = "crates/http" }
+utils = { path = "crates/utils" }
+
 
 tokio = { version = "1", features = [
     "macros",
@@ -26,6 +28,9 @@ tokio = { version = "1", features = [
     "time",
     "fs",
 ] }
+axum = { version = "0.8.8" }
+
+derive_more = "2.1.0"
 
 [workspace.dependencies]
 nutype = "0.6.2"

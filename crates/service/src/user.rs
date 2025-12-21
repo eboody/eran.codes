@@ -6,6 +6,7 @@ use domain::user;
 use crate::error::Result;
 
 #[allow(unused)]
+#[derive(Clone)]
 pub struct Service {
     users: Arc<dyn user::Repository>,
 }

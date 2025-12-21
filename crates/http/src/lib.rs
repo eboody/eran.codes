@@ -1,14 +1,21 @@
-pub fn add(left: u64, right: u64) -> u64 {
-    left + right
+mod handlers;
+
+use axum::{Router, routing::get};
+
+#[derive(Clone)]
+pub struct State {
+    pub user: service::user::Service,
 }
 
-#[cfg(test)]
-mod tests {
-    use super::*;
-
-    #[test]
-    fn it_works() {
-        let result = add(2, 2);
-        assert_eq!(result, 4);
+impl State {
+    pub fn new(user: service::user::Service) -> Self {
+        Self { user }
     }
+}
+
+pub fn router(state: State) -> Router {
+    Router::new()
+        .route("/", get(|| async { "Hello, World!" }))
+        .route("/health", get(crate::handlers::health))
+        .with_state(state)
 }

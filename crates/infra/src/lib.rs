@@ -1,7 +1,7 @@
 pub mod config;
 pub mod error;
-pub mod repo;
-
+mod repo;
+pub use repo::*;
 use sqlx::PgPool;
 
 use crate::error::Result;
@@ -13,8 +13,8 @@ pub struct Infra {
 }
 
 impl Infra {
-    pub async fn init(cfg: config::InfraConfig) -> Result<Self> {
-        let pool = PgPool::connect(&cfg.database_url)
+    pub async fn init(cfg: &config::InfraConfig) -> Result<Self> {
+        let pool = PgPool::connect(&cfg.db.url)
             .await
             .map_err(error::Error::Pgsql)?;
 

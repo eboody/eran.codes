@@ -2,7 +2,13 @@ use crate::error::{Error, Result};
 
 #[derive(Clone, Debug)]
 pub struct InfraConfig {
-    pub database_url: String,
+    pub db: DbConfig,
+}
+
+#[derive(Clone, Debug)]
+pub struct DbConfig {
+    pub url: String,
+    pub max_connections: u32,
 }
 
 impl InfraConfig {
@@ -11,6 +17,11 @@ impl InfraConfig {
             key: "DATABASE_URL",
         })?;
 
-        Ok(Self { database_url })
+        Ok(Self {
+            db: DbConfig {
+                url: database_url,
+                max_connections: 10,
+            },
+        })
     }
 }

@@ -1,71 +1,31 @@
-// Load config
-//
-// Create DB pool
-//
-// Create repositories
-//
-// Create services
-//
-// Create app state
-//
-// Call http::router(app_state)
-//
-// Bind to address
-//
-// Serve forever
-mod app_state;
 mod config;
 mod error;
 
-use infra::repo;
+use std::sync::Arc;
+
+use error::{Error, Result};
+use infra::user::Repository as UserRepo;
+use service::user::Service as UserService;
 
 #[tokio::main]
-async fn main() {
-    // app_config instantiates the entire configuration for the application's components
-    let app_config = config::AppConfig::load().expect("Failed to load config");
+async fn main() -> Result<()> {
+    let cfg = config::Config::load()?;
 
-    // app_state holds the initialized state of the application like repositories and
-    // services
-    let app_state = app_state::AppState::init(app_config.clone())
-        .await
-        .expect("Failed to initialize app state");
+    let addr = format!("{}:{}", &cfg.http.host, cfg.http.port);
 
-    dbg!("Application initialized successfully");
+    let infra = infra::Infra::init(&cfg.infra).await.map_err(Error::Infra)?;
 
-    let user_repo = repo::User::new(app_state.infra.db);
+    let user_repo = Arc::new(UserRepo::new(infra.db.clone()));
+    let user_service = UserService::new(user_repo);
 
-    let user_count = user_repo.count().await.expect("Failed to count users");
+    let http_state = http::State::new(user_service);
 
-    println!("\nuser_count:\n{:#?}", user_count);
+    let app = http::router(http_state);
 
-    // // Create repositories
-    // let user_repo = UserRepository::new(db_pool.clone());
-    // let product_repo = ProductRepository::new(db_pool.clone());
-    //
-    // // Create services
-    // let user_service = UserService::new(user_repo);
-    // let product_service = ProductService::new(product_repo);
-    //
-    // // Create app state
-    // let app_state = AppState {
-    //     user_service,
-    //     product_service,
-    //     config,
-    // };
-    //
-    // // Call http::router(app_state)
-    // let router = http::router(app_state);
-    //
-    // // Bind to address
-    // let addr = format!("{}:{}", app_state.config.host, app_state.config.port);
-    // let listener = tokio::net::TcpListener::bind(&addr)
-    //     .await
-    //     .expect("Failed to bind to address");
-    //
-    // println!("Server running on {}", addr);
-    //
-    // // Serve forever
-    // axum::serve(listener, router)
-    //     .await
-    //     .expect("Failed to serve");
+    let listener = tokio::net::TcpListener::bind(&addr).await?;
+
+    println!("listening on http://{}", addr);
+    axum::serve(listener, app).await?;
+
+    Ok(())
 }
