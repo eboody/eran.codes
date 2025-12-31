@@ -5,8 +5,9 @@ pub type Result<T> = core::result::Result<T, Error>;
 
 #[derive(Debug, From)]
 pub enum Error {
-    User(service::user::Error),
+    User(app::user::Error),
     Json(axum::extract::rejection::JsonRejection),
+    Form(axum::extract::rejection::FormRejection),
 }
 
 #[derive(Debug, serde::Serialize)]
@@ -28,7 +29,15 @@ impl axum::response::IntoResponse for Error {
                 },
             ),
 
-            Error::User(service::user::Error::Domain(_)) => (
+            Error::Form(_) => (
+                axum::http::StatusCode::BAD_REQUEST,
+                ClientError {
+                    code: "bad_request",
+                    message: "Invalid form body.",
+                },
+            ),
+
+            Error::User(app::user::Error::Domain(_)) => (
                 axum::http::StatusCode::BAD_REQUEST,
                 ClientError {
                     code: "invalid_input",
@@ -36,7 +45,7 @@ impl axum::response::IntoResponse for Error {
                 },
             ),
 
-            Error::User(service::user::Error::EmailTaken) => (
+            Error::User(app::user::Error::EmailTaken) => (
                 axum::http::StatusCode::CONFLICT,
                 ClientError {
                     code: "email_taken",
