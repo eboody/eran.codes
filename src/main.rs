@@ -3,9 +3,9 @@ mod error;
 
 use std::sync::Arc;
 
+use app::user;
 use error::{Error, Result};
 use infra::user::Repository as UserRepo;
-use service::user::Service as UserService;
 
 #[tokio::main]
 async fn main() -> Result<()> {
@@ -16,7 +16,7 @@ async fn main() -> Result<()> {
     let infra = infra::Infra::init(&cfg.infra).await.map_err(Error::Infra)?;
 
     let user_repo = Arc::new(UserRepo::new(infra.db.clone()));
-    let user_service = UserService::new(user_repo);
+    let user_service = user::Service::new(user_repo);
 
     let http_state = http::State::new(user_service);
 

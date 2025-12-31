@@ -36,7 +36,6 @@ impl axum::response::IntoResponse for Error {
                     message: "Invalid form body.",
                 },
             ),
-
             Error::User(app::user::Error::Domain(_)) => (
                 axum::http::StatusCode::BAD_REQUEST,
                 ClientError {
