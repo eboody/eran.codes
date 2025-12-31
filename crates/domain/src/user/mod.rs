@@ -1,10 +1,13 @@
 mod error;
+mod new_user;
 mod repo;
+mod user;
 
-use bon::Builder;
-pub use error::{Error, Result};
+pub use error::*;
+pub use new_user::*;
 use nutype::nutype;
-pub use repo::Repository;
+pub use repo::*;
+pub use user::*;
 
 #[nutype(
     sanitize(trim, lowercase),
@@ -22,31 +25,3 @@ pub struct Email(String);
 
 #[nutype(validate(greater = 0), derive(Debug, Clone, Copy, PartialEq, Eq, Hash))]
 pub struct Id(u32);
-
-#[derive(Debug, Clone, PartialEq, Builder)]
-pub struct User {
-    id: Id,
-    username: Username,
-    email: Email,
-}
-
-impl User {
-    // Optional, but I like making the "canonical" construction explicit.
-    pub fn new(id: Id, username: Username, email: Email) -> Self {
-        Self {
-            id,
-            username,
-            email,
-        }
-    }
-
-    pub fn id(&self) -> Id {
-        self.id
-    }
-    pub fn username(&self) -> &Username {
-        &self.username
-    }
-    pub fn email(&self) -> &Email {
-        &self.email
-    }
-}
