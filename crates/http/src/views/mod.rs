@@ -3,6 +3,6 @@ pub mod layout;
 pub mod pages;
 pub mod partials;
 
-pub fn render(markup: maud::Markup) -> axum::response::Html<String> {
-    axum::response::Html(markup.into_string())
+pub fn render(view: impl maud::Render) -> axum::response::Html<String> {
+    axum::response::Html(view.render().into_string())
 }
