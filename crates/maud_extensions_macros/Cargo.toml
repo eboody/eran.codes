@@ -1,0 +1,15 @@
+[package]
+name = "maud_extensions_macros"
+version = "0.1.0"
+edition = "2024"
+
+[lib]
+proc-macro = true
+
+[dependencies]
+cssparser = "0.33.0"
+proc-macro2 = "1.0.101"
+quote = "1.0.41"
+swc_common = "0.33.25"
+swc_ecma_parser = "0.143.5"
+syn = { version = "2.0.106", features = ["full"] }

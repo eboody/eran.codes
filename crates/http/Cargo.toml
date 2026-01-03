@@ -10,3 +10,6 @@ derive_more = "2.1.0"
 tracing = "0.1.44"
 
 axum = "0.8.8"
+maud = { version = "0.26.0", features = ["axum"] }
+tower-http = { version = "0.5.2", features = ["fs"] }
+maud_extensions_macros = { path = "../maud_extensions_macros" }

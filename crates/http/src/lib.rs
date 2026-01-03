@@ -1,8 +1,10 @@
 mod error;
 mod handlers;
+mod views;
 
 use axum::{Router, routing::get};
 pub use error::{Error, Result};
+use tower_http::services::ServeDir;
 
 #[derive(Clone)]
 pub struct State {
@@ -17,7 +19,9 @@ impl State {
 
 pub fn router(state: State) -> Router {
     Router::new()
-        .route("/", get(|| async { "Hello, World!" }))
+        .route("/", get(crate::handlers::home))
+        .route("/partials/ping", get(crate::handlers::ping_partial))
         .route("/health", get(crate::handlers::health))
+        .nest_service("/static", ServeDir::new("crates/http/static"))
         .with_state(state)
 }
