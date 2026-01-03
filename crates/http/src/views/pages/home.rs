@@ -1,4 +1,4 @@
-use maud_extensions_macros::{css, js};
+use maud_extensions::{css, js};
 
 pub struct HomePage;
 
@@ -32,16 +32,11 @@ impl maud::Render for HomePage {
                     hx-swap="outerHTML"
                 { "Ping" }
 
-                div class="card" {
+                div class="card clickable" {
                     p { "Click to run Surreal inline script." }
                     button class="btn" { "Run script" }
-                    ({
-                        js! {
-                            me('-').on("click", () => { me('-').textContent =
-                            "Surreal says hi." })
-                        }
-                    })
                 }
+                (js())
             }
         };
 
@@ -50,5 +45,12 @@ impl maud::Render for HomePage {
             content,
         }
         .render()
+    }
+}
+
+fn js() -> maud::Markup {
+    js! {
+        me("div.clickable.card").on("click", (el) => { me(el).textContent =
+        "Surreal says hi." })
     }
 }

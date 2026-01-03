@@ -361,7 +361,7 @@ pub fn font_faces(input: TokenStream) -> TokenStream {
 
         quote! {
             {
-                use maud_extensions_macros::font_face;
+                use maud_extensions::font_face;
                 let face = font_face!(#path, #family, #weight, #style);
                 css.push_str(&face.0);
             }

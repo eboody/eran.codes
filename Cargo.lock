@@ -883,7 +883,7 @@ dependencies = [
  "axum",
  "derive_more",
  "maud",
- "maud_extensions_macros",
+ "maud_extensions",
  "serde",
  "tower-http",
  "tracing",
@@ -1319,7 +1319,7 @@ dependencies = [
 ]
 
 [[package]]
-name = "maud_extensions_macros"
+name = "maud_extensions"
 version = "0.1.0"
 dependencies = [
  "cssparser",

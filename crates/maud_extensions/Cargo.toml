@@ -1,5 +1,5 @@
 [package]
-name = "maud_extensions_macros"
+name = "maud_extensions"
 version = "0.1.0"
 edition = "2024"
 

@@ -24,10 +24,10 @@ Included scripts:
 - `surreal` via `/static/surreal.js`
 
 ## Inline CSS/JS
-Use macros from `maud_extensions_macros` inside Maud views:
+Use macros from `maud_extensions` inside Maud views:
 
 ```rust
-use maud_extensions_macros::{css, js};
+use maud_extensions::{css, js};
 
 maud::html! {
     div class="card" {

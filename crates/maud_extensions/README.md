@@ -1,4 +1,4 @@
-# maud_extensions_macros
+# maud_extensions
 
 Proc macros to simplify Maud views.
 
@@ -14,7 +14,7 @@ Proc macros to simplify Maud views.
 
 ## Example
 ```rust
-use maud_extensions_macros::{css, js};
+use maud_extensions::{css, js};
 
 maud::html! {
     div {
