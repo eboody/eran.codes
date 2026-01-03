@@ -1,11 +1,8 @@
 mod error;
-mod extract;
-mod respond;
-mod router;
-mod routes;
-mod views;
+mod handlers;
+
+use axum::{Router, routing::get};
 pub use error::{Error, Result};
-use axum::Router;
 
 #[derive(Clone)]
 pub struct State {
@@ -19,5 +16,8 @@ impl State {
 }
 
 pub fn router(state: State) -> Router {
-    router::router(state)
+    Router::new()
+        .route("/", get(|| async { "Hello, World!" }))
+        .route("/health", get(crate::handlers::health))
+        .with_state(state)
 }
