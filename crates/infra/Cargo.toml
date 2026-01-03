@@ -14,4 +14,4 @@ sqlx = { version = "0.8.6", features = [
   "migrate",
 ] }
 utils = { path = "../utils" }
-reqwest = { version = "0.12", features = ["json", "rustls-tls"] }
+reqwest = { version = "0.13.1", features = ["json"] }
