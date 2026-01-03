@@ -10,9 +10,11 @@ impl maud::Render for HomePage {
                 p { "This page is server-rendered; HTMX handles the small interactions." }
 
                 div class="card" {
-                    (css! {
-                        me { border: 1px solid var(--accent); border-radius: 10px; padding: 12px; }
-                        me strong { color: var(--accent); }
+                    ({
+                        css! {
+                            me { border : 1px solid var(-- accent); border - radius :
+                            10px; padding : 12px; } me strong { color : var(-- accent); }
+                        }
                     })
                     p {
                         strong { "Scoped CSS" }
@@ -23,7 +25,6 @@ impl maud::Render for HomePage {
                 div id="ping-target" class="card" {
                     p { "No pings yet." }
                 }
-
                 button
                     class="btn"
                     hx-get="/partials/ping"
@@ -34,8 +35,11 @@ impl maud::Render for HomePage {
                 div class="card" {
                     p { "Click to run Surreal inline script." }
                     button class="btn" { "Run script" }
-                    (js! {
-                        me('-').on('click', () => { me('-').textContent = 'Surreal says hi.' })
+                    ({
+                        js! {
+                            me('-').on("click", () => { me('-').textContent =
+                            "Surreal says hi." })
+                        }
                     })
                 }
             }
