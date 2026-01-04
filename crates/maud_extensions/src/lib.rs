@@ -1,8 +1,12 @@
 use proc_macro::TokenStream;
-use proc_macro2::{Span, TokenStream as TokenStream2, TokenTree};
+use proc_macro2::{
+    Span, TokenStream as TokenStream2, TokenTree,
+};
 use quote::quote;
 use swc_common::{FileName, SourceMap};
-use swc_ecma_parser::{EsConfig, Parser, StringInput, Syntax};
+use swc_ecma_parser::{
+    EsConfig, Parser, StringInput, Syntax,
+};
 use syn::{
     LitStr, Result, Token,
     parse::{Parse, ParseStream},
@@ -52,9 +56,12 @@ pub fn css(input: TokenStream) -> TokenStream {
         CssInput::Tokens(tokens) => {
             let css = tokens_to_css(tokens);
             if let Err(message) = validate_css(&css) {
-                return syn::Error::new(Span::call_site(), message)
-                    .to_compile_error()
-                    .into();
+                return syn::Error::new(
+                    Span::call_site(),
+                    message,
+                )
+                .to_compile_error()
+                .into();
             }
             LitStr::new(&css, Span::call_site())
         }
@@ -81,16 +88,27 @@ fn tokens_to_css(tokens: TokenStream2) -> String {
                 if prev_word {
                     out.push(' ');
                 }
-                let (open, close) = match group.delimiter() {
-                    proc_macro2::Delimiter::Parenthesis => ('(', ')'),
-                    proc_macro2::Delimiter::Bracket => ('[', ']'),
-                    proc_macro2::Delimiter::Brace => ('{', '}'),
-                    proc_macro2::Delimiter::None => (' ', ' '),
+                let (open, close) = match group.delimiter()
+                {
+                    proc_macro2::Delimiter::Parenthesis => {
+                        ('(', ')')
+                    }
+                    proc_macro2::Delimiter::Bracket => {
+                        ('[', ']')
+                    }
+                    proc_macro2::Delimiter::Brace => {
+                        ('{', '}')
+                    }
+                    proc_macro2::Delimiter::None => {
+                        (' ', ' ')
+                    }
                 };
                 if open != ' ' {
                     out.push(open);
                 }
-                out.push_str(&tokens_to_css(group.stream()));
+                out.push_str(&tokens_to_css(
+                    group.stream(),
+                ));
                 if close != ' ' {
                     out.push(close);
                 }
@@ -120,7 +138,9 @@ fn tokens_to_css(tokens: TokenStream2) -> String {
     out
 }
 
-fn validate_css(css: &str) -> core::result::Result<(), String> {
+fn validate_css(
+    css: &str,
+) -> core::result::Result<(), String> {
     let mut input = cssparser::ParserInput::new(css);
     let mut parser = cssparser::Parser::new(&mut input);
     loop {
@@ -164,6 +184,30 @@ pub fn js(input: TokenStream) -> TokenStream {
     TokenStream::from(output)
 }
 
+#[proc_macro]
+pub fn inline_js(input: TokenStream) -> TokenStream {
+    let tokens: TokenStream2 = input.into();
+    let output = quote! {
+        fn js() -> maud::Markup {
+            ::maud_extensions::js! { #tokens }
+        }
+    };
+
+    TokenStream::from(output)
+}
+
+#[proc_macro]
+pub fn inline_css(input: TokenStream) -> TokenStream {
+    let tokens: TokenStream2 = input.into();
+    let output = quote! {
+        fn css() -> maud::Markup {
+            ::maud_extensions::css! { #tokens }
+        }
+    };
+
+    TokenStream::from(output)
+}
+
 fn tokens_to_js(tokens: TokenStream2) -> String {
     let mut out = String::new();
     let mut prev_word = false;
@@ -174,11 +218,20 @@ fn tokens_to_js(tokens: TokenStream2) -> String {
                 if prev_word {
                     out.push(' ');
                 }
-                let (open, close) = match group.delimiter() {
-                    proc_macro2::Delimiter::Parenthesis => ('(', ')'),
-                    proc_macro2::Delimiter::Bracket => ('[', ']'),
-                    proc_macro2::Delimiter::Brace => ('{', '}'),
-                    proc_macro2::Delimiter::None => (' ', ' '),
+                let (open, close) = match group.delimiter()
+                {
+                    proc_macro2::Delimiter::Parenthesis => {
+                        ('(', ')')
+                    }
+                    proc_macro2::Delimiter::Bracket => {
+                        ('[', ']')
+                    }
+                    proc_macro2::Delimiter::Brace => {
+                        ('{', '}')
+                    }
+                    proc_macro2::Delimiter::None => {
+                        (' ', ' ')
+                    }
                 };
                 if open != ' ' {
                     out.push(open);
@@ -213,14 +266,25 @@ fn tokens_to_js(tokens: TokenStream2) -> String {
     out
 }
 
-fn validate_js(js: &str) -> core::result::Result<(), String> {
+fn validate_js(
+    js: &str,
+) -> core::result::Result<(), String> {
     let cm = SourceMap::default();
-    let fm = cm.new_source_file(FileName::Custom("inline.js".to_string()), js.to_string());
+    let fm = cm.new_source_file(
+        FileName::Custom("inline.js".to_string()),
+        js.to_string(),
+    );
     let input = StringInput::from(&*fm);
-    let mut parser = Parser::new(Syntax::Es(EsConfig::default()), input, None);
+    let mut parser = Parser::new(
+        Syntax::Es(EsConfig::default()),
+        input,
+        None,
+    );
     match parser.parse_script() {
         Ok(_) => Ok(()),
-        Err(err) => Err(format!("js! could not parse JavaScript: {err:#?}")),
+        Err(err) => Err(format!(
+            "js! could not parse JavaScript: {err:#?}"
+        )),
     }
 }
 
@@ -248,16 +312,17 @@ impl Parse for FontFace {
             None
         };
 
-        let style = if weight.is_some() && input.peek(Token![,]) {
-            input.parse::<Token![,]>()?;
-            if input.peek(LitStr) {
-                Some(input.parse()?)
+        let style =
+            if weight.is_some() && input.peek(Token![,]) {
+                input.parse::<Token![,]>()?;
+                if input.peek(LitStr) {
+                    Some(input.parse()?)
+                } else {
+                    None
+                }
             } else {
                 None
-            }
-        } else {
-            None
-        };
+            };
 
         Ok(FontFace {
             path,
@@ -285,12 +350,12 @@ pub fn font_face(input: TokenStream) -> TokenStream {
 
     let path = font.path;
     let family = font.family;
-    let weight = font
-        .weight
-        .unwrap_or_else(|| LitStr::new("normal", Span::call_site()));
-    let style = font
-        .style
-        .unwrap_or_else(|| LitStr::new("normal", Span::call_site()));
+    let weight = font.weight.unwrap_or_else(|| {
+        LitStr::new("normal", Span::call_site())
+    });
+    let style = font.style.unwrap_or_else(|| {
+        LitStr::new("normal", Span::call_site())
+    });
 
     let expanded = quote! {
         {

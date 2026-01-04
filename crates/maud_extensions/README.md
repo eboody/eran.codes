@@ -5,6 +5,7 @@ Proc macros to simplify Maud views.
 ## Macros
 - `css! { ... }` or `css!("...")`: emits a `<style>` block with raw CSS.
 - `js! { ... }` or `js!("...")`: emits a `<script>` block with raw JS.
+- `inline_css! { ... }` and `inline_js! { ... }`: emit `fn css() -> maud::Markup` / `fn js() -> maud::Markup`.
 - `font_face!` and `font_faces!`: inline font-face CSS as data URLs.
 
 ## Notes

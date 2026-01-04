@@ -1,4 +1,4 @@
-use maud_extensions::{css, js};
+use maud_extensions::{css, inline_css, inline_js};
 
 pub struct HomePage;
 
@@ -12,8 +12,10 @@ impl maud::Render for HomePage {
                 div class="card" {
                     ({
                         css! {
-                            me { border : 1px solid var(-- accent); border - radius :
-                            10px; padding : 12px; } me strong { color : var(-- accent); }
+                            .me {
+                              border: 1px solid var(--accent);
+                              border-radius: 10px;
+                            }
                         }
                     })
                     p {
@@ -48,9 +50,19 @@ impl maud::Render for HomePage {
     }
 }
 
-fn js() -> maud::Markup {
-    js! {
-        me("div.clickable.card").on("click", (el) => { me(el).textContent =
-        "Surreal says hi." })
+inline_js! {
+    let x = 1;
+    x += 1;
+    console.log(x);
+}
+
+inline_css! {
+    me {
+      border: 1px solid var(--accent);
+      border-radius: 10px;
+      padding: 12px;
+    }
+    me strong {
+      color: var(--accent);
     }
 }
