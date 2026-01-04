@@ -1,0 +1,14 @@
+[env]
+RUST_LOG = "debug"
+DATABASE_URL = "postgres://app:app@localhost:5432/app"
+HOST = "localhost"
+PORT = "3002"
+
+[alias]
+r = "run"
+t = "test"
+b = "build"
+c = "check"
+fmt = "fmt --all"
+clippy = "clippy --all-targets --all-features"
+with-db = "run --bin with_db --"
