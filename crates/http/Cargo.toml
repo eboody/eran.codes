@@ -14,4 +14,8 @@ maud = { version = "0.27.0", features = ["axum"] }
 tower-http = { version = "0.6.8", features = ["fs"] }
 maud_extensions = { path = "../maud_extensions" }
 
-tower-livereload = "0.10.1"
+jiff = "0.2.17"
+tower-livereload = { version = "0.10.1", optional = true }
+
+[features]
+live-reload = ["tower-livereload"]
