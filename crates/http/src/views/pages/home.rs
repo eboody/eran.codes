@@ -51,9 +51,9 @@ impl maud::Render for HomePage {
 }
 
 inline_js! {
-    let x = 1;
-    x += 1;
-    console.log(x);
+    me("div.clickable.card").on("click", (el) => {
+      me(el).textContent = "Surreal says hi!";
+    });
 }
 
 inline_css! {
