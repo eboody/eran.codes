@@ -23,5 +23,6 @@ pub fn router(state: State) -> Router {
         .route("/partials/ping", get(crate::handlers::ping_partial))
         .route("/health", get(crate::handlers::health))
         .nest_service("/static", ServeDir::new("crates/http/static"))
+        .layer(tower_livereload::LiveReloadLayer::new())
         .with_state(state)
 }
