@@ -17,9 +17,7 @@ impl maud::Render for PageLayout<'_> {
                     script src="/static/css-scope-inline.js" {}
                     script src="/static/surreal.js" {}
                 }
-                body {
-                    (self.content.clone())
-                }
+                body { (self.content.clone()) }
             }
         }
     }

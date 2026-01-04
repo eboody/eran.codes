@@ -13,7 +13,10 @@ pub struct DbConfig {
 
 impl InfraConfig {
     pub fn from_env() -> Result<Self> {
-        let database_url = utils::envs::get_env("DATABASE_URL").map_err(|_| Error::MissingEnv {
+        let database_url = utils::envs::get_env(
+            "DATABASE_URL",
+        )
+        .map_err(|_| Error::MissingEnv {
             key: "DATABASE_URL",
         })?;
 

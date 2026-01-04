@@ -22,12 +22,23 @@ pub enum Error {
 pub type Result<T> = std::result::Result<T, Error>;
 
 impl fmt::Display for Error {
-    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+    fn fmt(
+        &self,
+        f: &mut fmt::Formatter<'_>,
+    ) -> fmt::Result {
         match self {
-            Error::Infra(e) => write!(f, "infra config error: {e}"),
-            Error::MissingEnv { key } => write!(f, "missing environment variable: {key}"),
+            Error::Infra(e) => {
+                write!(f, "infra config error: {e}")
+            }
+            Error::MissingEnv { key } => write!(
+                f,
+                "missing environment variable: {key}"
+            ),
             Error::InvalidEnv { key, reason } => {
-                write!(f, "invalid environment variable {key}: {reason}")
+                write!(
+                    f,
+                    "invalid environment variable {key}: {reason}"
+                )
             }
             Error::Io(e) => write!(f, "io error: {e}"),
             // Error::Http(e) => write!(f, "http config error: {e}"),

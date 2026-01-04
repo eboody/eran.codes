@@ -23,5 +23,8 @@ pub struct Username(String);
 )]
 pub struct Email(String);
 
-#[nutype(validate(greater = 0), derive(Debug, Clone, Copy, PartialEq, Eq, Hash))]
+#[nutype(
+    validate(greater = 0),
+    derive(Debug, Clone, Copy, PartialEq, Eq, Hash)
+)]
 pub struct Id(u32);

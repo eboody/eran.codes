@@ -13,10 +13,17 @@ pub enum Error {
 }
 
 impl fmt::Display for Error {
-    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+    fn fmt(
+        &self,
+        f: &mut fmt::Formatter<'_>,
+    ) -> fmt::Result {
         match self {
-            Error::Username(e) => write!(f, "invalid username: {}", e),
-            Error::Email(e) => write!(f, "invalid email: {}", e),
+            Error::Username(e) => {
+                write!(f, "invalid username: {}", e)
+            }
+            Error::Email(e) => {
+                write!(f, "invalid email: {}", e)
+            }
         }
     }
 }
