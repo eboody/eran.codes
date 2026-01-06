@@ -18,22 +18,28 @@ impl State {
 }
 
 pub fn router(state: State) -> Router {
-    let router = Router::new()
-        .route("/", get(crate::handlers::home))
+    let base = Router::new()
         .route("/partials/ping", get(crate::handlers::ping_partial))
         .route("/health", get(crate::handlers::health))
-        .nest_service("/static", ServeDir::new("crates/http/static"))
+        .nest_service(
+            "/static",
+            ServeDir::new(concat!(env!("CARGO_MANIFEST_DIR"), "/static")),
+        )
+        .with_state(state.clone());
+
+    let pages = Router::new()
+        .route("/", get(crate::handlers::home))
         .with_state(state);
 
     let router = {
         #[cfg(all(debug_assertions, feature = "live-reload"))]
         {
-            router.layer(tower_livereload::LiveReloadLayer::new())
+            base.merge(pages.layer(tower_livereload::LiveReloadLayer::new()))
         }
 
         #[cfg(not(all(debug_assertions, feature = "live-reload")))]
         {
-            router
+            base.merge(pages)
         }
     };
 

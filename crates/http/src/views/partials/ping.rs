@@ -7,6 +7,16 @@ impl maud::Render for PingPartial {
         let current_time = jiff::Timestamp::now();
         maud::html! {
             div id="ping-target" class="card" {
+                p {
+                    (current_time)
+                    ": Ping received "
+                    em { "(scoped)" }
+                }
+                ({
+                    js! {
+                        me().class_add("pinged");
+                    }
+                })
                 ({
                     css! {
                         me {
@@ -16,16 +26,6 @@ impl maud::Render for PingPartial {
                           font-style: normal;
                           color: red;
                         }
-                    }
-                })
-                p {
-                    (current_time)
-                    ": Ping received "
-                    em { "(scoped)" }
-                }
-                ({
-                    js! {
-                        me().class_add("pinged");
                     }
                 })
             }
