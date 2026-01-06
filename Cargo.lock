@@ -1363,7 +1363,9 @@ dependencies = [
 
 [[package]]
 name = "maud-extensions"
-version = "0.1.0"
+version = "0.1.2"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "8b54d4b975b775d4e3dc5817f299b9bc73aaeaef9fe51a5f9a7ec7cfdebe41e8"
 dependencies = [
  "cssparser",
  "proc-macro2",
