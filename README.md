@@ -6,7 +6,7 @@
 
 ## Structure
 - `crates/domain`, `crates/app`, `crates/infra`, `crates/http`, `crates/utils`
-- `crates/maud_extensions`
+- `maud-exts` (external crate)
 
 ## Commands
 - `cargo build`
@@ -16,4 +16,4 @@
 
 ## Docs
 - `crates/http/README.md`
-- `crates/maud_extensions/README.md`
+- `maud-exts/README.md`

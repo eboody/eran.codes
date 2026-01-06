@@ -1,4 +1,4 @@
-use maud_extensions::{css, inline_css, inline_js};
+use maud_exts::{css, inline_css, inline_js};
 
 pub struct HomePage;
 
@@ -12,8 +12,8 @@ impl maud::Render for HomePage {
                 div class="card" {
                     ({
                         css! {
-                            .me {
-                              border: 1px solid var(--accent);
+                            me {
+                              border: 1px solid blue;
                               border-radius: 10px;
                             }
                         }

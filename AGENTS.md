@@ -3,7 +3,7 @@
 ## Project Structure & Module Organization
 - `src/` holds the main binary (`src/main.rs`) plus a small helper binary in `src/bin/with_db.rs`.
 - `crates/` contains workspace crates by layer: `domain`, `app`, `infra`, `http`, `utils`.
-- `crates/maud_extensions/` provides `css!`, `js!`, and font macros for Maud templates.
+- `maud-exts` provides `css!`, `js!`, and font macros for Maud templates.
 - `crates/http/src/views/` holds Maud views (pages, partials, layout) and uses `maud::Render`.
 - `crates/http/static/` serves CSS and frontend helper scripts (htmx, css-scope-inline, surreal).
 - `crates/infra/migrations/` contains SQL migrations (`001_users.up.sql`, `002_users.down.sql`).
@@ -71,7 +71,7 @@ Call flow is separate from dependency direction.
 - HTTP parses and validates cheap things (basic format, length) if helpful, but does not perform expensive work.
 - HTTP maps DTOs to app commands, and app errors to responses.
 - HTTP renders Maud views using `maud::Render` components; pages and partials live under `crates/http/src/views/`.
-- Inline styles/scripts use `css!` and `js!` macros (from `maud_extensions`) and are scoped by `css-scope-inline` and `surreal` in `crates/http/static/`.
+- Inline styles/scripts use `css!` and `js!` macros (from `maud_exts`) and are scoped by `css-scope-inline` and `surreal` in `crates/http/static/`.
 
 ### Infra rules
 - Infra implements app-defined traits using concrete crates.

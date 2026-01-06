@@ -11,7 +11,6 @@ members = [
     "crates/infra",
     "crates/app",
     "crates/http",
-    "crates/maud_extensions",
     "crates/utils",
 ]
 
@@ -40,4 +39,4 @@ nutype = "0.6.2"
 crs = "cargo run-script"
 migrate = "cargo with-db sqlx migrate run --source crates/infra/migrations"
 prepare = "cargo with-db sqlx prepare --workspace -- --all-targets"
-w = "watchexec --restart --exts rs,html,css,js -- cargo run"
+w = "watchexec --restart --exts rs,html,css,js -- cargo run --features http/live-reload"
