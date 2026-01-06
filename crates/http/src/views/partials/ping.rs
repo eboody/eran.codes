@@ -1,4 +1,4 @@
-use maud_exts::{css, js};
+use maud_extensions::{css, js};
 
 pub struct PingPartial;
 

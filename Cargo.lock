@@ -884,7 +884,7 @@ dependencies = [
  "derive_more",
  "jiff",
  "maud",
- "maud-exts",
+ "maud-extensions",
  "serde",
  "tower-http",
  "tower-livereload",
@@ -1362,7 +1362,7 @@ dependencies = [
 ]
 
 [[package]]
-name = "maud-exts"
+name = "maud-extensions"
 version = "0.1.0"
 dependencies = [
  "cssparser",

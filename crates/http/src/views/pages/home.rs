@@ -1,4 +1,4 @@
-use maud_exts::{css, inline_css, inline_js};
+use maud_extensions::{css, inline_css, inline_js};
 
 pub struct HomePage;
 
