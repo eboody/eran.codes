@@ -13,9 +13,9 @@ impl maud::Render for PageLayout<'_> {
                     meta name="viewport" content="width=device-width, initial-scale=1";
                     title { (self.title) }
                     link rel="stylesheet" href="/static/app.css";
-                    script src="https://unpkg.com/htmx.org@1.9.12" defer {}
-                    script src="/static/css-scope-inline.js" defer {}
-                    script src="/static/surreal.js" defer {}
+                    script type="module" src="https://cdn.jsdelivr.net/gh/starfederation/datastar@1.0.0-RC.7/bundles/datastar.js" {}
+                    script src="/static/css-scope-inline.js" {}
+                    script src="/static/surreal.js" {}
                 }
                 body { (self.content.clone()) }
             }

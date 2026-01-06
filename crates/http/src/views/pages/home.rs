@@ -7,7 +7,7 @@ impl maud::Render for HomePage {
         let content = maud::html! {
             main class="page" {
                 h1 { "Hello from Maud" }
-                p { "This page is server-rendered; HTMX handles the small interactions." }
+                p { "This page is server-rendered; Datastar handles the small interactions." }
 
                 div class="card" {
                     ({
@@ -29,9 +29,7 @@ impl maud::Render for HomePage {
                 }
                 button
                     class="btn"
-                    hx-get="/partials/ping"
-                    hx-target="#ping-target"
-                    hx-swap="outerHTML"
+                    data-on:click="@get('/partials/ping')"
                 { "Ping" }
 
                 div class="card clickable" {
