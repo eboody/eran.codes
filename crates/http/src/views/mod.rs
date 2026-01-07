@@ -1,4 +1,4 @@
-// Views: pages are full documents, partials are HTMX fragments.
+// Views: pages are full documents, partials are Datastar fragments.
 pub mod layout;
 pub mod pages;
 pub mod partials;

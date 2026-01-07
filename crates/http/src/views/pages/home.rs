@@ -27,10 +27,7 @@ impl maud::Render for HomePage {
                 div id="ping-target" class="card" {
                     p { "No pings yet." }
                 }
-                button
-                    class="btn"
-                    data-on:click="@get('/partials/ping')"
-                { "Ping" }
+                button class="btn" data-on:click="@get('/partials/ping')" { "Ping" }
 
                 div class="card clickable" {
                     p { "Click to run Surreal inline script." }

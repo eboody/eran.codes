@@ -16,6 +16,9 @@ maud-extensions = "0.1.2"
 
 jiff = "0.2.17"
 tower-livereload = { version = "0.10.1", optional = true }
+datastar = { version = "0.3.1", features = ["axum"] }
+async-stream = "0.3.6"
+tokio = { version = "1", features = ["time"] }
 
 [features]
 live-reload = ["tower-livereload"]
