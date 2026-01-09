@@ -26,6 +26,7 @@
 - Avoid redundant suffixes on view types; prefer concise names like `views::partials::Ping`.
 - Prompt to update `README.md` and make a commit when changes warrant documentation or a logical checkpoint.
 - When in doubt, explicitly ask before making commits.
+- When designing a feature, present both a simpler baseline (with a TODO placeholder) and an enterprise-level option so the user can choose.
 - When a submodule name matches its primary type, keep the submodule private and re-export the type (e.g., `mod ping; pub use ping::Ping` → `views::partials::Ping`).
 - Prefer explicit re-exports over `pub use module::*` unless the module is intentionally a flat API surface.
 - Use `moddef::moddef!` for module declarations when it reduces repetition and aligns with the above naming conventions.
