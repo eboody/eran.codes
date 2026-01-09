@@ -31,3 +31,28 @@ impl Render for Layout<'_> {
         }
     }
 }
+
+#[derive(Debug)]
+pub struct Error {
+    pub title: &'static str,
+    pub message: &'static str,
+    pub status: u16,
+}
+
+impl Render for Error {
+    fn render(&self) -> Markup {
+        let content = maud::html! {
+            main class="page" {
+                h1 { (self.title) }
+                p { (self.message) }
+                p class="muted" { "Status: " (self.status) }
+            }
+        };
+
+        Layout {
+            title: self.title,
+            content,
+        }
+        .render()
+    }
+}

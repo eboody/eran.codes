@@ -17,8 +17,9 @@
 - TODOs in code track future work: signed cookies and per-tab SSE IDs.
 
 ## Error Handling Strategy
-- Default: return Datastar partial errors from `http::Error` without requiring handler context.
-- Optional upgrade: add page vs partial switching later if full-page error rendering becomes necessary.
+- Enterprise-level default: a centralized HTTP error type that maps domain/app errors to user-facing HTML pages for normal requests and Datastar patch responses for `datastar-request` requests.
+- Use middleware + task-local request kind so handlers can return `Result<T, http::Error>` without extra parameters.
+- Simpler option: always render a full error page and add a TODO comment in handlers to switch to Datastar-aware error patches later.
 
 ## Updating This File
 - Keep `AGENTS.md` updated when we introduce new architectural decisions, cross-cutting mechanisms, or boundary changes (e.g., SSE/session handling).
