@@ -1,8 +1,8 @@
 use maud_extensions::{css, inline_css, inline_js};
 
-pub struct HomePage;
+pub struct Home;
 
-impl maud::Render for HomePage {
+impl maud::Render for Home {
     fn render(&self) -> maud::Markup {
         let content = maud::html! {
             main class="page" {

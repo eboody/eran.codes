@@ -17,12 +17,12 @@
 - TODOs in code track future work: signed cookies and per-tab SSE IDs.
 
 ## Error Handling Strategy
-- Enterprise-level default: a centralized HTTP error type that maps domain/app errors to user-facing HTML pages for normal requests and Datastar patch responses for `datastar-request` requests.
-- Simpler option: always render a full error page and add a TODO comment in handlers to switch to Datastar-aware error patches later.
+- Default: return Datastar partial errors from `http::Error` without requiring handler context.
+- Optional upgrade: add page vs partial switching later if full-page error rendering becomes necessary.
 
 ## Updating This File
 - Keep `AGENTS.md` updated when we introduce new architectural decisions, cross-cutting mechanisms, or boundary changes (e.g., SSE/session handling).
-- Prefer module-scoped naming and re-exports for readability (e.g., `sse::Event`, `sse::Registry`, `views::pages::HomePage`, `views::partials::Ping`, `views::PageLayout`), avoiding deep paths in call sites.
+- Prefer module-scoped naming and re-exports for readability (e.g., `sse::Event`, `sse::Registry`, `views::pages::Home`, `views::partials::Ping`, `views::page::Layout`), avoiding deep paths in call sites.
 - For page-level shared UI, prefer `views::page::*` (e.g., `views::page::Layout`, `views::page::Error`) over a `layout` module.
 - Avoid redundant suffixes on view types; prefer concise names like `views::partials::Ping`.
 - Prompt to update `README.md` and make a commit when changes warrant documentation or a logical checkpoint.

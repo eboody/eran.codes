@@ -1,3 +1,3 @@
 moddef::moddef!(mod { home });
 
-pub use home::HomePage;
+pub use home::Home;

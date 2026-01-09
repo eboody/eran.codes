@@ -1,6 +1,5 @@
 mod error;
 mod handlers;
-pub mod request;
 pub mod sse;
 mod views;
 
