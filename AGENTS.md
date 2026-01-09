@@ -5,7 +5,7 @@
 - `crates/` contains workspace crates by layer: `domain`, `app`, `infra`, `http`, `utils`.
 - `maud-extensions` provides `css!`, `js!`, and font macros for Maud templates.
 - `crates/http/src/views/` holds Maud views (pages, partials, layout) and uses `maud::Render`.
-- `crates/http/static/` serves CSS and frontend helper scripts (htmx, css-scope-inline, surreal).
+- `crates/http/static/` serves CSS and frontend helper scripts (css-scope-inline, surreal, datastar).
 - `crates/infra/migrations/` contains SQL migrations (`001_users.up.sql`, `002_users.down.sql`).
 - `docker-compose.yml` provides a local Postgres instance for development.
 - `crates/http` owns SSE and session cookies (single SSE connection per visitor) using `tower-cookies`.
@@ -16,11 +16,16 @@
 - SSE events carry Datastar payloads; the client keeps one `EventSource` and applies patches.
 - TODOs in code track future work: signed cookies and per-tab SSE IDs.
 
+## Error Handling Strategy
+- Enterprise-level default: a centralized HTTP error type that maps domain/app errors to user-facing HTML pages for normal requests and Datastar patch responses for `datastar-request` requests.
+- Simpler option: always render a full error page and add a TODO comment in handlers to switch to Datastar-aware error patches later.
+
 ## Updating This File
 - Keep `AGENTS.md` updated when we introduce new architectural decisions, cross-cutting mechanisms, or boundary changes (e.g., SSE/session handling).
 - Prefer module-scoped naming and re-exports for readability (e.g., `sse::Event`, `sse::Registry`, `views::pages::HomePage`, `views::partials::Ping`, `views::PageLayout`), avoiding deep paths in call sites.
 - Avoid redundant suffixes on view types; prefer concise names like `views::partials::Ping`.
 - Prompt to update `README.md` and make a commit when changes warrant documentation or a logical checkpoint.
+- When in doubt, explicitly ask before making commits.
 - When a submodule name matches its primary type, keep the submodule private and re-export the type (e.g., `mod ping; pub use ping::Ping` → `views::partials::Ping`).
 - Prefer explicit re-exports over `pub use module::*` unless the module is intentionally a flat API surface.
 - Use `moddef::moddef!` for module declarations when it reduces repetition and aligns with the above naming conventions.

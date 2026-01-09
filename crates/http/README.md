@@ -1,17 +1,17 @@
 # HTTP crate
 
-HTTP transport, HTMX endpoints, and Maud views.
+HTTP transport, Datastar endpoints, and Maud views.
 
 ## Routes
 - `GET /` renders the home page.
-- `GET /partials/ping` returns an HTMX partial.
+- `GET /partials/ping` sends a Datastar patch via SSE.
 - `GET /health` returns `ok`.
 
 ## Views
 Maud views live in `crates/http/src/views/` and implement `maud::Render`:
 - `views/layout.rs`: `PageLayout`
 - `views/pages/home.rs`: `HomePage`
-- `views/partials/ping.rs`: `PingPartial`
+- `views/partials/ping.rs`: `Ping`
 
 Use `crate::views::render(...)` to convert a `maud::Render` into an `Html<String>` response.
 
@@ -19,7 +19,7 @@ Use `crate::views::render(...)` to convert a `maud::Render` into an `Html<String
 Static files are served from `crates/http/static/` at `/static`.
 
 Included scripts:
-- `htmx` via CDN in layout
+- `datastar` via CDN in layout
 - `css-scope-inline` via `/static/css-scope-inline.js`
 - `surreal` via `/static/surreal.js`
 

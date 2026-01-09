@@ -1,6 +1,6 @@
 // Welcome to Surreal 1.3.4
 // Documentation: https://github.com/gnat/surreal
-// Locality of Behavior (LoB): https://htmx.org/essays/locality-of-behaviour/
+// Locality of Behavior (LoB)
 let surreal = (function () {
 let $ = { // Convenience for internals.
     $: this, // Convenience for internals.
