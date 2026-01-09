@@ -1,5 +1,5 @@
 [env]
-RUST_LOG = "debug"
+RUST_LOG = "info,sqlx=warn,tower_http=info"
 DATABASE_URL = "postgres://app:app@localhost:5432/app"
 HOST = "localhost"
 PORT = "3002"
