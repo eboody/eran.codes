@@ -34,6 +34,7 @@ derive_more = "2.1.0"
 
 [workspace.dependencies]
 nutype = "0.6.2"
+moddef = "0.3.0"
 
 [workspace.metadata.scripts]
 crs = "cargo run-script"

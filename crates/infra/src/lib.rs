@@ -2,7 +2,7 @@ pub mod config;
 mod error;
 pub use error::{Error, Result};
 mod repo;
-pub use repo::*;
+pub use repo::user;
 use sqlx::PgPool;
 
 // our infra layer holds shared resources like DB pools, HTTP clients, etc.

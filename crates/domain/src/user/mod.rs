@@ -1,13 +1,10 @@
-mod error;
-mod new_user;
-mod repo;
-mod user;
+moddef::moddef!(mod { error, new_user, repo, user });
 
-pub use error::*;
-pub use new_user::*;
+pub use error::{Error, Result};
+pub use new_user::NewUser;
 use nutype::nutype;
-pub use repo::*;
-pub use user::*;
+pub use repo::Repository;
+pub use user::User;
 
 #[nutype(
     sanitize(trim, lowercase),

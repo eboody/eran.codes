@@ -1,7 +1,8 @@
 // Views: pages are full documents, partials are Datastar fragments.
-pub mod layout;
-pub mod pages;
-pub mod partials;
+moddef::moddef!(
+    mod { layout },
+    pub mod { pages, partials }
+);
 
 pub use layout::PageLayout;
 

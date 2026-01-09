@@ -21,6 +21,9 @@
 - Prefer module-scoped naming and re-exports for readability (e.g., `sse::Event`, `sse::Registry`, `views::pages::HomePage`, `views::partials::Ping`, `views::PageLayout`), avoiding deep paths in call sites.
 - Avoid redundant suffixes on view types; prefer concise names like `views::partials::Ping`.
 - Prompt to update `README.md` and make a commit when changes warrant documentation or a logical checkpoint.
+- When a submodule name matches its primary type, keep the submodule private and re-export the type (e.g., `mod ping; pub use ping::Ping` → `views::partials::Ping`).
+- Prefer explicit re-exports over `pub use module::*` unless the module is intentionally a flat API surface.
+- Use `moddef::moddef!` for module declarations when it reduces repetition and aligns with the above naming conventions.
 
 ````md
 # Agent: Architecture Boundary Enforcer

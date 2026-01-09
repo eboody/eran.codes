@@ -11,3 +11,4 @@ bon = { version = "3.8.1", features = [
   "experimental-getter",
   "implied-bounds",
 ] }
+moddef = { workspace = true }
