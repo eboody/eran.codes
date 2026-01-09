@@ -8,6 +8,19 @@
 - `crates/http/static/` serves CSS and frontend helper scripts (htmx, css-scope-inline, surreal).
 - `crates/infra/migrations/` contains SQL migrations (`001_users.up.sql`, `002_users.down.sql`).
 - `docker-compose.yml` provides a local Postgres instance for development.
+- `crates/http` owns SSE and session cookies (single SSE connection per visitor) using `tower-cookies`.
+
+## SSE + Session Notes
+- A single SSE connection per visitor is served at `/events`.
+- Session identity is stored in an unsigned `session_id` cookie (HTTP-only, SameSite Lax) in `crates/http`.
+- SSE events carry Datastar payloads; the client keeps one `EventSource` and applies patches.
+- TODOs in code track future work: signed cookies and per-tab SSE IDs.
+
+## Updating This File
+- Keep `AGENTS.md` updated when we introduce new architectural decisions, cross-cutting mechanisms, or boundary changes (e.g., SSE/session handling).
+- Prefer module-scoped naming and re-exports for readability (e.g., `sse::Event`, `sse::Registry`, `views::pages::HomePage`, `views::partials::Ping`, `views::PageLayout`), avoiding deep paths in call sites.
+- Avoid redundant suffixes on view types; prefer concise names like `views::partials::Ping`.
+- Prompt to update `README.md` and make a commit when changes warrant documentation or a logical checkpoint.
 
 ````md
 # Agent: Architecture Boundary Enforcer

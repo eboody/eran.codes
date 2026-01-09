@@ -18,7 +18,8 @@ async fn main() -> Result<()> {
     let user_repo = Arc::new(UserRepo::new(infra.db.clone()));
     let user_service = user::Service::new(user_repo);
 
-    let http_state = http::State::new(user_service);
+    let sse_registry = http::SseRegistry::new();
+    let http_state = http::State::new(user_service, sse_registry);
 
     let app = http::router(http_state);
 

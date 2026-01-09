@@ -1,22 +1,17 @@
-use maud_extensions::{css, js};
+use maud_extensions::css;
 
-pub struct PingPartial;
+pub struct Ping;
 
-impl maud::Render for PingPartial {
+impl maud::Render for Ping {
     fn render(&self) -> maud::Markup {
         let current_time = jiff::Timestamp::now();
         maud::html! {
-            div id="ping-target" class="card" {
+            div id="ping-target" class="card pinged" {
                 p {
                     (current_time)
                     ": Ping received "
                     em { "(scoped)" }
                 }
-                ({
-                    js! {
-                        me().class_add("pinged");
-                    }
-                })
                 ({
                     css! {
                         me {

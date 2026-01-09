@@ -37,7 +37,7 @@ impl maud::Render for HomePage {
             }
         };
 
-        crate::views::layout::PageLayout {
+        crate::views::PageLayout {
             title: "Home",
             content,
         }
@@ -46,6 +46,13 @@ impl maud::Render for HomePage {
 }
 
 inline_js! {
+    const source = new EventSource("/events");
+    source.addEventListener("ping-patch", (event) => {
+      const target = document.querySelector("#ping-target");
+      if (!target) return;
+      target.outerHTML = event.data;
+    });
+
     me("div.clickable.card").on("click", (el) => {
       me(el).textContent = "Surreal says hi!";
     });

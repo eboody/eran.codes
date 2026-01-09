@@ -1,32 +1,60 @@
 use async_stream::stream;
 use axum::{
-    extract::State,
+    extract::{Extension, State},
+    http::StatusCode,
     response::{IntoResponse, Sse},
 };
-use core::{convert::Infallible, time::Duration};
-use datastar::prelude::PatchElements;
+use core::convert::Infallible;
 use maud::Render;
+use tokio::sync::broadcast::error::RecvError;
+use tower_cookies::Cookies;
 
 pub async fn health(State(_state): State<crate::State>) -> &'static str {
     "ok"
 }
 
 pub async fn home(State(_state): State<crate::State>) -> axum::response::Html<String> {
-    crate::views::render(crate::views::pages::home::HomePage)
+    crate::views::render(crate::views::pages::HomePage)
 }
 
-pub async fn ping_partial(State(_state): State<crate::State>) -> impl IntoResponse {
-    Sse::new(stream! {
+const PING_EVENT: &str = "ping-patch";
+
+pub async fn events(
+    State(state): State<crate::State>,
+    Extension(cookies): Extension<Cookies>,
+) -> impl IntoResponse {
+    // TODO: Support per-tab SSE streams by mixing a tab id into the session key.
+    let session = crate::sse::Handle::from_cookies(&cookies);
+    let mut receiver = state.sse.subscribe(&session);
+
+    let stream = stream! {
         loop {
-            let elements = crate::views::partials::ping::PingPartial
-                .render()
-                .into_string();
-            let patch = PatchElements::new(elements);
-            let event = patch.write_as_axum_sse_event();
-
-            yield Ok::<_, Infallible>(event);
-
-            tokio::time::sleep(Duration::from_secs(1)).await;
+            match receiver.recv().await {
+                Ok(event) => {
+                    let mut sse_event = axum::response::sse::Event::default().data(event.data);
+                    if let Some(name) = event.name {
+                        sse_event = sse_event.event(name);
+                    }
+                    yield Ok::<_, Infallible>(sse_event);
+                }
+                Err(RecvError::Lagged(_)) => continue,
+                Err(RecvError::Closed) => break,
+            }
         }
-    })
+    };
+
+    Sse::new(stream)
+}
+
+pub async fn ping_partial(
+    State(state): State<crate::State>,
+    Extension(cookies): Extension<Cookies>,
+) -> impl IntoResponse {
+    let elements = crate::views::partials::Ping.render();
+    let session = crate::sse::Handle::from_cookies(&cookies);
+    let event = crate::sse::Event::named(PING_EVENT, elements);
+    // TODO: Log or surface send failures once we have observability hooks.
+    let _ = state.sse.send(&session, event);
+
+    StatusCode::NO_CONTENT
 }
