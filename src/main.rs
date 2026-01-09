@@ -6,9 +6,16 @@ use std::sync::Arc;
 use app::user;
 use error::{Error, Result};
 use infra::user::Repository as UserRepo;
+use tracing_subscriber::EnvFilter;
 
 #[tokio::main]
 async fn main() -> Result<()> {
+    tracing_subscriber::fmt()
+        .with_env_filter(
+            EnvFilter::try_from_default_env().unwrap_or_else(|_| "info,http=debug".into()),
+        )
+        .init();
+
     let cfg = config::Config::load()?;
 
     let addr = format!("{}:{}", &cfg.http.host, cfg.http.port);
