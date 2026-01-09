@@ -7,6 +7,7 @@
 ## Structure
 - `crates/domain`, `crates/app`, `crates/infra`, `crates/http`, `crates/utils`
 - `maud-extensions` (external crate)
+- `crates/http` handles SSE with one `/events` stream per visitor, keyed by an unsigned `session_id` cookie
 
 ## Commands
 - `cargo build`
