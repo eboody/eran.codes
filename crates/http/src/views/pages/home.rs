@@ -37,7 +37,7 @@ impl maud::Render for HomePage {
             }
         };
 
-        crate::views::PageLayout {
+        crate::views::page::Layout {
             title: "Home",
             content,
         }

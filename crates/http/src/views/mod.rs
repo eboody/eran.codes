@@ -1,10 +1,7 @@
 // Views: pages are full documents, partials are Datastar fragments.
 moddef::moddef!(
-    mod { layout },
-    pub mod { pages, partials }
+    pub mod { page, pages, partials }
 );
-
-pub use layout::PageLayout;
 
 pub fn render(
     view: impl maud::Render,
