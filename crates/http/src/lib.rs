@@ -131,8 +131,8 @@ pub fn router(
         )
         .route_layer(from_fn(crate::trace::record_route_middleware))
         .layer(CookieManagerLayer::new())
-        .layer(auth_layer)
         .layer(request_layers)
+        .layer(auth_layer)
         .with_state(state.clone());
 
     let pages = Router::new()

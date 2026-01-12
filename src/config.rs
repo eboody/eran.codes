@@ -33,10 +33,10 @@ impl HttpConfig {
                     reason: "must be base64url without padding"
                         .to_string(),
                 })?;
-        if session_secret.len() < 32 {
+        if session_secret.len() < 64 {
             return Err(Error::InvalidEnv {
                 key: "SESSION_SECRET",
-                reason: "must be at least 32 bytes".to_string(),
+                reason: "must be at least 64 bytes".to_string(),
             });
         }
 

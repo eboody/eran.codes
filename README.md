@@ -1,7 +1,7 @@
 # eran_codes
 
 ## Quickstart
-- `HOST`, `PORT`, `DATABASE_URL`, `SESSION_SECRET` (base64url, no padding)
+- `HOST`, `PORT`, `DATABASE_URL`, `SESSION_SECRET` (base64url, no padding, 64 bytes)
 - `cargo run`
 
 ## Structure
