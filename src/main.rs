@@ -7,6 +7,9 @@ use app::user;
 use error::{Error, Result};
 use infra::user::Repository as UserRepo;
 use tracing_subscriber::{EnvFilter, layer::SubscriberExt, util::SubscriberInitExt};
+use tower_cookies::Key;
+use tower_sessions::session_store::ExpiredDeletion;
+use tower_sessions_sqlx_store::PostgresStore;
 
 #[tokio::main]
 async fn main() -> Result<()> {
@@ -27,9 +30,26 @@ async fn main() -> Result<()> {
     let auth_service = app::auth::Service::new(Arc::new(auth_provider));
 
     let sse_registry = http::SseRegistry::new();
-    let http_state = http::State::new(user_service, auth_service, sse_registry);
+    let session_key = Key::from(&cfg.http.session_secret);
+    let http_state = http::State::new(
+        user_service,
+        auth_service,
+        sse_registry,
+        session_key.clone(),
+    );
 
-    let app = http::router(http_state, cfg.http.session_secret.clone());
+    let session_store = PostgresStore::new(infra.db.clone());
+    let cleanup_store = session_store.clone();
+    tokio::spawn(async move {
+        if let Err(error) = cleanup_store
+            .continuously_delete_expired(std::time::Duration::from_secs(60 * 60))
+            .await
+        {
+            tracing::warn!(?error, "session cleanup task failed");
+        }
+    });
+
+    let app = http::router(http_state, session_store);
 
     let listener = tokio::net::TcpListener::bind(&addr).await?;
 

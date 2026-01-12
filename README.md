@@ -7,8 +7,8 @@
 ## Structure
 - `crates/domain`, `crates/app`, `crates/infra`, `crates/http`, `crates/utils`
 - `maud-extensions` (external crate)
-- `crates/http` handles SSE with one `/events` stream per visitor, keyed by an unsigned `session_id` cookie
-- `crates/http` integrates `axum-login` with `tower-sessions` for auth sessions
+- `crates/http` handles SSE with one `/events` stream per visitor, keyed by a signed `session_id` cookie
+- `crates/http` integrates `axum-login` with `tower-sessions` for auth sessions (SQLx Postgres store)
 - Auth routes: `GET /register`, `POST /register`, `GET /login`, `POST /login`, `POST /logout`, `GET /protected`
 
 ## Commands

@@ -12,12 +12,12 @@
 
 ## SSE + Session Notes
 - A single SSE connection per visitor is served at `/events`.
-- Session identity is stored in an unsigned `session_id` cookie (HTTP-only, SameSite Lax) in `crates/http`.
+- Session identity is stored in a signed `session_id` cookie (HTTP-only, SameSite Lax) in `crates/http`.
 - SSE events carry Datastar payloads; the client keeps one `EventSource` and applies patches.
 - TODOs in code track future work: signed cookies and per-tab SSE IDs.
 
 ## Auth + Session Notes
-- `crates/http` integrates `axum-login` with `tower-sessions` for auth sessions.
+- `crates/http` integrates `axum-login` with `tower-sessions` for auth sessions, using the SQLx Postgres session store.
 - Session cookies are encrypted using `SESSION_SECRET` (base64url) and user ids are attached to tracing via `http::request::set_user_id`.
 - Auth backend uses `app::auth::ProviderImpl` with infra `AuthRepository` and `Argon2Hasher`.
  - Auth uses a separate `credentials` table with `password_hash` (argon2 PHC string); app owns traits, infra implements hashing.

@@ -23,13 +23,16 @@ use tower_http::{
 use tracing::field;
 use std::time::Duration;
 use axum_login::{AuthManagerLayerBuilder, login_required};
-use tower_sessions::{MemoryStore, SessionManagerLayer};
+use time::Duration as SessionDuration;
+use tower_sessions::{Expiry, SessionManagerLayer, SessionStore};
+use tower_cookies::cookie::SameSite;
 
 #[derive(Clone)]
 pub struct State {
     pub user: app::user::Service,
     pub auth: app::auth::Service,
     pub sse: sse::Registry,
+    pub cookie_key: Key,
     pub surreal_guard: std::sync::Arc<dashmap::DashMap<String, std::sync::Arc<tokio::sync::Mutex<()>>>>,
     pub surreal_cancel: std::sync::Arc<dashmap::DashMap<String, tokio_util::sync::CancellationToken>>,
     pub surreal_seq: std::sync::Arc<AtomicU64>,
@@ -40,11 +43,13 @@ impl State {
         user: app::user::Service,
         auth: app::auth::Service,
         sse: sse::Registry,
+        cookie_key: Key,
     ) -> Self {
         Self {
             user,
             auth,
             sse,
+            cookie_key,
             surreal_guard: std::sync::Arc::new(dashmap::DashMap::new()),
             surreal_cancel: std::sync::Arc::new(dashmap::DashMap::new()),
             surreal_seq: std::sync::Arc::new(AtomicU64::new(0)),
@@ -52,14 +57,19 @@ impl State {
     }
 }
 
-pub fn router(
+pub fn router<Store>(
     state: State,
-    session_secret: Vec<u8>,
-) -> Router {
-    let session_store = MemoryStore::default();
-    let session_key = Key::from(&session_secret);
+    session_store: Store,
+) -> Router
+where
+    Store: SessionStore + Clone + Send + Sync + 'static,
+{
+    let session_key = state.cookie_key.clone();
     let session_layer = SessionManagerLayer::new(session_store)
+        .with_name("eran.sid")
         .with_secure(!cfg!(debug_assertions))
+        .with_same_site(SameSite::Lax)
+        .with_expiry(Expiry::OnInactivity(SessionDuration::days(7)))
         .with_private(session_key);
     let auth_layer = AuthManagerLayerBuilder::new(
         crate::auth::Backend::new(state.auth.clone()),

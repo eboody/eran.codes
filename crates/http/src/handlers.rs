@@ -211,7 +211,8 @@ pub async fn surreal_message_guarded(
     Extension(cookies): Extension<Cookies>,
     ReadSignals(signals): ReadSignals<SurrealSignals>,
 ) -> impl IntoResponse {
-    let session = crate::sse::Handle::from_cookies(&cookies);
+    let session =
+        crate::sse::Handle::from_cookies(&cookies, &state.cookie_key);
     let session_id = session.id().to_string();
     let sequence = state
         .surreal_seq
@@ -278,7 +279,8 @@ pub async fn surreal_message_cancel(
     Extension(cookies): Extension<Cookies>,
     ReadSignals(signals): ReadSignals<SurrealSignals>,
 ) -> impl IntoResponse {
-    let session = crate::sse::Handle::from_cookies(&cookies);
+    let session =
+        crate::sse::Handle::from_cookies(&cookies, &state.cookie_key);
     let session_id = session.id().to_string();
     let sequence = state
         .surreal_seq
@@ -329,7 +331,8 @@ pub async fn events(
     Extension(cookies): Extension<Cookies>,
 ) -> impl IntoResponse {
     // TODO: Support per-tab SSE streams by mixing a tab id into the session key.
-    let session = crate::sse::Handle::from_cookies(&cookies);
+    let session =
+        crate::sse::Handle::from_cookies(&cookies, &state.cookie_key);
     let session_id = session.id().to_string();
     let mut receiver = state.sse.subscribe(&session);
 

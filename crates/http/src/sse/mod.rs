@@ -7,7 +7,7 @@ pub const SESSION_COOKIE: &str = "session_id";
 
 mod session {
     use tower_cookies::cookie::SameSite;
-    use tower_cookies::{Cookie, Cookies};
+    use tower_cookies::{Cookie, Cookies, Key};
     use uuid::Uuid;
 
     use super::{Event, SESSION_COOKIE};
@@ -19,8 +19,11 @@ mod session {
     }
 
     impl Handle {
-        pub fn from_cookies(cookies: &Cookies) -> Self {
-            let id = ensure_session(cookies);
+        pub fn from_cookies(
+            cookies: &Cookies,
+            key: &Key,
+        ) -> Self {
+            let id = ensure_session(cookies, key);
             Self { id }
         }
 
@@ -51,20 +54,23 @@ mod session {
         }
     }
 
-    fn ensure_session(cookies: &Cookies) -> String {
-        if let Some(cookie) = cookies.get(SESSION_COOKIE) {
+    fn ensure_session(
+        cookies: &Cookies,
+        key: &Key,
+    ) -> String {
+        if let Some(cookie) = cookies.signed(key).get(SESSION_COOKIE) {
             return cookie.value().to_string();
         }
 
         let session_id = Uuid::new_v4().to_string();
-        // TODO: Sign this cookie once we add authenticated sessions.
         let cookie = Cookie::build((SESSION_COOKIE, session_id.clone()))
             .path("/")
             .http_only(true)
             .same_site(SameSite::Lax)
+            .secure(!cfg!(debug_assertions))
             .build();
 
-        cookies.add(cookie);
+        cookies.signed(key).add(cookie);
         session_id
     }
 }
