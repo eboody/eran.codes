@@ -33,6 +33,8 @@ impl maud::Render for Home {
                     p { "Click to run Surreal inline script." }
                     button class="btn" { "Run script" }
                 }
+
+                button class="btn" data-on:click="@get('/error-test')" { "Trigger error" }
                 (js())
             }
         };

@@ -62,3 +62,7 @@ pub async fn ping_partial(
 
     StatusCode::NO_CONTENT
 }
+
+pub async fn error_test() -> crate::Result<axum::response::Html<String>> {
+    Err(crate::error::Error::Internal)
+}

@@ -698,6 +698,7 @@ dependencies = [
  "http 0.1.0",
  "infra",
  "tokio",
+ "tracing",
  "tracing-subscriber",
  "utils",
 ]

@@ -32,6 +32,7 @@ axum = { version = "0.8.8" }
 
 derive_more = "2.1.0"
 tracing-subscriber = { version = "0.3.19", features = ["env-filter"] }
+tracing = "0.1.44"
 
 [workspace.dependencies]
 nutype = "0.6.2"
