@@ -106,6 +106,7 @@ impl Error {
                     title,
                     message,
                     status: status.as_u16(),
+                    user: None,
                 },
             },
         }

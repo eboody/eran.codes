@@ -22,17 +22,44 @@ pub async fn health(State(_state): State<crate::State>) -> &'static str {
 
 pub async fn home(
     State(_state): State<crate::State>,
+    auth_session: crate::auth::Session,
 ) -> crate::Result<axum::response::Html<String>> {
-    Ok(views::render(pages::Home))
+    Ok(views::render(pages::Home {
+        user: auth_session.user.as_ref().map(|user| {
+            crate::views::page::UserNav {
+                username: user.username.clone(),
+                email: user.email.clone(),
+            }
+        }),
+    }))
 }
 
-pub async fn login_form() -> crate::Result<axum::response::Html<String>> {
-    Ok(views::render(pages::Login { message: None }))
+pub async fn login_form(
+    auth_session: crate::auth::Session,
+) -> crate::Result<axum::response::Response> {
+    if auth_session.user.is_some() {
+        return Ok(Redirect::to("/protected").into_response());
+    }
+
+    Ok(views::render(pages::Login {
+        message: None,
+        user: None,
+    })
+    .into_response())
 }
 
 pub async fn register_form(
-) -> crate::Result<axum::response::Html<String>> {
-    Ok(views::render(pages::Register { message: None }))
+    auth_session: crate::auth::Session,
+) -> crate::Result<axum::response::Response> {
+    if auth_session.user.is_some() {
+        return Ok(Redirect::to("/protected").into_response());
+    }
+
+    Ok(views::render(pages::Register {
+        message: None,
+        user: None,
+    })
+    .into_response())
 }
 
 #[derive(Deserialize)]
@@ -59,11 +86,12 @@ pub async fn login(
 
     if let Some(user) = auth_session.authenticate(credentials).await? {
         auth_session.login(&user).await?;
-        return Ok(Redirect::to("/").into_response());
+        return Ok(Redirect::to("/protected").into_response());
     }
 
     Ok(views::render(pages::Login {
         message: Some("Invalid email or password."),
+        user: None,
     })
     .into_response())
 }
@@ -90,7 +118,7 @@ pub async fn register(
                 auth_session.authenticate(credentials).await?
             {
                 auth_session.login(&user).await?;
-                Ok(Redirect::to("/").into_response())
+                Ok(Redirect::to("/protected").into_response())
             } else {
                 Err(crate::Error::Internal)
             }
@@ -98,12 +126,14 @@ pub async fn register(
         Err(app::user::Error::EmailTaken) => Ok(views::render(
             pages::Register {
                 message: Some("Email already in use."),
+                user: None,
             },
         )
         .into_response()),
         Err(app::user::Error::Domain(_)) => Ok(views::render(
             pages::Register {
                 message: Some("Invalid input."),
+                user: None,
             },
         )
         .into_response()),
@@ -126,8 +156,12 @@ pub async fn protected(
     };
 
     Ok(views::render(pages::Protected {
-        username: user.username,
-        email: user.email,
+        username: user.username.clone(),
+        email: user.email.clone(),
+        user: Some(crate::views::page::UserNav {
+            username: user.username,
+            email: user.email,
+        }),
     })
     .into_response())
 }

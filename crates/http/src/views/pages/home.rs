@@ -1,6 +1,10 @@
 use maud_extensions::{css, inline_css};
 
-pub struct Home;
+use crate::views::page::UserNav;
+
+pub struct Home {
+    pub user: Option<UserNav>,
+}
 
 impl maud::Render for Home {
     fn render(&self) -> maud::Markup {
@@ -68,6 +72,7 @@ impl maud::Render for Home {
         crate::views::page::Layout {
             title: "Home",
             content,
+            user: self.user.clone(),
         }
         .render()
     }

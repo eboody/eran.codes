@@ -1,8 +1,11 @@
 use maud::Render;
 
+use crate::views::page::UserNav;
+
 pub struct Protected {
     pub username: String,
     pub email: String,
+    pub user: Option<UserNav>,
 }
 
 impl Render for Protected {
@@ -24,6 +27,7 @@ impl Render for Protected {
         crate::views::page::Layout {
             title: "Protected",
             content,
+            user: self.user.clone(),
         }
         .render()
     }

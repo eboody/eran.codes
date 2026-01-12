@@ -1,7 +1,10 @@
 use maud::Render;
 
+use crate::views::page::UserNav;
+
 pub struct Login<'a> {
     pub message: Option<&'a str>,
+    pub user: Option<UserNav>,
 }
 
 impl Render for Login<'_> {
@@ -40,6 +43,7 @@ impl Render for Login<'_> {
         crate::views::page::Layout {
             title: "Sign in",
             content,
+            user: self.user.clone(),
         }
         .render()
     }

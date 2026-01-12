@@ -1,8 +1,15 @@
 use maud::{Markup, Render};
 
+#[derive(Clone, Debug)]
+pub struct UserNav {
+    pub username: String,
+    pub email: String,
+}
+
 pub struct Layout<'a> {
     pub title: &'a str,
     pub content: Markup,
+    pub user: Option<UserNav>,
 }
 
 impl Render for Layout<'_> {
@@ -22,6 +29,34 @@ impl Render for Layout<'_> {
                     script src="/static/css-scope-inline.js" {}
                 }
                 body data-on:load__window="@get('/events')" {
+                    header class="container" {
+                        nav {
+                            ul {
+                                li {
+                                    a href="/" { "eran.codes" }
+                                }
+                            }
+                            @match &self.user {
+                                Some(user) => {
+                                    ul {
+                                        li { span { "Signed in as " (user.username) } }
+                                        li { a href="/protected" { "Account" } }
+                                        li {
+                                            form method="post" action="/logout" {
+                                                button type="submit" class="secondary" { "Sign out" }
+                                            }
+                                        }
+                                    }
+                                }
+                                None => {
+                                    ul {
+                                        li { a href="/login" { "Sign in" } }
+                                        li { a href="/register" { "Create account" } }
+                                    }
+                                }
+                            }
+                        }
+                    }
                     div id="error-target" {}
                     (self.content.clone())
                 }
@@ -35,6 +70,7 @@ pub struct Error {
     pub title: &'static str,
     pub message: &'static str,
     pub status: u16,
+    pub user: Option<UserNav>,
 }
 
 impl Render for Error {
@@ -54,6 +90,7 @@ impl Render for Error {
         Layout {
             title: self.title,
             content,
+            user: self.user.clone(),
         }
         .render()
     }

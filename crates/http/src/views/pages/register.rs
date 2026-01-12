@@ -1,7 +1,10 @@
 use maud::Render;
 
+use crate::views::page::UserNav;
+
 pub struct Register<'a> {
     pub message: Option<&'a str>,
+    pub user: Option<UserNav>,
 }
 
 impl Render for Register<'_> {
@@ -45,6 +48,7 @@ impl Render for Register<'_> {
         crate::views::page::Layout {
             title: "Create account",
             content,
+            user: self.user.clone(),
         }
         .render()
     }
