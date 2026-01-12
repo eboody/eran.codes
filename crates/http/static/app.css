@@ -109,6 +109,11 @@ header.container nav {
   padding-left: 1.1rem;
 }
 
+.flow-card ol {
+  margin: 0.8rem 0 1rem;
+  padding-left: 1.3rem;
+}
+
 .highlights ul {
   margin: 0.8rem 0 0;
   padding-left: 1.1rem;

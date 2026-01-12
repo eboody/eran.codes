@@ -95,6 +95,26 @@ impl maud::Render for Home {
                     }
                 }
 
+                section {
+                    h2 { "Demo 2: Persistent session resilience" }
+                    article class="flow-card" {
+                        p {
+                            "Log in, restart the server, and stay authenticated. "
+                            "Sessions are stored in Postgres and expire on inactivity."
+                        }
+                        ol {
+                            li { "Sign in or register to create a session." }
+                            li { "Restart the server process." }
+                            li { "Reload " strong { "/protected" } " and remain signed in." }
+                        }
+                        p class="muted" {
+                            "Session records live in the "
+                            strong { "tower_sessions.session" }
+                            " table and are cleaned up automatically."
+                        }
+                    }
+                }
+
             }
         };
 
