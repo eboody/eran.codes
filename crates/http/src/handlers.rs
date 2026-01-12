@@ -294,10 +294,11 @@ pub async fn db_check_partial(
     tracing::info!(target: "demo.db", "db check requested");
 
     let exists = state.user.find_by_email(email.clone()).await.ok().flatten().is_some();
+    let trace = trace_snapshot(&state);
     let partial = views::partials::DbCheck {
         email: &email,
         exists,
-        trace: trace_snapshot(&state),
+        trace,
     };
 
     (

@@ -56,7 +56,7 @@ fn test_app() -> axum::Router {
     let auth_service = auth::Service::disabled();
     let sse_registry = app_http::SseRegistry::new();
     let cookie_key = Key::generate();
-    let trace_log = app_http::trace_log::Store::new();
+    let trace_log = app_http::trace_log::Store::new(sse_registry.clone());
     let state = app_http::State::new(
         user_service,
         auth_service,
@@ -92,6 +92,7 @@ async fn home_page_includes_demo_sections() {
     assert!(body.contains("Check auth status"));
     assert!(body.contains("Show session details"));
     assert!(body.contains("Check demo@example.com"));
+    assert!(body.contains("Live backend log"));
     assert!(body.contains("Start demo"));
     assert!(body.contains("Sign in"));
     assert!(body.contains("/register"));

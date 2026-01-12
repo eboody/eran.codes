@@ -147,7 +147,7 @@ where
         .layer(from_fn(crate::request::set_context_middleware))
         .layer(from_fn(crate::auth::set_user_context_middleware))
         .layer(from_fn_with_state(
-            state.trace_log.clone(),
+            state.clone(),
             crate::trace_log::audit_middleware,
         ));
 

@@ -254,6 +254,16 @@ impl maud::Render for Home {
                     }
                 }
 
+                section {
+                    h2 { "Live backend log (SSE)" }
+                    p class="muted" {
+                        "Actions above stream real request, trace, and DB events into this log via SSE."
+                    }
+                    div id="live-log-target" class="demo-result muted" {
+                        "No events yet. Trigger a demo action to start streaming."
+                    }
+                }
+
             }
         };
 

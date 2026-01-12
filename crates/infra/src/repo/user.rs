@@ -16,6 +16,7 @@ impl UserRepository for SqlxUserRepository {
         &self,
         email: &user::Email,
     ) -> Result<Option<user::User>> {
+        let start = std::time::Instant::now();
         tracing::info!(
             target: "demo.db",
             message = "db query",
@@ -32,6 +33,11 @@ impl UserRepository for SqlxUserRepository {
         .fetch_optional(&self.pg)
         .await
         .map_err(|error| Error::Repo(error.to_string()))?;
+        tracing::info!(
+            target: "demo.db",
+            message = "db query complete",
+            db_duration_ms = start.elapsed().as_millis() as u64
+        );
 
         let Some(row) = record else {
             return Ok(None);
@@ -58,6 +64,7 @@ impl UserRepository for SqlxUserRepository {
         user: &user::User,
         password_hash: &str,
     ) -> Result<()> {
+        let start = std::time::Instant::now();
         tracing::info!(
             target: "demo.db",
             message = "db query",
@@ -81,12 +88,18 @@ impl UserRepository for SqlxUserRepository {
         .execute(&mut *tx)
         .await
         .map_err(|error| Error::Repo(error.to_string()))?;
+        tracing::info!(
+            target: "demo.db",
+            message = "db query complete",
+            db_duration_ms = start.elapsed().as_millis() as u64
+        );
 
         tracing::info!(
             target: "demo.db",
             message = "db query",
             db_statement = "INSERT INTO credentials (user_id, password_hash) VALUES ($1, $2)"
         );
+        let start = std::time::Instant::now();
         sqlx::query(
             r#"
             INSERT INTO credentials (user_id, password_hash)
@@ -98,6 +111,11 @@ impl UserRepository for SqlxUserRepository {
         .execute(&mut *tx)
         .await
         .map_err(|error| Error::Repo(error.to_string()))?;
+        tracing::info!(
+            target: "demo.db",
+            message = "db query complete",
+            db_duration_ms = start.elapsed().as_millis() as u64
+        );
 
         tx.commit()
             .await

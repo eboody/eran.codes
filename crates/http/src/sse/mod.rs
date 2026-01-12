@@ -157,4 +157,20 @@ impl Registry {
             .map(|_| ())
             .map_err(|_| SendError::SendFailed)
     }
+
+    pub fn send_by_id(
+        &self,
+        session_id: &str,
+        event: Event,
+    ) -> SendResult<()> {
+        let session = self
+            .sessions
+            .get(session_id)
+            .ok_or(SendError::SessionMissing)?;
+
+        session
+            .send(event)
+            .map(|_| ())
+            .map_err(|_| SendError::SendFailed)
+    }
 }

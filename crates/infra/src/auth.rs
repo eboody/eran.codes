@@ -24,6 +24,7 @@ impl Repository for AuthRepository {
         &self,
         email: &str,
     ) -> Result<Option<AuthRecord>> {
+        let start = std::time::Instant::now();
         tracing::info!(
             target: "demo.db",
             message = "db query",
@@ -41,6 +42,11 @@ impl Repository for AuthRepository {
         .fetch_optional(&self.pg)
         .await
         .map_err(Self::map_error)?;
+        tracing::info!(
+            target: "demo.db",
+            message = "db query complete",
+            db_duration_ms = start.elapsed().as_millis() as u64
+        );
 
         Ok(record.map(|row| AuthRecord {
             id: row.get::<uuid::Uuid, _>("id").to_string(),
@@ -54,6 +60,7 @@ impl Repository for AuthRepository {
         &self,
         user_id: &str,
     ) -> Result<Option<AuthRecord>> {
+        let start = std::time::Instant::now();
         tracing::info!(
             target: "demo.db",
             message = "db query",
@@ -75,6 +82,11 @@ impl Repository for AuthRepository {
         .fetch_optional(&self.pg)
         .await
         .map_err(Self::map_error)?;
+        tracing::info!(
+            target: "demo.db",
+            message = "db query complete",
+            db_duration_ms = start.elapsed().as_millis() as u64
+        );
 
         Ok(record.map(|row| AuthRecord {
             id: row.get::<uuid::Uuid, _>("id").to_string(),
