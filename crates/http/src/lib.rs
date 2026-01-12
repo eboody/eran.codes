@@ -151,7 +151,6 @@ pub fn router(
         .route_layer(from_fn(crate::trace::record_route_middleware))
         .layer(CookieManagerLayer::new())
         .layer(request_layers)
-        .layer(auth_layer)
         .with_state(state.clone());
 
     let protected = Router::new()
@@ -183,5 +182,5 @@ pub fn router(
         }
     };
 
-    router
+    router.layer(auth_layer)
 }
