@@ -31,9 +31,6 @@ async fn main() -> Result<()> {
     tracing::info!("listening on http://{}", addr);
     axum::serve(listener, app).await?;
 
-    #[cfg(feature = "otel")]
-    shutdown_tracing();
-
     Ok(())
 }
 
@@ -43,9 +40,6 @@ fn init_tracing() {
     let log_format = std::env::var("LOG_FORMAT").unwrap_or_else(|_| "pretty".to_string());
 
     let subscriber = tracing_subscriber::registry().with(env_filter);
-
-    #[cfg(feature = "otel")]
-    let subscriber = subscriber.with(otel_layer());
 
     if log_format == "json" {
         subscriber
@@ -61,24 +55,4 @@ fn init_tracing() {
             .with(tracing_subscriber::fmt::layer().pretty())
             .init();
     }
-}
-
-#[cfg(feature = "otel")]
-fn otel_layer(
-) -> tracing_opentelemetry::OpenTelemetryLayer<
-    tracing_subscriber::Registry,
-    opentelemetry_sdk::trace::Tracer,
-> {
-    let tracer = opentelemetry_otlp::new_pipeline()
-        .tracing()
-        .with_exporter(opentelemetry_otlp::new_exporter().tonic())
-        .install_batch(opentelemetry_sdk::runtime::Tokio)
-        .expect("otlp tracer init failed");
-
-    tracing_opentelemetry::layer().with_tracer(tracer)
-}
-
-#[cfg(feature = "otel")]
-fn shutdown_tracing() {
-    opentelemetry::global::shutdown_tracer_provider();
 }

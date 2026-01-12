@@ -58,10 +58,6 @@ Never log plaintext passwords or secrets. Avoid logging raw emails; use a hash i
 - Prod: `RUST_LOG=info,http=info,app=info,infra=info,sqlx=warn`
 - Prefer JSON logs in production; pretty logs locally.
 
-## Optional Export
-If needed, add OpenTelemetry export (Jaeger/OTLP) behind a feature flag. Keep it wired in
-`main` and ensure no direct dependencies in `app` or `domain`.
-
 ## Required for New Work
 When adding new endpoints or use-cases:
 1) Ensure HTTP spans include request/session/user context.
