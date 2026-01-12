@@ -19,10 +19,10 @@ async fn main() -> Result<()> {
     let infra = infra::Infra::init(&cfg.infra).await.map_err(Error::Infra)?;
 
     let user_repo = Arc::new(UserRepo::new(infra.db.clone()));
-    let user_service = user::Service::new(user_repo);
+    let auth_hasher = Arc::new(infra::auth::Argon2Hasher::new());
+    let user_service = user::Service::new(user_repo, auth_hasher.clone());
 
     let auth_repo = Arc::new(infra::auth::AuthRepository::new(infra.db.clone()));
-    let auth_hasher = Arc::new(infra::auth::Argon2Hasher::new());
     let auth_provider = app::auth::ProviderImpl::new(auth_repo, auth_hasher);
     let auth_service = app::auth::Service::new(Arc::new(auth_provider));
 

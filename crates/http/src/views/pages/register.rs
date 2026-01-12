@@ -1,24 +1,28 @@
 use maud::Render;
 
-pub struct Login<'a> {
+pub struct Register<'a> {
     pub message: Option<&'a str>,
 }
 
-impl Render for Login<'_> {
+impl Render for Register<'_> {
     fn render(&self) -> maud::Markup {
         let content = maud::html! {
             main class="container" {
                 article {
                     header {
-                        h1 { "Sign in" }
+                        h1 { "Create account" }
                     }
-                    p { "Use your email address to continue." }
+                    p { "Pick a username and password to get started." }
 
                     @if let Some(message) = self.message {
                         p role="alert" { (message) }
                     }
 
-                    form method="post" action="/login" {
+                    form method="post" action="/register" {
+                        label {
+                            "Username"
+                            input type="text" name="username" required;
+                        }
                         label {
                             "Email"
                             input type="email" name="email" required;
@@ -27,18 +31,19 @@ impl Render for Login<'_> {
                             "Password"
                             input type="password" name="password" required;
                         }
-                        button type="submit" { "Sign in" }
+                        button type="submit" { "Create account" }
                     }
+
                     p {
-                        "Need an account? "
-                        a href="/register" { "Create one" }
+                        "Already have an account? "
+                        a href="/login" { "Sign in" }
                     }
                 }
             }
         };
 
         crate::views::page::Layout {
-            title: "Sign in",
+            title: "Create account",
             content,
         }
         .render()

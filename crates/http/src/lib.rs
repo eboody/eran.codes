@@ -22,7 +22,7 @@ use tower_http::{
 };
 use tracing::field;
 use std::time::Duration;
-use axum_login::AuthManagerLayerBuilder;
+use axum_login::{AuthManagerLayerBuilder, login_required};
 use tower_sessions::{MemoryStore, SessionManagerLayer};
 
 #[derive(Clone)]
@@ -154,10 +154,20 @@ pub fn router(
         .layer(auth_layer)
         .with_state(state.clone());
 
+    let protected = Router::new()
+        .route("/protected", get(crate::handlers::protected))
+        .route_layer(login_required!(crate::auth::Backend, login_url = "/login"));
+
     let pages = Router::new()
         .route("/", get(crate::handlers::home))
         .route("/login", get(crate::handlers::login_form).post(crate::handlers::login))
+        .route(
+            "/register",
+            get(crate::handlers::register_form)
+                .post(crate::handlers::register),
+        )
         .route("/logout", axum::routing::post(crate::handlers::logout))
+        .merge(protected)
         .route_layer(from_fn(crate::trace::record_route_middleware))
         .with_state(state);
 

@@ -9,6 +9,7 @@
 - `maud-extensions` (external crate)
 - `crates/http` handles SSE with one `/events` stream per visitor, keyed by an unsigned `session_id` cookie
 - `crates/http` integrates `axum-login` with `tower-sessions` for auth sessions
+- Auth routes: `GET /register`, `POST /register`, `GET /login`, `POST /login`, `POST /logout`, `GET /protected`
 
 ## Commands
 - `cargo build`
