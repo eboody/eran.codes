@@ -1,4 +1,5 @@
 use dashmap::DashMap;
+use datastar::prelude::{DatastarEvent, ExecuteScript, PatchElements, PatchSignals};
 use std::sync::Arc;
 use tokio::sync::broadcast;
 
@@ -72,26 +73,38 @@ pub use session::{Handle, Session};
 
 #[derive(Clone, Debug)]
 pub struct Event {
-    pub name: Option<String>,
-    pub data: String,
+    inner: Arc<DatastarEvent>,
 }
 
 impl Event {
-    pub fn data(data: impl Into<String>) -> Self {
+    pub fn patch_elements(elements: impl Into<String>) -> Self {
         Self {
-            name: None,
-            data: data.into(),
+            inner: Arc::new(PatchElements::new(elements).into_datastar_event()),
         }
     }
 
-    pub fn named(
-        name: impl Into<String>,
-        data: impl Into<String>,
-    ) -> Self {
+    pub fn patch_signals(signals: serde_json::Value) -> Self {
         Self {
-            name: Some(name.into()),
-            data: data.into(),
+            inner: Arc::new(
+                PatchSignals::new(signals.to_string()).into_datastar_event(),
+            ),
         }
+    }
+
+    pub fn execute_script(script: impl Into<String>) -> Self {
+        Self {
+            inner: Arc::new(ExecuteScript::new(script).into_datastar_event()),
+        }
+    }
+
+    pub fn from_event(event: DatastarEvent) -> Self {
+        Self {
+            inner: Arc::new(event),
+        }
+    }
+
+    pub fn as_datastar_event(&self) -> &DatastarEvent {
+        &self.inner
     }
 }
 

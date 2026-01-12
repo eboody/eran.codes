@@ -76,10 +76,7 @@ pub async fn events(
         loop {
             match receiver.recv().await {
                 Ok(event) => {
-                    let mut sse_event = axum::response::sse::Event::default().data(event.data);
-                    if let Some(name) = event.name {
-                        sse_event = sse_event.event(name);
-                    }
+                    let sse_event = event.as_datastar_event().write_as_axum_sse_event();
                     yield Ok::<_, Infallible>(sse_event);
                 }
                 Err(RecvError::Lagged(_)) => continue,

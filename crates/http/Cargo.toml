@@ -27,6 +27,7 @@ uuid = { version = "1.12.1", features = ["v4"] }
 tower-cookies = "0.11.0"
 moddef = { workspace = true }
 tower = "0.5.2"
+serde_json = "1.0.140"
 
 [features]
 live-reload = ["tower-livereload"]
