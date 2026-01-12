@@ -7,6 +7,7 @@ pub type Result<T> = core::result::Result<T, Error>;
 #[derive(Debug, From)]
 pub enum Error {
     User(app::user::Error),
+    Auth(app::auth::Error),
     Json(axum::extract::rejection::JsonRejection),
     Internal,
 }
@@ -46,6 +47,15 @@ impl axum::response::IntoResponse for Error {
     }
 }
 
+impl From<axum_login::Error<crate::auth::Backend>> for Error {
+    fn from(value: axum_login::Error<crate::auth::Backend>) -> Self {
+        match value {
+            axum_login::Error::Backend(error) => Error::Auth(error),
+            axum_login::Error::Session(_) => Error::Internal,
+        }
+    }
+}
+
 impl Error {
     pub fn into_render_response(&self, kind: crate::request::Kind) -> Response {
         let (status, title, message) = match self {
@@ -65,6 +75,11 @@ impl Error {
                 axum::http::StatusCode::CONFLICT,
                 "Email already in use",
                 "Email already in use.",
+            ),
+            Error::Auth(_) => (
+                axum::http::StatusCode::UNAUTHORIZED,
+                "Unauthorized",
+                "Unable to authenticate.",
             ),
 
             Error::Internal => (

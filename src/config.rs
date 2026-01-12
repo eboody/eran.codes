@@ -12,6 +12,7 @@ pub(crate) struct Config {
 pub struct HttpConfig {
     pub host: String,
     pub port: u16,
+    pub session_secret: Vec<u8>,
 }
 
 impl HttpConfig {
@@ -25,6 +26,20 @@ impl HttpConfig {
                 key: "PORT",
             })?;
 
+        let session_secret =
+            utils::envs::get_env_b64u_as_u8s("SESSION_SECRET")
+                .map_err(|_| Error::InvalidEnv {
+                    key: "SESSION_SECRET",
+                    reason: "must be base64url without padding"
+                        .to_string(),
+                })?;
+        if session_secret.len() < 32 {
+            return Err(Error::InvalidEnv {
+                key: "SESSION_SECRET",
+                reason: "must be at least 32 bytes".to_string(),
+            });
+        }
+
         Ok(Self {
             host,
             port: port_str.parse().map_err(|_| {
@@ -34,6 +49,7 @@ impl HttpConfig {
                         .to_string(),
                 }
             })?,
+            session_secret,
         })
     }
 }

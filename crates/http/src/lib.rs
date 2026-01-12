@@ -1,5 +1,6 @@
 mod error;
 mod handlers;
+mod auth;
 pub mod request;
 pub mod sse;
 mod trace;
@@ -11,7 +12,7 @@ use axum::{Router, routing::get};
 pub use error::{Error, Result};
 pub use sse::Registry as SseRegistry;
 use tower::ServiceBuilder;
-use tower_cookies::CookieManagerLayer;
+use tower_cookies::{CookieManagerLayer, Key};
 use tower_http::{
     classify::ServerErrorsFailureClass,
     request_id::{MakeRequestUuid, PropagateRequestIdLayer, SetRequestIdLayer},
@@ -20,20 +21,41 @@ use tower_http::{
 };
 use tracing::field;
 use std::time::Duration;
+use axum_login::AuthManagerLayerBuilder;
+use tower_sessions::{MemoryStore, SessionManagerLayer};
 
 #[derive(Clone)]
 pub struct State {
     pub user: app::user::Service,
+    pub auth: app::auth::Service,
     pub sse: sse::Registry,
 }
 
 impl State {
-    pub fn new(user: app::user::Service, sse: sse::Registry) -> Self {
-        Self { user, sse }
+    pub fn new(
+        user: app::user::Service,
+        auth: app::auth::Service,
+        sse: sse::Registry,
+    ) -> Self {
+        Self { user, auth, sse }
     }
 }
 
-pub fn router(state: State) -> Router {
+pub fn router(
+    state: State,
+    session_secret: Vec<u8>,
+) -> Router {
+    let session_store = MemoryStore::default();
+    let session_key = Key::from(&session_secret);
+    let session_layer = SessionManagerLayer::new(session_store)
+        .with_secure(!cfg!(debug_assertions))
+        .with_private(session_key);
+    let auth_layer = AuthManagerLayerBuilder::new(
+        crate::auth::Backend::new(state.auth.clone()),
+        session_layer,
+    )
+    .build();
+
     let request_layers = ServiceBuilder::new()
         .layer(
             TraceLayer::new_for_http()
@@ -88,6 +110,7 @@ pub fn router(state: State) -> Router {
                     tracing::error!(parent: span, error = %error, "request failed");
                 }),
         )
+        .layer(from_fn(crate::auth::set_user_context_middleware))
         .layer(from_fn(crate::request::set_context_middleware))
         .layer(SetRequestIdLayer::new(
             axum::http::HeaderName::from_static("x-request-id"),
@@ -108,11 +131,14 @@ pub fn router(state: State) -> Router {
         )
         .route_layer(from_fn(crate::trace::record_route_middleware))
         .layer(CookieManagerLayer::new())
+        .layer(auth_layer)
         .layer(request_layers)
         .with_state(state.clone());
 
     let pages = Router::new()
         .route("/", get(crate::handlers::home))
+        .route("/login", get(crate::handlers::login_form).post(crate::handlers::login))
+        .route("/logout", axum::routing::post(crate::handlers::logout))
         .route_layer(from_fn(crate::trace::record_route_middleware))
         .with_state(state);
 

@@ -2,7 +2,8 @@ use async_stream::stream;
 use axum::{
     extract::{Extension, State},
     http::StatusCode,
-    response::{IntoResponse, Sse},
+    response::{IntoResponse, Redirect, Sse},
+    Form,
 };
 use core::convert::Infallible;
 use maud::Render;
@@ -10,6 +11,8 @@ use tokio::sync::broadcast::error::RecvError;
 use tower_cookies::Cookies;
 
 use crate::views::{self, pages};
+use serde::Deserialize;
+use secrecy::SecretString;
 
 pub async fn health(State(_state): State<crate::State>) -> &'static str {
     "ok"
@@ -19,6 +22,43 @@ pub async fn home(
     State(_state): State<crate::State>,
 ) -> crate::Result<axum::response::Html<String>> {
     Ok(views::render(pages::Home))
+}
+
+pub async fn login_form() -> crate::Result<axum::response::Html<String>> {
+    Ok(views::render(pages::Login { message: None }))
+}
+
+#[derive(Deserialize)]
+pub struct LoginForm {
+    pub email: String,
+    pub password: String,
+}
+
+pub async fn login(
+    mut auth_session: crate::auth::Session,
+    Form(form): Form<LoginForm>,
+) -> crate::Result<axum::response::Response> {
+    let credentials = app::auth::Credentials {
+        email: form.email,
+        password: SecretString::new(form.password.into()),
+    };
+
+    if let Some(user) = auth_session.authenticate(credentials).await? {
+        auth_session.login(&user).await?;
+        return Ok(Redirect::to("/").into_response());
+    }
+
+    Ok(views::render(pages::Login {
+        message: Some("Invalid email or password."),
+    })
+    .into_response())
+}
+
+pub async fn logout(
+    mut auth_session: crate::auth::Session,
+) -> crate::Result<axum::response::Response> {
+    auth_session.logout().await?;
+    Ok(Redirect::to("/").into_response())
 }
 
 const PING_EVENT: &str = "ping-patch";

@@ -8,11 +8,14 @@ app = { path = "../app" }
 serde = { version = "1.0.228", features = ["derive"] }
 derive_more = "2.1.1"
 tracing = "0.1.44"
+axum-login = "0.18.0"
+tower-sessions = { version = "0.14.0", features = ["memory-store", "private"] }
 
 axum = "0.8.8"
 maud = { version = "0.27.0", features = ["axum"] }
 tower-http = { version = "0.6.8", features = ["fs", "request-id", "trace"] }
 maud-extensions = "0.1.2"
+secrecy = "0.10.3"
 
 jiff = "0.2.17"
 tower-livereload = { version = "0.10.1", optional = true }
@@ -21,7 +24,7 @@ async-stream = "0.3.6"
 tokio = { version = "1", features = ["sync", "time"] }
 dashmap = "6.1.0"
 uuid = { version = "1.12.1", features = ["v4"] }
-tower-cookies = "0.10.0"
+tower-cookies = "0.11.0"
 moddef = { workspace = true }
 tower = "0.5.2"
 

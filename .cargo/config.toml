@@ -3,6 +3,7 @@ RUST_LOG = "info,sqlx=warn,tower_http=info,eran_codes=debug"
 DATABASE_URL = "postgres://app:app@localhost:5432/app"
 HOST = "localhost"
 PORT = "3002"
+SESSION_SECRET = "GsbW97plNwbuy487bTXIvvtCuYJLQ3ThJg-TIUrEfZw"
 
 [alias]
 r = "run"

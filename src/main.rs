@@ -21,10 +21,12 @@ async fn main() -> Result<()> {
     let user_repo = Arc::new(UserRepo::new(infra.db.clone()));
     let user_service = user::Service::new(user_repo);
 
-    let sse_registry = http::SseRegistry::new();
-    let http_state = http::State::new(user_service, sse_registry);
+    let auth_service = app::auth::Service::disabled();
 
-    let app = http::router(http_state);
+    let sse_registry = http::SseRegistry::new();
+    let http_state = http::State::new(user_service, auth_service, sse_registry);
+
+    let app = http::router(http_state, cfg.http.session_secret.clone());
 
     let listener = tokio::net::TcpListener::bind(&addr).await?;
 
