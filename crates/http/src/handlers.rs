@@ -279,6 +279,33 @@ fn trace_snapshot(state: &crate::State) -> Vec<crate::trace_log::Entry> {
     state.trace_log.snapshot(&request_id)
 }
 
+#[derive(Deserialize)]
+pub struct DbCheckQuery {
+    pub email: Option<String>,
+}
+
+pub async fn db_check_partial(
+    State(state): State<crate::State>,
+    axum::extract::Query(query): axum::extract::Query<DbCheckQuery>,
+) -> impl IntoResponse {
+    let email = query
+        .email
+        .unwrap_or_else(|| "demo@example.com".to_string());
+    tracing::info!(target: "demo.db", "db check requested");
+
+    let exists = state.user.find_by_email(email.clone()).await.ok().flatten().is_some();
+    let partial = views::partials::DbCheck {
+        email: &email,
+        exists,
+        trace: trace_snapshot(&state),
+    };
+
+    (
+        StatusCode::OK,
+        axum::response::Html(partial.render().into_string()),
+    )
+}
+
 #[derive(Debug, Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub(crate) struct SurrealSignals {

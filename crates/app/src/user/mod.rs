@@ -75,6 +75,15 @@ impl Service {
 
         Ok(new_user.id)
     }
+
+    pub async fn find_by_email(
+        &self,
+        email: String,
+    ) -> Result<Option<user::User>> {
+        let email =
+            user::Email::try_new(email).map_err(domain::user::Error::from)?;
+        self.users.find_by_email(&email).await
+    }
 }
 
 pub fn validate_input(

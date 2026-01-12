@@ -136,18 +136,19 @@ where
                     tracing::error!(parent: span, error = %error, "request failed");
                 }),
         )
-        .layer(from_fn(crate::auth::set_user_context_middleware))
-        .layer(from_fn(crate::request::set_context_middleware))
-        .layer(from_fn_with_state(
-            state.trace_log.clone(),
-            crate::trace_log::audit_middleware,
-        ))
         .layer(SetRequestIdLayer::new(
             axum::http::HeaderName::from_static("x-request-id"),
             MakeRequestUuid,
         ))
         .layer(PropagateRequestIdLayer::new(
             axum::http::HeaderName::from_static("x-request-id"),
+        ));
+    let request_layers = request_layers
+        .layer(from_fn(crate::request::set_context_middleware))
+        .layer(from_fn(crate::auth::set_user_context_middleware))
+        .layer(from_fn_with_state(
+            state.trace_log.clone(),
+            crate::trace_log::audit_middleware,
         ));
 
     let base = Router::new()
@@ -156,6 +157,7 @@ where
         .route("/partials/session-status", get(crate::handlers::session_status_partial))
         .route("/partials/request-meta", get(crate::handlers::request_meta_partial))
         .route("/partials/boundary-check", get(crate::handlers::boundary_check_partial))
+        .route("/partials/db-check", get(crate::handlers::db_check_partial))
         .route(
             "/partials/surreal-message-guarded",
             get(crate::handlers::surreal_message_guarded),

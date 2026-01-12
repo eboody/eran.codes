@@ -1,7 +1,8 @@
-moddef::moddef!(mod { auth_status, boundary_check, error, ping, request_meta, session_status, trace_log });
+moddef::moddef!(mod { auth_status, boundary_check, db_check, error, ping, request_meta, session_status, trace_log });
 
 pub use auth_status::AuthStatus;
 pub use boundary_check::BoundaryCheck;
+pub use db_check::DbCheck;
 pub use error::Error;
 pub use ping::Ping;
 pub use request_meta::RequestMeta;

@@ -124,6 +124,17 @@ impl maud::Render for Home {
                         div id="session-status-target" class="demo-result muted" {
                             "Click “Show session details” to load the session id and expiry."
                         }
+                        div class="cta-row" {
+                            button class="button secondary" data-on:click="@get('/partials/db-check?email=demo@example.com')" {
+                                "Check demo@example.com"
+                            }
+                            button class="button secondary" data-on:click="@get('/partials/db-check?email=missing@example.com')" {
+                                "Check missing@example.com"
+                            }
+                        }
+                        div id="db-check-target" class="demo-result muted" {
+                            "Run a DB lookup to see the query and trace output."
+                        }
                     }
                 }
 
