@@ -166,6 +166,21 @@ impl maud::Render for Home {
                     }
                 }
 
+                section {
+                    h2 { "Demo 6: SSE and Datastar patches" }
+                    article class="flow-card" {
+                        p { "Live updates stream over a single SSE connection per visitor." }
+                        ul {
+                            li { "Datastar patches update signals and fragments in place." }
+                            li { "Session-scoped SSE handle keyed by signed cookie." }
+                            li { "Client keeps one EventSource at /events." }
+                        }
+                        p class="muted" {
+                            "Use the ping and signal demos to observe live updates."
+                        }
+                    }
+                }
+
             }
         };
 
