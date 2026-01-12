@@ -65,19 +65,25 @@ impl maud::Render for Home {
 }
 
 inline_js! {
-    const source = new EventSource("/events");
-    source.addEventListener("ping-patch", (event) => {
-      const target = document.querySelector("#ping-target");
-      if (!target) return;
-      target.outerHTML = event.data;
-    });
+    me().on("surreal_hi", async (ev) => {
+      let hi_running_name = "surreal_hi_running";
+      let element = me(".clickable button");
+      element.disabled = true;
 
-    me(".clickable button").on("click", async (el) => {
-      let element = me(el);
-      let previous_text = me(el).textContent;
+      let previous_text = element.textContent;
       element.textContent = "Surreal says hi!";
       await sleep(1000);
       element.textContent = previous_text;
+
+      element.disabled = false;
+    });
+
+    me(".clickable button").on("click", (el) => {
+      if (el.disabled) {
+        return;
+      } else {
+        me(el).send("surreal_hi");
+      }
     });
 }
 

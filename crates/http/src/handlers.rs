@@ -61,8 +61,6 @@ pub async fn logout(
     Ok(Redirect::to("/").into_response())
 }
 
-const PING_EVENT: &str = "ping-patch";
-
 pub async fn events(
     State(state): State<crate::State>,
     Extension(cookies): Extension<Cookies>,
@@ -97,17 +95,10 @@ pub async fn events(
 }
 
 pub async fn ping_partial(
-    State(state): State<crate::State>,
-    Extension(cookies): Extension<Cookies>,
+    State(_state): State<crate::State>,
 ) -> impl IntoResponse {
     let elements = views::partials::Ping.render();
-    let session = crate::sse::Handle::from_cookies(&cookies);
-    let event = crate::sse::Event::named(PING_EVENT, elements);
-    if let Err(error) = state.sse.send(&session, event) {
-        tracing::warn!(session_id = %session.id(), error = ?error, "sse send failed");
-    }
-
-    StatusCode::NO_CONTENT
+    (StatusCode::OK, axum::response::Html(elements.into_string()))
 }
 
 pub async fn error_test() -> crate::Result<axum::response::Html<String>> {
