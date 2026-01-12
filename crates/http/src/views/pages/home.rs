@@ -134,6 +134,19 @@ impl maud::Render for Home {
                     }
                 }
 
+                section {
+                    h2 { "Demo 4: Error handling showcase" }
+                    article class="flow-card" {
+                        p { "Errors are mapped centrally into user-facing responses." }
+                        ul {
+                            li { "Consistent status + message rendering." }
+                            li { "HTML page fallback for standard requests." }
+                            li { "Datastar-aware partials for interactive flows." }
+                        }
+                        a class="button secondary" href="/error-test" { "Trigger error" }
+                    }
+                }
+
             }
         };
 
