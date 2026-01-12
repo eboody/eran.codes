@@ -147,6 +147,25 @@ impl maud::Render for Home {
                     }
                 }
 
+                section {
+                    h2 { "Demo 5: Tracing and observability" }
+                    article class="flow-card" {
+                        p { "Each request is wrapped in structured spans with key context fields." }
+                        ul {
+                            li { "request_id, session_id, user_id, route, and latency_ms." }
+                            li { "User id is injected from the auth middleware." }
+                            li { "Structured logs support JSON or pretty output." }
+                        }
+                        p class="muted" {
+                            "Configure with "
+                            code { "RUST_LOG" }
+                            " and "
+                            code { "LOG_FORMAT=json" }
+                            " for structured output."
+                        }
+                    }
+                }
+
             }
         };
 

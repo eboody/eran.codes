@@ -85,6 +85,7 @@ async fn home_page_includes_demo_sections() {
     assert!(body.contains("Demo 2: Persistent session resilience"));
     assert!(body.contains("Demo 3: Architecture boundary map"));
     assert!(body.contains("Demo 4: Error handling showcase"));
+    assert!(body.contains("Demo 5: Tracing and observability"));
     assert!(body.contains("Start demo"));
     assert!(body.contains("Sign in"));
     assert!(body.contains("/register"));
