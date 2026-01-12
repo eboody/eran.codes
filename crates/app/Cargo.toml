@@ -10,3 +10,6 @@ derive_more = "2.1.0"
 tracing = "0.1.44"
 async-trait = "0.1.86"
 secrecy = "0.10.3"
+
+[dev-dependencies]
+tokio = { version = "1", features = ["macros", "rt-multi-thread"] }

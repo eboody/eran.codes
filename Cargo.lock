@@ -91,6 +91,7 @@ dependencies = [
  "derive_more",
  "domain",
  "secrecy",
+ "tokio",
  "tracing",
 ]
 
@@ -1128,11 +1129,13 @@ version = "0.1.0"
 dependencies = [
  "app",
  "async-stream",
+ "async-trait",
  "axum",
  "axum-login",
  "dashmap",
  "datastar",
  "derive_more",
+ "domain",
  "jiff",
  "maud",
  "maud-extensions",
