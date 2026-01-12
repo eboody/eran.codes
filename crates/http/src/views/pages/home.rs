@@ -91,6 +91,12 @@ impl maud::Render for Home {
                         div class="cta-row" {
                             a class="button" href="/register" { "Start demo" }
                             a class="button secondary" href="/login" { "Sign in" }
+                            button class="button secondary" data-on:click="@get('/partials/auth-status')" {
+                                "Check auth status"
+                            }
+                        }
+                        div id="auth-status-target" class="demo-result muted" {
+                            "Click “Check auth status” to load live session info."
                         }
                     }
                 }
@@ -112,6 +118,12 @@ impl maud::Render for Home {
                             strong { "tower_sessions.session" }
                             " table and are cleaned up automatically."
                         }
+                        button class="button secondary" data-on:click="@get('/partials/session-status')" {
+                            "Show session details"
+                        }
+                        div id="session-status-target" class="demo-result muted" {
+                            "Click “Show session details” to load the session id and expiry."
+                        }
                     }
                 }
 
@@ -131,6 +143,17 @@ impl maud::Render for Home {
                         p class="muted" {
                             "Domain types avoid serde/DB concerns; app orchestrates policy; infra owns SQL."
                         }
+                        div class="cta-row" {
+                            button class="button secondary" data-on:click="@get('/partials/boundary-check?case=valid')" {
+                                "Validate sample input"
+                            }
+                            button class="button secondary" data-on:click="@get('/partials/boundary-check?case=invalid')" {
+                                "Validate invalid input"
+                            }
+                        }
+                        div id="boundary-target" class="demo-result muted" {
+                            "Run a validation check to see domain constraints in action."
+                        }
                     }
                 }
 
@@ -143,7 +166,15 @@ impl maud::Render for Home {
                             li { "HTML page fallback for standard requests." }
                             li { "Datastar-aware partials for interactive flows." }
                         }
-                        a class="button secondary" href="/error-test" { "Trigger error" }
+                        div class="cta-row" {
+                            a class="button secondary" href="/error-test" { "Trigger full-page error" }
+                            button class="button secondary" data-on:click="@get('/error-test')" {
+                                "Trigger Datastar error"
+                            }
+                        }
+                        p class="muted" {
+                            "Datastar errors appear in the alert banner above."
+                        }
                     }
                 }
 
@@ -163,6 +194,12 @@ impl maud::Render for Home {
                             code { "LOG_FORMAT=json" }
                             " for structured output."
                         }
+                        button class="button secondary" data-on:click="@get('/partials/request-meta')" {
+                            "Fetch request metadata"
+                        }
+                        div id="request-meta-target" class="demo-result muted" {
+                            "Click “Fetch request metadata” to load request ids and timing."
+                        }
                     }
                 }
 
@@ -177,6 +214,31 @@ impl maud::Render for Home {
                         }
                         p class="muted" {
                             "Use the ping and signal demos to observe live updates."
+                        }
+                        div class="grid demos" data-signals="{surrealMessage: 'Ready.', originalSurrealMessage: 'Ready.', surrealStatus: 'idle'}" {
+                            article {
+                                h3 { "SSE ping" }
+                                div id="ping-target" {
+                                    p { "No pings yet." }
+                                }
+                                button data-on:click="@get('/partials/ping')" { "Ping" }
+                            }
+                            article {
+                                h3 { "Datastar signals" }
+                                p data-text="$surrealMessage" {}
+                                small data-text="$surrealStatus" {}
+                                div class="grid" {
+                                    button
+                                        data-on:click="$surrealMessage = 'Front-end says hi!'; setTimeout(() => { $surrealMessage = $originalSurrealMessage; }, 1000)"
+                                    { "Front-end update" }
+                                    button data-on:click="@get('/partials/surreal-message-guarded')" {
+                                        "Backend guarded"
+                                    }
+                                    button data-on:click="@get('/partials/surreal-message-cancel')" {
+                                        "Backend cancel"
+                                    }
+                                }
+                            }
                         }
                     }
                 }

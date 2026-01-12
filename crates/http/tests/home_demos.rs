@@ -87,6 +87,8 @@ async fn home_page_includes_demo_sections() {
     assert!(body.contains("Demo 4: Error handling showcase"));
     assert!(body.contains("Demo 5: Tracing and observability"));
     assert!(body.contains("Demo 6: SSE and Datastar patches"));
+    assert!(body.contains("Check auth status"));
+    assert!(body.contains("Show session details"));
     assert!(body.contains("Start demo"));
     assert!(body.contains("Sign in"));
     assert!(body.contains("/register"));

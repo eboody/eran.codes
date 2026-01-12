@@ -12,6 +12,7 @@ use serde::Deserialize;
 use tokio::sync::broadcast::error::RecvError;
 use tokio::time::{Duration, sleep};
 use tower_cookies::Cookies;
+use tower_sessions::Session;
 
 use crate::views::{self, pages};
 use secrecy::SecretString;
@@ -164,6 +165,95 @@ pub async fn protected(
         }),
     })
     .into_response())
+}
+
+pub async fn auth_status_partial(
+    auth_session: crate::auth::Session,
+    session: Session,
+) -> impl IntoResponse {
+    let user = auth_session.user.as_ref();
+    let session_id = session.id().map(|id| id.to_string());
+    let expiry = session.expiry().map(|expiry| format!("{expiry:?}"));
+
+    let partial = views::partials::AuthStatus {
+        user_id: user.map(|value| value.id.as_str()),
+        username: user.map(|value| value.username.as_str()),
+        email: user.map(|value| value.email.as_str()),
+        session_id,
+        expiry,
+    };
+
+    (
+        StatusCode::OK,
+        axum::response::Html(partial.render().into_string()),
+    )
+}
+
+pub async fn session_status_partial(
+    session: Session,
+) -> impl IntoResponse {
+    let session_id = session.id().map(|id| id.to_string());
+    let expiry = session.expiry().map(|expiry| format!("{expiry:?}"));
+
+    let partial = views::partials::SessionStatus {
+        session_id: session_id.as_deref(),
+        expiry: expiry.as_deref(),
+    };
+
+    (
+        StatusCode::OK,
+        axum::response::Html(partial.render().into_string()),
+    )
+}
+
+pub async fn request_meta_partial() -> impl IntoResponse {
+    let context = crate::request::current_context();
+    let partial = views::partials::RequestMeta {
+        request_id: context.as_ref().and_then(|value| value.request_id.as_deref()),
+        session_id: context.as_ref().and_then(|value| value.session_id.as_deref()),
+        user_id: context.as_ref().and_then(|value| value.user_id.as_deref()),
+        client_ip: context.as_ref().and_then(|value| value.client_ip.as_deref()),
+        user_agent: context.as_ref().and_then(|value| value.user_agent.as_deref()),
+    };
+
+    (
+        StatusCode::OK,
+        axum::response::Html(partial.render().into_string()),
+    )
+}
+
+#[derive(Deserialize)]
+pub struct BoundaryQuery {
+    pub case: Option<String>,
+}
+
+pub async fn boundary_check_partial(
+    axum::extract::Query(query): axum::extract::Query<BoundaryQuery>,
+) -> impl IntoResponse {
+    let (label, username, email) = match query.case.as_deref() {
+        Some("invalid") => ("Invalid input", " ", "not-an-email"),
+        _ => ("Valid input", "demo_user", "demo@example.com"),
+    };
+
+    let result = match app::user::validate_input(username, email) {
+        Ok(_) => "ok",
+        Err(err) => {
+            tracing::debug!(?err, "boundary validation failed");
+            "error"
+        }
+    };
+
+    let partial = views::partials::BoundaryCheck {
+        label,
+        username,
+        email,
+        result,
+    };
+
+    (
+        StatusCode::OK,
+        axum::response::Html(partial.render().into_string()),
+    )
 }
 
 #[derive(Debug, Deserialize)]

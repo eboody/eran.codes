@@ -76,3 +76,16 @@ impl Service {
         Ok(new_user.id)
     }
 }
+
+pub fn validate_input(
+    username: &str,
+    email: &str,
+) -> Result<(user::Username, user::Email)> {
+    let username =
+        user::Username::try_new(username.to_owned())
+            .map_err(domain::user::Error::from)?;
+    let email =
+        user::Email::try_new(email.to_owned())
+            .map_err(domain::user::Error::from)?;
+    Ok((username, email))
+}

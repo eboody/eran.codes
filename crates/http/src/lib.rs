@@ -143,6 +143,10 @@ where
 
     let base = Router::new()
         .route("/partials/ping", get(crate::handlers::ping_partial))
+        .route("/partials/auth-status", get(crate::handlers::auth_status_partial))
+        .route("/partials/session-status", get(crate::handlers::session_status_partial))
+        .route("/partials/request-meta", get(crate::handlers::request_meta_partial))
+        .route("/partials/boundary-check", get(crate::handlers::boundary_check_partial))
         .route(
             "/partials/surreal-message-guarded",
             get(crate::handlers::surreal_message_guarded),
