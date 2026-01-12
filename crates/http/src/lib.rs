@@ -42,6 +42,7 @@ pub fn router(state: State) -> Router {
                         "http.request",
                         method = %request.method(),
                         uri = %request.uri(),
+                        path = %request.uri().path(),
                         route = field::Empty,
                         request_id = field::Empty,
                         session_id = field::Empty,
@@ -52,8 +53,6 @@ pub fn router(state: State) -> Router {
                         status = field::Empty,
                         latency_ms = field::Empty,
                     );
-
-                    span.record("route", request.uri().path());
 
                     if let Some(context) = request.extensions().get::<crate::request::Context>() {
                         if let Some(request_id) = context.request_id.as_deref() {
@@ -77,7 +76,7 @@ pub fn router(state: State) -> Router {
                     span
                 })
                 .on_request(|_request: &Request<_>, span: &tracing::Span| {
-                    tracing::info!(parent: span, "request started");
+                    tracing::debug!(parent: span, "request started");
                 })
                 .on_response(|response: &axum::http::Response<_>, latency: Duration, span: &tracing::Span| {
                     span.record("status", response.status().as_u16());
