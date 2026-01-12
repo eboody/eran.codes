@@ -24,3 +24,7 @@
 - `crates/http/README.md`
 - `maud-extensions/README.md`
 - `docs/tracing.md`
+- `docs/datastar-tao.md`
+- `docs/datastar-signals.md`
+- `docs/datastar-expressions.md`
+- `docs/datastar-backend-requests.md`

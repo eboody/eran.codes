@@ -42,6 +42,9 @@
 - Prefer explicit re-exports over `pub use module::*` unless the module is intentionally a flat API surface.
 - Use `moddef::moddef!` for module declarations when it reduces repetition and aligns with the above naming conventions.
 - For Datastar-related work, follow `docs/datastar-tao.md` and keep Datastar-specific guidance there.
+- For frontend reactivity and signals, reference `docs/datastar-signals.md`.
+- For Datastar expressions and script execution, reference `docs/datastar-expressions.md`.
+- For backend requests and SSE guidance, reference `docs/datastar-backend-requests.md`.
 
 ````md
 # Agent: Architecture Boundary Enforcer
