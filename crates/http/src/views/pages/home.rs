@@ -71,40 +71,30 @@ impl maud::Render for Home {
                 }
 
                 section {
-                    h2 { "Live demos" }
-                    div class="grid demos" {
-                        article {
-                            h3 { "SSE ping" }
-                            div id="ping-target" {
-                                p { "No pings yet." }
-                            }
-                            button data-on:click="@get('/partials/ping')" { "Ping" }
+                    h2 { "Demo 1: Auth flow walkthrough" }
+                    article class="flow-card" {
+                        p {
+                            "Follow the full flow: "
+                            strong { "/register" }
+                            " → "
+                            strong { "/login" }
+                            " → "
+                            strong { "/protected" }
+                            "."
                         }
-                        article data-signals="{surrealMessage: 'Ready.', originalSurrealMessage: 'Ready.', surrealStatus: 'idle'}" {
-                            h3 { "Datastar signals" }
-                            p data-text="$surrealMessage" {}
-                            small data-text="$surrealStatus" {}
-                            div class="grid" {
-                                button
-                                    data-on:click="$surrealMessage = 'Front-end says hi!'; setTimeout(() => { $surrealMessage = $originalSurrealMessage; }, 1000)"
-                                { "Front-end update" }
-                                button data-on:click="@get('/partials/surreal-message-guarded')" {
-                                    "Backend guarded"
-                                }
-                                button data-on:click="@get('/partials/surreal-message-cancel')" {
-                                    "Backend cancel"
-                                }
-                            }
+                        ul {
+                            li { "Redirected access is enforced on protected routes." }
+                            li { "Sessions are stored in Postgres via tower-sessions." }
+                            li { "Session cookies are signed, HttpOnly, SameSite Lax." }
+                            li { "Passwords are hashed with Argon2 in a credentials table." }
                         }
-                        article {
-                            h3 { "Error surface" }
-                            p class="muted" { "Centralized error handling with HTML fallbacks." }
-                            button class="secondary" data-on:click="@get('/error-test')" {
-                                "Trigger error"
-                            }
+                        div class="cta-row" {
+                            a class="button" href="/register" { "Start demo" }
+                            a class="button secondary" href="/login" { "Sign in" }
                         }
                     }
                 }
+
             }
         };
 

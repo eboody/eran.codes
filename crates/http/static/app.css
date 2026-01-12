@@ -88,8 +88,7 @@ header.container nav {
   gap: 0.6rem;
 }
 
-.highlights article,
-.demos article {
+.highlights article {
   border: 1px solid rgba(11, 28, 31, 0.08);
   border-radius: 18px;
   padding: 1.5rem;
@@ -97,15 +96,22 @@ header.container nav {
   box-shadow: var(--brand-shadow);
 }
 
-.highlights ul {
-  margin: 0.8rem 0 0;
+.flow-card {
+  border: 1px dashed rgba(11, 28, 31, 0.2);
+  border-radius: 20px;
+  padding: 1.5rem;
+  background: rgba(255, 255, 255, 0.7);
+  box-shadow: var(--brand-shadow);
+}
+
+.flow-card ul {
+  margin: 0.8rem 0 1rem;
   padding-left: 1.1rem;
 }
 
-.demos article {
-  display: flex;
-  flex-direction: column;
-  gap: 0.75rem;
+.highlights ul {
+  margin: 0.8rem 0 0;
+  padding-left: 1.1rem;
 }
 
 button,
