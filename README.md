@@ -1,13 +1,14 @@
 # eran_codes
 
 ## Quickstart
-- `HOST`, `PORT`, `DATABASE_URL`
+- `HOST`, `PORT`, `DATABASE_URL`, `SESSION_SECRET` (base64url, no padding)
 - `cargo run`
 
 ## Structure
 - `crates/domain`, `crates/app`, `crates/infra`, `crates/http`, `crates/utils`
 - `maud-extensions` (external crate)
 - `crates/http` handles SSE with one `/events` stream per visitor, keyed by an unsigned `session_id` cookie
+- `crates/http` integrates `axum-login` with `tower-sessions` for auth sessions
 
 ## Commands
 - `cargo build`

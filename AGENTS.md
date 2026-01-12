@@ -16,6 +16,11 @@
 - SSE events carry Datastar payloads; the client keeps one `EventSource` and applies patches.
 - TODOs in code track future work: signed cookies and per-tab SSE IDs.
 
+## Auth + Session Notes
+- `crates/http` integrates `axum-login` with `tower-sessions` for auth sessions.
+- Session cookies are encrypted using `SESSION_SECRET` (base64url) and user ids are attached to tracing via `http::request::set_user_id`.
+- Current auth backend is scaffolded (`app::auth::Service::disabled`) until real credentials are implemented.
+
 ## Error Handling Strategy
 - Enterprise-level default: a centralized HTTP error type that maps domain/app errors to user-facing HTML pages for normal requests and Datastar patch responses for `datastar-request` requests.
 - Use middleware + task-local request kind so handlers can return `Result<T, http::Error>` without extra parameters.
