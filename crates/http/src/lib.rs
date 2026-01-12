@@ -11,6 +11,7 @@ use axum::http::Request;
 use axum::{Router, routing::get};
 pub use error::{Error, Result};
 pub use sse::Registry as SseRegistry;
+use std::sync::atomic::AtomicU64;
 use tower::ServiceBuilder;
 use tower_cookies::{CookieManagerLayer, Key};
 use tower_http::{
@@ -29,6 +30,9 @@ pub struct State {
     pub user: app::user::Service,
     pub auth: app::auth::Service,
     pub sse: sse::Registry,
+    pub surreal_guard: std::sync::Arc<dashmap::DashMap<String, std::sync::Arc<tokio::sync::Mutex<()>>>>,
+    pub surreal_cancel: std::sync::Arc<dashmap::DashMap<String, tokio_util::sync::CancellationToken>>,
+    pub surreal_seq: std::sync::Arc<AtomicU64>,
 }
 
 impl State {
@@ -37,7 +41,14 @@ impl State {
         auth: app::auth::Service,
         sse: sse::Registry,
     ) -> Self {
-        Self { user, auth, sse }
+        Self {
+            user,
+            auth,
+            sse,
+            surreal_guard: std::sync::Arc::new(dashmap::DashMap::new()),
+            surreal_cancel: std::sync::Arc::new(dashmap::DashMap::new()),
+            surreal_seq: std::sync::Arc::new(AtomicU64::new(0)),
+        }
     }
 }
 
@@ -122,6 +133,14 @@ pub fn router(
 
     let base = Router::new()
         .route("/partials/ping", get(crate::handlers::ping_partial))
+        .route(
+            "/partials/surreal-message-guarded",
+            get(crate::handlers::surreal_message_guarded),
+        )
+        .route(
+            "/partials/surreal-message-cancel",
+            get(crate::handlers::surreal_message_cancel),
+        )
         .route("/error-test", get(crate::handlers::error_test))
         .route("/events", get(crate::handlers::events))
         .route("/health", get(crate::handlers::health))

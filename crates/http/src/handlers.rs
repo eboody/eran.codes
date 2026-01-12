@@ -1,17 +1,19 @@
 use async_stream::stream;
 use axum::{
+    Form,
     extract::{Extension, State},
     http::StatusCode,
     response::{IntoResponse, Redirect, Sse},
-    Form,
 };
 use core::convert::Infallible;
+use datastar::axum::ReadSignals;
 use maud::Render;
+use serde::Deserialize;
 use tokio::sync::broadcast::error::RecvError;
+use tokio::time::{Duration, sleep};
 use tower_cookies::Cookies;
 
 use crate::views::{self, pages};
-use serde::Deserialize;
 use secrecy::SecretString;
 
 pub async fn health(State(_state): State<crate::State>) -> &'static str {
@@ -61,6 +63,164 @@ pub async fn logout(
     Ok(Redirect::to("/").into_response())
 }
 
+#[derive(Debug, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub(crate) struct SurrealSignals {
+    surreal_message: Option<String>,
+    original_surreal_message: Option<String>,
+    _surreal_status: Option<String>,
+}
+
+fn surreal_payload(
+    message: &str,
+    status: &str,
+) -> crate::sse::Event {
+    crate::sse::Event::patch_signals(serde_json::json!({
+        "surrealMessage": message,
+        "surrealStatus": status,
+    }))
+}
+
+fn surreal_send(
+    state: &crate::State,
+    session: &crate::sse::Handle,
+    message: &str,
+    status: &str,
+) -> bool {
+    match state.sse.send(session, surreal_payload(message, status)) {
+        Ok(()) => true,
+        Err(err) => {
+            tracing::debug!(?err, "sse session missing for surreal update");
+            false
+        }
+    }
+}
+
+fn surreal_original(signals: SurrealSignals) -> String {
+    signals
+        .original_surreal_message
+        .or(signals.surreal_message)
+        .unwrap_or_else(|| "Ready.".to_string())
+}
+
+pub async fn surreal_message_guarded(
+    State(state): State<crate::State>,
+    Extension(cookies): Extension<Cookies>,
+    ReadSignals(signals): ReadSignals<SurrealSignals>,
+) -> impl IntoResponse {
+    let session = crate::sse::Handle::from_cookies(&cookies);
+    let session_id = session.id().to_string();
+    let sequence = state
+        .surreal_seq
+        .fetch_add(1, std::sync::atomic::Ordering::Relaxed)
+        + 1;
+    let original = surreal_original(signals);
+
+    let lock = state
+        .surreal_guard
+        .entry(session_id)
+        .or_insert_with(|| std::sync::Arc::new(tokio::sync::Mutex::new(())))
+        .clone();
+
+    tokio::spawn(async move {
+        let guard = match lock.try_lock() {
+            Ok(guard) => {
+                if !surreal_send(
+                    &state,
+                    &session,
+                    &format!("Guarded says hi! #{sequence}"),
+                    &format!("guarded running #{sequence}"),
+                ) {
+                    return;
+                }
+                guard
+            }
+            Err(_) => {
+                if !surreal_send(
+                    &state,
+                    &session,
+                    &format!("Guarded queued #{sequence}"),
+                    &format!("guarded queued #{sequence}"),
+                ) {
+                    return;
+                }
+                let guard = lock.lock().await;
+                if !surreal_send(
+                    &state,
+                    &session,
+                    &format!("Guarded says hi! #{sequence}"),
+                    &format!("guarded running #{sequence}"),
+                ) {
+                    return;
+                }
+                guard
+            }
+        };
+
+        sleep(Duration::from_secs(1)).await;
+        drop(guard);
+        surreal_send(
+            &state,
+            &session,
+            &original,
+            &format!("guarded done #{sequence}"),
+        );
+    });
+
+    StatusCode::ACCEPTED
+}
+
+pub async fn surreal_message_cancel(
+    State(state): State<crate::State>,
+    Extension(cookies): Extension<Cookies>,
+    ReadSignals(signals): ReadSignals<SurrealSignals>,
+) -> impl IntoResponse {
+    let session = crate::sse::Handle::from_cookies(&cookies);
+    let session_id = session.id().to_string();
+    let sequence = state
+        .surreal_seq
+        .fetch_add(1, std::sync::atomic::Ordering::Relaxed)
+        + 1;
+    let original = surreal_original(signals);
+
+    let token = tokio_util::sync::CancellationToken::new();
+    if let Some(previous) = state.surreal_cancel.insert(session_id, token.clone()) {
+        previous.cancel();
+    }
+
+    tokio::spawn(async move {
+        if !surreal_send(
+            &state,
+            &session,
+            &format!("Cancelled says hi! #{sequence}"),
+            &format!("cancel running #{sequence}"),
+        ) {
+            return;
+        }
+
+        tokio::select! {
+            _ = sleep(Duration::from_secs(1)) => {
+                surreal_send(
+                    &state,
+                    &session,
+                    &original,
+                    &format!("cancel done #{sequence}"),
+                );
+            }
+            _ = token.cancelled() => {
+                surreal_send(
+                    &state,
+                    &session,
+                    &format!("Cancelled #{sequence}"),
+                    &format!("cancelled #{sequence}"),
+                );
+            }
+        }
+    });
+
+    StatusCode::ACCEPTED
+}
+
 pub async fn events(
     State(state): State<crate::State>,
     Extension(cookies): Extension<Cookies>,
@@ -91,9 +251,7 @@ pub async fn events(
     Sse::new(stream)
 }
 
-pub async fn ping_partial(
-    State(_state): State<crate::State>,
-) -> impl IntoResponse {
+pub async fn ping_partial(State(_state): State<crate::State>) -> impl IntoResponse {
     let elements = views::partials::Ping.render();
     (StatusCode::OK, axum::response::Html(elements.into_string()))
 }

@@ -20,9 +20,8 @@ impl Render for Layout<'_> {
                     link rel="stylesheet" href="/static/app.css";
                     script type="module" src="https://cdn.jsdelivr.net/gh/starfederation/datastar@1.0.0-RC.7/bundles/datastar.js" {}
                     script src="/static/css-scope-inline.js" {}
-                    script src="/static/surreal.js" {}
                 }
-                body {
+                body data-on:load__window="@get('/events')" {
                     div id="error-target" {}
                     (self.content.clone())
                 }

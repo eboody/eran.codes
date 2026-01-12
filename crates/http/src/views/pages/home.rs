@@ -1,4 +1,4 @@
-use maud_extensions::{css, inline_css, inline_js};
+use maud_extensions::{css, inline_css};
 
 pub struct Home;
 
@@ -37,10 +37,21 @@ impl maud::Render for Home {
                 }
 
                 section {
-                    article class="clickable" {
-                        h3 { "Surreal" }
-                        p { "Click to run Surreal inline script." }
-                        button { "Run script" }
+                    article data-signals="{surrealMessage: 'Ready.', originalSurrealMessage: 'Ready.', surrealStatus: 'idle'}" {
+                        h3 { "Signals" }
+                        p data-text="$surrealMessage" {}
+                        small data-text="$surrealStatus" {}
+                        div class="grid" {
+                            button
+                                data-on:click="$surrealMessage = 'Front-end says hi!'; setTimeout(() => { $surrealMessage = $originalSurrealMessage; }, 1000)"
+                            { "Front-end update" }
+                            button data-on:click="@get('/partials/surreal-message-guarded')" {
+                                "Backend guarded"
+                            }
+                            button data-on:click="@get('/partials/surreal-message-cancel')" {
+                                "Backend cancel"
+                            }
+                        }
                     }
                 }
 
@@ -51,8 +62,6 @@ impl maud::Render for Home {
                         }
                     }
                 }
-
-                (js())
             }
         };
 
@@ -62,29 +71,6 @@ impl maud::Render for Home {
         }
         .render()
     }
-}
-
-inline_js! {
-    me().on("surreal_hi", async (ev) => {
-      let hi_running_name = "surreal_hi_running";
-      let element = me(".clickable button");
-      element.disabled = true;
-
-      let previous_text = element.textContent;
-      element.textContent = "Surreal says hi!";
-      await sleep(1000);
-      element.textContent = previous_text;
-
-      element.disabled = false;
-    });
-
-    me(".clickable button").on("click", (el) => {
-      if (el.disabled) {
-        return;
-      } else {
-        me(el).send("surreal_hi");
-      }
-    });
 }
 
 inline_css! {
