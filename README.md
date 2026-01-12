@@ -15,6 +15,11 @@
 - `docker-compose up -d`
 - `cargo run --bin with_db -- sqlx migrate run --source crates/infra/migrations`
 
+## Tracing
+- Use `RUST_LOG` to control output; see `.cargo/config.toml` for defaults.
+- New endpoints and use-cases must follow `docs/tracing.md`.
+
 ## Docs
 - `crates/http/README.md`
 - `maud-extensions/README.md`
+- `docs/tracing.md`

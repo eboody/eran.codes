@@ -21,6 +21,9 @@
 - Use middleware + task-local request kind so handlers can return `Result<T, http::Error>` without extra parameters.
 - Simpler option: always render a full error page and add a TODO comment in handlers to switch to Datastar-aware error patches later.
 
+## Tracing Strategy
+- Follow `docs/tracing.md` for required spans, context fields, and per-layer responsibilities.
+
 ## Updating This File
 - Keep `AGENTS.md` updated when we introduce new architectural decisions, cross-cutting mechanisms, or boundary changes (e.g., SSE/session handling).
 - Prefer module-scoped naming and re-exports for readability (e.g., `sse::Event`, `sse::Registry`, `views::pages::Home`, `views::partials::Ping`, `views::page::Layout`), avoiding deep paths in call sites.
