@@ -16,6 +16,11 @@ impl UserRepository for SqlxUserRepository {
         &self,
         email: &user::Email,
     ) -> Result<Option<user::User>> {
+        tracing::info!(
+            target: "demo.db",
+            message = "db query",
+            db_statement = "SELECT id, username, email FROM users WHERE email = $1"
+        );
         let record = sqlx::query(
             r#"
             SELECT id, username, email
@@ -53,6 +58,11 @@ impl UserRepository for SqlxUserRepository {
         user: &user::User,
         password_hash: &str,
     ) -> Result<()> {
+        tracing::info!(
+            target: "demo.db",
+            message = "db query",
+            db_statement = "INSERT INTO users (id, username, email) VALUES ($1, $2, $3)"
+        );
         let mut tx = self
             .pg
             .begin()
@@ -72,6 +82,11 @@ impl UserRepository for SqlxUserRepository {
         .await
         .map_err(|error| Error::Repo(error.to_string()))?;
 
+        tracing::info!(
+            target: "demo.db",
+            message = "db query",
+            db_statement = "INSERT INTO credentials (user_id, password_hash) VALUES ($1, $2)"
+        );
         sqlx::query(
             r#"
             INSERT INTO credentials (user_id, password_hash)

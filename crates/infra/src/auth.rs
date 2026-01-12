@@ -24,6 +24,11 @@ impl Repository for AuthRepository {
         &self,
         email: &str,
     ) -> Result<Option<AuthRecord>> {
+        tracing::info!(
+            target: "demo.db",
+            message = "db query",
+            db_statement = "SELECT u.id, u.username, u.email, c.password_hash FROM users u JOIN credentials c ON c.user_id = u.id WHERE u.email = $1"
+        );
         let record = sqlx::query(
             r#"
             SELECT u.id, u.username, u.email, c.password_hash
@@ -49,6 +54,11 @@ impl Repository for AuthRepository {
         &self,
         user_id: &str,
     ) -> Result<Option<AuthRecord>> {
+        tracing::info!(
+            target: "demo.db",
+            message = "db query",
+            db_statement = "SELECT u.id, u.username, u.email, c.password_hash FROM users u JOIN credentials c ON c.user_id = u.id WHERE u.id = $1"
+        );
         let user_id = user_id
             .parse::<uuid::Uuid>()
             .map_err(|error| Error::Repository(error.to_string()))?;

@@ -4,6 +4,7 @@ mod auth;
 pub mod request;
 pub mod sse;
 mod trace;
+pub mod trace_log;
 mod views;
 
 use axum::middleware::from_fn;
@@ -26,6 +27,7 @@ use axum_login::{AuthManagerLayerBuilder, login_required};
 use time::Duration as SessionDuration;
 use tower_sessions::{Expiry, SessionManagerLayer, SessionStore};
 use tower_cookies::cookie::SameSite;
+use axum::middleware::from_fn_with_state;
 
 #[derive(Clone)]
 pub struct State {
@@ -33,6 +35,7 @@ pub struct State {
     pub auth: app::auth::Service,
     pub sse: sse::Registry,
     pub cookie_key: Key,
+    pub trace_log: trace_log::Store,
     pub surreal_guard: std::sync::Arc<dashmap::DashMap<String, std::sync::Arc<tokio::sync::Mutex<()>>>>,
     pub surreal_cancel: std::sync::Arc<dashmap::DashMap<String, tokio_util::sync::CancellationToken>>,
     pub surreal_seq: std::sync::Arc<AtomicU64>,
@@ -44,12 +47,14 @@ impl State {
         auth: app::auth::Service,
         sse: sse::Registry,
         cookie_key: Key,
+        trace_log: trace_log::Store,
     ) -> Self {
         Self {
             user,
             auth,
             sse,
             cookie_key,
+            trace_log,
             surreal_guard: std::sync::Arc::new(dashmap::DashMap::new()),
             surreal_cancel: std::sync::Arc::new(dashmap::DashMap::new()),
             surreal_seq: std::sync::Arc::new(AtomicU64::new(0)),
@@ -133,6 +138,10 @@ where
         )
         .layer(from_fn(crate::auth::set_user_context_middleware))
         .layer(from_fn(crate::request::set_context_middleware))
+        .layer(from_fn_with_state(
+            state.trace_log.clone(),
+            crate::trace_log::audit_middleware,
+        ))
         .layer(SetRequestIdLayer::new(
             axum::http::HeaderName::from_static("x-request-id"),
             MakeRequestUuid,

@@ -13,7 +13,8 @@ use tower_sessions_sqlx_store::PostgresStore;
 
 #[tokio::main]
 async fn main() -> Result<()> {
-    init_tracing();
+    let trace_log = http::trace_log::Store::new();
+    init_tracing(trace_log.clone());
 
     let cfg = config::Config::load()?;
 
@@ -36,6 +37,7 @@ async fn main() -> Result<()> {
         auth_service,
         sse_registry,
         session_key.clone(),
+        trace_log,
     );
 
     let session_store = PostgresStore::new(infra.db.clone());
@@ -59,12 +61,13 @@ async fn main() -> Result<()> {
     Ok(())
 }
 
-fn init_tracing() {
+fn init_tracing(trace_log: http::trace_log::Store) {
     let env_filter =
         EnvFilter::try_from_default_env().unwrap_or_else(|_| "info,http=debug".into());
     let log_format = std::env::var("LOG_FORMAT").unwrap_or_else(|_| "pretty".to_string());
 
     let subscriber = tracing_subscriber::registry().with(env_filter);
+    let trace_layer = http::trace_log::TraceLogLayer::new(trace_log);
 
     if log_format == "json" {
         subscriber
@@ -74,10 +77,12 @@ fn init_tracing() {
                     .with_current_span(true)
                     .with_span_list(true),
             )
+            .with(trace_layer)
             .init();
     } else {
         subscriber
             .with(tracing_subscriber::fmt::layer().pretty())
+            .with(trace_layer)
             .init();
     }
 }

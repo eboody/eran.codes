@@ -1152,6 +1152,7 @@ dependencies = [
  "tower-livereload",
  "tower-sessions",
  "tracing",
+ "tracing-subscriber",
  "uuid",
 ]
 
