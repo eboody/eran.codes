@@ -29,7 +29,10 @@ pub async fn events(
 ) -> impl IntoResponse {
     // TODO: Support per-tab SSE streams by mixing a tab id into the session key.
     let session = crate::sse::Handle::from_cookies(&cookies);
+    let session_id = session.id().to_string();
     let mut receiver = state.sse.subscribe(&session);
+
+    tracing::info!(session_id = %session_id, "sse connected");
 
     let stream = stream! {
         loop {
@@ -42,7 +45,10 @@ pub async fn events(
                     yield Ok::<_, Infallible>(sse_event);
                 }
                 Err(RecvError::Lagged(_)) => continue,
-                Err(RecvError::Closed) => break,
+                Err(RecvError::Closed) => {
+                    tracing::info!(session_id = %session_id, "sse disconnected");
+                    break;
+                }
             }
         }
     };
@@ -57,8 +63,9 @@ pub async fn ping_partial(
     let elements = views::partials::Ping.render();
     let session = crate::sse::Handle::from_cookies(&cookies);
     let event = crate::sse::Event::named(PING_EVENT, elements);
-    // TODO: Log or surface send failures once we have observability hooks.
-    let _ = state.sse.send(&session, event);
+    if let Err(error) = state.sse.send(&session, event) {
+        tracing::warn!(session_id = %session.id(), error = ?error, "sse send failed");
+    }
 
     StatusCode::NO_CONTENT
 }

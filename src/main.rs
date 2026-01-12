@@ -6,15 +6,11 @@ use std::sync::Arc;
 use app::user;
 use error::{Error, Result};
 use infra::user::Repository as UserRepo;
-use tracing_subscriber::EnvFilter;
+use tracing_subscriber::{EnvFilter, layer::SubscriberExt, util::SubscriberInitExt};
 
 #[tokio::main]
 async fn main() -> Result<()> {
-    tracing_subscriber::fmt()
-        .with_env_filter(
-            EnvFilter::try_from_default_env().unwrap_or_else(|_| "info,http=debug".into()),
-        )
-        .init();
+    init_tracing();
 
     let cfg = config::Config::load()?;
 
@@ -35,5 +31,54 @@ async fn main() -> Result<()> {
     tracing::info!("listening on http://{}", addr);
     axum::serve(listener, app).await?;
 
+    #[cfg(feature = "otel")]
+    shutdown_tracing();
+
     Ok(())
+}
+
+fn init_tracing() {
+    let env_filter =
+        EnvFilter::try_from_default_env().unwrap_or_else(|_| "info,http=debug".into());
+    let log_format = std::env::var("LOG_FORMAT").unwrap_or_else(|_| "pretty".to_string());
+
+    let subscriber = tracing_subscriber::registry().with(env_filter);
+
+    #[cfg(feature = "otel")]
+    let subscriber = subscriber.with(otel_layer());
+
+    if log_format == "json" {
+        subscriber
+            .with(
+                tracing_subscriber::fmt::layer()
+                    .json()
+                    .with_current_span(true)
+                    .with_span_list(true),
+            )
+            .init();
+    } else {
+        subscriber
+            .with(tracing_subscriber::fmt::layer().pretty())
+            .init();
+    }
+}
+
+#[cfg(feature = "otel")]
+fn otel_layer(
+) -> tracing_opentelemetry::OpenTelemetryLayer<
+    tracing_subscriber::Registry,
+    opentelemetry_sdk::trace::Tracer,
+> {
+    let tracer = opentelemetry_otlp::new_pipeline()
+        .tracing()
+        .with_exporter(opentelemetry_otlp::new_exporter().tonic())
+        .install_batch(opentelemetry_sdk::runtime::Tokio)
+        .expect("otlp tracer init failed");
+
+    tracing_opentelemetry::layer().with_tracer(tracer)
+}
+
+#[cfg(feature = "otel")]
+fn shutdown_tracing() {
+    opentelemetry::global::shutdown_tracer_provider();
 }

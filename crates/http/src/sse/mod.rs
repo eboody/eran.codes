@@ -2,14 +2,15 @@ use dashmap::DashMap;
 use std::sync::Arc;
 use tokio::sync::broadcast;
 
+pub const SESSION_COOKIE: &str = "session_id";
+
 mod session {
     use tower_cookies::cookie::SameSite;
     use tower_cookies::{Cookie, Cookies};
     use uuid::Uuid;
 
-    use super::Event;
+    use super::{Event, SESSION_COOKIE};
 
-    const SESSION_COOKIE: &str = "session_id";
     const SESSION_CHANNEL_SIZE: usize = 32;
 
     pub struct Handle {

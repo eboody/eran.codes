@@ -28,6 +28,7 @@ Never log plaintext passwords or secrets. Avoid logging raw emails; use a hash i
 - Add response metadata in `on_response` and errors in `on_failure`.
 - Add a `RequestContext` extension or task-local to carry `request_id`, `session_id`,
   `user_id`, `route`, and `is_datastar`.
+- Auth middleware must call `http::request::set_user_id` once identity is known.
 
 ## App Layer (Use-Case Spans)
 - Public app service methods must be `#[tracing::instrument]`.

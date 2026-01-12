@@ -12,6 +12,7 @@ pub struct Infra {
 }
 
 impl Infra {
+    #[tracing::instrument(skip(cfg))]
     pub async fn init(cfg: &config::InfraConfig) -> Result<Self> {
         let pool = PgPool::connect(&cfg.db.url)
             .await
@@ -19,6 +20,7 @@ impl Infra {
 
         pool.acquire().await.map_err(error::Error::Pgsql)?;
 
+        tracing::info!("running database migrations");
         sqlx::migrate!().run(&pool).await?;
 
         let http_client = reqwest::Client::builder()

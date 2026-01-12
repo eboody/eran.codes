@@ -38,6 +38,13 @@ impl SqlxUserRepository {
         Self { pg }
     }
 
+    #[tracing::instrument(
+        skip(self),
+        fields(
+            db.statement = "SELECT COUNT(*)::bigint AS count FROM users",
+            db.rows = tracing::field::Empty
+        )
+    )]
     pub async fn count(&self) -> Result<i64> {
         let row = sqlx::query!(
             "SELECT COUNT(*)::bigint AS count FROM users"
@@ -46,6 +53,7 @@ impl SqlxUserRepository {
         .await
         .map_err(crate::error::Error::Pgsql)?;
 
+        tracing::Span::current().record("db.rows", 1);
         Ok(row.count.unwrap_or(0))
     }
 }

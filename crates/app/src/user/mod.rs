@@ -16,6 +16,7 @@ impl Service {
         Self { users }
     }
 
+    #[tracing::instrument(skip(self))]
     pub async fn register_user(&self) -> Result<user::Id> {
         todo!()
     }
