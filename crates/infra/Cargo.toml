@@ -5,6 +5,7 @@ edition = "2024"
 
 [dependencies]
 domain = { path = "../domain" }
+app = { path = "../app" }
 
 derive_more = { version = "2.1.0", features = ["from"] }
 sqlx = { version = "0.8.6", features = [
@@ -12,7 +13,13 @@ sqlx = { version = "0.8.6", features = [
   "runtime-tokio",
   "macros",
   "migrate",
+  "uuid",
 ] }
 utils = { path = "../utils" }
 reqwest = { version = "0.13.1", features = ["json"] }
 tracing = "0.1.44"
+argon2 = "0.5.3"
+password-hash = "0.5.0"
+rand_core = "0.6.4"
+async-trait = "0.1.86"
+uuid = { version = "1.12.1", features = ["v4"] }

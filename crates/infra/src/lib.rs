@@ -1,5 +1,6 @@
 pub mod config;
 mod error;
+pub mod auth;
 pub use error::{Error, Result};
 mod repo;
 pub use repo::user;

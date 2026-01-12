@@ -21,7 +21,10 @@ async fn main() -> Result<()> {
     let user_repo = Arc::new(UserRepo::new(infra.db.clone()));
     let user_service = user::Service::new(user_repo);
 
-    let auth_service = app::auth::Service::disabled();
+    let auth_repo = Arc::new(infra::auth::AuthRepository::new(infra.db.clone()));
+    let auth_hasher = Arc::new(infra::auth::Argon2Hasher::new());
+    let auth_provider = app::auth::ProviderImpl::new(auth_repo, auth_hasher);
+    let auth_service = app::auth::Service::new(Arc::new(auth_provider));
 
     let sse_registry = http::SseRegistry::new();
     let http_state = http::State::new(user_service, auth_service, sse_registry);

@@ -19,7 +19,8 @@
 ## Auth + Session Notes
 - `crates/http` integrates `axum-login` with `tower-sessions` for auth sessions.
 - Session cookies are encrypted using `SESSION_SECRET` (base64url) and user ids are attached to tracing via `http::request::set_user_id`.
-- Current auth backend is scaffolded (`app::auth::Service::disabled`) until real credentials are implemented.
+- Auth backend uses `app::auth::ProviderImpl` with infra `AuthRepository` and `Argon2Hasher`.
+ - Auth uses a separate `credentials` table with `password_hash` (argon2 PHC string); app owns traits, infra implements hashing.
 
 ## Error Handling Strategy
 - Enterprise-level default: a centralized HTTP error type that maps domain/app errors to user-facing HTML pages for normal requests and Datastar patch responses for `datastar-request` requests.
