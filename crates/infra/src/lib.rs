@@ -12,16 +12,12 @@ pub struct Infra {
 }
 
 impl Infra {
-    pub async fn init(
-        cfg: &config::InfraConfig,
-    ) -> Result<Self> {
+    pub async fn init(cfg: &config::InfraConfig) -> Result<Self> {
         let pool = PgPool::connect(&cfg.db.url)
             .await
             .map_err(error::Error::Pgsql)?;
 
-        pool.acquire()
-            .await
-            .map_err(error::Error::Pgsql)?;
+        pool.acquire().await.map_err(error::Error::Pgsql)?;
 
         sqlx::migrate!().run(&pool).await?;
 

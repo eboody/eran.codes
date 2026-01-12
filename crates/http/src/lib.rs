@@ -4,11 +4,11 @@ pub mod request;
 pub mod sse;
 mod views;
 
-use axum::{Router, routing::get};
 use axum::middleware::from_fn;
-use tower::ServiceBuilder;
+use axum::{Router, routing::get};
 pub use error::{Error, Result};
 pub use sse::Registry as SseRegistry;
+use tower::ServiceBuilder;
 use tower_cookies::CookieManagerLayer;
 use tower_http::{
     request_id::{MakeRequestUuid, PropagateRequestIdLayer, SetRequestIdLayer},
