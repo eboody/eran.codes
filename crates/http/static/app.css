@@ -114,6 +114,27 @@ header.container nav {
   padding-left: 1.3rem;
 }
 
+.flow-map {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.4rem;
+  align-items: center;
+  margin: 0.8rem 0 1rem;
+}
+
+.flow-map .step {
+  background: rgba(11, 28, 31, 0.08);
+  border-radius: 999px;
+  padding: 0.3rem 0.8rem;
+  font-size: 0.8rem;
+  font-weight: 600;
+}
+
+.flow-map .arrow {
+  font-weight: 700;
+  color: rgba(11, 28, 31, 0.45);
+}
+
 .highlights ul {
   margin: 0.8rem 0 0;
   padding-left: 1.1rem;

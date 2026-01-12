@@ -115,6 +115,25 @@ impl maud::Render for Home {
                     }
                 }
 
+                section {
+                    h2 { "Demo 3: Architecture boundary map" }
+                    article class="flow-card" {
+                        p { "Follow a single request through each boundary." }
+                        div class="flow-map" {
+                            span class="step" { "http::dto::Register" }
+                            span class="arrow" { "→" }
+                            span class="step" { "app::user::RegisterUser" }
+                            span class="arrow" { "→" }
+                            span class="step" { "domain::user::{Username, Email}" }
+                            span class="arrow" { "→" }
+                            span class="step" { "infra::repo::SqlxUserRepository" }
+                        }
+                        p class="muted" {
+                            "Domain types avoid serde/DB concerns; app orchestrates policy; infra owns SQL."
+                        }
+                    }
+                }
+
             }
         };
 
