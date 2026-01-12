@@ -5,36 +5,53 @@ pub struct Home;
 impl maud::Render for Home {
     fn render(&self) -> maud::Markup {
         let content = maud::html! {
-            main class="page" {
-                h1 { "Hello from Maud" }
-                p { "This page is server-rendered; Datastar handles the small interactions." }
+            main class="container" {
+                header {
+                    h1 { "Hello from Maud" }
+                    p { "This page is server-rendered; Datastar handles the small interactions." }
+                }
 
-                div class="card" {
-                    ({
-                        css! {
-                            me {
-                              border: 1px solid blue;
-                              border-radius: 10px;
+                section {
+                    div class="grid" {
+                        article {
+                            ({
+                                css! {
+                                    me {
+                                      border: 1px solid var(--pico-primary);
+                                    }
+                                }
+                            })
+                            p {
+                                strong { "Scoped CSS" }
+                                " via css-scope-inline."
                             }
                         }
-                    })
-                    p {
-                        strong { "Scoped CSS" }
-                        " via css-scope-inline."
+                        article {
+                            h3 { "Ping" }
+                            div id="ping-target" {
+                                p { "No pings yet." }
+                            }
+                            button data-on:click="@get('/partials/ping')" { "Ping" }
+                        }
                     }
                 }
 
-                div id="ping-target" class="card" {
-                    p { "No pings yet." }
-                }
-                button class="btn" data-on:click="@get('/partials/ping')" { "Ping" }
-
-                div class="card clickable" {
-                    p { "Click to run Surreal inline script." }
-                    button class="btn" { "Run script" }
+                section {
+                    article class="clickable" {
+                        h3 { "Surreal" }
+                        p { "Click to run Surreal inline script." }
+                        button { "Run script" }
+                    }
                 }
 
-                button class="btn" data-on:click="@get('/error-test')" { "Trigger error" }
+                section {
+                    article {
+                        button class="secondary" data-on:click="@get('/error-test')" {
+                            "Trigger error"
+                        }
+                    }
+                }
+
                 (js())
             }
         };
@@ -55,18 +72,22 @@ inline_js! {
       target.outerHTML = event.data;
     });
 
-    me("div.clickable.card").on("click", (el) => {
-      me(el).textContent = "Surreal says hi!";
+    me(".clickable button").on("click", async (el) => {
+      let element = me(el);
+      let previous_text = me(el).textContent;
+      element.textContent = "Surreal says hi!";
+      await sleep(1000);
+      element.textContent = previous_text;
     });
 }
 
 inline_css! {
     me {
-      border: 1px solid var(--accent);
-      border-radius: 10px;
-      padding: 12px;
+      border: 1px solid var(--pico-primary);
+      border-radius: var(--pico-border-radius);
+      padding: var(--pico-spacing);
     }
     me strong {
-      color: var(--accent);
+      color: var(--pico-primary);
     }
 }

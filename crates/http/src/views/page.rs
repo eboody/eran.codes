@@ -41,10 +41,14 @@ pub struct Error {
 impl Render for Error {
     fn render(&self) -> Markup {
         let content = maud::html! {
-            main class="page" {
-                h1 { (self.title) }
-                p { (self.message) }
-                p class="muted" { "Status: " (self.status) }
+            main class="container" {
+                article {
+                    header {
+                        h1 { (self.title) }
+                    }
+                    p { (self.message) }
+                    p { "Status: " (self.status) }
+                }
             }
         };
 

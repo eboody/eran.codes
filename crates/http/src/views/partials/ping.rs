@@ -6,7 +6,7 @@ impl maud::Render for Ping {
     fn render(&self) -> maud::Markup {
         let current_time = jiff::Timestamp::now();
         maud::html! {
-            div id="ping-target" class="card pinged" {
+            article id="ping-target" class="pinged" {
                 p {
                     (current_time)
                     ": Ping received "
@@ -15,11 +15,11 @@ impl maud::Render for Ping {
                 ({
                     css! {
                         me {
-                          border: 1px dashed var(--accent);
+                          border: 1px dashed var(--pico-primary);
                         }
                         me em {
                           font-style: normal;
-                          color: red;
+                          color: var(--pico-primary);
                         }
                     }
                 })

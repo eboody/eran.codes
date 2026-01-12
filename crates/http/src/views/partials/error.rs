@@ -9,17 +9,17 @@ pub struct Error {
 impl Render for Error {
     fn render(&self) -> maud::Markup {
         maud::html! {
-            div id="error-target" class="card error" {
+            article id="error-target" role="alert" {
                 strong { "Something went wrong" }
                 p { (self.message) }
                 ({
                     css! {
                         me {
-                          border: 1px solid #b00020;
-                          background: #fff2f2;
+                          border: 1px solid var(--pico-del-color);
+                          background: var(--pico-del-background);
                         }
                         me strong {
-                          color: #b00020;
+                          color: var(--pico-del-color);
                         }
                     }
                 })
