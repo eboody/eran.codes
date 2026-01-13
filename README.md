@@ -2,6 +2,7 @@
 
 ## Quickstart
 - `HOST`, `PORT`, `DATABASE_URL`, `SESSION_SECRET` (base64url, no padding, 64 bytes)
+- Optional: `SESSION_CLEANUP_INTERVAL_SECS` (defaults to 3600)
 - `cargo run`
 
 ## Structure

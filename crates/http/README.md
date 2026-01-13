@@ -7,13 +7,13 @@ HTTP transport, Datastar endpoints, and Maud views.
 - `GET /partials/ping` sends a Datastar patch via SSE.
 - `GET /health` returns `ok`.
 
-## Views
-Maud views live in `crates/http/src/views/` and implement `maud::Render`:
-- `views/layout.rs`: `PageLayout`
-- `views/pages/home.rs`: `HomePage`
-- `views/partials/ping.rs`: `Ping`
+## Sessions
+- Auth sessions use `tower-sessions` with the SQLx Postgres store.
+- Session cleanup runs on an interval configured by `SESSION_CLEANUP_INTERVAL_SECS` (default: 3600).
+- Migrations for sessions live in `crates/infra/migrations/004_sessions.*.sql`.
 
-Use `crate::views::render(...)` to convert a `maud::Render` into an `Html<String>` response.
+## Views
+Maud views live in `crates/http/src/views/` and implement `maud::Render`.
 
 ## Static assets
 Static files are served from `crates/http/static/` at `/static`.

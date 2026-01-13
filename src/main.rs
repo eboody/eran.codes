@@ -42,9 +42,12 @@ async fn main() -> Result<()> {
 
     let session_store = PostgresStore::new(infra.db.clone());
     let cleanup_store = session_store.clone();
+    let cleanup_interval = std::time::Duration::from_secs(
+        cfg.http.session_cleanup_interval_secs,
+    );
     tokio::spawn(async move {
         if let Err(error) = cleanup_store
-            .continuously_delete_expired(std::time::Duration::from_secs(60 * 60))
+            .continuously_delete_expired(cleanup_interval)
             .await
         {
             tracing::warn!(?error, "session cleanup task failed");

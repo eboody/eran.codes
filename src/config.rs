@@ -13,6 +13,7 @@ pub struct HttpConfig {
     pub host: String,
     pub port: u16,
     pub session_secret: Vec<u8>,
+    pub session_cleanup_interval_secs: u64,
 }
 
 impl HttpConfig {
@@ -40,6 +41,30 @@ impl HttpConfig {
             });
         }
 
+        let session_cleanup_interval_secs =
+            match std::env::var("SESSION_CLEANUP_INTERVAL_SECS") {
+                Ok(value) => value.parse().map_err(|_| {
+                    Error::InvalidEnv {
+                        key: "SESSION_CLEANUP_INTERVAL_SECS",
+                        reason: "must be a valid u64 integer".to_string(),
+                    }
+                })?,
+                Err(std::env::VarError::NotPresent) => 3600,
+                Err(_) => {
+                    return Err(Error::InvalidEnv {
+                        key: "SESSION_CLEANUP_INTERVAL_SECS",
+                        reason: "must be a valid u64 integer".to_string(),
+                    })
+                }
+            };
+
+        if session_cleanup_interval_secs == 0 {
+            return Err(Error::InvalidEnv {
+                key: "SESSION_CLEANUP_INTERVAL_SECS",
+                reason: "must be greater than 0".to_string(),
+            });
+        }
+
         Ok(Self {
             host,
             port: port_str.parse().map_err(|_| {
@@ -50,6 +75,7 @@ impl HttpConfig {
                 }
             })?,
             session_secret,
+            session_cleanup_interval_secs,
         })
     }
 }
