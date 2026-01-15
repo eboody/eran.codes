@@ -30,7 +30,7 @@ pub struct Entry {
 
 #[derive(Clone)]
 pub struct Store {
-    inner: Arc<DashMap<String, VecDeque<Entry>>>,
+    requests: Arc<DashMap<String, VecDeque<Entry>>>,
     sessions: Arc<DashMap<String, VecDeque<Entry>>>,
     global: Arc<Mutex<VecDeque<Entry>>>,
     max_entries: usize,
@@ -43,20 +43,12 @@ impl Store {
         max_entries: usize,
     ) -> Self {
         Self {
-            inner: Arc::new(DashMap::new()),
+            requests: Arc::new(DashMap::new()),
             sessions: Arc::new(DashMap::new()),
             global: Arc::new(Mutex::new(VecDeque::new())),
             max_entries,
             sse,
         }
-    }
-
-    pub fn record(
-        &self,
-        request_id: &str,
-        entry: Entry,
-    ) {
-        self.record_with_session(request_id, None, entry);
     }
 
     pub fn record_with_session(
@@ -66,7 +58,7 @@ impl Store {
         entry: Entry,
     ) {
         let mut queue = self
-            .inner
+            .requests
             .entry(request_id.to_string())
             .or_insert_with(VecDeque::new);
         if queue.len() >= self.max_entries {
@@ -115,11 +107,11 @@ impl Store {
         }
     }
 
-    pub fn snapshot(
+    pub fn snapshot_request(
         &self,
         request_id: &str,
     ) -> Vec<Entry> {
-        self.inner
+        self.requests
             .get(request_id)
             .map(|queue| queue.iter().cloned().collect())
             .unwrap_or_default()
