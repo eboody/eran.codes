@@ -14,7 +14,9 @@ use tower_sessions_sqlx_store::PostgresStore;
 #[tokio::main]
 async fn main() -> Result<()> {
     let sse_registry = http::SseRegistry::new();
-    let trace_log = http::trace_log::Store::new(sse_registry.clone());
+    let trace_log = http::trace_log::Store::builder()
+        .with_sse(sse_registry.clone())
+        .build();
     init_tracing(trace_log.clone());
 
     let cfg = config::Config::load()?;
@@ -32,13 +34,13 @@ async fn main() -> Result<()> {
     let auth_service = app::auth::Service::new(Arc::new(auth_provider));
 
     let session_key = Key::from(&cfg.http.session_secret);
-    let http_state = http::State::new(
-        user_service,
-        auth_service,
-        sse_registry,
-        session_key.clone(),
-        trace_log,
-    );
+    let http_state = http::State::builder()
+        .with_user(user_service)
+        .with_auth(auth_service)
+        .with_sse(sse_registry)
+        .with_cookie_key(session_key.clone())
+        .with_trace_log(trace_log)
+        .build();
 
     let session_store = PostgresStore::new(infra.db.clone());
     let cleanup_store = session_store.clone();
