@@ -20,14 +20,14 @@ pub async fn auth_status_partial(
     let expiry = session.expiry().map(|expiry| format!("{expiry:?}"));
     let trace = trace_snapshot(&state);
 
-    let partial = views::partials::AuthStatus {
-        user_id: user.map(|value| value.id.as_str()),
-        username: user.map(|value| value.username.as_str()),
-        email: user.map(|value| value.email.as_str()),
-        session_id,
-        expiry,
-        trace,
-    };
+    let partial = views::partials::AuthStatus::builder()
+        .maybe_user_id(user.map(|value| value.id.as_str()))
+        .maybe_username(user.map(|value| value.username.as_str()))
+        .maybe_email(user.map(|value| value.email.as_str()))
+        .maybe_session_id(session_id.clone())
+        .maybe_expiry(expiry.clone())
+        .trace(trace)
+        .build();
 
     (
         StatusCode::OK,
@@ -43,12 +43,14 @@ pub async fn session_status_partial(
     let session_id = session.id().map(|id| id.to_string());
     let expiry = session.expiry().map(|expiry| format!("{expiry:?}"));
     let trace = trace_snapshot(&state);
+    let session_id = session_id.as_deref();
+    let expiry = expiry.as_deref();
 
-    let partial = views::partials::SessionStatus {
-        session_id: session_id.as_deref(),
-        expiry: expiry.as_deref(),
-        trace,
-    };
+    let partial = views::partials::SessionStatus::builder()
+        .maybe_session_id(session_id)
+        .maybe_expiry(expiry)
+        .trace(trace)
+        .build();
 
     (
         StatusCode::OK,
@@ -62,14 +64,19 @@ pub async fn request_meta_partial(
     tracing::info!(target: "demo.request", "request metadata requested");
     let context = crate::request::current_context();
     let trace = trace_snapshot(&state);
-    let partial = views::partials::RequestMeta {
-        request_id: context.as_ref().and_then(|value| value.request_id.as_deref()),
-        session_id: context.as_ref().and_then(|value| value.session_id.as_deref()),
-        user_id: context.as_ref().and_then(|value| value.user_id.as_deref()),
-        client_ip: context.as_ref().and_then(|value| value.client_ip.as_deref()),
-        user_agent: context.as_ref().and_then(|value| value.user_agent.as_deref()),
-        trace,
-    };
+    let request_id = context.as_ref().and_then(|value| value.request_id.as_deref());
+    let session_id = context.as_ref().and_then(|value| value.session_id.as_deref());
+    let user_id = context.as_ref().and_then(|value| value.user_id.as_deref());
+    let client_ip = context.as_ref().and_then(|value| value.client_ip.as_deref());
+    let user_agent = context.as_ref().and_then(|value| value.user_agent.as_deref());
+    let partial = views::partials::RequestMeta::builder()
+        .maybe_request_id(request_id)
+        .maybe_session_id(session_id)
+        .maybe_user_id(user_id)
+        .maybe_client_ip(client_ip)
+        .maybe_user_agent(user_agent)
+        .trace(trace)
+        .build();
 
     (
         StatusCode::OK,
@@ -100,13 +107,13 @@ pub async fn boundary_check_partial(
         }
     };
 
-    let partial = views::partials::BoundaryCheck {
-        label,
-        username,
-        email,
-        result,
-        trace: trace_snapshot(&state),
-    };
+    let partial = views::partials::BoundaryCheck::builder()
+        .label(label)
+        .username(username)
+        .email(email)
+        .result(result)
+        .trace(trace_snapshot(&state))
+        .build();
 
     (
         StatusCode::OK,
@@ -137,11 +144,11 @@ pub async fn db_check_partial(
 
     let exists = state.user.find_by_email(email.clone()).await.ok().flatten().is_some();
     let trace = trace_snapshot(&state);
-    let partial = views::partials::DbCheck {
-        email: &email,
-        exists,
-        trace,
-    };
+    let partial = views::partials::DbCheck::builder()
+        .email(&email)
+        .exists(exists)
+        .trace(trace)
+        .build();
 
     (
         StatusCode::OK,

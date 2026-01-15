@@ -1,7 +1,9 @@
+use bon::Builder;
 use maud::Render;
 
 use crate::views::partials::TraceLog;
 
+#[derive(Builder)]
 pub struct SessionStatus<'a> {
     pub session_id: Option<&'a str>,
     pub expiry: Option<&'a str>,
@@ -19,7 +21,7 @@ impl Render for SessionStatus<'_> {
                         li { "expiry: " (self.expiry.unwrap_or("none")) }
                     }
                 }
-                (TraceLog { entries: &self.trace }.render())
+                (TraceLog::builder().entries(&self.trace).build().render())
             }
         }
     }

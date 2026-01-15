@@ -1,7 +1,9 @@
+use bon::Builder;
 use maud::Render;
 
 use crate::views::partials::TraceLog;
 
+#[derive(Builder)]
 pub struct RequestMeta<'a> {
     pub request_id: Option<&'a str>,
     pub session_id: Option<&'a str>,
@@ -25,7 +27,7 @@ impl Render for RequestMeta<'_> {
                         li { "user_agent: " (self.user_agent.unwrap_or("none")) }
                     }
                 }
-                (TraceLog { entries: &self.trace }.render())
+                (TraceLog::builder().entries(&self.trace).build().render())
             }
         }
     }

@@ -1,7 +1,9 @@
+use bon::Builder;
 use maud::Render;
 
 use crate::views::partials::TraceLog;
 
+#[derive(Builder)]
 pub struct AuthStatus<'a> {
     pub user_id: Option<&'a str>,
     pub username: Option<&'a str>,
@@ -31,7 +33,7 @@ impl Render for AuthStatus<'_> {
                         li { "expiry: " (self.expiry.as_deref().unwrap_or("none")) }
                     }
                 }
-                (TraceLog { entries: &self.trace }.render())
+                (TraceLog::builder().entries(&self.trace).build().render())
             }
         }
     }

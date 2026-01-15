@@ -1,7 +1,9 @@
+use bon::Builder;
 use maud::Render;
 
 use crate::trace_log::Entry;
 
+#[derive(Builder)]
 pub struct TraceLog<'a> {
     pub entries: &'a [Entry],
 }

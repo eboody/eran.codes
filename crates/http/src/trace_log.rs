@@ -16,10 +16,10 @@ use tracing::{Event, Level};
 use tracing_subscriber::{Layer, registry::LookupSpan};
 
 use crate::{request, sse, views};
-use bon::bon;
+use bon::{bon, Builder};
 use maud::Render;
 
-#[derive(Clone, Debug)]
+#[derive(Clone, Debug, Builder)]
 pub struct Entry {
     pub timestamp: String,
     pub level: String,
@@ -96,10 +96,14 @@ impl Store {
 
         if let Some(session_id) = session_id {
             let entries = self.snapshot_session(session_id);
-            let live_log = views::partials::LiveLog { entries: &entries }
+            let live_log = views::partials::LiveLog::builder()
+                .entries(&entries)
+                .build()
                 .render()
                 .into_string();
-            let network_log = views::partials::NetworkLog { entries: &entries }
+            let network_log = views::partials::NetworkLog::builder()
+                .entries(&entries)
+                .build()
                 .render()
                 .into_string();
             let _ = self
@@ -203,13 +207,13 @@ where
             .message
             .unwrap_or_else(|| event.metadata().name().to_string());
 
-        let entry = Entry {
-            timestamp: jiff::Timestamp::now().to_string(),
-            level: level.to_string(),
-            target: event.metadata().target().to_string(),
-            message,
-            fields: visitor.fields,
-        };
+        let entry = Entry::builder()
+            .timestamp(jiff::Timestamp::now().to_string())
+            .level(level.to_string())
+            .target(event.metadata().target().to_string())
+            .message(message)
+            .fields(visitor.fields)
+            .build();
 
         let session_id = context
             .as_ref()
@@ -258,17 +262,17 @@ pub async fn audit_middleware(
     state.trace_log.record_with_session(
         &request_id,
         session_id.as_deref(),
-        Entry {
-            timestamp: jiff::Timestamp::now().to_string(),
-            level: "INFO".to_string(),
-            target: "demo.request".to_string(),
-            message: "request.start".to_string(),
-            fields: vec![
+        Entry::builder()
+            .timestamp(jiff::Timestamp::now().to_string())
+            .level("INFO".to_string())
+            .target("demo.request".to_string())
+            .message("request.start".to_string())
+            .fields(vec![
                 ("method".to_string(), method.clone()),
                 ("path".to_string(), path.clone()),
                 ("request_id".to_string(), request_id.clone()),
-            ],
-        },
+            ])
+            .build(),
     );
 
     let response = next.run(req).await;
@@ -277,19 +281,19 @@ pub async fn audit_middleware(
     state.trace_log.record_with_session(
         &request_id,
         session_id.as_deref(),
-        Entry {
-            timestamp: jiff::Timestamp::now().to_string(),
-            level: "INFO".to_string(),
-            target: "demo.request".to_string(),
-            message: "request.end".to_string(),
-            fields: vec![
+        Entry::builder()
+            .timestamp(jiff::Timestamp::now().to_string())
+            .level("INFO".to_string())
+            .target("demo.request".to_string())
+            .message("request.end".to_string())
+            .fields(vec![
                 ("method".to_string(), method),
                 ("path".to_string(), path),
                 ("status".to_string(), response.status().as_u16().to_string()),
                 ("latency_ms".to_string(), latency_ms),
                 ("request_id".to_string(), request_id.clone()),
-            ],
-        },
+            ])
+            .build(),
     );
 
     if response.status() == StatusCode::INTERNAL_SERVER_ERROR {

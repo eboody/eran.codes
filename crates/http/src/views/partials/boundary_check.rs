@@ -1,7 +1,9 @@
+use bon::Builder;
 use maud::Render;
 
 use crate::views::partials::TraceLog;
 
+#[derive(Builder)]
 pub struct BoundaryCheck<'a> {
     pub label: &'a str,
     pub username: &'a str,
@@ -22,7 +24,7 @@ impl Render for BoundaryCheck<'_> {
                         li { "result: " (self.result) }
                     }
                 }
-                (TraceLog { entries: &self.trace }.render())
+                (TraceLog::builder().entries(&self.trace).build().render())
             }
         }
     }

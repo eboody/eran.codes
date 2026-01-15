@@ -1,7 +1,9 @@
+use bon::Builder;
 use maud::Render;
 
 use crate::views::partials::TraceLog;
 
+#[derive(Builder)]
 pub struct DbCheck<'a> {
     pub email: &'a str,
     pub exists: bool,
@@ -20,7 +22,7 @@ impl Render for DbCheck<'_> {
                         li { "result: " (status) }
                     }
                 }
-                (TraceLog { entries: &self.trace }.render())
+                (TraceLog::builder().entries(&self.trace).build().render())
             }
         }
     }
