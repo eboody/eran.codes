@@ -25,6 +25,8 @@
 ## Docs
 - `crates/http/README.md`
 - `maud-extensions/README.md`
+- `bon.md`
+- `docs/auth-sessions.md`
 - `docs/tracing.md`
 - `docs/datastar-tao.md`
 - `docs/datastar-signals.md`

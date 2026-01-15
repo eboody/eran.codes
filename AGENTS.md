@@ -30,6 +30,12 @@
 ## Tracing Strategy
 - Follow `docs/tracing.md` for required spans, context fields, and per-layer responsibilities.
 
+## Bon Builders
+- Prefer the `bon` crate for configuration/builders whenever a constructor has many steps or the call site reads as a pipeline of abstract methods.
+- Use builder methods that are self-documenting (e.g., `with_session_store`, `enable_trace_layers`, `with_state`) so the high-level modules stay readable without diving into implementation.
+- Keep builders close to the module they configure (e.g., router builders in `crates/http/src/router.rs` or a sibling module).
+- See `bon.md` for what to look up before implementing a new builder.
+
 ## Updating This File
 - Keep `AGENTS.md` updated when we introduce new architectural decisions, cross-cutting mechanisms, or boundary changes (e.g., SSE/session handling).
 - Prefer module-scoped naming and re-exports for readability (e.g., `sse::Event`, `sse::Registry`, `views::pages::Home`, `views::partials::Ping`, `views::page::Layout`), avoiding deep paths in call sites.

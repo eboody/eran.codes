@@ -15,6 +15,20 @@ HTTP transport, Datastar endpoints, and Maud views.
 ## Views
 Maud views live in `crates/http/src/views/` and implement `maud::Render`.
 
+## Router builder
+Router wiring is assembled via Bon to keep the call site self-documenting:
+
+```rust
+http::router(state, session_store);
+```
+
+Under the hood this flows through named builder steps in `crates/http/src/router.rs`.
+
+## Internal docs
+- `crates/http/src/README.md`
+- `crates/http/src/handlers/README.md`
+- `crates/http/src/views/README.md`
+
 ## Static assets
 Static files are served from `crates/http/static/` at `/static`.
 
