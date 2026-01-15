@@ -5,10 +5,11 @@ use axum::{
     response::Response,
 };
 use axum_login::{AuthUser, AuthnBackend, AuthSession};
+use bon::Builder;
 
 use crate::request;
 
-#[derive(Clone, Debug)]
+#[derive(Clone, Debug, Builder)]
 pub struct User {
     pub id: String,
     pub username: String,
@@ -70,12 +71,12 @@ impl AuthnBackend for Backend {
 
 impl From<app::auth::AuthenticatedUser> for User {
     fn from(user: app::auth::AuthenticatedUser) -> Self {
-        Self {
-            id: user.id,
-            username: user.username,
-            email: user.email,
-            session_hash: user.session_hash,
-        }
+        Self::builder()
+            .id(user.id)
+            .username(user.username)
+            .email(user.email)
+            .session_hash(user.session_hash)
+            .build()
     }
 }
 
