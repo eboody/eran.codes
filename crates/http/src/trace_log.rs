@@ -1,11 +1,12 @@
 use std::{
     collections::VecDeque,
     sync::{Arc, Mutex},
+    time::Instant,
 };
 
 use axum::{
     body::Body,
-    extract::State,
+    extract::Extension,
     http::{Request, StatusCode},
     middleware::Next,
     response::Response,
@@ -15,6 +16,7 @@ use tracing::{Event, Level};
 use tracing_subscriber::{Layer, registry::LookupSpan};
 
 use crate::{request, sse, views};
+use bon::bon;
 use maud::Render;
 
 #[derive(Clone, Debug)]
@@ -29,17 +31,22 @@ pub struct Entry {
 #[derive(Clone)]
 pub struct Store {
     inner: Arc<DashMap<String, VecDeque<Entry>>>,
+    sessions: Arc<DashMap<String, VecDeque<Entry>>>,
     global: Arc<Mutex<VecDeque<Entry>>>,
     max_entries: usize,
     sse: sse::Registry,
 }
 
 impl Store {
-    pub fn new(sse: sse::Registry) -> Self {
+    pub fn new(
+        sse: sse::Registry,
+        max_entries: usize,
+    ) -> Self {
         Self {
             inner: Arc::new(DashMap::new()),
+            sessions: Arc::new(DashMap::new()),
             global: Arc::new(Mutex::new(VecDeque::new())),
-            max_entries: 50,
+            max_entries,
             sse,
         }
     }
@@ -67,22 +74,40 @@ impl Store {
         }
         queue.push_back(entry);
 
+        let entry = queue.back().cloned().expect("entry");
+
+        if let Some(session_id) = session_id {
+            let mut session_queue = self
+                .sessions
+                .entry(session_id.to_string())
+                .or_insert_with(VecDeque::new);
+            if session_queue.len() >= self.max_entries {
+                session_queue.pop_front();
+            }
+            session_queue.push_back(entry.clone());
+        }
+
         if let Ok(mut global) = self.global.lock() {
             if global.len() >= self.max_entries {
                 global.pop_front();
             }
-            global.push_back(queue.back().cloned().expect("entry"));
+            global.push_back(entry);
         }
 
         if let Some(session_id) = session_id {
-            let markup = views::partials::LiveLog {
-                entries: &self.snapshot_global(),
-            }
-            .render()
-            .into_string();
+            let entries = self.snapshot_session(session_id);
+            let live_log = views::partials::LiveLog { entries: &entries }
+                .render()
+                .into_string();
+            let network_log = views::partials::NetworkLog { entries: &entries }
+                .render()
+                .into_string();
             let _ = self
                 .sse
-                .send_by_id(session_id, sse::Event::patch_elements(markup));
+                .send_by_id(session_id, sse::Event::patch_elements(live_log));
+            let _ = self
+                .sse
+                .send_by_id(session_id, sse::Event::patch_elements(network_log));
         }
     }
 
@@ -100,10 +125,17 @@ impl Store {
         &self,
         session_id: &str,
     ) -> Vec<Entry> {
-        self.inner
+        self.sessions
             .get(session_id)
             .map(|queue| queue.iter().cloned().collect())
             .unwrap_or_default()
+    }
+
+    pub fn clear_session(
+        &self,
+        session_id: &str,
+    ) {
+        self.sessions.remove(session_id);
     }
 
     pub fn snapshot_global(&self) -> Vec<Entry> {
@@ -111,6 +143,17 @@ impl Store {
             .lock()
             .map(|value| value.iter().cloned().collect())
             .unwrap_or_default()
+    }
+}
+
+#[bon]
+impl Store {
+    #[builder]
+    pub fn builder(
+        #[builder(setters(name = with_sse))] sse: sse::Registry,
+        #[builder(default = 50, setters(name = with_max_entries))] max_entries: usize,
+    ) -> Self {
+        Self::new(sse, max_entries)
     }
 }
 
@@ -199,10 +242,13 @@ impl tracing::field::Visit for FieldVisitor {
 }
 
 pub async fn audit_middleware(
-    State(state): State<crate::State>,
+    Extension(state): Extension<crate::State>,
     req: Request<Body>,
     next: Next,
 ) -> Response {
+    let started_at = Instant::now();
+    let method = req.method().to_string();
+    let path = req.uri().path().to_string();
     let request_id = request::current_context()
         .and_then(|value| value.request_id)
         .unwrap_or_else(|| "unknown".to_string());
@@ -218,14 +264,15 @@ pub async fn audit_middleware(
             target: "demo.request".to_string(),
             message: "request.start".to_string(),
             fields: vec![
-                ("method".to_string(), req.method().to_string()),
-                ("path".to_string(), req.uri().path().to_string()),
+                ("method".to_string(), method.clone()),
+                ("path".to_string(), path.clone()),
                 ("request_id".to_string(), request_id.clone()),
             ],
         },
     );
 
     let response = next.run(req).await;
+    let latency_ms = started_at.elapsed().as_millis().to_string();
 
     state.trace_log.record_with_session(
         &request_id,
@@ -236,7 +283,10 @@ pub async fn audit_middleware(
             target: "demo.request".to_string(),
             message: "request.end".to_string(),
             fields: vec![
+                ("method".to_string(), method),
+                ("path".to_string(), path),
                 ("status".to_string(), response.status().as_u16().to_string()),
+                ("latency_ms".to_string(), latency_ms),
                 ("request_id".to_string(), request_id.clone()),
             ],
         },

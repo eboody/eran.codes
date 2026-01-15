@@ -1,5 +1,6 @@
 use axum::{
     body::Body,
+    extract::Extension,
     http::{header, HeaderMap, Request},
     middleware::Next,
     response::Response,
@@ -8,6 +9,7 @@ use axum::{
 use crate::sse::SESSION_COOKIE;
 use std::cell::RefCell;
 use tracing::Span;
+use tower_cookies::{Cookies, Key};
 
 #[derive(Clone, Copy, Debug)]
 pub enum Kind {
@@ -41,10 +43,11 @@ pub fn current_context() -> Option<Context> {
 }
 
 pub async fn set_context_middleware(
+    Extension(state): Extension<crate::State>,
     req: Request<Body>,
     next: Next,
 ) -> Response {
-    let context = context_from_headers(req.headers());
+    let context = context_from_request(&req, &state.cookie_key);
     let mut req = req;
     req.extensions_mut().insert(context.clone());
     REQUEST_CONTEXT
@@ -71,10 +74,17 @@ pub fn set_user_id(user_id: impl Into<String>) {
     }
 }
 
-fn context_from_headers(headers: &HeaderMap) -> Context {
+fn context_from_request(
+    req: &Request<Body>,
+    key: &Key,
+) -> Context {
+    let headers = req.headers();
+    let cookies = req.extensions().get::<Cookies>();
     Context {
         request_id: header_value(headers, header::HeaderName::from_static("x-request-id")),
-        session_id: session_id_from_headers(headers),
+        session_id: cookies
+            .and_then(|cookies| session_id_from_cookies(cookies, key))
+            .or_else(|| session_id_from_headers(headers)),
         user_id: None,
         client_ip: client_ip_from_headers(headers),
         user_agent: header_value(headers, header::USER_AGENT),
@@ -100,6 +110,16 @@ fn session_id_from_headers(headers: &HeaderMap) -> Option<String> {
     })
 }
 
+fn session_id_from_cookies(
+    cookies: &Cookies,
+    key: &Key,
+) -> Option<String> {
+    cookies
+        .signed(key)
+        .get(SESSION_COOKIE)
+        .map(|cookie| cookie.value().to_string())
+}
+
 fn client_ip_from_headers(headers: &HeaderMap) -> Option<String> {
     let forwarded = header_value(
         headers,
@@ -121,6 +141,7 @@ fn header_value(
 mod tests {
     use super::*;
     use axum::http::HeaderValue;
+    use tower_cookies::{Cookie, Cookies, Key};
 
     #[test]
     fn parses_session_id_from_cookie_header() {
@@ -160,6 +181,38 @@ mod tests {
         let kind = kind_from_headers(&headers);
 
         assert!(matches!(kind, Kind::Datastar));
+    }
+
+    #[test]
+    fn reads_signed_session_cookie() {
+        let key = Key::generate();
+        let cookies = Cookies::new();
+        cookies
+            .signed(&key)
+            .add(Cookie::new(SESSION_COOKIE, "signed123"));
+
+        let session_id = session_id_from_cookies(&cookies, &key);
+
+        assert_eq!(session_id.as_deref(), Some("signed123"));
+    }
+
+    #[test]
+    fn context_prefers_signed_session_cookie() {
+        let key = Key::generate();
+        let cookies = Cookies::new();
+        cookies
+            .signed(&key)
+            .add(Cookie::new(SESSION_COOKIE, "signed123"));
+
+        let mut req = Request::builder()
+            .uri("/")
+            .body(Body::empty())
+            .unwrap();
+        req.extensions_mut().insert(cookies);
+
+        let context = context_from_request(&req, &key);
+
+        assert_eq!(context.session_id.as_deref(), Some("signed123"));
     }
 
     #[tokio::test]
