@@ -97,7 +97,7 @@ impl Error {
 
         match kind {
             crate::request::Kind::Datastar => Response::Partial {
-                status,
+                status: axum::http::StatusCode::OK,
                 view: crate::views::partials::Error { message },
             },
             crate::request::Kind::Page => Response::Page {

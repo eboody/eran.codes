@@ -163,15 +163,19 @@ impl Registry {
         handle: &Handle,
         event: Event,
     ) -> SendResult<()> {
+        let session_id = handle.id();
         let session = self
             .sessions
-            .get(handle.id())
+            .get(session_id)
             .ok_or(SendError::SessionMissing)?;
 
-        session
-            .send(event)
-            .map(|_| ())
-            .map_err(|_| SendError::SendFailed)
+        let result = session.send(event).map(|_| ());
+        if result.is_err() {
+            drop(session);
+            self.sessions.remove(session_id);
+            return Err(SendError::SendFailed);
+        }
+        Ok(())
     }
 
     pub fn send_by_id(
@@ -184,10 +188,13 @@ impl Registry {
             .get(session_id)
             .ok_or(SendError::SessionMissing)?;
 
-        session
-            .send(event)
-            .map(|_| ())
-            .map_err(|_| SendError::SendFailed)
+        let result = session.send(event).map(|_| ());
+        if result.is_err() {
+            drop(session);
+            self.sessions.remove(session_id);
+            return Err(SendError::SendFailed);
+        }
+        Ok(())
     }
 
     pub fn remove(

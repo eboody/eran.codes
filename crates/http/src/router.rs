@@ -20,10 +20,11 @@ pub fn router<Store>(state: State, session_store: Store) -> Router
 where
     Store: SessionStore + Clone + Send + Sync + 'static,
 {
-    let base = base_routes();
-    let pages = pages_routes();
-    let router = merge_routes(base, pages)
-        .route_layer(from_fn(crate::trace::record_route_middleware));
+    let router = RoutesBuilder::new()
+        .with_base_routes()
+        .with_page_routes()
+        .with_route_tracing()
+        .finish();
     let router = RequestLayerBuilder::builder()
         .with_router(router)
         .with_state(state.clone())
@@ -252,14 +253,48 @@ fn pages_routes() -> Router {
         .merge(protected)
 }
 
-fn merge_routes(base: Router, pages: Router) -> Router {
+struct RoutesBuilder {
+    router: Router,
+}
+
+impl RoutesBuilder {
+    fn new() -> Self {
+        Self {
+            router: Router::new(),
+        }
+    }
+
+    fn with_base_routes(mut self) -> Self {
+        self.router = self.router.merge(base_routes());
+        self
+    }
+
+    fn with_page_routes(mut self) -> Self {
+        let pages = maybe_live_reload(pages_routes());
+        self.router = self.router.merge(pages);
+        self
+    }
+
+    fn with_route_tracing(mut self) -> Self {
+        self.router = self
+            .router
+            .route_layer(from_fn(crate::trace::record_route_middleware));
+        self
+    }
+
+    fn finish(self) -> Router {
+        self.router
+    }
+}
+
+fn maybe_live_reload(pages: Router) -> Router {
     #[cfg(all(debug_assertions, feature = "live-reload"))]
     {
-        base.merge(pages.layer(tower_livereload::LiveReloadLayer::new()))
+        pages.layer(tower_livereload::LiveReloadLayer::new())
     }
 
     #[cfg(not(all(debug_assertions, feature = "live-reload")))]
     {
-        base.merge(pages)
+        pages
     }
 }
