@@ -82,9 +82,7 @@ fn context_from_request(
     let cookies = req.extensions().get::<Cookies>();
     Context {
         request_id: header_value(headers, header::HeaderName::from_static("x-request-id")),
-        session_id: cookies
-            .and_then(|cookies| session_id_from_cookies(cookies, key))
-            .or_else(|| session_id_from_headers(headers)),
+        session_id: cookies.and_then(|cookies| session_id_from_cookies(cookies, key)),
         user_id: None,
         client_ip: client_ip_from_headers(headers),
         user_agent: header_value(headers, header::USER_AGENT),
@@ -98,16 +96,6 @@ fn kind_from_headers(headers: &HeaderMap) -> Kind {
     } else {
         Kind::Page
     }
-}
-
-fn session_id_from_headers(headers: &HeaderMap) -> Option<String> {
-    let raw = headers.get(header::COOKIE)?.to_str().ok()?;
-    raw.split(';').find_map(|pair| {
-        let pair = pair.trim();
-        pair.strip_prefix(SESSION_COOKIE)
-            .and_then(|value| value.strip_prefix('='))
-            .map(|value| value.to_string())
-    })
 }
 
 fn session_id_from_cookies(
@@ -142,19 +130,6 @@ mod tests {
     use super::*;
     use axum::http::HeaderValue;
     use tower_cookies::{Cookie, Cookies, Key};
-
-    #[test]
-    fn parses_session_id_from_cookie_header() {
-        let mut headers = HeaderMap::new();
-        headers.insert(
-            header::COOKIE,
-            HeaderValue::from_static("foo=bar; session_id=abc123; baz=qux"),
-        );
-
-        let session_id = session_id_from_headers(&headers);
-
-        assert_eq!(session_id.as_deref(), Some("abc123"));
-    }
 
     #[test]
     fn prefers_forwarded_ip_over_real_ip() {
@@ -213,6 +188,23 @@ mod tests {
         let context = context_from_request(&req, &key);
 
         assert_eq!(context.session_id.as_deref(), Some("signed123"));
+    }
+
+    #[test]
+    fn ignores_unsigned_session_cookie() {
+        let key = Key::generate();
+        let mut req = Request::builder()
+            .uri("/")
+            .header(
+                header::COOKIE,
+                HeaderValue::from_static("session_id=unsigned"),
+            )
+            .body(Body::empty())
+            .unwrap();
+
+        let context = context_from_request(&req, &key);
+
+        assert_eq!(context.session_id.as_deref(), None);
     }
 
     #[tokio::test]
