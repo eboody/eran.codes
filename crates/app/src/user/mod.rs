@@ -3,12 +3,13 @@ mod error;
 use std::sync::Arc;
 
 use async_trait::async_trait;
+use bon::Builder;
 use secrecy::{ExposeSecret, SecretString};
 
 use domain::user;
 pub use error::{Error, Result};
 
-#[derive(Clone, Debug)]
+#[derive(Clone, Debug, Builder)]
 pub struct RegisterUser {
     pub username: String,
     pub email: String,

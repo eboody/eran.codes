@@ -1,14 +1,17 @@
+use bon::Builder;
 use maud::{Markup, Render};
 
-#[derive(Clone, Debug)]
+#[derive(Clone, Debug, Builder)]
 pub struct UserNav {
     pub username: String,
     pub email: String,
 }
 
+#[derive(Builder)]
 pub struct Layout<'a> {
     pub title: &'a str,
     pub content: Markup,
+    #[builder(setters(name = with_user))]
     pub user: Option<UserNav>,
 }
 
@@ -65,11 +68,12 @@ impl Render for Layout<'_> {
     }
 }
 
-#[derive(Debug)]
+#[derive(Debug, Builder)]
 pub struct Error {
     pub title: &'static str,
     pub message: &'static str,
     pub status: u16,
+    #[builder(setters(name = with_user))]
     pub user: Option<UserNav>,
 }
 
@@ -87,11 +91,11 @@ impl Render for Error {
             }
         };
 
-        Layout {
-            title: self.title,
-            content,
-            user: self.user.clone(),
-        }
-        .render()
+        Layout::builder()
+            .title(self.title)
+            .content(content)
+            .maybe_with_user(self.user.clone())
+            .build()
+            .render()
     }
 }

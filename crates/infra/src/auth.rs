@@ -48,11 +48,13 @@ impl Repository for AuthRepository {
             db_duration_ms = start.elapsed().as_millis() as u64
         );
 
-        Ok(record.map(|row| AuthRecord {
-            id: row.get::<uuid::Uuid, _>("id").to_string(),
-            username: row.get::<String, _>("username"),
-            email: row.get::<String, _>("email"),
-            password_hash: row.get::<String, _>("password_hash"),
+        Ok(record.map(|row| {
+            AuthRecord::builder()
+                .id(row.get::<uuid::Uuid, _>("id").to_string())
+                .username(row.get::<String, _>("username"))
+                .email(row.get::<String, _>("email"))
+                .password_hash(row.get::<String, _>("password_hash"))
+                .build()
         }))
     }
 
@@ -88,11 +90,13 @@ impl Repository for AuthRepository {
             db_duration_ms = start.elapsed().as_millis() as u64
         );
 
-        Ok(record.map(|row| AuthRecord {
-            id: row.get::<uuid::Uuid, _>("id").to_string(),
-            username: row.get::<String, _>("username"),
-            email: row.get::<String, _>("email"),
-            password_hash: row.get::<String, _>("password_hash"),
+        Ok(record.map(|row| {
+            AuthRecord::builder()
+                .id(row.get::<uuid::Uuid, _>("id").to_string())
+                .username(row.get::<String, _>("username"))
+                .email(row.get::<String, _>("email"))
+                .password_hash(row.get::<String, _>("password_hash"))
+                .build()
         }))
     }
 }

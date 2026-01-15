@@ -102,12 +102,12 @@ impl Error {
             },
             crate::request::Kind::Page => Response::Page {
                 status,
-                view: crate::views::page::Error {
-                    title,
-                    message,
-                    status: status.as_u16(),
-                    user: None,
-                },
+                view: crate::views::page::Error::builder()
+                    .title(title)
+                    .message(message)
+                    .status(status.as_u16())
+                    .maybe_with_user(None)
+                    .build(),
             },
         }
     }

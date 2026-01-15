@@ -24,11 +24,11 @@ impl Render for Protected {
             }
         };
 
-        crate::views::page::Layout {
-            title: "Protected",
-            content,
-            user: self.user.clone(),
-        }
-        .render()
+        crate::views::page::Layout::builder()
+            .title("Protected")
+            .content(content)
+            .maybe_with_user(self.user.clone())
+            .build()
+            .render()
     }
 }

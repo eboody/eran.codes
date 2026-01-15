@@ -40,11 +40,11 @@ impl Render for Login<'_> {
             }
         };
 
-        crate::views::page::Layout {
-            title: "Sign in",
-            content,
-            user: self.user.clone(),
-        }
-        .render()
+        crate::views::page::Layout::builder()
+            .title("Sign in")
+            .content(content)
+            .maybe_with_user(self.user.clone())
+            .build()
+            .render()
     }
 }

@@ -277,11 +277,11 @@ impl maud::Render for Home {
             }
         };
 
-        crate::views::page::Layout {
-            title: "Home",
-            content,
-            user: self.user.clone(),
-        }
-        .render()
+        crate::views::page::Layout::builder()
+            .title("Home")
+            .content(content)
+            .maybe_with_user(self.user.clone())
+            .build()
+            .render()
     }
 }

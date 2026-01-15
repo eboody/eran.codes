@@ -45,11 +45,11 @@ impl Render for Register<'_> {
             }
         };
 
-        crate::views::page::Layout {
-            title: "Create account",
-            content,
-            user: self.user.clone(),
-        }
-        .render()
+        crate::views::page::Layout::builder()
+            .title("Create account")
+            .content(content)
+            .maybe_with_user(self.user.clone())
+            .build()
+            .render()
     }
 }

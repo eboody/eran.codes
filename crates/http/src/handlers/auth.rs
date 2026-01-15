@@ -53,10 +53,10 @@ pub async fn login(
     mut auth_session: crate::auth::Session,
     Form(form): Form<LoginForm>,
 ) -> crate::Result<axum::response::Response> {
-    let credentials = app::auth::Credentials {
-        email: form.email,
-        password: SecretString::new(form.password.into()),
-    };
+    let credentials = app::auth::Credentials::builder()
+        .email(form.email)
+        .password(SecretString::new(form.password.into()))
+        .build();
 
     if let Some(user) = auth_session.authenticate(credentials).await? {
         auth_session.login(&user).await?;
@@ -75,16 +75,16 @@ pub async fn register(
     mut auth_session: crate::auth::Session,
     Form(form): Form<RegisterForm>,
 ) -> crate::Result<axum::response::Response> {
-    let credentials = app::auth::Credentials {
-        email: form.email.clone(),
-        password: SecretString::new(form.password.clone().into()),
-    };
+    let credentials = app::auth::Credentials::builder()
+        .email(form.email.clone())
+        .password(SecretString::new(form.password.clone().into()))
+        .build();
 
-    let command = app::user::RegisterUser {
-        username: form.username,
-        email: form.email,
-        password: SecretString::new(form.password.into()),
-    };
+    let command = app::user::RegisterUser::builder()
+        .username(form.username)
+        .email(form.email)
+        .password(SecretString::new(form.password.into()))
+        .build();
 
     match state.user.register_user(command).await {
         Ok(_) => {
@@ -126,10 +126,12 @@ pub async fn protected(
     Ok(views::render(pages::Protected {
         username: user.username.clone(),
         email: user.email.clone(),
-        user: Some(crate::views::page::UserNav {
-            username: user.username,
-            email: user.email,
-        }),
+        user: Some(
+            crate::views::page::UserNav::builder()
+                .username(user.username)
+                .email(user.email)
+                .build(),
+        ),
     })
     .into_response())
 }

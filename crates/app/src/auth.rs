@@ -1,6 +1,7 @@
 use std::sync::Arc;
 
 use async_trait::async_trait;
+use bon::Builder;
 use secrecy::{ExposeSecret, SecretString};
 
 pub type Result<T> = core::result::Result<T, Error>;
@@ -22,13 +23,13 @@ impl core::fmt::Display for Error {
 
 impl std::error::Error for Error {}
 
-#[derive(Clone, Debug)]
+#[derive(Clone, Debug, Builder)]
 pub struct Credentials {
     pub email: String,
     pub password: SecretString,
 }
 
-#[derive(Clone, Debug)]
+#[derive(Clone, Debug, Builder)]
 pub struct AuthenticatedUser {
     pub id: String,
     pub username: String,
@@ -36,7 +37,7 @@ pub struct AuthenticatedUser {
     pub session_hash: String,
 }
 
-#[derive(Clone, Debug)]
+#[derive(Clone, Debug, Builder)]
 pub struct AuthRecord {
     pub id: String,
     pub username: String,
@@ -162,12 +163,14 @@ impl Provider for ProviderImpl {
             return Ok(None);
         }
 
-        Ok(Some(AuthenticatedUser {
-            id: record.id,
-            username: record.username,
-            email: record.email,
-            session_hash: record.password_hash,
-        }))
+        Ok(Some(
+            AuthenticatedUser::builder()
+                .id(record.id)
+                .username(record.username)
+                .email(record.email)
+                .session_hash(record.password_hash)
+                .build(),
+        ))
     }
 
     async fn get_user(
@@ -179,12 +182,14 @@ impl Provider for ProviderImpl {
             None => return Ok(None),
         };
 
-        Ok(Some(AuthenticatedUser {
-            id: record.id,
-            username: record.username,
-            email: record.email,
-            session_hash: record.password_hash,
-        }))
+        Ok(Some(
+            AuthenticatedUser::builder()
+                .id(record.id)
+                .username(record.username)
+                .email(record.email)
+                .session_hash(record.password_hash)
+                .build(),
+        ))
     }
 }
 
@@ -234,21 +239,25 @@ mod tests {
     #[tokio::test]
     async fn authenticate_returns_user_on_valid_password() {
         let repo = Arc::new(TestRepo {
-            record: Some(AuthRecord {
-                id: "user-1".to_string(),
-                username: "user".to_string(),
-                email: "user@example.com".to_string(),
-                password_hash: "hash".to_string(),
-            }),
+            record: Some(
+                AuthRecord::builder()
+                    .id("user-1".to_string())
+                    .username("user".to_string())
+                    .email("user@example.com".to_string())
+                    .password_hash("hash".to_string())
+                    .build(),
+            ),
         });
         let hasher = Arc::new(TestHasher { ok: true });
         let provider = ProviderImpl::new(repo, hasher);
 
         let user = provider
-            .authenticate(Credentials {
-                email: "user@example.com".to_string(),
-                password: SecretString::new("pw".into()),
-            })
+            .authenticate(
+                Credentials::builder()
+                    .email("user@example.com".to_string())
+                    .password(SecretString::new("pw".into()))
+                    .build(),
+            )
             .await
             .unwrap();
 
@@ -258,21 +267,25 @@ mod tests {
     #[tokio::test]
     async fn authenticate_returns_none_on_invalid_password() {
         let repo = Arc::new(TestRepo {
-            record: Some(AuthRecord {
-                id: "user-1".to_string(),
-                username: "user".to_string(),
-                email: "user@example.com".to_string(),
-                password_hash: "hash".to_string(),
-            }),
+            record: Some(
+                AuthRecord::builder()
+                    .id("user-1".to_string())
+                    .username("user".to_string())
+                    .email("user@example.com".to_string())
+                    .password_hash("hash".to_string())
+                    .build(),
+            ),
         });
         let hasher = Arc::new(TestHasher { ok: false });
         let provider = ProviderImpl::new(repo, hasher);
 
         let user = provider
-            .authenticate(Credentials {
-                email: "user@example.com".to_string(),
-                password: SecretString::new("pw".into()),
-            })
+            .authenticate(
+                Credentials::builder()
+                    .email("user@example.com".to_string())
+                    .password(SecretString::new("pw".into()))
+                    .build(),
+            )
             .await
             .unwrap();
 
