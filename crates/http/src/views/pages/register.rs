@@ -1,7 +1,9 @@
+use bon::Builder;
 use maud::Render;
 
 use crate::views::page::UserNav;
 
+#[derive(Builder)]
 pub struct Register<'a> {
     pub message: Option<&'a str>,
     pub user: Option<UserNav>,

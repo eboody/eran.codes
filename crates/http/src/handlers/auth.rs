@@ -3,6 +3,7 @@ use axum::{
     extract::Extension,
     response::{IntoResponse, Redirect},
 };
+use bon::Builder;
 use serde::Deserialize;
 
 use crate::views::{self, pages};
@@ -15,10 +16,9 @@ pub async fn login_form(
         return Ok(Redirect::to("/protected").into_response());
     }
 
-    Ok(views::render(pages::Login {
-        message: None,
-        user: None,
-    })
+    Ok(views::render(
+        pages::Login::builder().build(),
+    )
     .into_response())
 }
 
@@ -29,20 +29,19 @@ pub async fn register_form(
         return Ok(Redirect::to("/protected").into_response());
     }
 
-    Ok(views::render(pages::Register {
-        message: None,
-        user: None,
-    })
+    Ok(views::render(
+        pages::Register::builder().build(),
+    )
     .into_response())
 }
 
-#[derive(Deserialize)]
+#[derive(Builder, Deserialize)]
 pub struct LoginForm {
     pub email: String,
     pub password: String,
 }
 
-#[derive(Deserialize)]
+#[derive(Builder, Deserialize)]
 pub struct RegisterForm {
     pub username: String,
     pub email: String,
@@ -63,10 +62,11 @@ pub async fn login(
         return Ok(Redirect::to("/protected").into_response());
     }
 
-    Ok(views::render(pages::Login {
-        message: Some("Invalid email or password."),
-        user: None,
-    })
+    Ok(views::render(
+        pages::Login::builder()
+            .maybe_message(Some("Invalid email or password."))
+            .build(),
+    )
     .into_response())
 }
 
@@ -95,15 +95,17 @@ pub async fn register(
                 Err(crate::Error::Internal)
             }
         }
-        Err(app::user::Error::EmailTaken) => Ok(views::render(pages::Register {
-            message: Some("Email already in use."),
-            user: None,
-        })
+        Err(app::user::Error::EmailTaken) => Ok(views::render(
+            pages::Register::builder()
+                .maybe_message(Some("Email already in use."))
+                .build(),
+        )
         .into_response()),
-        Err(app::user::Error::Domain(_)) => Ok(views::render(pages::Register {
-            message: Some("Invalid input."),
-            user: None,
-        })
+        Err(app::user::Error::Domain(_)) => Ok(views::render(
+            pages::Register::builder()
+                .maybe_message(Some("Invalid input."))
+                .build(),
+        )
         .into_response()),
         Err(error) => Err(error.into()),
     }
@@ -123,15 +125,17 @@ pub async fn protected(
         return Ok(Redirect::to("/login").into_response());
     };
 
-    Ok(views::render(pages::Protected {
-        username: user.username.clone(),
-        email: user.email.clone(),
-        user: Some(
-            crate::views::page::UserNav::builder()
-                .username(user.username)
-                .email(user.email)
-                .build(),
-        ),
-    })
+    Ok(views::render(
+        pages::Protected::builder()
+            .username(user.username.clone())
+            .email(user.email.clone())
+            .maybe_user(Some(
+                crate::views::page::UserNav::builder()
+                    .username(user.username)
+                    .email(user.email)
+                    .build(),
+            ))
+            .build(),
+    )
     .into_response())
 }

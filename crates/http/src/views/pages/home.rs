@@ -1,5 +1,8 @@
+use bon::Builder;
+
 use crate::views::page::UserNav;
 
+#[derive(Builder)]
 pub struct Home {
     pub user: Option<UserNav>,
 }

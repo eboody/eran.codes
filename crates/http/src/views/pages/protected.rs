@@ -1,7 +1,9 @@
+use bon::Builder;
 use maud::Render;
 
 use crate::views::page::UserNav;
 
+#[derive(Builder)]
 pub struct Protected {
     pub username: String,
     pub email: String,
