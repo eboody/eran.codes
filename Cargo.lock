@@ -88,6 +88,7 @@ name = "app"
 version = "0.1.0"
 dependencies = [
  "async-trait",
+ "bon",
  "derive_more",
  "domain",
  "secrecy",
@@ -1422,6 +1423,7 @@ dependencies = [
  "app",
  "argon2",
  "async-trait",
+ "bon",
  "derive_more",
  "domain",
  "password-hash",

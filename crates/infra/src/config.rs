@@ -1,11 +1,13 @@
+use bon::Builder;
+
 use crate::error::{Error, Result};
 
-#[derive(Clone, Debug)]
+#[derive(Clone, Debug, Builder)]
 pub struct InfraConfig {
     pub db: DbConfig,
 }
 
-#[derive(Clone, Debug)]
+#[derive(Clone, Debug, Builder)]
 pub struct DbConfig {
     pub url: String,
     pub max_connections: u32,
@@ -20,11 +22,15 @@ impl InfraConfig {
             key: "DATABASE_URL",
         })?;
 
-        Ok(Self {
-            db: DbConfig {
-                url: database_url,
-                max_connections: 10,
-            },
-        })
+        Ok(
+            Self::builder()
+                .db(
+                    DbConfig::builder()
+                        .url(database_url)
+                        .max_connections(10)
+                        .build(),
+                )
+                .build(),
+        )
     }
 }
