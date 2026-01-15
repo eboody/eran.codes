@@ -56,14 +56,16 @@ fn test_app() -> axum::Router {
     let auth_service = auth::Service::disabled();
     let sse_registry = app_http::SseRegistry::new();
     let cookie_key = Key::generate();
-    let trace_log = app_http::trace_log::Store::new(sse_registry.clone());
-    let state = app_http::State::new(
-        user_service,
-        auth_service,
-        sse_registry,
-        cookie_key,
-        trace_log,
-    );
+    let trace_log = app_http::trace_log::Store::builder()
+        .with_sse(sse_registry.clone())
+        .build();
+    let state = app_http::State::builder()
+        .with_user(user_service)
+        .with_auth(auth_service)
+        .with_sse(sse_registry)
+        .with_cookie_key(cookie_key)
+        .with_trace_log(trace_log)
+        .build();
     let session_store = MemoryStore::default();
     app_http::router(state, session_store)
 }

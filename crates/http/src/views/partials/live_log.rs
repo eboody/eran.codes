@@ -24,6 +24,17 @@ impl Render for LiveLog<'_> {
                                 (entry.target.clone())
                                 ": "
                                 (entry.message.clone())
+                                @if !entry.fields.is_empty() {
+                                    ul class="muted" {
+                                        @for (name, value) in entry.fields.iter() {
+                                            li {
+                                                code { (name) }
+                                                ": "
+                                                (value.clone())
+                                            }
+                                        }
+                                    }
+                                }
                             }
                         }
                     }

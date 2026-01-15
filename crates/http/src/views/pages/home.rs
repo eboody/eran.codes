@@ -264,6 +264,16 @@ impl maud::Render for Home {
                     }
                 }
 
+                section {
+                    h2 { "Live network log (SSE)" }
+                    p class="muted" {
+                        "Server-side request timings emulate a network tab view."
+                    }
+                    div id="network-log-target" class="demo-result muted" {
+                        "No requests yet. Trigger a demo action to populate this table."
+                    }
+                }
+
             }
         };
 

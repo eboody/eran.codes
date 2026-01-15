@@ -28,7 +28,7 @@ impl Render for Layout<'_> {
                     script type="module" src="https://cdn.jsdelivr.net/gh/starfederation/datastar@1.0.0-RC.7/bundles/datastar.js" {}
                     script src="/static/css-scope-inline.js" {}
                 }
-                body data-on:load__window="@get('/events')" {
+                body data-init="@get('/events')" {
                     header class="container" {
                         nav {
                             ul {
