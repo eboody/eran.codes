@@ -15,19 +15,32 @@ pub struct State {
 
 #[derive(Clone)]
 pub struct DemoState {
-    pub surreal_guard:
-        std::sync::Arc<dashmap::DashMap<String, std::sync::Arc<tokio::sync::Mutex<()>>>>,
-    pub surreal_cancel:
-        std::sync::Arc<dashmap::DashMap<String, tokio_util::sync::CancellationToken>>,
-    pub surreal_seq: std::sync::Arc<AtomicU64>,
+    pub surreal: SurrealState,
 }
 
 impl DemoState {
     pub fn new() -> Self {
         Self {
-            surreal_guard: std::sync::Arc::new(dashmap::DashMap::new()),
-            surreal_cancel: std::sync::Arc::new(dashmap::DashMap::new()),
-            surreal_seq: std::sync::Arc::new(AtomicU64::new(0)),
+            surreal: SurrealState::new(),
+        }
+    }
+}
+
+#[derive(Clone)]
+pub struct SurrealState {
+    pub guard:
+        std::sync::Arc<dashmap::DashMap<String, std::sync::Arc<tokio::sync::Mutex<()>>>>,
+    pub cancel:
+        std::sync::Arc<dashmap::DashMap<String, tokio_util::sync::CancellationToken>>,
+    pub seq: std::sync::Arc<AtomicU64>,
+}
+
+impl SurrealState {
+    pub fn new() -> Self {
+        Self {
+            guard: std::sync::Arc::new(dashmap::DashMap::new()),
+            cancel: std::sync::Arc::new(dashmap::DashMap::new()),
+            seq: std::sync::Arc::new(AtomicU64::new(0)),
         }
     }
 }

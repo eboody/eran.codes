@@ -4,7 +4,7 @@ This directory is the HTTP crate's implementation detail. `crates/http/src/lib.r
 intentionally thin and re-exports the public surface so the high-level entry stays readable.
 
 ## Module map
-- `state.rs`: shared HTTP state and demo-only state (`State`, `DemoState`).
+- `state.rs`: shared HTTP state and demo-only state (`State`, `DemoState`, `SurrealState`).
 - `router.rs`: Bon-powered router assembly with named builder steps.
 - `handlers/`: request handlers grouped by concern.
 - `request.rs`: request context extraction and task-local context helpers.

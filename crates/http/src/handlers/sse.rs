@@ -60,14 +60,16 @@ pub async fn surreal_message_guarded(
     let session_id = session.id().to_string();
     let sequence = state
         .demo
-        .surreal_seq
+        .surreal
+        .seq
         .fetch_add(1, std::sync::atomic::Ordering::Relaxed)
         + 1;
     let original = surreal_original(signals);
 
     let lock = state
         .demo
-        .surreal_guard
+        .surreal
+        .guard
         .entry(session_id)
         .or_insert_with(|| std::sync::Arc::new(tokio::sync::Mutex::new(())))
         .clone();
@@ -130,7 +132,8 @@ pub async fn surreal_message_cancel(
     let session_id = session.id().to_string();
     let sequence = state
         .demo
-        .surreal_seq
+        .surreal
+        .seq
         .fetch_add(1, std::sync::atomic::Ordering::Relaxed)
         + 1;
     let original = surreal_original(signals);
@@ -138,7 +141,8 @@ pub async fn surreal_message_cancel(
     let token = tokio_util::sync::CancellationToken::new();
     if let Some(previous) = state
         .demo
-        .surreal_cancel
+        .surreal
+        .cancel
         .insert(session_id, token.clone())
     {
         previous.cancel();
