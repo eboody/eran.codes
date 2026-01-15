@@ -1,0 +1,66 @@
+use std::sync::atomic::AtomicU64;
+
+use bon::bon;
+use tower_cookies::Key;
+
+#[derive(Clone)]
+pub struct State {
+    pub user: app::user::Service,
+    pub auth: app::auth::Service,
+    pub sse: crate::sse::Registry,
+    pub cookie_key: Key,
+    pub trace_log: crate::trace_log::Store,
+    pub demo: DemoState,
+}
+
+#[derive(Clone)]
+pub struct DemoState {
+    pub surreal_guard:
+        std::sync::Arc<dashmap::DashMap<String, std::sync::Arc<tokio::sync::Mutex<()>>>>,
+    pub surreal_cancel:
+        std::sync::Arc<dashmap::DashMap<String, tokio_util::sync::CancellationToken>>,
+    pub surreal_seq: std::sync::Arc<AtomicU64>,
+}
+
+impl DemoState {
+    pub fn new() -> Self {
+        Self {
+            surreal_guard: std::sync::Arc::new(dashmap::DashMap::new()),
+            surreal_cancel: std::sync::Arc::new(dashmap::DashMap::new()),
+            surreal_seq: std::sync::Arc::new(AtomicU64::new(0)),
+        }
+    }
+}
+
+impl State {
+    pub fn new(
+        user: app::user::Service,
+        auth: app::auth::Service,
+        sse: crate::sse::Registry,
+        cookie_key: Key,
+        trace_log: crate::trace_log::Store,
+    ) -> Self {
+        Self {
+            user,
+            auth,
+            sse,
+            cookie_key,
+            trace_log,
+            demo: DemoState::new(),
+        }
+    }
+}
+
+#[bon]
+impl State {
+    #[builder]
+    pub fn builder(
+        #[builder(setters(name = with_user))] user: app::user::Service,
+        #[builder(setters(name = with_auth))] auth: app::auth::Service,
+        #[builder(setters(name = with_sse))] sse: crate::sse::Registry,
+        #[builder(setters(name = with_cookie_key))] cookie_key: Key,
+        #[builder(setters(name = with_trace_log))] trace_log: crate::trace_log::Store,
+    ) -> Self {
+        Self::new(user, auth, sse, cookie_key, trace_log)
+    }
+}
