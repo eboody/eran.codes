@@ -1,33 +1,30 @@
 use axum::Extension;
 use axum::Router;
 use axum::middleware::from_fn;
-use axum::routing::get;
-use axum_login::{AuthManagerLayerBuilder, login_required};
+use axum_login::AuthManagerLayerBuilder;
 use bon::Builder;
 use time::Duration as SessionDuration;
 use tower_cookies::CookieManagerLayer;
 use tower_cookies::cookie::SameSite;
 use tower_http::classify::ServerErrorsFailureClass;
 use tower_http::request_id::{MakeRequestUuid, PropagateRequestIdLayer, SetRequestIdLayer};
-use tower_http::services::ServeDir;
 use tower_http::trace::TraceLayer;
 use tower_sessions::{Expiry, SessionManagerLayer, SessionStore};
 use tracing::field;
 
 use crate::State;
 
-pub fn router<Store>(state: State, session_store: Store) -> Router
+pub fn apply_request_layers<Store>(
+    state: State,
+    session_store: Store,
+    router: Router,
+) -> Router
 where
     Store: SessionStore + Clone + Send + Sync + 'static,
 {
-    let router = RoutesBuilder::new()
-        .with_base_routes()
-        .with_page_routes()
-        .with_route_tracing()
-        .finish();
-    let router = RequestLayerBuilder::builder()
+    RequestLayers::builder()
         .with_router(router)
-        .with_state(state.clone())
+        .with_state(state)
         .with_session_store(session_store)
         .build()
         .with_trace_layer()
@@ -39,12 +36,11 @@ where
         .with_request_id_assignment()
         .with_auth_layer()
         .with_state_extension()
-        .finish();
-    router
+        .finish()
 }
 
 #[derive(Builder)]
-struct RequestLayerBuilder<Store> {
+pub struct RequestLayers<Store> {
     #[builder(setters(name = with_router))]
     router: Router,
     #[builder(setters(name = with_state))]
@@ -53,7 +49,7 @@ struct RequestLayerBuilder<Store> {
     session_store: Store,
 }
 
-impl<Store> RequestLayerBuilder<Store>
+impl<Store> RequestLayers<Store>
 where
     Store: SessionStore + Clone + Send + Sync + 'static,
 {
@@ -194,107 +190,5 @@ where
 
     fn finish(self) -> Router {
         self.router
-    }
-}
-
-fn base_routes() -> Router {
-    Router::new()
-        .route("/partials/ping", get(crate::handlers::ping_partial))
-        .route(
-            "/partials/auth-status",
-            get(crate::handlers::auth_status_partial),
-        )
-        .route(
-            "/partials/session-status",
-            get(crate::handlers::session_status_partial),
-        )
-        .route(
-            "/partials/request-meta",
-            get(crate::handlers::request_meta_partial),
-        )
-        .route(
-            "/partials/boundary-check",
-            get(crate::handlers::boundary_check_partial),
-        )
-        .route("/partials/db-check", get(crate::handlers::db_check_partial))
-        .route(
-            "/partials/surreal-message-guarded",
-            get(crate::handlers::surreal_message_guarded),
-        )
-        .route(
-            "/partials/surreal-message-cancel",
-            get(crate::handlers::surreal_message_cancel),
-        )
-        .route("/error-test", get(crate::handlers::error_test))
-        .route("/events", get(crate::handlers::events))
-        .route("/health", get(crate::handlers::health))
-        .nest_service(
-            "/static",
-            ServeDir::new(concat!(env!("CARGO_MANIFEST_DIR"), "/static")),
-        )
-}
-
-fn pages_routes() -> Router {
-    let protected = Router::new()
-        .route("/protected", get(crate::handlers::protected))
-        .route_layer(login_required!(crate::auth::Backend, login_url = "/login"));
-
-    Router::new()
-        .route("/", get(crate::handlers::home))
-        .route(
-            "/login",
-            get(crate::handlers::login_form).post(crate::handlers::login),
-        )
-        .route(
-            "/register",
-            get(crate::handlers::register_form).post(crate::handlers::register),
-        )
-        .route("/logout", axum::routing::post(crate::handlers::logout))
-        .merge(protected)
-}
-
-struct RoutesBuilder {
-    router: Router,
-}
-
-impl RoutesBuilder {
-    fn new() -> Self {
-        Self {
-            router: Router::new(),
-        }
-    }
-
-    fn with_base_routes(mut self) -> Self {
-        self.router = self.router.merge(base_routes());
-        self
-    }
-
-    fn with_page_routes(mut self) -> Self {
-        let pages = maybe_live_reload(pages_routes());
-        self.router = self.router.merge(pages);
-        self
-    }
-
-    fn with_route_tracing(mut self) -> Self {
-        self.router = self
-            .router
-            .route_layer(from_fn(crate::trace::record_route_middleware));
-        self
-    }
-
-    fn finish(self) -> Router {
-        self.router
-    }
-}
-
-fn maybe_live_reload(pages: Router) -> Router {
-    #[cfg(all(debug_assertions, feature = "live-reload"))]
-    {
-        pages.layer(tower_livereload::LiveReloadLayer::new())
-    }
-
-    #[cfg(not(all(debug_assertions, feature = "live-reload")))]
-    {
-        pages
     }
 }
