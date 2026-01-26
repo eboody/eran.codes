@@ -2,7 +2,7 @@ use bon::Builder;
 use maud::Render;
 
 use crate::views::page::{Layout, UserNav};
-use crate::views::partials::{ChatMessage, ChatMessages};
+use crate::views::partials::ChatMessage;
 
 #[derive(Builder)]
 pub struct Chat {
@@ -31,7 +31,7 @@ impl Render for Chat {
                 }
 
                 section class="chat-panel" {
-                    (ChatMessages::builder()
+                    (crate::views::partials::ChatWindow::builder()
                         .messages(self.messages.clone())
                         .build()
                         .render())

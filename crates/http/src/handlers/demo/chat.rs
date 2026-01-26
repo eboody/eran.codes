@@ -120,7 +120,7 @@ pub async fn post_chat_message(
         .as_ref()
         .ok_or(crate::error::Error::Internal)?;
 
-    let message = state
+    let _message = state
         .chat
         .post_message(
             app::chat::PostMessage::builder()
@@ -130,8 +130,6 @@ pub async fn post_chat_message(
                 .build(),
         )
         .await?;
-
-    broadcast_message(&state, &message, user).await;
 
     let messages = state
         .chat
@@ -144,6 +142,7 @@ pub async fn post_chat_message(
         .await?;
 
     let message_views = to_message_views(&messages, &user.id);
+    broadcast_messages(&state, message_views.clone());
     let partial = views::partials::ChatMessages::builder()
         .messages(message_views)
         .build();
@@ -192,30 +191,19 @@ async fn ensure_room(
     Ok(room)
 }
 
-async fn broadcast_message(
+fn broadcast_messages(
     state: &crate::State,
-    message: &domain::chat::Message,
-    user: &crate::auth::User,
+    messages: Vec<views::partials::ChatMessage>,
 ) {
-    let author = user.username.clone();
-    let html = views::partials::ChatMessage::builder()
-        .message_id(message.id.as_uuid().to_string())
-        .author(author)
-        .body(message.body.to_string())
-        .status(format!("{:?}", message.status))
+    let html = views::partials::ChatWindow::builder()
+        .messages(messages)
         .build()
         .render()
         .into_string();
 
-    let html = html.replace('\\', "\\\\").replace('`', "\\`");
-    let script = format!(
-        "const list = document.getElementById('chat-messages'); if (list) {{ list.insertAdjacentHTML('beforeend', `{}`); }}",
-        html
-    );
-
     let _ = state
         .sse
-        .broadcast(crate::sse::Event::execute_script(script));
+        .broadcast(crate::sse::Event::patch_elements(html));
 }
 
 fn to_message_views(
