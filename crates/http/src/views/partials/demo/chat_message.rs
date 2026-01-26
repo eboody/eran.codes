@@ -32,8 +32,12 @@ impl Render for ChatMessages {
     fn render(&self) -> maud::Markup {
         maud::html! {
             ul id="chat-messages" class="chat-messages" {
-                @for message in &self.messages {
-                    (message.render())
+                @if self.messages.is_empty() {
+                    li class="muted" { "No messages yet." }
+                } @else {
+                    @for message in &self.messages {
+                        (message.render())
+                    }
                 }
             }
         }
