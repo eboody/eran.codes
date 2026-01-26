@@ -192,6 +192,13 @@ fn broadcast_message(
         .selector("#chat-messages")
         .mode(ElementPatchMode::Append)
         .into_datastar_event();
+    tracing::info!(
+        target: "demo.sse",
+        message = "chat message broadcast",
+        selector = "#chat-messages",
+        mode = "append",
+        payload_bytes = message_html.len() as u64
+    );
     let _ = state
         .sse
         .broadcast(crate::sse::Event::from_event(event));
