@@ -35,7 +35,7 @@ pub async fn chat_page(
         )
         .await?;
 
-    let message_views = to_message_views(&messages, &user.id);
+    let message_views = to_message_views(&messages);
     let user_nav = crate::views::page::UserNav::builder()
         .username(user.username.clone())
         .email(user.email.clone())
@@ -122,7 +122,7 @@ pub async fn post_chat_message(
         .as_ref()
         .ok_or(crate::error::Error::Internal)?;
 
-    let message = state
+    let _message = state
         .chat
         .post_message(
             app::chat::PostMessage::builder()
@@ -133,10 +133,16 @@ pub async fn post_chat_message(
         )
         .await?;
 
-    broadcast_message(&state, &message, &user.id);
+    let window_html =
+        render_chat_window(&state, &signals.room_id, &user.id).await?;
+    broadcast_window(&state, &window_html);
 
     let response = match crate::request::current_kind() {
-        crate::request::Kind::Datastar => StatusCode::ACCEPTED.into_response(),
+        crate::request::Kind::Datastar => (
+            StatusCode::OK,
+            axum::response::Html(window_html),
+        )
+            .into_response(),
         crate::request::Kind::Page => {
             axum::response::Redirect::to("/demo/chat").into_response()
         }
@@ -175,39 +181,22 @@ async fn ensure_room(
     Ok(room)
 }
 
-fn broadcast_message(
+fn broadcast_window(
     state: &crate::State,
-    message: &domain::chat::Message,
-    current_user_id: &str,
+    window_html: &str,
 ) {
-    let author = author_label(message.user_id.as_uuid(), current_user_id);
-    let html = views::partials::ChatMessage::builder()
-        .message_id(message.id.as_uuid().to_string())
-        .author(author)
-        .body(message.body.to_string())
-        .status(format!("{:?}", message.status))
-        .build()
-        .render()
-        .into_string();
-    let html = html.replace('\\', "\\\\").replace('`', "\\`");
-    let script = format!(
-        "const list = document.getElementById('chat-messages'); if (!list) return; const atBottom = list.scrollTop + list.clientHeight >= list.scrollHeight - 24; list.insertAdjacentHTML('beforeend', `{}`); if (atBottom) list.scrollTop = list.scrollHeight;",
-        html
-    );
-
     let _ = state
         .sse
-        .broadcast(crate::sse::Event::execute_script(script));
+        .broadcast(crate::sse::Event::patch_elements(window_html.to_string()));
 }
 
 fn to_message_views(
     messages: &[domain::chat::Message],
-    current_user_id: &str,
 ) -> Vec<views::partials::ChatMessage> {
     messages
         .iter()
         .map(|message| {
-            let author = author_label(message.user_id.as_uuid(), current_user_id);
+            let author = author_label(message.user_id.as_uuid());
             views::partials::ChatMessage::builder()
                 .message_id(message.id.as_uuid().to_string())
                 .author(author)
@@ -220,11 +209,28 @@ fn to_message_views(
 
 fn author_label(
     user_id: &uuid::Uuid,
-    current_user_id: &str,
 ) -> String {
-    if user_id.to_string() == current_user_id {
-        "You".to_string()
-    } else {
-        format!("User {}", &user_id.to_string()[..8])
-    }
+    format!("User {}", &user_id.to_string()[..8])
+}
+
+async fn render_chat_window(
+    state: &crate::State,
+    room_id: &str,
+    user_id: &str,
+) -> Result<String, crate::error::Error> {
+    let messages = state
+        .chat
+        .list_messages(
+            app::chat::ListMessages::builder()
+                .room_id(room_id.to_string())
+                .user_id(user_id.to_string())
+                .build(),
+        )
+        .await?;
+    let message_views = to_message_views(&messages);
+    Ok(views::partials::ChatWindow::builder()
+        .messages(message_views)
+        .build()
+        .render()
+        .into_string())
 }
