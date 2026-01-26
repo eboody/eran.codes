@@ -292,6 +292,7 @@ When asked to design or review a feature, produce:
 - Current commit history uses short, lowercase, imperative messages (e.g., “added migrations”).
 - Keep commits focused on a single change; include context in the PR description.
 - PRs should include a brief summary, test status (e.g., `cargo test`), and any DB/migration steps.
+- Exercise judgement on when changes warrant a commit; choose an appropriate message and commit without asking for confirmation.
 
 ## Configuration & Security Notes
 - Required env vars: `HOST`, `PORT`, `DATABASE_URL`.
