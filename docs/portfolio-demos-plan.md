@@ -46,3 +46,15 @@ Use this file to guide portfolio demos and implementation priorities.
   - Endpoints: `GET /demo/chat`, `POST /demo/chat/messages` (optional rooms/join).
   - Flow: POST → app validate + rate limit → persist + audit → SSE `chat.message` → Datastar append.
   - Failures: 400/401/429 map to partials; moderation returns pending; DB errors via centralized error.
+- App surface (sketch):
+  - Commands: `PostMessage`, `ListMessages`, `CreateRoom`, `JoinRoom`, `ModerateMessage`.
+  - Traits: `ChatRepository`, `ModerationQueue`, `RateLimiter`, `AuditLog`, `Clock`, `IdGenerator`.
+- Domain newtypes (sketch):
+  - `RoomId`, `RoomName`, `MessageId`, `MessageBody`, `MessageStatus`, `UserId`.
+- Migration outline (sketch):
+  - `chat_rooms` (id, name, created_at, created_by)
+  - `chat_messages` (id, room_id, user_id, body, created_at, status, client_id)
+  - `chat_room_memberships` (room_id, user_id, joined_at, role)
+  - `chat_moderation_queue` (message_id, reason, status, reviewer_id, reviewed_at)
+  - `chat_audit_log` (id, room_id, actor_user_id, action, metadata_json, created_at)
+  - Indexing: `chat_messages` by `(room_id, created_at)` and `chat_room_memberships` by `(room_id, user_id)`.
