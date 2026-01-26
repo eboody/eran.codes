@@ -40,15 +40,14 @@ impl Render for Chat {
                 section class="chat-input" {
                     form method="post"
                         action="/demo/chat/messages"
-                        data-signals=(format!("{{chatRoomId: '{}', chatBody: ''}}", self.room_id))
-                        data-on:submit="@post('/demo/chat/messages', {chatRoomId: $chatRoomId, chatBody: $chatBody}); $chatBody = ''"
+                        data-on:submit="@post('/demo/chat/messages', {chatRoomId: el.room_id.value, chatBody: el.body.value}); el.body.value = ''"
                         data-indicator:fetching {
+                        input type="hidden" name="room_id" value=(self.room_id);
                         label {
                             "Message"
                             input type="text"
                                 name="body"
                                 placeholder="Say something..."
-                                data-bind:chatBody
                                 required;
                         }
                         button type="submit" { "Send" }
