@@ -6,6 +6,7 @@ Views are Maud components split by responsibility so templates stay small and re
 - `page.rs`: shared layout + page-level helpers (e.g., `Layout`, `Error`, `UserNav`).
 - `pages/`: full-page documents (`Home`, `Login`, `Register`, `Protected`).
 - `partials/`: Datastar fragments and reusable UI blocks for demos and SSE patches.
+- `partials/demo/`: demo-only fragments (status panels, trace logs, ping).
 
 ## Conventions
 - Pages and partials implement `maud::Render`.

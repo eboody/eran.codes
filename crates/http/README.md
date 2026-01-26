@@ -22,7 +22,7 @@ Router wiring is assembled via Bon to keep the call site self-documenting:
 http::router(state, session_store);
 ```
 
-Under the hood this flows through named builder steps in `crates/http/src/router.rs`.
+Under the hood this flows through named builder steps in `crates/http/src/router/`.
 
 ## Internal docs
 - `crates/http/src/README.md`

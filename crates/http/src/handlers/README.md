@@ -6,7 +6,7 @@ Each module focuses on a single HTTP surface.
 ## Modules
 - `pages.rs`: full-page HTML handlers (`/`, `/login`, `/register`, `/protected`, `/logout`).
 - `auth.rs`: auth form + session handlers (login/register/logout/protected).
-- `partials.rs`: Datastar fragment handlers used by the demos.
+- `demo/partials.rs`: Datastar fragment handlers used by the demos.
 - `sse.rs`: SSE stream and Datastar signal demo handlers.
 
 ## Guidelines
