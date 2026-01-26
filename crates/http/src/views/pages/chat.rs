@@ -43,7 +43,6 @@ impl Render for Chat {
                         data-signals=(format!("{{roomId: '{}', body: ''}}", self.room_id))
                         data-on:submit="@post('/demo/chat/messages'); $body = ''"
                     {
-                        input type="hidden" name="room_id" value=(self.room_id);
                         label {
                             "Message"
                             input type="text"
