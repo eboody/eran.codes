@@ -40,9 +40,6 @@ impl Render for Chat {
                 section class="chat-input" {
                     form method="post"
                         action="/demo/chat/messages"
-                        data-target="#chat-messages"
-                        data-swap="append"
-                        data-on:submit="@post('/demo/chat/messages', {roomId: el.room_id.value, body: el.body.value}); el.body.value = ''"
                     {
                         input type="hidden" name="room_id" value=(self.room_id);
                         label {
@@ -52,7 +49,12 @@ impl Render for Chat {
                                 placeholder="Say something..."
                                 required;
                         }
-                        button type="submit" { "Send" }
+                        button
+                            type="button"
+                            data-target="#chat-messages"
+                            data-swap="append"
+                            data-on:click="@post('/demo/chat/messages', {roomId: el.form.room_id.value, body: el.form.body.value}); el.form.body.value = ''"
+                        { "Send" }
                     }
                 }
             }
