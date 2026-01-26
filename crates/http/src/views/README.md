@@ -12,3 +12,8 @@ Views are Maud components split by responsibility so templates stay small and re
 - Pages and partials implement `maud::Render`.
 - Inline CSS/JS uses `maud_extensions::{css, js}` with scoped styling.
 - Pages should be composed from `page::Layout` to keep a consistent shell.
+
+## Readme map
+- `crates/http/README.md`
+- `crates/http/src/README.md`
+- `crates/http/src/handlers/README.md`

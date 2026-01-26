@@ -13,3 +13,8 @@ Each module focuses on a single HTTP surface.
 - Keep handlers small and IO-focused; push validation and policy to `app`.
 - Prefer `views::render` for full pages and explicit `Html` for partials.
 - Keep request DTOs scoped to the module that owns the route.
+
+## Readme map
+- `crates/http/README.md`
+- `crates/http/src/README.md`
+- `crates/http/src/views/README.md`
