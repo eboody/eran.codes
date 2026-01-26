@@ -40,6 +40,7 @@ impl Render for Chat {
                 section class="chat-input" {
                     form method="post"
                         action="/demo/chat/messages"
+                        data-on:submit="@post('/demo/chat/messages', {roomId: el.room_id.value, body: el.body.value}); el.body.value = ''"
                     {
                         input type="hidden" name="room_id" value=(self.room_id);
                         label {

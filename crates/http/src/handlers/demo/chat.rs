@@ -4,12 +4,14 @@ use axum::{
     response::IntoResponse,
 };
 use maud::Render;
+use datastar::axum::ReadSignals;
 use serde::Deserialize;
 
 use crate::views;
 
 #[derive(Deserialize)]
-pub struct ChatMessageForm {
+#[serde(rename_all = "camelCase")]
+pub struct ChatSignals {
     pub room_id: String,
     pub body: String,
 }
@@ -113,46 +115,28 @@ pub async fn moderate_message(
 pub async fn post_chat_message(
     Extension(state): Extension<crate::State>,
     auth_session: crate::auth::Session,
-    axum::extract::Form(form): axum::extract::Form<ChatMessageForm>,
+    ReadSignals(signals): ReadSignals<ChatSignals>,
 ) -> Result<axum::response::Response, crate::error::Error> {
     let user = auth_session
         .user
         .as_ref()
         .ok_or(crate::error::Error::Internal)?;
 
-    let _message = state
+    let message = state
         .chat
         .post_message(
             app::chat::PostMessage::builder()
-                .room_id(form.room_id.clone())
+                .room_id(signals.room_id.clone())
                 .user_id(user.id.clone())
-                .body(form.body.clone())
+                .body(signals.body.clone())
                 .build(),
         )
         .await?;
 
-    let messages = state
-        .chat
-        .list_messages(
-            app::chat::ListMessages::builder()
-                .room_id(form.room_id)
-                .user_id(user.id.clone())
-                .build(),
-        )
-        .await?;
-
-    let message_views = to_message_views(&messages, &user.id);
-    broadcast_messages(&state, message_views.clone());
-    let partial = views::partials::ChatMessages::builder()
-        .messages(message_views)
-        .build();
+    broadcast_message(&state, &message, &user.id);
 
     let response = match crate::request::current_kind() {
-        crate::request::Kind::Datastar => (
-            StatusCode::OK,
-            axum::response::Html(partial.render().into_string()),
-        )
-            .into_response(),
+        crate::request::Kind::Datastar => StatusCode::ACCEPTED.into_response(),
         crate::request::Kind::Page => {
             axum::response::Redirect::to("/demo/chat").into_response()
         }
@@ -191,19 +175,29 @@ async fn ensure_room(
     Ok(room)
 }
 
-fn broadcast_messages(
+fn broadcast_message(
     state: &crate::State,
-    messages: Vec<views::partials::ChatMessage>,
+    message: &domain::chat::Message,
+    current_user_id: &str,
 ) {
-    let html = views::partials::ChatWindow::builder()
-        .messages(messages)
+    let author = author_label(message.user_id.as_uuid(), current_user_id);
+    let html = views::partials::ChatMessage::builder()
+        .message_id(message.id.as_uuid().to_string())
+        .author(author)
+        .body(message.body.to_string())
+        .status(format!("{:?}", message.status))
         .build()
         .render()
         .into_string();
+    let html = html.replace('\\', "\\\\").replace('`', "\\`");
+    let script = format!(
+        "const list = document.getElementById('chat-messages'); if (!list) return; const atBottom = list.scrollTop + list.clientHeight >= list.scrollHeight - 24; list.insertAdjacentHTML('beforeend', `{}`); if (atBottom) list.scrollTop = list.scrollHeight;",
+        html
+    );
 
     let _ = state
         .sse
-        .broadcast(crate::sse::Event::patch_elements(html));
+        .broadcast(crate::sse::Event::execute_script(script));
 }
 
 fn to_message_views(
