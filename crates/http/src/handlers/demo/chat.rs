@@ -4,16 +4,14 @@ use axum::{
     response::IntoResponse,
 };
 use maud::Render;
-use datastar::axum::ReadSignals;
 use serde::Deserialize;
 
 use crate::views;
 
 #[derive(Deserialize)]
-#[serde(rename_all = "camelCase")]
-pub struct ChatSignals {
-    pub chat_room_id: String,
-    pub chat_body: String,
+pub struct ChatMessageForm {
+    pub room_id: String,
+    pub body: String,
 }
 
 pub async fn chat_page(
@@ -115,8 +113,8 @@ pub async fn moderate_message(
 pub async fn post_chat_message(
     Extension(state): Extension<crate::State>,
     auth_session: crate::auth::Session,
-    ReadSignals(signals): ReadSignals<ChatSignals>,
-) -> Result<impl IntoResponse, crate::error::Error> {
+    axum::extract::Form(form): axum::extract::Form<ChatMessageForm>,
+) -> Result<axum::response::Response, crate::error::Error> {
     let user = auth_session
         .user
         .as_ref()
@@ -126,9 +124,9 @@ pub async fn post_chat_message(
         .chat
         .post_message(
             app::chat::PostMessage::builder()
-                .room_id(signals.chat_room_id.clone())
+                .room_id(form.room_id.clone())
                 .user_id(user.id.clone())
-                .body(signals.chat_body.clone())
+                .body(form.body.clone())
                 .build(),
         )
         .await?;
@@ -139,7 +137,7 @@ pub async fn post_chat_message(
         .chat
         .list_messages(
             app::chat::ListMessages::builder()
-                .room_id(signals.chat_room_id)
+                .room_id(form.room_id)
                 .user_id(user.id.clone())
                 .build(),
         )
@@ -150,10 +148,18 @@ pub async fn post_chat_message(
         .messages(message_views)
         .build();
 
-    Ok((
-        StatusCode::OK,
-        axum::response::Html(partial.render().into_string()),
-    ))
+    let response = match crate::request::current_kind() {
+        crate::request::Kind::Datastar => (
+            StatusCode::OK,
+            axum::response::Html(partial.render().into_string()),
+        )
+            .into_response(),
+        crate::request::Kind::Page => {
+            axum::response::Redirect::to("/demo/chat").into_response()
+        }
+    };
+
+    Ok(response)
 }
 
 async fn ensure_room(

@@ -40,10 +40,7 @@ impl Render for Chat {
                 section class="chat-input" {
                     form method="post"
                         action="/demo/chat/messages"
-                        data-target="#chat-messages"
-                        data-swap="outer"
-                        data-on:submit="@post('/demo/chat/messages', {chatRoomId: el.room_id.value, chatBody: el.body.value}); el.body.value = ''"
-                        data-indicator:fetching {
+                    {
                         input type="hidden" name="room_id" value=(self.room_id);
                         label {
                             "Message"
@@ -53,7 +50,6 @@ impl Render for Chat {
                                 required;
                         }
                         button type="submit" { "Send" }
-                        small data-show="$fetching" { "Sending..." }
                     }
                 }
             }
