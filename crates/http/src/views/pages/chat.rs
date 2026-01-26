@@ -45,6 +45,8 @@ impl Render for Chat {
                 section class="chat-input" {
                     form method="post"
                         action="/demo/chat/messages"
+                        data-target="#chat-messages"
+                        data-swap="append"
                         data-on:submit="@post('/demo/chat/messages'); $body = ''"
                     {
                         label {
