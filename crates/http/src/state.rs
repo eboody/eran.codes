@@ -9,7 +9,7 @@ pub struct State {
     pub auth: app::auth::Service,
     pub sse: crate::sse::Registry,
     pub cookie_key: Key,
-    pub trace_log: crate::trace_log::Store,
+    pub trace_log: crate::trace_log::TraceLogStore,
     pub demo: DemoState,
 }
 
@@ -51,7 +51,7 @@ impl State {
         auth: app::auth::Service,
         sse: crate::sse::Registry,
         cookie_key: Key,
-        trace_log: crate::trace_log::Store,
+        trace_log: crate::trace_log::TraceLogStore,
     ) -> Self {
         Self {
             user,
@@ -72,7 +72,7 @@ impl State {
         #[builder(setters(name = with_auth))] auth: app::auth::Service,
         #[builder(setters(name = with_sse))] sse: crate::sse::Registry,
         #[builder(setters(name = with_cookie_key))] cookie_key: Key,
-        #[builder(setters(name = with_trace_log))] trace_log: crate::trace_log::Store,
+        #[builder(setters(name = with_trace_log))] trace_log: crate::trace_log::TraceLogStore,
     ) -> Self {
         Self::new(user, auth, sse, cookie_key, trace_log)
     }
