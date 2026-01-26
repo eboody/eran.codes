@@ -30,7 +30,12 @@ impl Render for Chat {
                     }
                 }
 
-                section class="chat-panel" {
+                section class="chat-panel"
+                    data-signals=(format!("{{roomId: '{}', body: '', sseConnected: false}}", self.room_id)) {
+                    div class="pill-row" {
+                        span class="pill secondary" data-show="$sseConnected" { "SSE connected" }
+                        span class="pill muted" data-show="!$sseConnected" { "SSE disconnected" }
+                    }
                     (crate::views::partials::ChatWindow::builder()
                         .messages(self.messages.clone())
                         .build()
@@ -40,7 +45,6 @@ impl Render for Chat {
                 section class="chat-input" {
                     form method="post"
                         action="/demo/chat/messages"
-                        data-signals=(format!("{{roomId: '{}', body: ''}}", self.room_id))
                         data-on:submit="@post('/demo/chat/messages'); $body = ''"
                     {
                         label {

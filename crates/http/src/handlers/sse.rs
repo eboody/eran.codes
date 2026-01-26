@@ -193,6 +193,11 @@ pub async fn events(
     let trace_guard = TraceLogGuard::new(state.trace_log.clone(), session_id.clone());
 
     tracing::info!(session_id = %session_id, "sse connected");
+    let _ = state
+        .sse
+        .send(&session, crate::sse::Event::patch_signals(serde_json::json!({
+            "sseConnected": true
+        })));
 
     let stream = stream! {
         let _guard = guard;
