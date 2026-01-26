@@ -34,3 +34,9 @@ Use this file to guide portfolio demos and implementation priorities.
 ## Demo 8: Security Posture Summary
 - Path: checklist UI on home/protected.
 - Shows: signed cookies, SameSite, HttpOnly, inactivity expiry.
+
+## Demo 9: Live Chat Room
+- Path: `/demo/chat`
+- Shows: session-scoped identity, SSE/Datastar message stream, request → broadcast flow.
+- Enterprise: persisted history, rate limits, abuse controls, trace-friendly fanout.
+- Enterprise checklist: schema for messages + rooms, rate limiting, moderation queue, audit trail.
