@@ -3,6 +3,7 @@ mod error;
 pub mod auth;
 pub use error::{Error, Result};
 mod repo;
+pub use repo::chat;
 pub use repo::user;
 use sqlx::PgPool;
 

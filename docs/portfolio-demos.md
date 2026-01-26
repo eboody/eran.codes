@@ -27,4 +27,4 @@ Use this list when building or explaining demos in this repo.
 - Chat room shows request → broadcast flow with persisted history, rate limits, and abuse controls.
 - Chat room enterprise checklist: messages + rooms schema, moderation queue, audit trail.
   - Boundaries: domain newtypes, app commands/traits, infra SQLx, http DTOs/views.
-  - Migrations: `chat_rooms`, `chat_messages`, `chat_room_memberships`, `chat_moderation_queue`, `chat_audit_log`.
+  - Migrations: `chat_rooms`, `chat_messages`, `chat_room_memberships`, `chat_moderation_queue`, `chat_audit_log`, `chat_rate_limits`.

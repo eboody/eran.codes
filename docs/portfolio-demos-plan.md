@@ -58,4 +58,5 @@ Use this file to guide portfolio demos and implementation priorities.
   - `chat_room_memberships` (room_id, user_id, joined_at, role)
   - `chat_moderation_queue` (message_id, reason, status, reviewer_id, reviewed_at)
   - `chat_audit_log` (id, room_id, actor_user_id, action, metadata_json, created_at)
+  - `chat_rate_limits` (room_id, user_id, window_start, count)
   - Indexing: `chat_messages` by `(room_id, created_at)` and `chat_room_memberships` by `(room_id, user_id)`.
