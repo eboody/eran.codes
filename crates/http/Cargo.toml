@@ -5,6 +5,7 @@ edition = "2024"
 
 [dependencies]
 app = { path = "../app" }
+domain = { path = "../domain" }
 serde = { version = "1.0.228", features = ["derive"] }
 derive_more = "2.1.1"
 tracing = "0.1.44"

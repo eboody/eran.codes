@@ -1,6 +1,6 @@
 use axum::Router;
 use axum::middleware::from_fn;
-use axum::routing::get;
+use axum::routing::{get, post};
 use axum_login::login_required;
 use tower_http::services::ServeDir;
 
@@ -80,6 +80,11 @@ fn pages_routes() -> Router {
         .route("/protected", get(crate::handlers::protected))
         .route_layer(login_required!(crate::auth::Backend, login_url = "/login"));
 
+    let chat = Router::new()
+        .route("/demo/chat", get(crate::handlers::chat_page))
+        .route("/demo/chat/messages", post(crate::handlers::post_chat_message))
+        .route_layer(login_required!(crate::auth::Backend, login_url = "/login"));
+
     Router::new()
         .route("/", get(crate::handlers::home))
         .route(
@@ -92,6 +97,7 @@ fn pages_routes() -> Router {
         )
         .route("/logout", axum::routing::post(crate::handlers::logout))
         .merge(protected)
+        .merge(chat)
 }
 
 fn maybe_live_reload(pages: Router) -> Router {

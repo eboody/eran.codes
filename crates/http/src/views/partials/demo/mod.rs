@@ -1,7 +1,8 @@
-moddef::moddef!(mod { auth_status, boundary_check, db_check, live_log, network_log, ping, request_meta, session_status, trace_log });
+moddef::moddef!(mod { auth_status, boundary_check, chat_message, db_check, live_log, network_log, ping, request_meta, session_status, trace_log });
 
 pub use auth_status::AuthStatus;
 pub use boundary_check::BoundaryCheck;
+pub use chat_message::{ChatMessage, ChatMessages};
 pub use db_check::DbCheck;
 pub use live_log::LiveLog;
 pub use network_log::NetworkLog;

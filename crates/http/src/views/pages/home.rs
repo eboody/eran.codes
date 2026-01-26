@@ -277,6 +277,21 @@ impl maud::Render for Home {
                     }
                 }
 
+                section {
+                    h2 { "Demo 9: Live chat room" }
+                    article class="flow-card" {
+                        p { "Enterprise chat flow with persistence, moderation, and SSE fanout." }
+                        ul {
+                            li { "Messages are stored in Postgres and reloaded on entry." }
+                            li { "Rate limiting + moderation queue are enforced in the app layer." }
+                            li { "SSE broadcasts updates to all connected visitors." }
+                        }
+                        div class="cta-row" {
+                            a class="button" href="/demo/chat" { "Open chat demo" }
+                        }
+                    }
+                }
+
             }
         };
 

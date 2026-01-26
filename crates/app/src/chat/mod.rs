@@ -20,6 +20,7 @@ pub struct PostMessage {
 #[derive(Clone, Debug, Builder)]
 pub struct ListMessages {
     pub room_id: String,
+    pub user_id: String,
     #[builder(default = 50)]
     pub limit: usize,
 }
@@ -69,6 +70,10 @@ pub trait Repository: Send + Sync {
     async fn find_room(
         &self,
         room_id: &chat::RoomId,
+    ) -> Result<Option<chat::Room>>;
+    async fn find_room_by_name(
+        &self,
+        name: &chat::RoomName,
     ) -> Result<Option<chat::Room>>;
     async fn list_messages(
         &self,
@@ -226,12 +231,27 @@ impl Service {
         command: ListMessages,
     ) -> Result<Vec<chat::Message>> {
         let room_id = parse_room_id(&command.room_id)?;
+        let user_id = parse_user_id(&command.user_id)?;
 
         let Some(_) = self.repo.find_room(&room_id).await? else {
             return Err(Error::RoomNotFound);
         };
 
+        let is_member = self.repo.is_member(&room_id, &user_id).await?;
+        if !is_member {
+            return Err(Error::NotMember);
+        }
+
         self.repo.list_messages(&room_id, command.limit).await
+    }
+
+    pub async fn find_room_by_name(
+        &self,
+        name: String,
+    ) -> Result<Option<chat::Room>> {
+        let name =
+            chat::RoomName::try_new(name).map_err(domain::chat::Error::from)?;
+        self.repo.find_room_by_name(&name).await
     }
 
     pub async fn post_message(

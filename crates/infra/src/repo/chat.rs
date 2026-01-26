@@ -110,6 +110,44 @@ impl app::chat::Repository for SqlxChatRepository {
         }))
     }
 
+    async fn find_room_by_name(
+        &self,
+        name: &chat::RoomName,
+    ) -> Result<Option<chat::Room>> {
+        tracing::info!(
+            target: "demo.db",
+            message = "db query",
+            db_statement = "SELECT id, name, created_by FROM chat_rooms WHERE name = $1"
+        );
+        let record = sqlx::query(
+            r#"
+            SELECT id, name, created_by
+            FROM chat_rooms
+            WHERE name = $1
+            "#,
+        )
+        .bind(name.to_string())
+        .fetch_optional(&self.pg)
+        .await
+        .map_err(|error| Error::Repo(error.to_string()))?;
+
+        let Some(row) = record else {
+            return Ok(None);
+        };
+
+        let name = row.get::<String, _>("name");
+        let name = chat::RoomName::try_new(name)
+            .map_err(|error| Error::Repo(error.to_string()))?;
+
+        Ok(Some(chat::Room {
+            id: chat::RoomId::from_uuid(row.get::<uuid::Uuid, _>("id")),
+            name,
+            created_by: chat::UserId::from_uuid(
+                row.get::<uuid::Uuid, _>("created_by"),
+            ),
+        }))
+    }
+
     async fn list_messages(
         &self,
         room_id: &chat::RoomId,

@@ -33,10 +33,28 @@ async fn main() -> Result<()> {
     let auth_provider = app::auth::ProviderImpl::new(auth_repo, auth_hasher);
     let auth_service = app::auth::Service::new(Arc::new(auth_provider));
 
+    let chat_repo = Arc::new(infra::chat::Repository::new(infra.db.clone()));
+    let chat_moderation =
+        Arc::new(infra::chat::ModerationQueue::new(infra.db.clone()));
+    let chat_rate_limiter =
+        Arc::new(infra::chat::RateLimiter::new(infra.db.clone()));
+    let chat_audit = Arc::new(infra::chat::AuditLog::new(infra.db.clone()));
+    let chat_clock = Arc::new(infra::chat::SystemClock::new());
+    let chat_ids = Arc::new(infra::chat::UuidGenerator::new());
+    let chat_service = app::chat::Service::builder()
+        .with_repo(chat_repo)
+        .with_moderation_queue(chat_moderation)
+        .with_rate_limiter(chat_rate_limiter)
+        .with_audit_log(chat_audit)
+        .with_clock(chat_clock)
+        .with_id_generator(chat_ids)
+        .build();
+
     let session_key = Key::from(&cfg.http.session_secret);
     let http_state = http::State::builder()
         .with_user(user_service)
         .with_auth(auth_service)
+        .with_chat(chat_service)
         .with_sse(sse_registry)
         .with_cookie_key(session_key.clone())
         .with_trace_log(trace_log)

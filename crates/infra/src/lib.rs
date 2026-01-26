@@ -1,9 +1,9 @@
 pub mod config;
 mod error;
 pub mod auth;
+pub mod chat;
 pub use error::{Error, Result};
 mod repo;
-pub use repo::chat;
 pub use repo::user;
 use sqlx::PgPool;
 

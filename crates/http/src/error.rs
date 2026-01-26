@@ -8,6 +8,7 @@ pub type Result<T> = core::result::Result<T, Error>;
 pub enum Error {
     User(app::user::Error),
     Auth(app::auth::Error),
+    Chat(app::chat::Error),
     Json(axum::extract::rejection::JsonRejection),
     Internal,
 }
@@ -80,6 +81,33 @@ impl Error {
                 axum::http::StatusCode::UNAUTHORIZED,
                 "Unauthorized",
                 "Unable to authenticate.",
+            ),
+            Error::Chat(app::chat::Error::RateLimited) => (
+                axum::http::StatusCode::TOO_MANY_REQUESTS,
+                "Too many messages",
+                "Slow down and try again.",
+            ),
+            Error::Chat(app::chat::Error::RoomNotFound)
+            | Error::Chat(app::chat::Error::MessageNotFound) => (
+                axum::http::StatusCode::NOT_FOUND,
+                "Not found",
+                "The chat room or message was not found.",
+            ),
+            Error::Chat(app::chat::Error::NotMember) => (
+                axum::http::StatusCode::FORBIDDEN,
+                "Access denied",
+                "You are not a member of this room.",
+            ),
+            Error::Chat(app::chat::Error::InvalidId(_))
+            | Error::Chat(app::chat::Error::Domain(_)) => (
+                axum::http::StatusCode::BAD_REQUEST,
+                "Invalid input",
+                "Invalid chat request.",
+            ),
+            Error::Chat(app::chat::Error::Repo(_)) => (
+                axum::http::StatusCode::INTERNAL_SERVER_ERROR,
+                "Internal server error",
+                "Internal server error.",
             ),
 
             Error::Internal => (

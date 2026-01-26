@@ -118,6 +118,32 @@ impl Registry {
         Ok(())
     }
 
+    pub fn broadcast(
+        &self,
+        event: Event,
+    ) -> SendResult<usize> {
+        let mut sent = 0;
+        let mut failed = Vec::new();
+        for entry in self.sessions.iter() {
+            let result = entry.value().send(event.clone());
+            if result.is_err() {
+                failed.push(entry.key().clone());
+            } else {
+                sent += 1;
+            }
+        }
+
+        for session_id in failed {
+            self.sessions.remove(&session_id);
+        }
+
+        if sent == 0 && !self.sessions.is_empty() {
+            return Err(SendError::SendFailed);
+        }
+
+        Ok(sent)
+    }
+
     pub fn remove(
         &self,
         session_id: &str,
