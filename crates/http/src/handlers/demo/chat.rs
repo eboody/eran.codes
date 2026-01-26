@@ -145,11 +145,7 @@ pub async fn post_chat_message(
     broadcast_message(&state, &message_html);
 
     let response = match crate::request::current_kind() {
-        crate::request::Kind::Datastar => (
-            StatusCode::OK,
-            axum::response::Html(message_html),
-        )
-            .into_response(),
+        crate::request::Kind::Datastar => StatusCode::ACCEPTED.into_response(),
         crate::request::Kind::Page => {
             axum::response::Redirect::to("/demo/chat").into_response()
         }

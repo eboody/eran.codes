@@ -40,6 +40,8 @@ impl Render for Chat {
                 section class="chat-input" {
                     form method="post"
                         action="/demo/chat/messages"
+                        data-signals=(format!("{{roomId: '{}', body: ''}}", self.room_id))
+                        data-on:submit="@post('/demo/chat/messages'); $body = ''"
                     {
                         input type="hidden" name="room_id" value=(self.room_id);
                         label {
@@ -47,14 +49,10 @@ impl Render for Chat {
                             input type="text"
                                 name="body"
                                 placeholder="Say something..."
+                                data-bind:body
                                 required;
                         }
-                        button
-                            type="button"
-                            data-target="#chat-messages"
-                            data-swap="append"
-                            data-on:click="@post('/demo/chat/messages', {roomId: el.form.room_id.value, body: el.form.body.value}); el.form.body.value = ''"
-                        { "Send" }
+                        button type="submit" { "Send" }
                     }
                 }
             }
