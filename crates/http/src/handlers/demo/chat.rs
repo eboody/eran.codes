@@ -5,6 +5,7 @@ use axum::{
 };
 use maud::Render;
 use datastar::axum::ReadSignals;
+use datastar::prelude::{ElementPatchMode, PatchElements};
 use serde::Deserialize;
 
 use crate::views;
@@ -122,7 +123,7 @@ pub async fn post_chat_message(
         .as_ref()
         .ok_or(crate::error::Error::Internal)?;
 
-    let _message = state
+    let message = state
         .chat
         .post_message(
             app::chat::PostMessage::builder()
@@ -133,14 +134,20 @@ pub async fn post_chat_message(
         )
         .await?;
 
-    let messages_html =
-        render_chat_messages(&state, &signals.room_id, &user.id).await?;
-    broadcast_messages(&state, &messages_html);
+    let message_html = views::partials::ChatMessage::builder()
+        .message_id(message.id.as_uuid().to_string())
+        .author(user.username.clone())
+        .body(message.body.to_string())
+        .status(format!("{:?}", message.status))
+        .build()
+        .render()
+        .into_string();
+    broadcast_message(&state, &message_html);
 
     let response = match crate::request::current_kind() {
         crate::request::Kind::Datastar => (
             StatusCode::OK,
-            axum::response::Html(messages_html),
+            axum::response::Html(message_html),
         )
             .into_response(),
         crate::request::Kind::Page => {
@@ -181,13 +188,17 @@ async fn ensure_room(
     Ok(room)
 }
 
-fn broadcast_messages(
+fn broadcast_message(
     state: &crate::State,
-    messages_html: &str,
+    message_html: &str,
 ) {
+    let event = PatchElements::new(message_html)
+        .selector("#chat-messages")
+        .mode(ElementPatchMode::Append)
+        .into_datastar_event();
     let _ = state
         .sse
-        .broadcast(crate::sse::Event::patch_elements(messages_html.to_string()));
+        .broadcast(crate::sse::Event::from_event(event));
 }
 
 fn to_message_views(
@@ -196,7 +207,10 @@ fn to_message_views(
     messages
         .iter()
         .map(|message| {
-            let author = author_label(message.user_id.as_uuid());
+            let author = format!(
+                "User {}",
+                &message.user_id.as_uuid().to_string()[..8]
+            );
             views::partials::ChatMessage::builder()
                 .message_id(message.id.as_uuid().to_string())
                 .author(author)
@@ -205,32 +219,4 @@ fn to_message_views(
                 .build()
         })
         .collect()
-}
-
-fn author_label(
-    user_id: &uuid::Uuid,
-) -> String {
-    format!("User {}", &user_id.to_string()[..8])
-}
-
-async fn render_chat_messages(
-    state: &crate::State,
-    room_id: &str,
-    user_id: &str,
-) -> Result<String, crate::error::Error> {
-    let messages = state
-        .chat
-        .list_messages(
-            app::chat::ListMessages::builder()
-                .room_id(room_id.to_string())
-                .user_id(user_id.to_string())
-                .build(),
-        )
-        .await?;
-    let message_views = to_message_views(&messages);
-    Ok(views::partials::ChatMessages::builder()
-        .messages(message_views)
-        .build()
-        .render()
-        .into_string())
 }

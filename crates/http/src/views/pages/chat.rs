@@ -41,7 +41,7 @@ impl Render for Chat {
                     form method="post"
                         action="/demo/chat/messages"
                         data-target="#chat-messages"
-                        data-swap="outer"
+                        data-swap="append"
                         data-on:submit="@post('/demo/chat/messages', {roomId: el.room_id.value, body: el.body.value}); el.body.value = ''"
                     {
                         input type="hidden" name="room_id" value=(self.room_id);
