@@ -275,6 +275,7 @@ When asked to design or review a feature, produce:
 - `cargo run` starts the HTTP server (requires `HOST`, `PORT`, `DATABASE_URL`).
 - `docker-compose up -d` starts a local Postgres on `localhost:5432`.
 - `cargo run --bin with_db -- sqlx migrate run --source crates/infra/migrations` runs DB migrations with `DATABASE_URL` injected.
+- Always run at least `cargo check` (or `cargo test` when it adds coverage) after code changes to ensure the workspace compiles.
 
 ## Coding Style & Naming Conventions
 - Rust 2024 edition; use standard `rustfmt` defaults.
