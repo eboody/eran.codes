@@ -46,6 +46,7 @@ Use this file to guide portfolio demos and implementation priorities.
   - Endpoints: `GET /demo/chat`, `POST /demo/chat/messages` (optional rooms/join).
   - Flow: POST → app validate + rate limit → persist + audit → SSE `chat.message` → Datastar append.
   - Failures: 400/401/429 map to partials; moderation returns pending; DB errors via centralized error.
+  - Builders: use Bon typestate builders for chat router/service configuration so required steps read explicitly.
 - App surface (sketch):
   - Commands: `PostMessage`, `ListMessages`, `CreateRoom`, `JoinRoom`, `ModerateMessage`.
   - Traits: `ChatRepository`, `ModerationQueue`, `RateLimiter`, `AuditLog`, `Clock`, `IdGenerator`.

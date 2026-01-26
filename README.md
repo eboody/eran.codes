@@ -32,3 +32,10 @@
 - `docs/datastar-signals.md`
 - `docs/datastar-expressions.md`
 - `docs/datastar-backend-requests.md`
+
+## README hierarchy
+- `README.md` (workspace overview)
+- `crates/http/README.md` (HTTP crate overview)
+- `crates/http/src/README.md` (HTTP internals)
+- `crates/http/src/handlers/README.md` (handler responsibilities)
+- `crates/http/src/views/README.md` (Maud view structure)

@@ -23,6 +23,7 @@ http::router(state, session_store);
 ```
 
 Under the hood this flows through named builder steps in `crates/http/src/router/`.
+Use Bon's typestate builder patterns for router/state configuration so call sites read like a checklist.
 
 ## Internal docs
 - `crates/http/src/README.md`
