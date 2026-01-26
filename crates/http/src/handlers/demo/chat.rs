@@ -133,14 +133,14 @@ pub async fn post_chat_message(
         )
         .await?;
 
-    let window_html =
-        render_chat_window(&state, &signals.room_id, &user.id).await?;
-    broadcast_window(&state, &window_html);
+    let messages_html =
+        render_chat_messages(&state, &signals.room_id, &user.id).await?;
+    broadcast_messages(&state, &messages_html);
 
     let response = match crate::request::current_kind() {
         crate::request::Kind::Datastar => (
             StatusCode::OK,
-            axum::response::Html(window_html),
+            axum::response::Html(messages_html),
         )
             .into_response(),
         crate::request::Kind::Page => {
@@ -181,13 +181,13 @@ async fn ensure_room(
     Ok(room)
 }
 
-fn broadcast_window(
+fn broadcast_messages(
     state: &crate::State,
-    window_html: &str,
+    messages_html: &str,
 ) {
     let _ = state
         .sse
-        .broadcast(crate::sse::Event::patch_elements(window_html.to_string()));
+        .broadcast(crate::sse::Event::patch_elements(messages_html.to_string()));
 }
 
 fn to_message_views(
@@ -213,7 +213,7 @@ fn author_label(
     format!("User {}", &user_id.to_string()[..8])
 }
 
-async fn render_chat_window(
+async fn render_chat_messages(
     state: &crate::State,
     room_id: &str,
     user_id: &str,
@@ -228,7 +228,7 @@ async fn render_chat_window(
         )
         .await?;
     let message_views = to_message_views(&messages);
-    Ok(views::partials::ChatWindow::builder()
+    Ok(views::partials::ChatMessages::builder()
         .messages(message_views)
         .build()
         .render()
