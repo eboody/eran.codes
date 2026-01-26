@@ -1,14 +1,20 @@
-use derive_more::From;
-
 pub type Result<T> = core::result::Result<T, Error>;
 
-#[derive(Debug, From)]
+#[derive(Debug)]
 pub enum Error {
     Domain(domain::chat::Error),
     Repo(String),
+    InvalidId(String),
     RateLimited,
     RoomNotFound,
+    MessageNotFound,
     NotMember,
+}
+
+impl From<domain::chat::Error> for Error {
+    fn from(error: domain::chat::Error) -> Self {
+        Self::Domain(error)
+    }
 }
 
 impl core::fmt::Display for Error {

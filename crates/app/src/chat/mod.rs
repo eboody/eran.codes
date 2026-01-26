@@ -1,6 +1,7 @@
 mod error;
 
 use std::sync::Arc;
+use std::time::UNIX_EPOCH;
 
 use async_trait::async_trait;
 use bon::{bon, Builder};
@@ -74,6 +75,10 @@ pub trait Repository: Send + Sync {
         room_id: &chat::RoomId,
         limit: usize,
     ) -> Result<Vec<chat::Message>>;
+    async fn find_message(
+        &self,
+        message_id: &chat::MessageId,
+    ) -> Result<Option<chat::Message>>;
     async fn insert_message(
         &self,
         message: &chat::Message,
@@ -84,6 +89,11 @@ pub trait Repository: Send + Sync {
         user_id: &chat::UserId,
         role: &str,
     ) -> Result<()>;
+    async fn is_member(
+        &self,
+        room_id: &chat::RoomId,
+        user_id: &chat::UserId,
+    ) -> Result<bool>;
     async fn update_message_status(
         &self,
         message_id: &chat::MessageId,
@@ -153,6 +163,227 @@ impl Service {
             clock,
             ids,
         }
+    }
+
+    pub async fn create_room(
+        &self,
+        command: CreateRoom,
+    ) -> Result<chat::Room> {
+        let created_by = parse_user_id(&command.created_by)?;
+        let name = chat::RoomName::try_new(command.name)
+            .map_err(domain::chat::Error::from)?;
+
+        let room = chat::Room {
+            id: self.ids.new_room_id(),
+            name,
+            created_by,
+        };
+
+        self.repo.create_room(&room).await?;
+        self.repo
+            .add_membership(&room.id, &created_by, "owner")
+            .await?;
+        self.audit
+            .record(self.audit_entry(
+                room.id,
+                created_by,
+                "chat.room.create",
+                vec![("room_id".to_string(), room.id.as_uuid().to_string())],
+            ))
+            .await?;
+
+        Ok(room)
+    }
+
+    pub async fn join_room(
+        &self,
+        command: JoinRoom,
+    ) -> Result<()> {
+        let room_id = parse_room_id(&command.room_id)?;
+        let user_id = parse_user_id(&command.user_id)?;
+
+        let Some(_) = self.repo.find_room(&room_id).await? else {
+            return Err(Error::RoomNotFound);
+        };
+
+        self.repo
+            .add_membership(&room_id, &user_id, &command.role)
+            .await?;
+        self.audit
+            .record(self.audit_entry(
+                room_id,
+                user_id,
+                "chat.room.join",
+                vec![("role".to_string(), command.role)],
+            ))
+            .await?;
+
+        Ok(())
+    }
+
+    pub async fn list_messages(
+        &self,
+        command: ListMessages,
+    ) -> Result<Vec<chat::Message>> {
+        let room_id = parse_room_id(&command.room_id)?;
+
+        let Some(_) = self.repo.find_room(&room_id).await? else {
+            return Err(Error::RoomNotFound);
+        };
+
+        self.repo.list_messages(&room_id, command.limit).await
+    }
+
+    pub async fn post_message(
+        &self,
+        command: PostMessage,
+    ) -> Result<chat::Message> {
+        let room_id = parse_room_id(&command.room_id)?;
+        let user_id = parse_user_id(&command.user_id)?;
+
+        let Some(_) = self.repo.find_room(&room_id).await? else {
+            return Err(Error::RoomNotFound);
+        };
+
+        let is_member = self.repo.is_member(&room_id, &user_id).await?;
+        if !is_member {
+            return Err(Error::NotMember);
+        }
+
+        self.rate_limiter.check(&room_id, &user_id).await?;
+
+        let body = chat::MessageBody::try_new(command.body)
+            .map_err(domain::chat::Error::from)?;
+        let requires_moderation = should_moderate(&body);
+        let status = if requires_moderation {
+            chat::MessageStatus::Pending
+        } else {
+            chat::MessageStatus::Visible
+        };
+
+        let message = chat::Message {
+            id: self.ids.new_message_id(),
+            room_id,
+            user_id,
+            body,
+            status,
+            client_id: command.client_id,
+        };
+
+        self.repo.insert_message(&message).await?;
+
+        if requires_moderation {
+            self.moderation
+                .enqueue(&message.id, "auto")
+                .await?;
+        }
+
+        self.audit
+            .record(self.audit_entry(
+                room_id,
+                user_id,
+                "chat.message.post",
+                vec![
+                    ("message_id".to_string(), message.id.as_uuid().to_string()),
+                    ("status".to_string(), format!("{:?}", status)),
+                ],
+            ))
+            .await?;
+
+        Ok(message)
+    }
+
+    pub async fn moderate_message(
+        &self,
+        command: ModerateMessage,
+    ) -> Result<()> {
+        let message_id = parse_message_id(&command.message_id)?;
+        let reviewer_id = parse_user_id(&command.reviewer_id)?;
+
+        let Some(message) = self.repo.find_message(&message_id).await? else {
+            return Err(Error::MessageNotFound);
+        };
+
+        let status = match command.decision {
+            ModerationDecision::Approve => chat::MessageStatus::Visible,
+            ModerationDecision::Remove => chat::MessageStatus::Removed,
+        };
+
+        self.repo
+            .update_message_status(&message_id, status)
+            .await?;
+
+        self.audit
+            .record(self.audit_entry(
+                message.room_id,
+                reviewer_id,
+                "chat.message.moderate",
+                vec![
+                    ("message_id".to_string(), message_id.as_uuid().to_string()),
+                    ("decision".to_string(), format!("{:?}", command.decision)),
+                    (
+                        "reason".to_string(),
+                        command.reason.unwrap_or_default(),
+                    ),
+                ],
+            ))
+            .await?;
+
+        Ok(())
+    }
+}
+
+fn parse_room_id(value: &str) -> Result<chat::RoomId> {
+    let id = value
+        .parse::<uuid::Uuid>()
+        .map_err(|error| Error::InvalidId(error.to_string()))?;
+    Ok(chat::RoomId::from_uuid(id))
+}
+
+fn parse_user_id(value: &str) -> Result<chat::UserId> {
+    let id = value
+        .parse::<uuid::Uuid>()
+        .map_err(|error| Error::InvalidId(error.to_string()))?;
+    Ok(chat::UserId::from_uuid(id))
+}
+
+fn parse_message_id(value: &str) -> Result<chat::MessageId> {
+    let id = value
+        .parse::<uuid::Uuid>()
+        .map_err(|error| Error::InvalidId(error.to_string()))?;
+    Ok(chat::MessageId::from_uuid(id))
+}
+
+fn should_moderate(
+    body: &chat::MessageBody,
+) -> bool {
+    let value = body.to_string();
+    value.len() > 300 || value.contains("http://") || value.contains("https://")
+}
+
+impl Service {
+    fn audit_entry(
+        &self,
+        room_id: chat::RoomId,
+        actor_id: chat::UserId,
+        action: &str,
+        mut metadata: Vec<(String, String)>,
+    ) -> AuditEntry {
+        let timestamp = self
+            .clock
+            .now()
+            .duration_since(UNIX_EPOCH)
+            .map(|value| value.as_millis().to_string())
+            .unwrap_or_else(|_| "0".to_string());
+
+        metadata.push(("timestamp_ms".to_string(), timestamp));
+
+        AuditEntry::builder()
+            .room_id(room_id)
+            .actor_id(actor_id)
+            .action(action.to_string())
+            .metadata(metadata)
+            .build()
     }
 }
 

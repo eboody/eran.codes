@@ -162,6 +162,51 @@ impl app::chat::Repository for SqlxChatRepository {
         Ok(messages)
     }
 
+    async fn find_message(
+        &self,
+        message_id: &chat::MessageId,
+    ) -> Result<Option<chat::Message>> {
+        tracing::info!(
+            target: "demo.db",
+            message = "db query",
+            db_statement = "SELECT id, room_id, user_id, body, status, client_id FROM chat_messages WHERE id = $1"
+        );
+        let row = sqlx::query(
+            r#"
+            SELECT id, room_id, user_id, body, status, client_id
+            FROM chat_messages
+            WHERE id = $1
+            "#,
+        )
+        .bind(message_id.as_uuid())
+        .fetch_optional(&self.pg)
+        .await
+        .map_err(|error| Error::Repo(error.to_string()))?;
+
+        let Some(row) = row else {
+            return Ok(None);
+        };
+
+        let body = row.get::<String, _>("body");
+        let body = chat::MessageBody::try_new(body)
+            .map_err(|error| Error::Repo(error.to_string()))?;
+        let status =
+            Self::status_from_db(row.get::<String, _>("status").as_str())?;
+
+        Ok(Some(chat::Message {
+            id: chat::MessageId::from_uuid(row.get::<uuid::Uuid, _>("id")),
+            room_id: chat::RoomId::from_uuid(
+                row.get::<uuid::Uuid, _>("room_id"),
+            ),
+            user_id: chat::UserId::from_uuid(
+                row.get::<uuid::Uuid, _>("user_id"),
+            ),
+            body,
+            status,
+            client_id: row.get::<Option<String>, _>("client_id"),
+        }))
+    }
+
     async fn insert_message(
         &self,
         message: &chat::Message,
@@ -216,6 +261,32 @@ impl app::chat::Repository for SqlxChatRepository {
         .map_err(|error| Error::Repo(error.to_string()))?;
 
         Ok(())
+    }
+
+    async fn is_member(
+        &self,
+        room_id: &chat::RoomId,
+        user_id: &chat::UserId,
+    ) -> Result<bool> {
+        tracing::info!(
+            target: "demo.db",
+            message = "db query",
+            db_statement = "SELECT 1 FROM chat_room_memberships WHERE room_id = $1 AND user_id = $2"
+        );
+        let row = sqlx::query(
+            r#"
+            SELECT 1
+            FROM chat_room_memberships
+            WHERE room_id = $1 AND user_id = $2
+            "#,
+        )
+        .bind(room_id.as_uuid())
+        .bind(user_id.as_uuid())
+        .fetch_optional(&self.pg)
+        .await
+        .map_err(|error| Error::Repo(error.to_string()))?;
+
+        Ok(row.is_some())
     }
 
     async fn update_message_status(
