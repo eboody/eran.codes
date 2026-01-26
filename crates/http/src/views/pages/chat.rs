@@ -37,11 +37,11 @@ impl Render for Chat {
                         .render())
                 }
 
-                section class="chat-input"
-                    data-signals=(format!("{{chatRoomId: '{}', chatBody: ''}}", self.room_id)) {
+                section class="chat-input" {
                     form method="post"
                         action="/demo/chat/messages"
-                        data-on:submit="@post('/demo/chat/messages'); $chatBody = ''"
+                        data-signals=(format!("{{chatRoomId: '{}', chatBody: ''}}", self.room_id))
+                        data-on:submit="@post('/demo/chat/messages', {chatRoomId: $chatRoomId, chatBody: $chatBody}); $chatBody = ''"
                         data-indicator:fetching {
                         label {
                             "Message"
