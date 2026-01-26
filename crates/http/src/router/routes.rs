@@ -83,6 +83,11 @@ fn pages_routes() -> Router {
     let chat = Router::new()
         .route("/demo/chat", get(crate::handlers::chat_page))
         .route("/demo/chat/messages", post(crate::handlers::post_chat_message))
+        .route(
+            "/demo/chat/moderation",
+            get(crate::handlers::moderation_page)
+                .post(crate::handlers::moderate_message),
+        )
         .route_layer(login_required!(crate::auth::Backend, login_url = "/login"));
 
     Router::new()

@@ -390,6 +390,109 @@ impl app::chat::ModerationQueue for SqlxChatModerationQueue {
 
         Ok(())
     }
+
+    async fn list_pending(
+        &self,
+        limit: usize,
+    ) -> Result<Vec<app::chat::ModerationItem>> {
+        tracing::info!(
+            target: "demo.db",
+            message = "db query",
+            db_statement = "SELECT queue entries"
+        );
+        let rows = sqlx::query(
+            r#"
+            SELECT q.message_id,
+                   q.reason,
+                   q.status,
+                   q.reviewed_at,
+                   m.room_id,
+                   m.user_id,
+                   m.body,
+                   r.name AS room_name,
+                   m.created_at::text AS created_at
+            FROM chat_moderation_queue q
+            JOIN chat_messages m ON m.id = q.message_id
+            JOIN chat_rooms r ON r.id = m.room_id
+            WHERE q.status = 'pending'
+            ORDER BY m.created_at ASC
+            LIMIT $1
+            "#,
+        )
+        .bind(limit as i64)
+        .fetch_all(&self.pg)
+        .await
+        .map_err(|error| Error::Repo(error.to_string()))?;
+
+        let mut items = Vec::with_capacity(rows.len());
+        for row in rows {
+            let room_name = row.get::<String, _>("room_name");
+            let room_name = chat::RoomName::try_new(room_name)
+                .map_err(|error| Error::Repo(error.to_string()))?;
+            let body = row.get::<String, _>("body");
+            let body = chat::MessageBody::try_new(body)
+                .map_err(|error| Error::Repo(error.to_string()))?;
+
+            items.push(
+                app::chat::ModerationItem::builder()
+                    .message_id(chat::MessageId::from_uuid(
+                        row.get::<uuid::Uuid, _>("message_id"),
+                    ))
+                    .room_id(chat::RoomId::from_uuid(
+                        row.get::<uuid::Uuid, _>("room_id"),
+                    ))
+                    .room_name(room_name)
+                    .user_id(chat::UserId::from_uuid(
+                        row.get::<uuid::Uuid, _>("user_id"),
+                    ))
+                    .body(body)
+                    .queue_status(row.get::<String, _>("status"))
+                    .reason(row.get::<String, _>("reason"))
+                    .created_at(row.get::<String, _>("created_at"))
+                    .build(),
+            );
+        }
+
+        Ok(items)
+    }
+
+    async fn complete(
+        &self,
+        message_id: &chat::MessageId,
+        reviewer_id: &chat::UserId,
+        decision: app::chat::ModerationDecision,
+        reason: Option<String>,
+    ) -> Result<()> {
+        let status = match decision {
+            app::chat::ModerationDecision::Approve => "approved",
+            app::chat::ModerationDecision::Remove => "removed",
+        };
+
+        tracing::info!(
+            target: "demo.db",
+            message = "db query",
+            db_statement = "UPDATE chat_moderation_queue"
+        );
+        sqlx::query(
+            r#"
+            UPDATE chat_moderation_queue
+            SET status = $2,
+                reviewer_id = $3,
+                reviewed_at = now(),
+                reason = COALESCE($4, reason)
+            WHERE message_id = $1
+            "#,
+        )
+        .bind(message_id.as_uuid())
+        .bind(status)
+        .bind(reviewer_id.as_uuid())
+        .bind(reason)
+        .execute(&self.pg)
+        .await
+        .map_err(|error| Error::Repo(error.to_string()))?;
+
+        Ok(())
+    }
 }
 
 pub struct SqlxChatRateLimiter {

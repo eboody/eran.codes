@@ -26,6 +26,7 @@ impl Render for Chat {
                         h3 { "Room" }
                         p { (&self.room_name) }
                         p class="muted" { "Room id: " (&self.room_id) }
+                        a class="button secondary" href="/demo/chat/moderation" { "Moderation queue" }
                     }
                 }
 

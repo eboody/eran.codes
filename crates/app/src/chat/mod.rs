@@ -47,6 +47,18 @@ pub struct ModerateMessage {
     pub reason: Option<String>,
 }
 
+#[derive(Clone, Debug, Builder)]
+pub struct ModerationItem {
+    pub message_id: chat::MessageId,
+    pub room_id: chat::RoomId,
+    pub room_name: chat::RoomName,
+    pub user_id: chat::UserId,
+    pub body: chat::MessageBody,
+    pub queue_status: String,
+    pub reason: String,
+    pub created_at: String,
+}
+
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 pub enum ModerationDecision {
     Approve,
@@ -112,6 +124,17 @@ pub trait ModerationQueue: Send + Sync {
         &self,
         message_id: &chat::MessageId,
         reason: &str,
+    ) -> Result<()>;
+    async fn list_pending(
+        &self,
+        limit: usize,
+    ) -> Result<Vec<ModerationItem>>;
+    async fn complete(
+        &self,
+        message_id: &chat::MessageId,
+        reviewer_id: &chat::UserId,
+        decision: ModerationDecision,
+        reason: Option<String>,
     ) -> Result<()>;
 }
 
@@ -245,6 +268,13 @@ impl Service {
         self.repo.list_messages(&room_id, command.limit).await
     }
 
+    pub async fn list_moderation_queue(
+        &self,
+        limit: usize,
+    ) -> Result<Vec<ModerationItem>> {
+        self.moderation.list_pending(limit).await
+    }
+
     pub async fn find_room_by_name(
         &self,
         name: String,
@@ -331,6 +361,15 @@ impl Service {
 
         self.repo
             .update_message_status(&message_id, status)
+            .await?;
+
+        self.moderation
+            .complete(
+                &message_id,
+                &reviewer_id,
+                command.decision,
+                command.reason.clone(),
+            )
             .await?;
 
         self.audit
