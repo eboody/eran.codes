@@ -37,15 +37,19 @@ impl Render for Chat {
                         .render())
                 }
 
-                section class="chat-input" {
+                section class="chat-input"
+                    data-signals=(format!("{{chatRoomId: '{}', chatBody: ''}}", self.room_id)) {
                     form method="post"
                         action="/demo/chat/messages"
-                        data-on:submit="@post('/demo/chat/messages')"
+                        data-on:submit="@post('/demo/chat/messages'); $chatBody = ''"
                         data-indicator:fetching {
-                        input type="hidden" name="room_id" value=(self.room_id);
                         label {
                             "Message"
-                            input type="text" name="body" placeholder="Say something..." required;
+                            input type="text"
+                                name="body"
+                                placeholder="Say something..."
+                                data-bind:chatBody
+                                required;
                         }
                         button type="submit" { "Send" }
                         small data-show="$fetching" { "Sending..." }

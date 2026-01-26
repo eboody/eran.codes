@@ -4,14 +4,16 @@ use axum::{
     response::IntoResponse,
 };
 use maud::Render;
+use datastar::axum::ReadSignals;
 use serde::Deserialize;
 
 use crate::views;
 
 #[derive(Deserialize)]
-pub struct ChatMessageForm {
-    pub room_id: String,
-    pub body: String,
+#[serde(rename_all = "camelCase")]
+pub struct ChatSignals {
+    pub chat_room_id: String,
+    pub chat_body: String,
 }
 
 pub async fn chat_page(
@@ -113,7 +115,7 @@ pub async fn moderate_message(
 pub async fn post_chat_message(
     Extension(state): Extension<crate::State>,
     auth_session: crate::auth::Session,
-    axum::extract::Form(form): axum::extract::Form<ChatMessageForm>,
+    ReadSignals(signals): ReadSignals<ChatSignals>,
 ) -> Result<impl IntoResponse, crate::error::Error> {
     let user = auth_session
         .user
@@ -124,9 +126,9 @@ pub async fn post_chat_message(
         .chat
         .post_message(
             app::chat::PostMessage::builder()
-                .room_id(form.room_id.clone())
+                .room_id(signals.chat_room_id.clone())
                 .user_id(user.id.clone())
-                .body(form.body.clone())
+                .body(signals.chat_body.clone())
                 .build(),
         )
         .await?;
@@ -137,7 +139,7 @@ pub async fn post_chat_message(
         .chat
         .list_messages(
             app::chat::ListMessages::builder()
-                .room_id(form.room_id)
+                .room_id(signals.chat_room_id)
                 .user_id(user.id.clone())
                 .build(),
         )
