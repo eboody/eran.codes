@@ -10,7 +10,7 @@ pub struct AuthStatus<'a> {
     pub email: Option<&'a str>,
     pub session_id: Option<String>,
     pub expiry: Option<String>,
-    pub trace: Vec<crate::trace_log::Entry>,
+    pub trace: Vec<crate::trace_log::TraceEntry>,
 }
 
 impl Render for AuthStatus<'_> {

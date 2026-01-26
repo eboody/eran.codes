@@ -121,7 +121,7 @@ pub async fn boundary_check_partial(
     )
 }
 
-fn trace_snapshot(state: &crate::State) -> Vec<crate::trace_log::Entry> {
+fn trace_snapshot(state: &crate::State) -> Vec<crate::trace_log::TraceEntry> {
     let request_id = crate::request::current_context()
         .and_then(|value| value.request_id)
         .unwrap_or_else(|| "unknown".to_string());

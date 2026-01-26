@@ -20,7 +20,7 @@ use bon::{bon, Builder};
 use maud::Render;
 
 #[derive(Clone, Debug, Builder)]
-pub struct Entry {
+pub struct TraceEntry {
     pub timestamp: String,
     pub level: String,
     pub target: String,
@@ -29,15 +29,15 @@ pub struct Entry {
 }
 
 #[derive(Clone)]
-pub struct Store {
-    requests: Arc<DashMap<String, VecDeque<Entry>>>,
-    sessions: Arc<DashMap<String, VecDeque<Entry>>>,
-    global: Arc<Mutex<VecDeque<Entry>>>,
+pub struct TraceLogStore {
+    requests: Arc<DashMap<String, VecDeque<TraceEntry>>>,
+    sessions: Arc<DashMap<String, VecDeque<TraceEntry>>>,
+    global: Arc<Mutex<VecDeque<TraceEntry>>>,
     max_entries: usize,
     sse: sse::Registry,
 }
 
-impl Store {
+impl TraceLogStore {
     pub fn new(
         sse: sse::Registry,
         max_entries: usize,
@@ -55,7 +55,7 @@ impl Store {
         &self,
         request_id: &str,
         session_id: Option<&str>,
-        entry: Entry,
+        entry: TraceEntry,
     ) {
         let mut queue = self
             .requests
@@ -110,7 +110,7 @@ impl Store {
     pub fn snapshot_request(
         &self,
         request_id: &str,
-    ) -> Vec<Entry> {
+    ) -> Vec<TraceEntry> {
         self.requests
             .get(request_id)
             .map(|queue| queue.iter().cloned().collect())
@@ -120,7 +120,7 @@ impl Store {
     pub fn snapshot_session(
         &self,
         session_id: &str,
-    ) -> Vec<Entry> {
+    ) -> Vec<TraceEntry> {
         self.sessions
             .get(session_id)
             .map(|queue| queue.iter().cloned().collect())
@@ -134,7 +134,7 @@ impl Store {
         self.sessions.remove(session_id);
     }
 
-    pub fn snapshot_global(&self) -> Vec<Entry> {
+    pub fn snapshot_global(&self) -> Vec<TraceEntry> {
         self.global
             .lock()
             .map(|value| value.iter().cloned().collect())
@@ -143,7 +143,7 @@ impl Store {
 }
 
 #[bon]
-impl Store {
+impl TraceLogStore {
     #[builder]
     pub fn builder(
         #[builder(setters(name = with_sse))] sse: sse::Registry,
@@ -154,11 +154,11 @@ impl Store {
 }
 
 pub struct TraceLogLayer {
-    store: Store,
+    store: TraceLogStore,
 }
 
 impl TraceLogLayer {
-    pub fn new(store: Store) -> Self {
+    pub fn new(store: TraceLogStore) -> Self {
         Self { store }
     }
 }
@@ -199,7 +199,7 @@ where
             .message
             .unwrap_or_else(|| event.metadata().name().to_string());
 
-        let entry = Entry::builder()
+        let entry = TraceEntry::builder()
             .timestamp(jiff::Timestamp::now().to_string())
             .level(level.to_string())
             .target(event.metadata().target().to_string())
@@ -254,7 +254,7 @@ pub async fn audit_middleware(
     state.trace_log.record_with_session(
         &request_id,
         session_id.as_deref(),
-        Entry::builder()
+        TraceEntry::builder()
             .timestamp(jiff::Timestamp::now().to_string())
             .level("INFO".to_string())
             .target("demo.request".to_string())
@@ -273,7 +273,7 @@ pub async fn audit_middleware(
     state.trace_log.record_with_session(
         &request_id,
         session_id.as_deref(),
-        Entry::builder()
+        TraceEntry::builder()
             .timestamp(jiff::Timestamp::now().to_string())
             .level("INFO".to_string())
             .target("demo.request".to_string())

@@ -10,7 +10,7 @@ pub struct RequestMeta<'a> {
     pub user_id: Option<&'a str>,
     pub client_ip: Option<&'a str>,
     pub user_agent: Option<&'a str>,
-    pub trace: Vec<crate::trace_log::Entry>,
+    pub trace: Vec<crate::trace_log::TraceEntry>,
 }
 
 impl Render for RequestMeta<'_> {

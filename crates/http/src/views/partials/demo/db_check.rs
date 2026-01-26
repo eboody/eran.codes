@@ -7,7 +7,7 @@ use crate::views::partials::TraceLog;
 pub struct DbCheck<'a> {
     pub email: &'a str,
     pub exists: bool,
-    pub trace: Vec<crate::trace_log::Entry>,
+    pub trace: Vec<crate::trace_log::TraceEntry>,
 }
 
 impl Render for DbCheck<'_> {

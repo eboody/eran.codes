@@ -1,11 +1,11 @@
 use bon::Builder;
 use maud::Render;
 
-use crate::trace_log::Entry;
+use crate::trace_log::TraceEntry;
 
 #[derive(Builder)]
 pub struct NetworkLog<'a> {
-    pub entries: &'a [Entry],
+    pub entries: &'a [TraceEntry],
 }
 
 impl Render for NetworkLog<'_> {
@@ -49,7 +49,7 @@ impl Render for NetworkLog<'_> {
     }
 }
 
-fn field_value(entry: &Entry, name: &str) -> String {
+fn field_value(entry: &TraceEntry, name: &str) -> String {
     entry
         .fields
         .iter()

@@ -14,7 +14,7 @@ use tower_sessions_sqlx_store::PostgresStore;
 #[tokio::main]
 async fn main() -> Result<()> {
     let sse_registry = http::SseRegistry::new();
-    let trace_log = http::trace_log::Store::builder()
+    let trace_log = http::trace_log::TraceLogStore::builder()
         .with_sse(sse_registry.clone())
         .build();
     init_tracing(trace_log.clone());
@@ -66,7 +66,7 @@ async fn main() -> Result<()> {
     Ok(())
 }
 
-fn init_tracing(trace_log: http::trace_log::Store) {
+fn init_tracing(trace_log: http::trace_log::TraceLogStore) {
     let env_filter =
         EnvFilter::try_from_default_env().unwrap_or_else(|_| "info,http=debug".into());
     let log_format = std::env::var("LOG_FORMAT").unwrap_or_else(|_| "pretty".to_string());

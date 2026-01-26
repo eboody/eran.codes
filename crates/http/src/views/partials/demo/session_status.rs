@@ -7,7 +7,7 @@ use crate::views::partials::TraceLog;
 pub struct SessionStatus<'a> {
     pub session_id: Option<&'a str>,
     pub expiry: Option<&'a str>,
-    pub trace: Vec<crate::trace_log::Entry>,
+    pub trace: Vec<crate::trace_log::TraceEntry>,
 }
 
 impl Render for SessionStatus<'_> {

@@ -1,11 +1,11 @@
 use bon::Builder;
 use maud::Render;
 
-use crate::trace_log::Entry;
+use crate::trace_log::TraceEntry;
 
 #[derive(Builder)]
 pub struct LiveLog<'a> {
-    pub entries: &'a [Entry],
+    pub entries: &'a [TraceEntry],
 }
 
 impl Render for LiveLog<'_> {

@@ -9,7 +9,7 @@ pub struct BoundaryCheck<'a> {
     pub username: &'a str,
     pub email: &'a str,
     pub result: &'a str,
-    pub trace: Vec<crate::trace_log::Entry>,
+    pub trace: Vec<crate::trace_log::TraceEntry>,
 }
 
 impl Render for BoundaryCheck<'_> {

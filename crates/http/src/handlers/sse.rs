@@ -216,13 +216,13 @@ pub async fn events(
 }
 
 struct TraceLogGuard {
-    store: crate::trace_log::Store,
+    store: crate::trace_log::TraceLogStore,
     session_id: String,
 }
 
 impl TraceLogGuard {
     fn new(
-        store: crate::trace_log::Store,
+        store: crate::trace_log::TraceLogStore,
         session_id: impl Into<String>,
     ) -> Self {
         Self {
