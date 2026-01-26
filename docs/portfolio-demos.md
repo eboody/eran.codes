@@ -14,6 +14,7 @@ Use this list when building or explaining demos in this repo.
 - SSE support with per-visitor signed session cookie.
 - Datastar-compatible request path (signals/patches available in codebase).
 - Live chat room demo: single EventSource, chat stream updates, and form-driven message posts.
+  - Flow: POST message → validate + persist → SSE `chat.message` → Datastar append.
 
 ## Architecture and Ops
 - Layered boundaries: domain/app/infra/http with explicit traits.
@@ -24,3 +25,4 @@ Use this list when building or explaining demos in this repo.
 - Composition root wiring in src/main.rs for services and stores.
 - Chat room shows request → broadcast flow with persisted history, rate limits, and abuse controls.
 - Chat room enterprise checklist: messages + rooms schema, moderation queue, audit trail.
+  - Boundaries: domain newtypes, app commands/traits, infra SQLx, http DTOs/views.

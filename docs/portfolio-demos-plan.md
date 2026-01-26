@@ -40,3 +40,9 @@ Use this file to guide portfolio demos and implementation priorities.
 - Shows: session-scoped identity, SSE/Datastar message stream, request → broadcast flow.
 - Enterprise: persisted history, rate limits, abuse controls, trace-friendly fanout.
 - Enterprise checklist: schema for messages + rooms, rate limiting, moderation queue, audit trail.
+- Enterprise plan:
+  - Boundaries: domain newtypes (RoomId, MessageBody), app commands/traits, infra SQLx, http DTOs + views.
+  - Data model: `chat_rooms`, `chat_messages` (status + client_id), `chat_room_memberships`, `chat_moderation_queue`, `chat_audit_log`.
+  - Endpoints: `GET /demo/chat`, `POST /demo/chat/messages` (optional rooms/join).
+  - Flow: POST → app validate + rate limit → persist + audit → SSE `chat.message` → Datastar append.
+  - Failures: 400/401/429 map to partials; moderation returns pending; DB errors via centralized error.
