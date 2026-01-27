@@ -10,11 +10,21 @@ use serde::Deserialize;
 
 use crate::{request, views};
 
+const DEMO_USER_EMAIL: &str = "demo.bot@example.com";
+const DEMO_USER_NAME: &str = "Demo Bot";
+
 #[derive(Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct ChatSignals {
     pub room_id: String,
     pub body: String,
+}
+
+#[derive(Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct DemoChatSignals {
+    pub room_id: String,
+    pub bot_body: String,
 }
 
 pub async fn chat_page(
@@ -158,6 +168,62 @@ pub async fn post_chat_message(
     Ok(response)
 }
 
+pub async fn post_demo_chat_message(
+    Extension(state): Extension<crate::State>,
+    auth_session: crate::auth::Session,
+    ReadSignals(signals): ReadSignals<DemoChatSignals>,
+) -> Result<axum::response::Response, crate::error::Error> {
+    let _ = auth_session
+        .user
+        .as_ref()
+        .ok_or(crate::error::Error::Internal)?;
+
+    let demo_user = ensure_demo_user(&state).await?;
+    let _ = state
+        .chat
+        .join_room(
+            app::chat::JoinRoom::builder()
+                .room_id(signals.room_id.clone())
+                .user_id(demo_user.id.as_uuid().to_string())
+                .build(),
+        )
+        .await;
+
+    let message = state
+        .chat
+        .post_message(
+            app::chat::PostMessage::builder()
+                .room_id(signals.room_id.clone())
+                .user_id(demo_user.id.as_uuid().to_string())
+                .body(signals.bot_body.clone())
+                .build(),
+        )
+        .await?;
+
+    let message_html = views::partials::ChatMessage::builder()
+        .message_id(message.id.as_uuid().to_string())
+        .author(demo_user.username.to_string())
+        .body(message.body.to_string())
+        .status(format!("{:?}", message.status))
+        .build()
+        .render()
+        .into_string();
+    broadcast_message(&state, &message_html);
+
+    let response = match crate::request::current_kind() {
+        crate::request::Kind::Datastar => (
+            StatusCode::OK,
+            axum::response::Html(message_html),
+        )
+            .into_response(),
+        crate::request::Kind::Page => {
+            axum::response::Redirect::to("/demo/chat").into_response()
+        }
+    };
+
+    Ok(response)
+}
+
 async fn ensure_room(
     state: &crate::State,
     user_id: &str,
@@ -188,18 +254,54 @@ async fn ensure_room(
     Ok(room)
 }
 
+async fn ensure_demo_user(
+    state: &crate::State,
+) -> Result<domain::user::User, crate::error::Error> {
+    if let Some(user) = state
+        .user
+        .find_by_email(DEMO_USER_EMAIL.to_string())
+        .await?
+    {
+        return Ok(user);
+    }
+
+    let password = secrecy::SecretString::new(
+        uuid::Uuid::new_v4().to_string().into(),
+    );
+    match state
+        .user
+        .register_user(
+            app::user::RegisterUser::builder()
+                .username(DEMO_USER_NAME.to_string())
+                .email(DEMO_USER_EMAIL.to_string())
+                .password(password)
+                .build(),
+        )
+        .await
+    {
+        Ok(_) | Err(app::user::Error::EmailTaken) => {}
+        Err(error) => return Err(error.into()),
+    }
+
+    state
+        .user
+        .find_by_email(DEMO_USER_EMAIL.to_string())
+        .await?
+        .ok_or(crate::error::Error::Internal)
+}
+
 fn broadcast_message(
     state: &crate::State,
     message_html: &str,
 ) {
     let event = PatchElements::new(message_html)
-        .selector("#chat-messages")
+        .selector(".chat-messages")
         .mode(ElementPatchMode::Append)
         .into_datastar_event();
     tracing::info!(
         target: "demo.sse",
         message = "chat message broadcast",
-        selector = "#chat-messages",
+        selector = ".chat-messages",
         mode = "append",
         payload_bytes = message_html.len() as u64
     );
@@ -217,7 +319,7 @@ fn broadcast_message(
             .target("demo.sse".to_string())
             .message("chat message broadcast".to_string())
             .fields(vec![
-                ("selector".to_string(), "#chat-messages".to_string()),
+                ("selector".to_string(), ".chat-messages".to_string()),
                 ("mode".to_string(), "append".to_string()),
                 ("payload_bytes".to_string(), message_html.len().to_string()),
             ])

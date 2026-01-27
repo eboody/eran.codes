@@ -31,7 +31,7 @@ pub struct ChatMessages {
 impl Render for ChatMessages {
     fn render(&self) -> maud::Markup {
         maud::html! {
-            ul id="chat-messages" class="chat-messages" {
+            ul class="chat-messages" {
                 @if self.messages.is_empty() {
                     li class="muted" { "No messages yet." }
                 } @else {

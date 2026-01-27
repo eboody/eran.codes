@@ -16,7 +16,8 @@ pub struct Chat {
 impl Render for Chat {
     fn render(&self) -> maud::Markup {
         let content = maud::html! {
-            main class="container" {
+            main class="container"
+                data-signals=(format!("{{roomId: '{}', body: '', botBody: '', sseConnected: false}}", self.room_id)) {
                 header class="hero" {
                     div {
                         h1 { "Live chat room" }
@@ -30,34 +31,58 @@ impl Render for Chat {
                     }
                 }
 
-                section class="chat-panel"
-                    data-signals=(format!("{{roomId: '{}', body: '', sseConnected: false}}", self.room_id)) {
+                section class="chat-panel" {
                     div class="pill-row" {
                         span class="pill secondary" data-show="$sseConnected" { "SSE connected" }
                         span class="pill muted" data-show="!$sseConnected" { "SSE disconnected" }
                     }
-                    (crate::views::partials::ChatWindow::builder()
-                        .messages(self.messages.clone())
-                        .build()
-                        .render())
-                }
-
-                section class="chat-input" {
-                    form method="post"
-                        action="/demo/chat/messages"
-                        data-target="#chat-messages"
-                        data-swap="append"
-                        data-on:submit="@post('/demo/chat/messages'); $body = ''"
-                    {
-                        label {
-                            "Message"
-                            input type="text"
-                                name="body"
-                                placeholder="Say something..."
-                                data-bind:body
-                                required;
+                    div class="chat-columns" {
+                        div class="chat-stack" {
+                            (crate::views::partials::ChatWindow::builder()
+                                .maybe_title(Some("You".to_string()))
+                                .messages(self.messages.clone())
+                                .build()
+                                .render())
+                            form method="post"
+                                action="/demo/chat/messages"
+                                data-target=".chat-messages"
+                                data-swap="append"
+                                data-on:submit="@post('/demo/chat/messages'); $body = ''"
+                            {
+                                label {
+                                    "Message as you"
+                                    input type="text"
+                                        name="body"
+                                        placeholder="Say something..."
+                                        data-bind:body
+                                        required;
+                                }
+                                button type="submit" { "Send" }
+                            }
                         }
-                        button type="submit" { "Send" }
+                        div class="chat-stack" {
+                            (crate::views::partials::ChatWindow::builder()
+                                .maybe_title(Some("Demo user".to_string()))
+                                .messages(self.messages.clone())
+                                .build()
+                                .render())
+                            form method="post"
+                                action="/demo/chat/messages/demo"
+                                data-target=".chat-messages"
+                                data-swap="append"
+                                data-on:submit="@post('/demo/chat/messages/demo'); $botBody = ''"
+                            {
+                                label {
+                                    "Message as demo user"
+                                    input type="text"
+                                        name="body"
+                                        placeholder="Send as demo user..."
+                                        data-bind:botBody
+                                        required;
+                                }
+                                button type="submit" class="secondary" { "Send as demo" }
+                            }
+                        }
                     }
                 }
             }

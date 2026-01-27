@@ -83,6 +83,10 @@ fn pages_routes() -> Router {
         .route("/demo/chat", get(crate::handlers::chat_page))
         .route("/demo/chat/messages", post(crate::handlers::post_chat_message))
         .route(
+            "/demo/chat/messages/demo",
+            post(crate::handlers::post_demo_chat_message),
+        )
+        .route(
             "/demo/chat/moderation",
             get(crate::handlers::moderation_page)
                 .post(crate::handlers::moderate_message),
