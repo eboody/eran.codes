@@ -94,11 +94,33 @@ fn field_value(entry: &TraceEntry, name: &str) -> String {
 
 fn source_badge(entry: &TraceEntry) -> maud::Markup {
     let path = field_value(entry, "path");
-    match path.as_str() {
-        "/demo/chat/messages" => maud::html! { span class="badge" { "You" } },
-        "/demo/chat/messages/demo" => {
-            maud::html! { span class="badge secondary" { "Demo" } }
+    match ChatRequestSource::from_path(&path) {
+        Some(source) => source.badge(),
+        None => maud::html! {},
+    }
+}
+
+#[derive(Clone, Copy)]
+enum ChatRequestSource {
+    You,
+    Demo,
+}
+
+impl ChatRequestSource {
+    fn from_path(path: &str) -> Option<Self> {
+        match path {
+            "/demo/chat/messages" => Some(Self::You),
+            "/demo/chat/messages/demo" => Some(Self::Demo),
+            _ => None,
         }
-        _ => maud::html! {},
+    }
+
+    fn badge(self) -> maud::Markup {
+        match self {
+            ChatRequestSource::You => maud::html! { span class="badge" { "You" } },
+            ChatRequestSource::Demo => {
+                maud::html! { span class="badge secondary" { "Demo" } }
+            }
+        }
     }
 }

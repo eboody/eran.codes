@@ -18,24 +18,17 @@ impl Render for Chat {
         let content = maud::html! {
             main class="container"
                 data-signals=(format!("{{roomId: '{}', body: '', botBody: '', sseConnected: false}}", self.room_id)) {
-                header class="hero" {
-                    div {
-                        h1 { "Live chat room" }
-                        p { "Enterprise demo: persistence, rate limits, moderation, and SSE fanout." }
-                    }
-                    aside class="hero-card" {
-                        h3 { "Room" }
-                        p { (&self.room_name) }
-                        p class="muted" { "Room id: " (&self.room_id) }
-                        a class="button secondary" href="/demo/chat/moderation" { "Moderation queue" }
-                    }
-                }
+                (crate::views::partials::ChatHero::builder()
+                    .room_name(self.room_name.clone())
+                    .room_id(self.room_id.clone())
+                    .build()
+                    .render())
 
                 section class="chat-panel" {
-                    div class="pill-row" {
-                        span class="pill secondary" data-show="$sseConnected" { "SSE connected" }
-                        span class="pill muted" data-show="!$sseConnected" { "SSE disconnected" }
-                    }
+                    (crate::views::partials::ChatConnection::builder()
+                        .connected_signal("$sseConnected".to_string())
+                        .build()
+                        .render())
                     div class="chat-columns" {
                         (crate::views::partials::ChatPanel::builder()
                             .role(crate::views::partials::ChatPanelRole::You)
