@@ -3,46 +3,98 @@ use maud::Render;
 
 use crate::views::partials::ChatWindow;
 
+#[derive(Clone, Copy, Debug)]
+pub enum ChatPanelRole {
+    You,
+    Demo,
+}
+
+impl ChatPanelRole {
+    fn title(&self) -> &'static str {
+        match self {
+            ChatPanelRole::You => "You",
+            ChatPanelRole::Demo => "Demo user",
+        }
+    }
+
+    fn input_label(&self) -> &'static str {
+        match self {
+            ChatPanelRole::You => "Message as you",
+            ChatPanelRole::Demo => "Message as demo user",
+        }
+    }
+
+    fn placeholder(&self) -> &'static str {
+        match self {
+            ChatPanelRole::You => "Say something...",
+            ChatPanelRole::Demo => "Send as demo user...",
+        }
+    }
+
+    fn action(&self) -> &'static str {
+        match self {
+            ChatPanelRole::You => "/demo/chat/messages",
+            ChatPanelRole::Demo => "/demo/chat/messages/demo",
+        }
+    }
+
+    fn input_signal(&self) -> &'static str {
+        match self {
+            ChatPanelRole::You => "body",
+            ChatPanelRole::Demo => "botBody",
+        }
+    }
+
+    fn button_label(&self) -> &'static str {
+        match self {
+            ChatPanelRole::You => "Send",
+            ChatPanelRole::Demo => "Send as demo",
+        }
+    }
+
+    fn button_class(&self) -> Option<&'static str> {
+        match self {
+            ChatPanelRole::You => None,
+            ChatPanelRole::Demo => Some("secondary"),
+        }
+    }
+}
+
 #[derive(Clone, Debug, Builder)]
 pub struct ChatPanel {
-    pub title: String,
+    pub role: ChatPanelRole,
     pub messages: Vec<crate::views::partials::ChatMessage>,
-    pub action: String,
-    pub input_label: String,
-    pub placeholder: String,
-    pub input_name: String,
-    pub input_signal: String,
-    pub button_label: String,
-    pub button_class: Option<String>,
 }
 
 impl Render for ChatPanel {
     fn render(&self) -> maud::Markup {
+        let action = self.role.action();
+        let input_signal = self.role.input_signal();
         maud::html! {
             div class="chat-stack" {
                 (ChatWindow::builder()
-                    .maybe_title(Some(self.title.clone()))
+                    .maybe_title(Some(self.role.title().to_string()))
                     .messages(self.messages.clone())
                     .build()
                     .render())
                 form method="post"
-                    action=(self.action.as_str())
+                    action=(action)
                     data-target=".chat-messages"
                     data-swap="append"
-                    data-on:submit=(format!("@post('{}'); ${} = ''", self.action, self.input_signal))
+                    data-on:submit=(format!("@post('{}'); ${} = ''", action, input_signal))
                 {
                     label {
-                        (self.input_label.as_str())
+                        (self.role.input_label())
                         input type="text"
-                            name=(self.input_name.as_str())
-                            placeholder=(self.placeholder.as_str())
-                            data-bind=(self.input_signal.as_str())
+                            name="body"
+                            placeholder=(self.role.placeholder())
+                            data-bind=(input_signal)
                             required;
                     }
-                    @if let Some(class) = &self.button_class {
-                        button type="submit" class=(class) { (self.button_label.as_str()) }
+                    @if let Some(class) = self.role.button_class() {
+                        button type="submit" class=(class) { (self.role.button_label()) }
                     } @else {
-                        button type="submit" { (self.button_label.as_str()) }
+                        button type="submit" { (self.role.button_label()) }
                     }
                 }
             }

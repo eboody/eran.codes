@@ -3,7 +3,7 @@ moddef::moddef!(mod { auth_status, boundary_check, chat_message, chat_panel, cha
 pub use auth_status::AuthStatus;
 pub use boundary_check::BoundaryCheck;
 pub use chat_message::{ChatMessage, ChatMessages};
-pub use chat_panel::ChatPanel;
+pub use chat_panel::{ChatPanel, ChatPanelRole};
 pub use chat_window::ChatWindow;
 pub use db_check::DbCheck;
 pub use live_log::LiveLog;
