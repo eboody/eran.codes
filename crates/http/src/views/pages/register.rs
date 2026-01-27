@@ -1,16 +1,20 @@
 use bon::Builder;
 use maud::Render;
+use urlencoding;
 
 use crate::views::page::UserNav;
 
 #[derive(Builder)]
 pub struct Register<'a> {
     pub message: Option<&'a str>,
+    pub next: Option<&'a str>,
     pub user: Option<UserNav>,
 }
 
 impl Render for Register<'_> {
     fn render(&self) -> maud::Markup {
+        let next_query =
+            self.next.map(|value| urlencoding::encode(value).to_string());
         let content = maud::html! {
             main class="container" {
                 article {
@@ -24,6 +28,9 @@ impl Render for Register<'_> {
                     }
 
                     form method="post" action="/register" {
+                        @if let Some(next) = self.next {
+                            input type="hidden" name="next" value=(next);
+                        }
                         label {
                             "Username"
                             input type="text" name="username" required;
@@ -41,7 +48,11 @@ impl Render for Register<'_> {
 
                     p {
                         "Already have an account? "
-                        a href="/login" { "Sign in" }
+                        @if let Some(next) = next_query {
+                            a href=(format!("/login?next={}", next)) { "Sign in" }
+                        } @else {
+                            a href="/login" { "Sign in" }
+                        }
                     }
                 }
             }

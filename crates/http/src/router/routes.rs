@@ -1,7 +1,6 @@
 use axum::Router;
 use axum::middleware::from_fn;
 use axum::routing::{get, post};
-use axum_login::login_required;
 use tower_http::services::ServeDir;
 
 pub struct Routes {
@@ -78,7 +77,7 @@ fn base_routes() -> Router {
 fn pages_routes() -> Router {
     let protected = Router::new()
         .route("/protected", get(crate::handlers::protected))
-        .route_layer(login_required!(crate::auth::Backend, login_url = "/login"));
+        .route_layer(from_fn(crate::auth::require_auth_middleware));
 
     let chat = Router::new()
         .route("/demo/chat", get(crate::handlers::chat_page))
@@ -88,7 +87,7 @@ fn pages_routes() -> Router {
             get(crate::handlers::moderation_page)
                 .post(crate::handlers::moderate_message),
         )
-        .route_layer(login_required!(crate::auth::Backend, login_url = "/login"));
+        .route_layer(from_fn(crate::auth::require_auth_middleware));
 
     Router::new()
         .route("/", get(crate::handlers::home))

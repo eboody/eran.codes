@@ -2,7 +2,7 @@ use axum::{
     body::Body,
     http::Request,
     middleware::Next,
-    response::Response,
+    response::{IntoResponse, Redirect, Response},
 };
 use axum_login::{AuthUser, AuthnBackend, AuthSession};
 use bon::Builder;
@@ -92,4 +92,22 @@ pub async fn set_user_context_middleware(
     }
 
     next.run(req).await
+}
+
+pub async fn require_auth_middleware(
+    auth_session: Session,
+    req: Request<Body>,
+    next: Next,
+) -> Response {
+    if auth_session.user.is_some() {
+        return next.run(req).await;
+    }
+
+    let next_path = req
+        .uri()
+        .path_and_query()
+        .map(|value| value.as_str())
+        .unwrap_or("/");
+    let redirect = format!("/login?next={}", urlencoding::encode(next_path));
+    Redirect::to(&redirect).into_response()
 }
