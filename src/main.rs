@@ -6,10 +6,10 @@ use std::sync::Arc;
 use app::user;
 use error::{Error, Result};
 use infra::user::Repository as UserRepo;
-use tracing_subscriber::{EnvFilter, layer::SubscriberExt, util::SubscriberInitExt};
 use tower_cookies::Key;
 use tower_sessions::session_store::ExpiredDeletion;
 use tower_sessions_sqlx_store::PostgresStore;
+use tracing_subscriber::{EnvFilter, layer::SubscriberExt, util::SubscriberInitExt};
 
 #[tokio::main]
 async fn main() -> Result<()> {
@@ -34,10 +34,8 @@ async fn main() -> Result<()> {
     let auth_service = app::auth::Service::new(Arc::new(auth_provider));
 
     let chat_repo = Arc::new(infra::chat::Repository::new(infra.db.clone()));
-    let chat_moderation =
-        Arc::new(infra::chat::ModerationQueue::new(infra.db.clone()));
-    let chat_rate_limiter =
-        Arc::new(infra::chat::RateLimiter::new(infra.db.clone()));
+    let chat_moderation = Arc::new(infra::chat::ModerationQueue::new(infra.db.clone()));
+    let chat_rate_limiter = Arc::new(infra::chat::RateLimiter::new(infra.db.clone()));
     let chat_audit = Arc::new(infra::chat::AuditLog::new(infra.db.clone()));
     let chat_clock = Arc::new(infra::chat::SystemClock::new());
     let chat_ids = Arc::new(infra::chat::UuidGenerator::new());
@@ -62,9 +60,8 @@ async fn main() -> Result<()> {
 
     let session_store = PostgresStore::new(infra.db.clone());
     let cleanup_store = session_store.clone();
-    let cleanup_interval = std::time::Duration::from_secs(
-        cfg.http.session_cleanup_interval_secs,
-    );
+    let cleanup_interval =
+        std::time::Duration::from_secs(cfg.http.session_cleanup_interval_secs);
     tokio::spawn(async move {
         if let Err(error) = cleanup_store
             .continuously_delete_expired(cleanup_interval)

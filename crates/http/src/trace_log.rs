@@ -107,6 +107,50 @@ impl TraceLogStore {
         }
     }
 
+    pub fn record_sse_event(
+        &self,
+        session_id: Option<&str>,
+        entry: TraceEntry,
+    ) {
+        if let Some(session_id) = session_id {
+            let mut session_queue = self
+                .sessions
+                .entry(session_id.to_string())
+                .or_insert_with(VecDeque::new);
+            if session_queue.len() >= self.max_entries {
+                session_queue.pop_front();
+            }
+            session_queue.push_back(entry.clone());
+        }
+
+        if let Ok(mut global) = self.global.lock() {
+            if global.len() >= self.max_entries {
+                global.pop_front();
+            }
+            global.push_back(entry);
+        }
+
+        if let Some(session_id) = session_id {
+            let entries = self.snapshot_session(session_id);
+            let live_log = views::partials::LiveLog::builder()
+                .entries(&entries)
+                .build()
+                .render()
+                .into_string();
+            let network_log = views::partials::NetworkLog::builder()
+                .entries(&entries)
+                .build()
+                .render()
+                .into_string();
+            let _ = self
+                .sse
+                .send_by_id(session_id, sse::Event::patch_elements(live_log));
+            let _ = self
+                .sse
+                .send_by_id(session_id, sse::Event::patch_elements(network_log));
+        }
+    }
+
     pub fn snapshot_request(
         &self,
         request_id: &str,
@@ -190,8 +234,9 @@ where
             .any(|(name, _)| name == "db_statement");
         let is_demo = event.metadata().target().starts_with("demo");
         let is_info = matches!(level, Level::INFO | Level::WARN | Level::ERROR);
+        let is_sse = event.metadata().target().starts_with("demo.sse");
 
-        if !(is_info || has_db || is_demo) {
+        if is_sse || !(is_info || has_db || is_demo) {
             return;
         }
 

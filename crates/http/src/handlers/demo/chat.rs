@@ -8,7 +8,7 @@ use datastar::axum::ReadSignals;
 use datastar::prelude::{ElementPatchMode, PatchElements};
 use serde::Deserialize;
 
-use crate::views;
+use crate::{request, views};
 
 #[derive(Deserialize)]
 #[serde(rename_all = "camelCase")]
@@ -206,6 +206,23 @@ fn broadcast_message(
     let _ = state
         .sse
         .broadcast(crate::sse::Event::from_event(event));
+
+    let session_id = request::current_context()
+        .and_then(|value| value.session_id);
+    state.trace_log.record_sse_event(
+        session_id.as_deref(),
+        crate::trace_log::TraceEntry::builder()
+            .timestamp(jiff::Timestamp::now().to_string())
+            .level("INFO".to_string())
+            .target("demo.sse".to_string())
+            .message("chat message broadcast".to_string())
+            .fields(vec![
+                ("selector".to_string(), "#chat-messages".to_string()),
+                ("mode".to_string(), "append".to_string()),
+                ("payload_bytes".to_string(), message_html.len().to_string()),
+            ])
+            .build(),
+    );
 }
 
 fn to_message_views(
