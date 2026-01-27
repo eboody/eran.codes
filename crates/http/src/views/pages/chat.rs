@@ -37,52 +37,29 @@ impl Render for Chat {
                         span class="pill muted" data-show="!$sseConnected" { "SSE disconnected" }
                     }
                     div class="chat-columns" {
-                        div class="chat-stack" {
-                            (crate::views::partials::ChatWindow::builder()
-                                .maybe_title(Some("You".to_string()))
-                                .messages(self.messages.clone())
-                                .build()
-                                .render())
-                            form method="post"
-                                action="/demo/chat/messages"
-                                data-target=".chat-messages"
-                                data-swap="append"
-                                data-on:submit="@post('/demo/chat/messages'); $body = ''"
-                            {
-                                label {
-                                    "Message as you"
-                                    input type="text"
-                                        name="body"
-                                        placeholder="Say something..."
-                                        data-bind:body
-                                        required;
-                                }
-                                button type="submit" { "Send" }
-                            }
-                        }
-                        div class="chat-stack" {
-                            (crate::views::partials::ChatWindow::builder()
-                                .maybe_title(Some("Demo user".to_string()))
-                                .messages(self.messages.clone())
-                                .build()
-                                .render())
-                            form method="post"
-                                action="/demo/chat/messages/demo"
-                                data-target=".chat-messages"
-                                data-swap="append"
-                                data-on:submit="@post('/demo/chat/messages/demo'); $botBody = ''"
-                            {
-                                label {
-                                    "Message as demo user"
-                                    input type="text"
-                                        name="body"
-                                        placeholder="Send as demo user..."
-                                        data-bind:botBody
-                                        required;
-                                }
-                                button type="submit" class="secondary" { "Send as demo" }
-                            }
-                        }
+                        (crate::views::partials::ChatPanel::builder()
+                            .title("You".to_string())
+                            .messages(self.messages.clone())
+                            .action("/demo/chat/messages".to_string())
+                            .input_label("Message as you".to_string())
+                            .placeholder("Say something...".to_string())
+                            .input_name("body".to_string())
+                            .input_signal("body".to_string())
+                            .button_label("Send".to_string())
+                            .build()
+                            .render())
+                        (crate::views::partials::ChatPanel::builder()
+                            .title("Demo user".to_string())
+                            .messages(self.messages.clone())
+                            .action("/demo/chat/messages/demo".to_string())
+                            .input_label("Message as demo user".to_string())
+                            .placeholder("Send as demo user...".to_string())
+                            .input_name("body".to_string())
+                            .input_signal("botBody".to_string())
+                            .button_label("Send as demo".to_string())
+                            .maybe_button_class(Some("secondary".to_string()))
+                            .build()
+                            .render())
                     }
                 }
             }
