@@ -8,7 +8,7 @@ use datastar::axum::ReadSignals;
 use datastar::prelude::{ElementPatchMode, PatchElements};
 use serde::Deserialize;
 
-use crate::{request, views};
+use crate::{paths::Route, request, views};
 
 const DEMO_USER_EMAIL: &str = "demo.bot@example.com";
 const DEMO_USER_NAME: &str = "Demo Bot";
@@ -161,7 +161,7 @@ pub async fn post_chat_message(
         )
             .into_response(),
         crate::request::Kind::Page => {
-            axum::response::Redirect::to("/demo/chat").into_response()
+            axum::response::Redirect::to(Route::Chat.as_str()).into_response()
         }
     };
 
@@ -217,7 +217,7 @@ pub async fn post_demo_chat_message(
         )
             .into_response(),
         crate::request::Kind::Page => {
-            axum::response::Redirect::to("/demo/chat").into_response()
+            axum::response::Redirect::to(Route::Chat.as_str()).into_response()
         }
     };
 

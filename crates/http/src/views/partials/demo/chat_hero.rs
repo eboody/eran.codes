@@ -1,6 +1,8 @@
 use bon::Builder;
 use maud::Render;
 
+use crate::paths::Route;
+
 #[derive(Clone, Debug, Builder)]
 pub struct ChatHero {
     pub room_name: String,
@@ -19,7 +21,7 @@ impl Render for ChatHero {
                     h3 { "Room" }
                     p { (&self.room_name) }
                     p class="muted" { "Room id: " (&self.room_id) }
-                    a class="button secondary" href="/demo/chat/moderation" { "Moderation queue" }
+                    a class="button secondary" href=(Route::ChatModeration.as_str()) { "Moderation queue" }
                 }
             }
         }

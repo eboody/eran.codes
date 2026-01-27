@@ -7,7 +7,7 @@ use axum::{
 use axum_login::{AuthUser, AuthnBackend, AuthSession};
 use bon::Builder;
 
-use crate::request;
+use crate::{paths::Route, request};
 
 #[derive(Clone, Debug, Builder)]
 pub struct User {
@@ -108,6 +108,10 @@ pub async fn require_auth_middleware(
         .path_and_query()
         .map(|value| value.as_str())
         .unwrap_or("/");
-    let redirect = format!("/login?next={}", urlencoding::encode(next_path));
+    let redirect = format!(
+        "{}?next={}",
+        Route::Login.as_str(),
+        urlencoding::encode(next_path)
+    );
     Redirect::to(&redirect).into_response()
 }

@@ -1,5 +1,6 @@
 use bon::Builder;
 
+use crate::paths::Route;
 use crate::views::page::UserNav;
 
 #[derive(Builder)]
@@ -28,13 +29,13 @@ impl maud::Render for Home {
                         @if let Some(user) = &self.user {
                             p { "Signed in as " strong { (&user.username) } "." }
                             p class="muted" { (&user.email) }
-                            a class="button" href="/protected" { "Open account" }
+                            a class="button" href=(Route::Protected.as_str()) { "Open account" }
                         } @else {
                             p { "No active session." }
                             p class="muted" { "Create an account to see session-backed auth." }
                             div class="cta-row" {
-                                a class="button" href="/register" { "Create account" }
-                                a class="button secondary" href="/login" { "Sign in" }
+                                a class="button" href=(Route::Register.as_str()) { "Create account" }
+                                a class="button secondary" href=(Route::Login.as_str()) { "Sign in" }
                             }
                         }
                     }
@@ -78,11 +79,11 @@ impl maud::Render for Home {
                     article class="flow-card" {
                         p {
                             "Follow the full flow: "
-                            strong { "/register" }
+                            strong { (Route::Register.as_str()) }
                             " → "
-                            strong { "/login" }
+                            strong { (Route::Login.as_str()) }
                             " → "
-                            strong { "/protected" }
+                            strong { (Route::Protected.as_str()) }
                             "."
                         }
                         ul {
@@ -92,9 +93,9 @@ impl maud::Render for Home {
                             li { "Passwords are hashed with Argon2 in a credentials table." }
                         }
                         div class="cta-row" {
-                            a class="button" href="/register" { "Start demo" }
-                            a class="button secondary" href="/login" { "Sign in" }
-                            button class="button secondary" data-on:click="@get('/partials/auth-status')" {
+                            a class="button" href=(Route::Register.as_str()) { "Start demo" }
+                            a class="button secondary" href=(Route::Login.as_str()) { "Sign in" }
+                            button class="button secondary" data-on:click=(format!("@get('{}')", Route::PartialAuthStatus.as_str())) {
                                 "Check auth status"
                             }
                         }
@@ -114,24 +115,24 @@ impl maud::Render for Home {
                         ol {
                             li { "Sign in or register to create a session." }
                             li { "Restart the server process." }
-                            li { "Reload " strong { "/protected" } " and remain signed in." }
+                            li { "Reload " strong { (Route::Protected.as_str()) } " and remain signed in." }
                         }
                         p class="muted" {
                             "Session records live in the "
                             strong { "tower_sessions.session" }
                             " table and are cleaned up automatically."
                         }
-                        button class="button secondary" data-on:click="@get('/partials/session-status')" {
+                        button class="button secondary" data-on:click=(format!("@get('{}')", Route::PartialSessionStatus.as_str())) {
                             "Show session details"
                         }
                         div id="session-status-target" class="demo-result muted" {
                             "Click “Show session details” to load the session id and expiry."
                         }
                         div class="cta-row" {
-                            button class="button secondary" data-on:click="@get('/partials/db-check?email=demo@example.com')" {
+                            button class="button secondary" data-on:click=(format!("@get('{}')", Route::PartialDbCheck.with_query("email=demo@example.com"))) {
                                 "Check demo@example.com"
                             }
-                            button class="button secondary" data-on:click="@get('/partials/db-check?email=missing@example.com')" {
+                            button class="button secondary" data-on:click=(format!("@get('{}')", Route::PartialDbCheck.with_query("email=missing@example.com"))) {
                                 "Check missing@example.com"
                             }
                         }
@@ -158,10 +159,10 @@ impl maud::Render for Home {
                             "Domain types avoid serde/DB concerns; app orchestrates policy; infra owns SQL."
                         }
                         div class="cta-row" {
-                            button class="button secondary" data-on:click="@get('/partials/boundary-check?case=valid')" {
+                            button class="button secondary" data-on:click=(format!("@get('{}')", Route::PartialBoundaryCheck.with_query("case=valid"))) {
                                 "Validate sample input"
                             }
-                            button class="button secondary" data-on:click="@get('/partials/boundary-check?case=invalid')" {
+                            button class="button secondary" data-on:click=(format!("@get('{}')", Route::PartialBoundaryCheck.with_query("case=invalid"))) {
                                 "Validate invalid input"
                             }
                         }
@@ -181,8 +182,8 @@ impl maud::Render for Home {
                             li { "Datastar-aware partials for interactive flows." }
                         }
                         div class="cta-row" {
-                            a class="button secondary" href="/error-test" { "Trigger full-page error" }
-                            button class="button secondary" data-on:click="@get('/error-test')" {
+                            a class="button secondary" href=(Route::ErrorTest.as_str()) { "Trigger full-page error" }
+                            button class="button secondary" data-on:click=(format!("@get('{}')", Route::ErrorTest.as_str())) {
                                 "Trigger Datastar error"
                             }
                         }
@@ -208,7 +209,7 @@ impl maud::Render for Home {
                             code { "LOG_FORMAT=json" }
                             " for structured output."
                         }
-                        button class="button secondary" data-on:click="@get('/partials/request-meta')" {
+                        button class="button secondary" data-on:click=(format!("@get('{}')", Route::PartialRequestMeta.as_str())) {
                             "Fetch request metadata"
                         }
                         div id="request-meta-target" class="demo-result muted" {
@@ -229,13 +230,13 @@ impl maud::Render for Home {
                         p class="muted" {
                             "Use the ping and signal demos to observe live updates."
                         }
-                        div class="grid demos" data-signals="{surrealMessage: 'Ready.', originalSurrealMessage: 'Ready.', surrealStatus: 'idle'}" {
+                        div class="grid demos" data-signals=(format!("{{surrealMessage: '{}', originalSurrealMessage: '{}', surrealStatus: 'idle'}}", "Ready.", "Ready.")) {
                             article {
                                 h3 { "SSE ping" }
                                 div id="ping-target" {
                                     p { "No pings yet." }
                                 }
-                                button data-on:click="@get('/partials/ping')" { "Ping" }
+                                button data-on:click=(format!("@get('{}')", Route::PartialPing.as_str())) { "Ping" }
                             }
                             article {
                                 h3 { "Datastar signals" }
@@ -245,10 +246,10 @@ impl maud::Render for Home {
                                     button
                                         data-on:click="$surrealMessage = 'Front-end says hi!'; setTimeout(() => { $surrealMessage = $originalSurrealMessage; }, 1000)"
                                     { "Front-end update" }
-                                    button data-on:click="@get('/partials/surreal-message-guarded')" {
+                                    button data-on:click=(format!("@get('{}')", Route::PartialSurrealGuarded.as_str())) {
                                         "Backend guarded"
                                     }
-                                    button data-on:click="@get('/partials/surreal-message-cancel')" {
+                                    button data-on:click=(format!("@get('{}')", Route::PartialSurrealCancel.as_str())) {
                                         "Backend cancel"
                                     }
                                 }
@@ -287,7 +288,7 @@ impl maud::Render for Home {
                             li { "SSE broadcasts updates to all connected visitors." }
                         }
                         div class="cta-row" {
-                            a class="button" href="/demo/chat" { "Open chat demo" }
+                            a class="button" href=(Route::Chat.as_str()) { "Open chat demo" }
                         }
                     }
                 }

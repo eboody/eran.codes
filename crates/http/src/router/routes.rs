@@ -38,36 +38,37 @@ impl Routes {
 }
 
 fn base_routes() -> Router {
+    use crate::paths::Route;
     Router::new()
-        .route("/partials/ping", get(crate::handlers::ping_partial))
+        .route(Route::PartialPing.as_str(), get(crate::handlers::ping_partial))
         .route(
-            "/partials/auth-status",
+            Route::PartialAuthStatus.as_str(),
             get(crate::handlers::auth_status_partial),
         )
         .route(
-            "/partials/session-status",
+            Route::PartialSessionStatus.as_str(),
             get(crate::handlers::session_status_partial),
         )
         .route(
-            "/partials/request-meta",
+            Route::PartialRequestMeta.as_str(),
             get(crate::handlers::request_meta_partial),
         )
         .route(
-            "/partials/boundary-check",
+            Route::PartialBoundaryCheck.as_str(),
             get(crate::handlers::boundary_check_partial),
         )
-        .route("/partials/db-check", get(crate::handlers::db_check_partial))
+        .route(Route::PartialDbCheck.as_str(), get(crate::handlers::db_check_partial))
         .route(
-            "/partials/surreal-message-guarded",
+            Route::PartialSurrealGuarded.as_str(),
             get(crate::handlers::surreal_message_guarded),
         )
         .route(
-            "/partials/surreal-message-cancel",
+            Route::PartialSurrealCancel.as_str(),
             get(crate::handlers::surreal_message_cancel),
         )
-        .route("/error-test", get(crate::handlers::error_test))
-        .route("/events", get(crate::handlers::events))
-        .route("/health", get(crate::handlers::health))
+        .route(Route::ErrorTest.as_str(), get(crate::handlers::error_test))
+        .route(Route::Events.as_str(), get(crate::handlers::events))
+        .route(Route::Health.as_str(), get(crate::handlers::health))
         .nest_service(
             "/static",
             ServeDir::new(concat!(env!("CARGO_MANIFEST_DIR"), "/static")),
@@ -75,35 +76,36 @@ fn base_routes() -> Router {
 }
 
 fn pages_routes() -> Router {
+    use crate::paths::Route;
     let protected = Router::new()
-        .route("/protected", get(crate::handlers::protected))
+        .route(Route::Protected.as_str(), get(crate::handlers::protected))
         .route_layer(from_fn(crate::auth::require_auth_middleware));
 
     let chat = Router::new()
-        .route("/demo/chat", get(crate::handlers::chat_page))
-        .route("/demo/chat/messages", post(crate::handlers::post_chat_message))
+        .route(Route::Chat.as_str(), get(crate::handlers::chat_page))
+        .route(Route::ChatMessages.as_str(), post(crate::handlers::post_chat_message))
         .route(
-            "/demo/chat/messages/demo",
+            Route::ChatMessagesDemo.as_str(),
             post(crate::handlers::post_demo_chat_message),
         )
         .route(
-            "/demo/chat/moderation",
+            Route::ChatModeration.as_str(),
             get(crate::handlers::moderation_page)
                 .post(crate::handlers::moderate_message),
         )
         .route_layer(from_fn(crate::auth::require_auth_middleware));
 
     Router::new()
-        .route("/", get(crate::handlers::home))
+        .route(Route::Home.as_str(), get(crate::handlers::home))
         .route(
-            "/login",
+            Route::Login.as_str(),
             get(crate::handlers::login_form).post(crate::handlers::login),
         )
         .route(
-            "/register",
+            Route::Register.as_str(),
             get(crate::handlers::register_form).post(crate::handlers::register),
         )
-        .route("/logout", axum::routing::post(crate::handlers::logout))
+        .route(Route::Logout.as_str(), axum::routing::post(crate::handlers::logout))
         .merge(protected)
         .merge(chat)
 }

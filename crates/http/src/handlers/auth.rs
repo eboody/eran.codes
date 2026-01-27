@@ -6,6 +6,7 @@ use axum::{
 use bon::Builder;
 use serde::Deserialize;
 
+use crate::paths::Route;
 use crate::views::{self, pages};
 use secrecy::SecretString;
 
@@ -130,14 +131,14 @@ pub async fn logout(
     mut auth_session: crate::auth::Session,
 ) -> crate::Result<axum::response::Response> {
     auth_session.logout().await?;
-    Ok(Redirect::to("/").into_response())
+    Ok(Redirect::to(Route::Home.as_str()).into_response())
 }
 
 pub async fn protected(
     auth_session: crate::auth::Session,
 ) -> crate::Result<axum::response::Response> {
     let Some(user) = auth_session.user else {
-        return Ok(Redirect::to("/login").into_response());
+        return Ok(Redirect::to(Route::Login.as_str()).into_response());
     };
 
     Ok(views::render(
@@ -171,6 +172,6 @@ fn sanitize_next(next: Option<String>) -> Option<String> {
 }
 
 fn redirect_to_next(next: Option<String>) -> Redirect {
-    let target = next.unwrap_or_else(|| "/protected".to_string());
+    let target = next.unwrap_or_else(|| Route::Protected.as_str().to_string());
     Redirect::to(&target)
 }

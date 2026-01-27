@@ -2,6 +2,7 @@ use bon::Builder;
 use maud::Render;
 
 use crate::views::page::UserNav;
+use crate::paths::Route;
 
 #[derive(Builder)]
 pub struct Protected {
@@ -19,7 +20,7 @@ impl Render for Protected {
                         h1 { "Welcome, " (self.username) }
                     }
                     p { "Signed in as " (self.email) "." }
-                    form method="post" action="/logout" {
+                    form method="post" action=(Route::Logout.as_str()) {
                         button type="submit" { "Sign out" }
                     }
                 }

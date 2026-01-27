@@ -109,8 +109,12 @@ enum ChatRequestSource {
 impl ChatRequestSource {
     fn from_path(path: &str) -> Option<Self> {
         match path {
-            "/demo/chat/messages" => Some(Self::You),
-            "/demo/chat/messages/demo" => Some(Self::Demo),
+            value if value == crate::paths::Route::ChatMessages.as_str() => {
+                Some(Self::You)
+            }
+            value if value == crate::paths::Route::ChatMessagesDemo.as_str() => {
+                Some(Self::Demo)
+            }
             _ => None,
         }
     }

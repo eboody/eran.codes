@@ -2,6 +2,7 @@ use bon::Builder;
 use maud::Render;
 
 use crate::views::page::{Layout, UserNav};
+use crate::paths::Route;
 
 #[derive(Builder)]
 pub struct ChatModeration {
@@ -38,7 +39,7 @@ impl Render for ChatModeration {
                                     }
                                     p { (&entry.body) }
                                     p class="muted" { "Reason: " (&entry.reason) }
-                                    form method="post" action="/demo/chat/moderation" class="cta-row" {
+                                    form method="post" action=(Route::ChatModeration.as_str()) class="cta-row" {
                                         input type="hidden" name="message_id" value=(entry.message_id.as_uuid().to_string());
                                         input type="hidden" name="reason" value=(entry.reason.clone());
                                         button type="submit" name="decision" value="approve" class="button secondary" { "Approve" }

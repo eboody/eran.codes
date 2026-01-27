@@ -2,6 +2,7 @@ use bon::Builder;
 use maud::Render;
 use urlencoding;
 
+use crate::paths::Route;
 use crate::views::page::UserNav;
 
 #[derive(Builder)]
@@ -27,7 +28,7 @@ impl Render for Login<'_> {
                         p role="alert" { (message) }
                     }
 
-                    form method="post" action="/login" {
+                    form method="post" action=(Route::Login.as_str()) {
                         @if let Some(next) = self.next {
                             input type="hidden" name="next" value=(next);
                         }
@@ -44,9 +45,9 @@ impl Render for Login<'_> {
                     p {
                         "Need an account? "
                         @if let Some(next) = next_query {
-                            a href=(format!("/register?next={}", next)) { "Create one" }
+                            a href=(format!("{}?next={}", Route::Register.as_str(), next)) { "Create one" }
                         } @else {
-                            a href="/register" { "Create one" }
+                            a href=(Route::Register.as_str()) { "Create one" }
                         }
                     }
                 }

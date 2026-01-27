@@ -2,6 +2,7 @@ use bon::Builder;
 use maud::Render;
 
 use crate::views::partials::ChatWindow;
+use crate::paths::Route;
 
 #[derive(Clone, Copy, Debug)]
 pub enum ChatPanelRole {
@@ -33,8 +34,8 @@ impl ChatPanelRole {
 
     fn action(&self) -> &'static str {
         match self {
-            ChatPanelRole::You => "/demo/chat/messages",
-            ChatPanelRole::Demo => "/demo/chat/messages/demo",
+            ChatPanelRole::You => Route::ChatMessages.as_str(),
+            ChatPanelRole::Demo => Route::ChatMessagesDemo.as_str(),
         }
     }
 
