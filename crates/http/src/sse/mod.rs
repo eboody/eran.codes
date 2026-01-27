@@ -84,7 +84,14 @@ impl Registry {
         handle: &Handle,
         event: Event,
     ) -> SendResult<()> {
+        let event_type = format!("{:?}", event.as_datastar_event().event);
         let session_id = handle.id();
+        tracing::info!(
+            target: "demo.sse",
+            message = "sse send",
+            session_id = %session_id,
+            event_type = event_type
+        );
         let session = self
             .sessions
             .get(session_id)
@@ -104,6 +111,13 @@ impl Registry {
         session_id: &str,
         event: Event,
     ) -> SendResult<()> {
+        let event_type = format!("{:?}", event.as_datastar_event().event);
+        tracing::info!(
+            target: "demo.sse",
+            message = "sse send",
+            session_id = %session_id,
+            event_type = event_type
+        );
         let session = self
             .sessions
             .get(session_id)
@@ -122,8 +136,16 @@ impl Registry {
         &self,
         event: Event,
     ) -> SendResult<usize> {
+        let event_type = format!("{:?}", event.as_datastar_event().event);
         let mut sent = 0;
         let mut failed = Vec::new();
+        let total = self.sessions.len();
+        tracing::info!(
+            target: "demo.sse",
+            message = "sse broadcast",
+            sessions = total,
+            event_type = event_type
+        );
         for entry in self.sessions.iter() {
             let result = entry.value().send(event.clone());
             if result.is_err() {
