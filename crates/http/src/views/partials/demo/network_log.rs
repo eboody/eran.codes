@@ -31,6 +31,7 @@ impl Render for NetworkLog<'_> {
                         thead {
                             tr {
                                 th { "Time" }
+                                th { "Source" }
                                 th { "Method" }
                                 th { "Path" }
                                 th { "Status" }
@@ -41,6 +42,7 @@ impl Render for NetworkLog<'_> {
                             @for entry in request_rows.iter().rev().take(20) {
                                 tr {
                                     td { (entry.timestamp.clone()) }
+                                    td { (source_badge(entry)) }
                                     td { (field_value(entry, "method")) }
                                     td { (field_value(entry, "path")) }
                                     td { (field_value(entry, "status")) }
@@ -88,4 +90,15 @@ fn field_value(entry: &TraceEntry, name: &str) -> String {
         .find(|(field, _)| field == name)
         .map(|(_, value)| value.clone())
         .unwrap_or_else(|| "-".to_string())
+}
+
+fn source_badge(entry: &TraceEntry) -> maud::Markup {
+    let path = field_value(entry, "path");
+    match path.as_str() {
+        "/demo/chat/messages" => maud::html! { span class="badge" { "You" } },
+        "/demo/chat/messages/demo" => {
+            maud::html! { span class="badge secondary" { "Demo" } }
+        }
+        _ => maud::html! {},
+    }
 }
