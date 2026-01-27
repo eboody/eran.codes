@@ -1,4 +1,4 @@
-use std::sync::Arc;
+use std::sync::{Arc, Mutex};
 
 use async_trait::async_trait;
 use axum::{
@@ -52,6 +52,8 @@ impl auth::PasswordHasher for TestHasher {
 
 struct TestAuthProvider;
 
+const USER_ID: &str = "d358d153-19a1-4a4c-8c52-73ff1a1f44d3";
+
 #[async_trait]
 impl auth::Provider for TestAuthProvider {
     async fn authenticate(
@@ -70,7 +72,7 @@ impl auth::Provider for TestAuthProvider {
         &self,
         user_id: &str,
     ) -> auth::Result<Option<auth::AuthenticatedUser>> {
-        if user_id == "user-1" {
+        if user_id == USER_ID {
             return Ok(Some(test_user()));
         }
         Ok(None)
@@ -79,14 +81,17 @@ impl auth::Provider for TestAuthProvider {
 
 fn test_user() -> auth::AuthenticatedUser {
     auth::AuthenticatedUser::builder()
-        .id("user-1".to_string())
+        .id(USER_ID.to_string())
         .username("Demo".to_string())
         .email("demo@example.com".to_string())
         .session_hash("hash".to_string())
         .build()
 }
 
-struct ChatRepo;
+#[derive(Default)]
+struct ChatRepo {
+    room: Mutex<Option<domain_chat::Room>>,
+}
 
 #[async_trait]
 impl app::chat::Repository for ChatRepo {
@@ -94,6 +99,8 @@ impl app::chat::Repository for ChatRepo {
         &self,
         _room: &domain_chat::Room,
     ) -> app::chat::Result<()> {
+        let mut slot = self.room.lock().expect("room lock");
+        *slot = Some(_room.clone());
         Ok(())
     }
 
@@ -101,14 +108,22 @@ impl app::chat::Repository for ChatRepo {
         &self,
         _room_id: &domain_chat::RoomId,
     ) -> app::chat::Result<Option<domain_chat::Room>> {
-        Ok(None)
+        let slot = self.room.lock().expect("room lock");
+        Ok(slot
+            .as_ref()
+            .filter(|room| &room.id == _room_id)
+            .cloned())
     }
 
     async fn find_room_by_name(
         &self,
         _name: &domain_chat::RoomName,
     ) -> app::chat::Result<Option<domain_chat::Room>> {
-        Ok(None)
+        let slot = self.room.lock().expect("room lock");
+        Ok(slot
+            .as_ref()
+            .filter(|room| &room.name == _name)
+            .cloned())
     }
 
     async fn list_messages(
@@ -246,7 +261,7 @@ fn test_app() -> axum::Router {
         .build();
     let cookie_key = Key::generate();
     let chat = app::chat::Service::builder()
-        .with_repo(Arc::new(ChatRepo))
+        .with_repo(Arc::new(ChatRepo::default()))
         .with_moderation_queue(Arc::new(ModerationQueue))
         .with_rate_limiter(Arc::new(RateLimiter))
         .with_audit_log(Arc::new(AuditLog))
@@ -288,6 +303,7 @@ async fn login_redirects_to_next() {
     let app = test_app();
     let body = "email=demo%40example.com&password=password&next=%2Fdemo%2Fchat";
     let response = app
+        .clone()
         .oneshot(
             Request::post("/login")
                 .header(
@@ -308,4 +324,50 @@ async fn login_redirects_to_next() {
         .to_str()
         .unwrap();
     assert_eq!(location, "/demo/chat");
+}
+
+#[tokio::test]
+async fn login_sets_session_cookie_and_allows_chat() {
+    let app = test_app();
+    let body = "email=demo%40example.com&password=password&next=%2Fdemo%2Fchat";
+    let response = app
+        .clone()
+        .oneshot(
+            Request::post("/login")
+                .header(
+                    axum::http::header::CONTENT_TYPE,
+                    "application/x-www-form-urlencoded",
+                )
+                .body(Body::from(body))
+                .unwrap(),
+        )
+        .await
+        .unwrap();
+
+    assert_eq!(response.status(), StatusCode::SEE_OTHER);
+    let set_cookie = response
+        .headers()
+        .get_all(axum::http::header::SET_COOKIE)
+        .iter()
+        .filter_map(|value| value.to_str().ok())
+        .find(|value| value.starts_with("eran.sid="))
+        .map(|value| value.to_string())
+        .expect("eran.sid cookie");
+
+    let cookie_header = set_cookie
+        .split(';')
+        .next()
+        .expect("cookie")
+        .to_string();
+    let response = app
+        .oneshot(
+            Request::get("/demo/chat")
+                .header(axum::http::header::COOKIE, cookie_header)
+                .body(Body::empty())
+                .unwrap(),
+        )
+        .await
+        .unwrap();
+
+    assert_eq!(response.status(), StatusCode::OK);
 }

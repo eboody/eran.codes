@@ -179,7 +179,7 @@ mod tests {
             .signed(&key)
             .add(Cookie::new(SESSION_COOKIE, "signed123"));
 
-        let req = Request::builder()
+        let mut req = Request::builder()
             .uri("/")
             .body(Body::empty())
             .unwrap();
@@ -193,7 +193,7 @@ mod tests {
     #[test]
     fn ignores_unsigned_session_cookie() {
         let key = Key::generate();
-        let mut req = Request::builder()
+        let req = Request::builder()
             .uri("/")
             .header(
                 header::COOKIE,
