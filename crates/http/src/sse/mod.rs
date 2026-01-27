@@ -86,7 +86,7 @@ impl Registry {
     ) -> SendResult<()> {
         let event_type = format!("{:?}", event.as_datastar_event().event);
         let session_id = handle.id();
-        tracing::info!(
+        tracing::debug!(
             target: "demo.sse",
             message = "sse send",
             session_id = %session_id,
@@ -112,7 +112,7 @@ impl Registry {
         event: Event,
     ) -> SendResult<()> {
         let event_type = format!("{:?}", event.as_datastar_event().event);
-        tracing::info!(
+        tracing::debug!(
             target: "demo.sse",
             message = "sse send",
             session_id = %session_id,
@@ -140,7 +140,7 @@ impl Registry {
         let mut sent = 0;
         let mut failed = Vec::new();
         let total = self.sessions.len();
-        tracing::info!(
+        tracing::debug!(
             target: "demo.sse",
             message = "sse broadcast",
             sessions = total,
