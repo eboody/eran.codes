@@ -219,7 +219,7 @@ mod tests {
     fn keeps_session_until_last_guard_drops() {
         let registry = Registry::new();
         let key = Key::generate();
-        let cookies = Cookies::new();
+        let cookies = Cookies::default();
         let handle = Handle::from_cookies(&cookies, &key);
 
         let (_rx1, guard1) = registry.subscribe(&handle);

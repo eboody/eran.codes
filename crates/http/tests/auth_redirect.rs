@@ -2,9 +2,10 @@ use std::sync::Arc;
 
 use async_trait::async_trait;
 use axum::{
-    body::{Body, to_bytes},
-    http::Request,
+    body::Body,
+    http::{Request, StatusCode},
 };
+use secrecy::ExposeSecret;
 use tower::ServiceExt;
 use tower_cookies::Key;
 use tower_sessions::MemoryStore;
@@ -49,34 +50,40 @@ impl auth::PasswordHasher for TestHasher {
     }
 }
 
-fn test_app() -> axum::Router {
-    let user_repo = Arc::new(TestUserRepo);
-    let hasher = Arc::new(TestHasher);
-    let user_service = user::Service::new(user_repo, hasher);
-    let auth_service = auth::Service::disabled();
-    let sse_registry = app_http::SseRegistry::new();
-    let cookie_key = Key::generate();
-    let trace_log = app_http::trace_log::TraceLogStore::builder()
-        .with_sse(sse_registry.clone())
-        .build();
-    let chat = app::chat::Service::builder()
-        .with_repo(Arc::new(ChatRepo))
-        .with_moderation_queue(Arc::new(ModerationQueue))
-        .with_rate_limiter(Arc::new(RateLimiter))
-        .with_audit_log(Arc::new(AuditLog))
-        .with_clock(Arc::new(Clock))
-        .with_id_generator(Arc::new(Ids))
-        .build();
-    let state = app_http::State::builder()
-        .with_user(user_service)
-        .with_auth(auth_service)
-        .with_chat(chat)
-        .with_sse(sse_registry)
-        .with_cookie_key(cookie_key)
-        .with_trace_log(trace_log)
-        .build();
-    let session_store = MemoryStore::default();
-    app_http::router(state, session_store)
+struct TestAuthProvider;
+
+#[async_trait]
+impl auth::Provider for TestAuthProvider {
+    async fn authenticate(
+        &self,
+        credentials: auth::Credentials,
+    ) -> auth::Result<Option<auth::AuthenticatedUser>> {
+        if credentials.email == "demo@example.com"
+            && credentials.password.expose_secret() == "password"
+        {
+            return Ok(Some(test_user()));
+        }
+        Ok(None)
+    }
+
+    async fn get_user(
+        &self,
+        user_id: &str,
+    ) -> auth::Result<Option<auth::AuthenticatedUser>> {
+        if user_id == "user-1" {
+            return Ok(Some(test_user()));
+        }
+        Ok(None)
+    }
+}
+
+fn test_user() -> auth::AuthenticatedUser {
+    auth::AuthenticatedUser::builder()
+        .id("user-1".to_string())
+        .username("Demo".to_string())
+        .email("demo@example.com".to_string())
+        .session_hash("hash".to_string())
+        .build()
 }
 
 struct ChatRepo;
@@ -227,33 +234,78 @@ impl app::chat::IdGenerator for Ids {
     }
 }
 
+fn test_app() -> axum::Router {
+    let user_repo = Arc::new(TestUserRepo);
+    let hasher = Arc::new(TestHasher);
+    let user_service = user::Service::new(user_repo, hasher);
+    let auth_provider = Arc::new(TestAuthProvider);
+    let auth_service = auth::Service::new(auth_provider);
+    let sse_registry = app_http::SseRegistry::new();
+    let trace_log = app_http::trace_log::TraceLogStore::builder()
+        .with_sse(sse_registry.clone())
+        .build();
+    let cookie_key = Key::generate();
+    let chat = app::chat::Service::builder()
+        .with_repo(Arc::new(ChatRepo))
+        .with_moderation_queue(Arc::new(ModerationQueue))
+        .with_rate_limiter(Arc::new(RateLimiter))
+        .with_audit_log(Arc::new(AuditLog))
+        .with_clock(Arc::new(Clock))
+        .with_id_generator(Arc::new(Ids))
+        .build();
+    let state = app_http::State::builder()
+        .with_user(user_service)
+        .with_auth(auth_service)
+        .with_chat(chat)
+        .with_sse(sse_registry)
+        .with_cookie_key(cookie_key)
+        .with_trace_log(trace_log)
+        .build();
+    let session_store = MemoryStore::default();
+    app_http::router(state, session_store)
+}
+
 #[tokio::test]
-async fn home_page_includes_demo_sections() {
+async fn unauthenticated_chat_redirects_to_login() {
     let app = test_app();
     let response = app
-        .oneshot(Request::get("/").body(Body::empty()).unwrap())
+        .oneshot(Request::get("/demo/chat").body(Body::empty()).unwrap())
         .await
         .unwrap();
 
-    assert_eq!(response.status(), axum::http::StatusCode::OK);
+    assert!(response.status().is_redirection());
+    let location = response
+        .headers()
+        .get(axum::http::header::LOCATION)
+        .unwrap()
+        .to_str()
+        .unwrap();
+    assert_eq!(location, "/login?next=%2Fdemo%2Fchat");
+}
 
-    let body = to_bytes(response.into_body(), usize::MAX)
+#[tokio::test]
+async fn login_redirects_to_next() {
+    let app = test_app();
+    let body = "email=demo%40example.com&password=password&next=%2Fdemo%2Fchat";
+    let response = app
+        .oneshot(
+            Request::post("/login")
+                .header(
+                    axum::http::header::CONTENT_TYPE,
+                    "application/x-www-form-urlencoded",
+                )
+                .body(Body::from(body))
+                .unwrap(),
+        )
         .await
         .unwrap();
-    let body = String::from_utf8_lossy(&body);
 
-    assert!(body.contains("Demo 1: Auth flow walkthrough"));
-    assert!(body.contains("Demo 2: Persistent session resilience"));
-    assert!(body.contains("Demo 3: Architecture boundary map"));
-    assert!(body.contains("Demo 4: Error handling showcase"));
-    assert!(body.contains("Demo 5: Tracing and observability"));
-    assert!(body.contains("Demo 6: SSE and Datastar patches"));
-    assert!(body.contains("Check auth status"));
-    assert!(body.contains("Show session details"));
-    assert!(body.contains("Check demo@example.com"));
-    assert!(body.contains("Live backend log"));
-    assert!(body.contains("Start demo"));
-    assert!(body.contains("Sign in"));
-    assert!(body.contains("/register"));
-    assert!(body.contains("/login"));
+    assert_eq!(response.status(), StatusCode::SEE_OTHER);
+    let location = response
+        .headers()
+        .get(axum::http::header::LOCATION)
+        .unwrap()
+        .to_str()
+        .unwrap();
+    assert_eq!(location, "/demo/chat");
 }

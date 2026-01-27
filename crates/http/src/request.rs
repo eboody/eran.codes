@@ -161,7 +161,7 @@ mod tests {
     #[test]
     fn reads_signed_session_cookie() {
         let key = Key::generate();
-        let cookies = Cookies::new();
+        let cookies = Cookies::default();
         cookies
             .signed(&key)
             .add(Cookie::new(SESSION_COOKIE, "signed123"));
@@ -174,12 +174,12 @@ mod tests {
     #[test]
     fn context_prefers_signed_session_cookie() {
         let key = Key::generate();
-        let cookies = Cookies::new();
+        let cookies = Cookies::default();
         cookies
             .signed(&key)
             .add(Cookie::new(SESSION_COOKIE, "signed123"));
 
-        let mut req = Request::builder()
+        let req = Request::builder()
             .uri("/")
             .body(Body::empty())
             .unwrap();
