@@ -1,7 +1,22 @@
 use bon::Builder;
 use maud::Render;
 
-use crate::views::partials::TraceLog;
+use crate::views::partials::{KeyValueList, TraceLog};
+
+#[derive(Clone, Copy, Debug)]
+enum AuthStatusLabel {
+    Authenticated,
+    Anonymous,
+}
+
+impl AuthStatusLabel {
+    fn as_str(self) -> &'static str {
+        match self {
+            AuthStatusLabel::Authenticated => "Authenticated",
+            AuthStatusLabel::Anonymous => "Anonymous",
+        }
+    }
+}
 
 #[derive(Builder)]
 pub struct AuthStatus<'a> {
@@ -16,22 +31,29 @@ pub struct AuthStatus<'a> {
 impl Render for AuthStatus<'_> {
     fn render(&self) -> maud::Markup {
         let status = if self.user_id.is_some() {
-            "Authenticated"
+            AuthStatusLabel::Authenticated
         } else {
-            "Anonymous"
+            AuthStatusLabel::Anonymous
         };
+        let items = vec![
+            ("user_id".to_string(), self.user_id.unwrap_or("none").to_string()),
+            ("username".to_string(), self.username.unwrap_or("none").to_string()),
+            ("email".to_string(), self.email.unwrap_or("none").to_string()),
+            (
+                "session_id".to_string(),
+                self.session_id.as_deref().unwrap_or("none").to_string(),
+            ),
+            (
+                "expiry".to_string(),
+                self.expiry.as_deref().unwrap_or("none").to_string(),
+            ),
+        ];
 
         maud::html! {
             article id="auth-status-target" {
                 div class="demo-result" {
-                    p { strong { (status) } }
-                    ul {
-                        li { "user_id: " (self.user_id.unwrap_or("none")) }
-                        li { "username: " (self.username.unwrap_or("none")) }
-                        li { "email: " (self.email.unwrap_or("none")) }
-                        li { "session_id: " (self.session_id.as_deref().unwrap_or("none")) }
-                        li { "expiry: " (self.expiry.as_deref().unwrap_or("none")) }
-                    }
+                    p { strong { (status.as_str()) } }
+                    (KeyValueList::builder().items(items).build().render())
                 }
                 (TraceLog::builder().entries(&self.trace).build().render())
             }

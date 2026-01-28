@@ -1,7 +1,7 @@
 use bon::Builder;
 use maud::Render;
 
-use crate::views::partials::TraceLog;
+use crate::views::partials::{KeyValueList, TraceLog};
 
 #[derive(Builder)]
 pub struct RequestMeta<'a> {
@@ -19,13 +19,16 @@ impl Render for RequestMeta<'_> {
             article id="request-meta-target" {
                 div class="demo-result" {
                     p { strong { "Request metadata" } }
-                    ul {
-                        li { "request_id: " (self.request_id.unwrap_or("none")) }
-                        li { "session_id: " (self.session_id.unwrap_or("none")) }
-                        li { "user_id: " (self.user_id.unwrap_or("none")) }
-                        li { "client_ip: " (self.client_ip.unwrap_or("none")) }
-                        li { "user_agent: " (self.user_agent.unwrap_or("none")) }
-                    }
+                    (KeyValueList::builder()
+                        .items(vec![
+                            ("request_id".to_string(), self.request_id.unwrap_or("none").to_string()),
+                            ("session_id".to_string(), self.session_id.unwrap_or("none").to_string()),
+                            ("user_id".to_string(), self.user_id.unwrap_or("none").to_string()),
+                            ("client_ip".to_string(), self.client_ip.unwrap_or("none").to_string()),
+                            ("user_agent".to_string(), self.user_agent.unwrap_or("none").to_string()),
+                        ])
+                        .build()
+                        .render())
                 }
                 (TraceLog::builder().entries(&self.trace).build().render())
             }
