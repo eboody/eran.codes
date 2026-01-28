@@ -1,6 +1,7 @@
 use bon::Builder;
 use maud::Render;
 
+use crate::views::partials::ModerationAction;
 use crate::views::page::{Layout, UserNav};
 use crate::paths::Route;
 
@@ -42,8 +43,8 @@ impl Render for ChatModeration {
                                     form method="post" action=(Route::ChatModeration.as_str()) class="cta-row" {
                                         input type="hidden" name="message_id" value=(entry.message_id.as_uuid().to_string());
                                         input type="hidden" name="reason" value=(entry.reason.clone());
-                                        button type="submit" name="decision" value="approve" class="button secondary" { "Approve" }
-                                        button type="submit" name="decision" value="remove" class="button" { "Remove" }
+                                        button type="submit" name="decision" value=(ModerationAction::Approve.as_str()) class="button secondary" { "Approve" }
+                                        button type="submit" name="decision" value=(ModerationAction::Remove.as_str()) class="button" { "Remove" }
                                     }
                                 }
                             }

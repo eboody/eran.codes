@@ -102,10 +102,14 @@ pub async fn moderate_message(
         .as_ref()
         .ok_or(crate::error::Error::Internal)?;
 
-    let decision = match form.decision.as_str() {
-        "approve" => app::chat::ModerationDecision::Approve,
-        "remove" => app::chat::ModerationDecision::Remove,
-        _ => return Err(crate::error::Error::Internal),
+    let decision = match crate::views::partials::ModerationAction::parse(&form.decision) {
+        Some(crate::views::partials::ModerationAction::Approve) => {
+            app::chat::ModerationDecision::Approve
+        }
+        Some(crate::views::partials::ModerationAction::Remove) => {
+            app::chat::ModerationDecision::Remove
+        }
+        None => return Err(crate::error::Error::Internal),
     };
 
     state
