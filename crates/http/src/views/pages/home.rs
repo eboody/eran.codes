@@ -2,6 +2,7 @@ use bon::Builder;
 
 use crate::paths::Route;
 use crate::views::page::UserNav;
+use crate::views::partials::{DemoResultPlaceholder, DemoSection, HomeHero};
 
 #[derive(Builder)]
 pub struct Home {
@@ -12,34 +13,10 @@ impl maud::Render for Home {
     fn render(&self) -> maud::Markup {
         let content = maud::html! {
             main class="container" {
-                header class="hero" {
-                    div {
-                        h1 { "eran.codes platform" }
-                        p { "A production-ready Axum stack with signed sessions, SQLx persistence, and Datastar-powered UI." }
-                        div class="hero-tags" {
-                            span class="pill" { "axum-login" }
-                            span class="pill" { "tower-sessions" }
-                            span class="pill" { "sqlx + postgres" }
-                            span class="pill" { "datastar + sse" }
-                            span class="pill" { "argon2" }
-                        }
-                    }
-                    aside class="hero-card" {
-                        h3 { "Session status" }
-                        @if let Some(user) = &self.user {
-                            p { "Signed in as " strong { (&user.username) } "." }
-                            p class="muted" { (&user.email) }
-                            a class="button" href=(Route::Protected.as_str()) { "Open account" }
-                        } @else {
-                            p { "No active session." }
-                            p class="muted" { "Create an account to see session-backed auth." }
-                            div class="cta-row" {
-                                a class="button" href=(Route::Register.as_str()) { "Create account" }
-                                a class="button secondary" href=(Route::Login.as_str()) { "Sign in" }
-                            }
-                        }
-                    }
-                }
+                (HomeHero::builder()
+                    .maybe_user(self.user.clone())
+                    .build()
+                    .render())
 
                 section {
                     h2 { "Implementation highlights" }
@@ -74,9 +51,9 @@ impl maud::Render for Home {
                     }
                 }
 
-                section {
-                    h2 { "Demo 1: Auth flow walkthrough" }
-                    article class="flow-card" {
+                (DemoSection::builder()
+                    .title("Demo 1: Auth flow walkthrough".to_string())
+                    .content(maud::html! {
                         p {
                             "Follow the full flow: "
                             strong { (Route::Register.as_str()) }
@@ -99,15 +76,18 @@ impl maud::Render for Home {
                                 "Check auth status"
                             }
                         }
-                        div id="auth-status-target" class="demo-result muted" {
-                            "Click “Check auth status” to load live session info."
-                        }
-                    }
-                }
+                        (DemoResultPlaceholder::builder()
+                            .target_id("auth-status-target".to_string())
+                            .message("Click “Check auth status” to load live session info.".to_string())
+                            .build()
+                            .render())
+                    })
+                    .build()
+                    .render())
 
-                section {
-                    h2 { "Demo 2: Persistent session resilience" }
-                    article class="flow-card" {
+                (DemoSection::builder()
+                    .title("Demo 2: Persistent session resilience".to_string())
+                    .content(maud::html! {
                         p {
                             "Log in, restart the server, and stay authenticated. "
                             "Sessions are stored in Postgres and expire on inactivity."
@@ -125,9 +105,11 @@ impl maud::Render for Home {
                         button class="button secondary" data-on:click=(format!("@get('{}')", Route::PartialSessionStatus.as_str())) {
                             "Show session details"
                         }
-                        div id="session-status-target" class="demo-result muted" {
-                            "Click “Show session details” to load the session id and expiry."
-                        }
+                        (DemoResultPlaceholder::builder()
+                            .target_id("session-status-target".to_string())
+                            .message("Click “Show session details” to load the session id and expiry.".to_string())
+                            .build()
+                            .render())
                         div class="cta-row" {
                             button class="button secondary" data-on:click=(format!("@get('{}')", Route::PartialDbCheck.with_query("email=demo@example.com"))) {
                                 "Check demo@example.com"
@@ -136,15 +118,18 @@ impl maud::Render for Home {
                                 "Check missing@example.com"
                             }
                         }
-                        div id="db-check-target" class="demo-result muted" {
-                            "Run a DB lookup to see the query and trace output."
-                        }
-                    }
-                }
+                        (DemoResultPlaceholder::builder()
+                            .target_id("db-check-target".to_string())
+                            .message("Run a DB lookup to see the query and trace output.".to_string())
+                            .build()
+                            .render())
+                    })
+                    .build()
+                    .render())
 
-                section {
-                    h2 { "Demo 3: Architecture boundary map" }
-                    article class="flow-card" {
+                (DemoSection::builder()
+                    .title("Demo 3: Architecture boundary map".to_string())
+                    .content(maud::html! {
                         p { "Follow a single request through each boundary." }
                         div class="flow-map" {
                             span class="step" { "http::dto::Register" }
@@ -166,15 +151,18 @@ impl maud::Render for Home {
                                 "Validate invalid input"
                             }
                         }
-                        div id="boundary-target" class="demo-result muted" {
-                            "Run a validation check to see domain constraints in action."
-                        }
-                    }
-                }
+                        (DemoResultPlaceholder::builder()
+                            .target_id("boundary-target".to_string())
+                            .message("Run a validation check to see domain constraints in action.".to_string())
+                            .build()
+                            .render())
+                    })
+                    .build()
+                    .render())
 
-                section {
-                    h2 { "Demo 4: Error handling showcase" }
-                    article class="flow-card" {
+                (DemoSection::builder()
+                    .title("Demo 4: Error handling showcase".to_string())
+                    .content(maud::html! {
                         p { "Errors are mapped centrally into user-facing responses." }
                         ul {
                             li { "Consistent status + message rendering." }
@@ -190,12 +178,13 @@ impl maud::Render for Home {
                         p class="muted" {
                             "Datastar errors appear in the alert banner above."
                         }
-                    }
-                }
+                    })
+                    .build()
+                    .render())
 
-                section {
-                    h2 { "Demo 5: Tracing and observability" }
-                    article class="flow-card" {
+                (DemoSection::builder()
+                    .title("Demo 5: Tracing and observability".to_string())
+                    .content(maud::html! {
                         p { "Each request is wrapped in structured spans with key context fields." }
                         ul {
                             li { "request_id, session_id, user_id, route, and latency_ms." }
@@ -212,15 +201,18 @@ impl maud::Render for Home {
                         button class="button secondary" data-on:click=(format!("@get('{}')", Route::PartialRequestMeta.as_str())) {
                             "Fetch request metadata"
                         }
-                        div id="request-meta-target" class="demo-result muted" {
-                            "Click “Fetch request metadata” to load request ids and timing."
-                        }
-                    }
-                }
+                        (DemoResultPlaceholder::builder()
+                            .target_id("request-meta-target".to_string())
+                            .message("Click “Fetch request metadata” to load request ids and timing.".to_string())
+                            .build()
+                            .render())
+                    })
+                    .build()
+                    .render())
 
-                section {
-                    h2 { "Demo 6: SSE and Datastar patches" }
-                    article class="flow-card" {
+                (DemoSection::builder()
+                    .title("Demo 6: SSE and Datastar patches".to_string())
+                    .content(maud::html! {
                         p { "Live updates stream over a single SSE connection per visitor." }
                         ul {
                             li { "Datastar patches update signals and fragments in place." }
@@ -255,17 +247,20 @@ impl maud::Render for Home {
                                 }
                             }
                         }
-                    }
-                }
+                    })
+                    .build()
+                    .render())
 
                 section {
                     h2 { "Live backend log (SSE)" }
                     p class="muted" {
                         "Actions above stream real request, trace, and DB events into this log via SSE."
                     }
-                    div id="live-log-target" class="demo-result muted" {
-                        "No events yet. Trigger a demo action to start streaming."
-                    }
+                    (DemoResultPlaceholder::builder()
+                        .target_id("live-log-target".to_string())
+                        .message("No events yet. Trigger a demo action to start streaming.".to_string())
+                        .build()
+                        .render())
                 }
 
                 section {
@@ -273,14 +268,16 @@ impl maud::Render for Home {
                     p class="muted" {
                         "Server-side request timings emulate a network tab view."
                     }
-                    div id="network-log-target" class="demo-result muted" {
-                        "No requests yet. Trigger a demo action to populate this table."
-                    }
+                    (DemoResultPlaceholder::builder()
+                        .target_id("network-log-target".to_string())
+                        .message("No requests yet. Trigger a demo action to populate this table.".to_string())
+                        .build()
+                        .render())
                 }
 
-                section {
-                    h2 { "Demo 9: Live chat room" }
-                    article class="flow-card" {
+                (DemoSection::builder()
+                    .title("Demo 9: Live chat room".to_string())
+                    .content(maud::html! {
                         p { "Enterprise chat flow with persistence, moderation, and SSE fanout." }
                         ul {
                             li { "Messages are stored in Postgres and reloaded on entry." }
@@ -290,8 +287,9 @@ impl maud::Render for Home {
                         div class="cta-row" {
                             a class="button" href=(Route::Chat.as_str()) { "Open chat demo" }
                         }
-                    }
-                }
+                    })
+                    .build()
+                    .render())
 
             }
         };
