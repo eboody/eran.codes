@@ -2,7 +2,7 @@ use bon::Builder;
 
 use crate::paths::Route;
 use crate::views::page::UserNav;
-use crate::views::partials::{DemoResultPlaceholder, DemoSection, HomeHero};
+use crate::views::partials::{DemoResultPlaceholder, DemoSection, HighlightsSection, HomeHero};
 
 #[derive(Builder)]
 pub struct Home {
@@ -18,38 +18,14 @@ impl maud::Render for Home {
                     .build()
                     .render())
 
-                section {
-                    h2 { "Implementation highlights" }
-                    div class="grid highlights" {
-                        article {
-                            h3 { "Auth + sessions" }
-                            ul {
-                                li { "axum-login with SQLx-backed session store" }
-                                li { "Signed session cookies (HTTP-only, SameSite Lax)" }
-                                li { "Argon2 password hashing with credentials table" }
-                                li { "Session cleanup task for expired records" }
-                            }
-                        }
-                        article {
-                            h3 { "Realtime UX" }
-                            ul {
-                                li { "Single SSE stream per visitor" }
-                                li { "Datastar patches for signals + fragments" }
-                                li { "Scoped CSS for safe inline styling" }
-                                li { "Server-rendered HTML with progressive enhancement" }
-                            }
-                        }
-                        article {
-                            h3 { "Architecture + tracing" }
-                            ul {
-                                li { "Domain/app/infra/http boundaries enforced" }
-                                li { "Request spans with request-id and user-id" }
-                                li { "Centralized error rendering" }
-                                li { "Config-driven wiring in the binary root" }
-                            }
-                        }
-                    }
-                }
+                (HighlightsSection::builder()
+                    .categories(vec![
+                        crate::views::partials::HighlightCategory::AuthSessions,
+                        crate::views::partials::HighlightCategory::Realtime,
+                        crate::views::partials::HighlightCategory::ArchitectureTracing,
+                    ])
+                    .build()
+                    .render())
 
                 (DemoSection::builder()
                     .title("Demo 1: Auth flow walkthrough".to_string())

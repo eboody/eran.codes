@@ -1,4 +1,4 @@
-moddef::moddef!(mod { auth_status, boundary_check, chat_message, chat_panel, chat_window, chat_connection, chat_hero, db_check, live_log, network_log, ping, request_meta, session_status, trace_log, moderation_action, key_value_list, demo_section, demo_result, home_hero });
+moddef::moddef!(mod { auth_status, boundary_check, chat_message, chat_panel, chat_window, chat_connection, chat_hero, db_check, live_log, network_log, ping, request_meta, session_status, trace_log, moderation_action, key_value_list, demo_section, demo_result, home_hero, highlights_section });
 
 pub use auth_status::AuthStatus;
 pub use boundary_check::BoundaryCheck;
@@ -11,6 +11,8 @@ pub use key_value_list::KeyValueList;
 pub use demo_section::DemoSection;
 pub use demo_result::DemoResultPlaceholder;
 pub use home_hero::HomeHero;
+pub use highlights_section::HighlightsSection;
+pub use highlights_section::HighlightCategory;
 pub use chat_window::ChatWindow;
 pub use db_check::DbCheck;
 pub use live_log::LiveLog;
