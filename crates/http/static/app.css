@@ -33,12 +33,13 @@
 .pill {
   display: inline-flex;
   align-items: center;
-  padding: 0.15rem 0.55rem;
+  padding: 0.1rem 0.4rem;
   border-radius: 999px;
   border: 1px solid var(--pico-muted-border-color);
-  font-size: 0.7rem;
+  font-size: 0.62rem;
   font-weight: 600;
-  letter-spacing: 0.02em;
+  letter-spacing: 0.01em;
+  line-height: 1;
 }
 
 .muted {
@@ -258,7 +259,8 @@ button.secondary,
 
 .log-timestamp {
   font-variant-numeric: tabular-nums;
-  font-size: 0.68rem;
+  font-size: 0.6rem;
+  line-height: 1;
 }
 
 .log-message {
@@ -315,7 +317,7 @@ button.secondary,
 
 .pill.path {
   font-family: "JetBrains Mono", "SF Mono", ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
-  font-size: 0.68rem;
+  font-size: 0.6rem;
   letter-spacing: 0.01em;
 }
 
