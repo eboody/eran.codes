@@ -14,26 +14,17 @@ impl Render for LiveLog<'_> {
             maud::html! { p class="muted" { "No events yet. Trigger a demo action to start streaming." } }
         } else {
             maud::html! {
-                ul {
+                ul class="live-log-entries" {
                     @for entry in self.entries.iter().rev().take(20) {
                         li {
                             strong { (entry.timestamp.clone()) }
                             " "
-                            (entry.level.clone())
-                            " "
                             (entry.target.clone())
                             ": "
                             (entry.message.clone())
-                            @if !entry.fields.is_empty() {
-                                ul class="muted" {
-                                    @for (name, value) in entry.fields.iter() {
-                                        li {
-                                            code { (name) }
-                                            ": "
-                                            (value.clone())
-                                        }
-                                    }
-                                }
+                            @if let Some(fields) = compact_fields(entry) {
+                                " "
+                                span class="muted" { (fields) }
                             }
                         }
                     }
@@ -63,5 +54,20 @@ impl Render for LiveLog<'_> {
                 }
             }
         }
+    }
+}
+
+fn compact_fields(entry: &TraceEntry) -> Option<String> {
+    if entry.fields.is_empty() {
+        return None;
+    }
+    let mut parts = Vec::new();
+    for (name, value) in entry.fields.iter().take(3) {
+        parts.push(format!("{}={}", name, value));
+    }
+    if parts.is_empty() {
+        None
+    } else {
+        Some(parts.join(" · "))
     }
 }
