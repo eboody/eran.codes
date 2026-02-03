@@ -23,7 +23,7 @@ impl Render for LiveLog<'_> {
                             span class="pill log-target" { (entry.target.clone()) }
                             span class="log-message" { (entry.message.clone()) }
                             @if let Some(fields) = compact_fields(entry) {
-                                span class="pill log-fields" { (fields) }
+                                (fields)
                             }
                         }
                     }
@@ -57,18 +57,42 @@ impl Render for LiveLog<'_> {
     }
 }
 
-fn compact_fields(entry: &TraceEntry) -> Option<String> {
+fn compact_fields(entry: &TraceEntry) -> Option<maud::Markup> {
     if entry.fields.is_empty() {
         return None;
     }
-    let mut parts = Vec::new();
-    for (name, value) in entry.fields.iter().take(3) {
-        parts.push(format!("{}={}", name, value));
+    let mut parts: Vec<maud::Markup> = Vec::new();
+    let mut extras: Vec<String> = Vec::new();
+    for (name, value) in entry.fields.iter() {
+        match name.as_str() {
+            "method" => {
+                parts.push(maud::html! {
+                    span class=(format!("pill method {}", method_class(value))) { (value) }
+                });
+            }
+            "path" => {
+                parts.push(maud::html! { span class="pill path" { (value) } });
+            }
+            "status" => {
+                parts.push(maud::html! { span class=(format!("pill status {}", status_class(value))) { (value) } });
+            }
+            _ => extras.push(format!("{}={}", name, value)),
+        }
+    }
+    if !extras.is_empty() {
+        let extra = extras.into_iter().take(2).collect::<Vec<_>>().join(" · ");
+        parts.push(maud::html! { span class="pill log-fields" { (extra) } });
     }
     if parts.is_empty() {
         None
     } else {
-        Some(parts.join(" · "))
+        Some(maud::html! {
+            span class="log-fields" {
+                @for part in parts {
+                    (part)
+                }
+            }
+        })
     }
 }
 
@@ -80,4 +104,33 @@ fn level_class(level: &str) -> &'static str {
         "trace" => "log-level-trace",
         _ => "log-level-info",
     }
+}
+
+fn method_class(method: &str) -> &'static str {
+    match method {
+        "GET" => "method-get",
+        "POST" => "method-post",
+        "PUT" => "method-put",
+        "PATCH" => "method-patch",
+        "DELETE" => "method-delete",
+        _ => "method-other",
+    }
+}
+
+fn status_class(status: &str) -> &'static str {
+    if let Some(code) = status.parse::<u16>().ok() {
+        if code >= 500 {
+            return "status-5xx";
+        }
+        if code >= 400 {
+            return "status-4xx";
+        }
+        if code >= 300 {
+            return "status-3xx";
+        }
+        if code >= 200 {
+            return "status-2xx";
+        }
+    }
+    "status-unknown"
 }
