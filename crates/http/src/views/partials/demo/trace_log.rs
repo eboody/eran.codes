@@ -2,6 +2,7 @@ use bon::Builder;
 use maud::Render;
 
 use crate::trace_log::TraceEntry;
+use crate::views::partials::{LogRow, Pill};
 
 #[derive(Builder)]
 pub struct TraceLog<'a> {
@@ -19,33 +20,131 @@ impl Render for TraceLog<'_> {
         maud::html! {
             div class="demo-result" {
                 p { strong { "Trace log" } }
-                ul {
+                ul class="live-log-entries" {
                     @for entry in self.entries {
-                        li {
-                            strong { (entry.timestamp.clone()) }
-                            " "
-                            (entry.level.clone())
-                            " "
-                            (entry.target.clone())
-                            ": "
-                            (entry.message.clone())
-                            @if !entry.fields.is_empty() {
-                                " "
-                                span class="muted" {
-                                    "("
-                                    @for (idx, field) in entry.fields.iter().enumerate() {
-                                        @if idx > 0 { ", " }
-                                        (field.0.clone())
-                                        "="
-                                        (field.1.clone())
-                                    }
-                                    ")"
-                                }
-                            }
-                        }
+                        (LogRow::builder()
+                            .timestamp(entry.timestamp.clone())
+                            .message(entry.message.clone())
+                            .pills(build_pills(entry))
+                            .build()
+                            .render())
                     }
                 }
             }
         }
     }
+}
+
+fn build_pills(entry: &TraceEntry) -> Vec<Pill> {
+    let mut pills = Vec::new();
+    pills.push(
+        Pill::builder()
+            .text(entry.level.clone())
+            .extra_class(format!("log-level {}", level_class(&entry.level)))
+            .build(),
+    );
+    if let Some(status) = field_value(entry, "status") {
+        pills.push(
+            Pill::builder()
+                .text(status.clone())
+                .extra_class(format!("status {}", status_class(&status)))
+                .build(),
+        );
+    }
+    if let Some(method) = field_value(entry, "method") {
+        pills.push(
+            Pill::builder()
+                .text(method.clone())
+                .extra_class(format!("method {}", method_class(&method)))
+                .build(),
+        );
+    }
+    if let Some(path) = field_value(entry, "path") {
+        pills.push(
+            Pill::builder()
+                .text(path)
+                .extra_class("path".to_string())
+                .build(),
+        );
+    }
+    pills.push(
+        Pill::builder()
+            .text(entry.target.clone())
+            .extra_class("log-target".to_string())
+            .build(),
+    );
+    pills.extend(compact_fields(entry));
+    pills
+}
+
+fn compact_fields(entry: &TraceEntry) -> Vec<Pill> {
+    if entry.fields.is_empty() {
+        return Vec::new();
+    }
+    let mut parts: Vec<Pill> = Vec::new();
+    let mut extras: Vec<String> = Vec::new();
+    for (name, value) in entry.fields.iter() {
+        match name.as_str() {
+            "method" | "path" | "status" => continue,
+            _ => extras.push(format!("{}={}", name, value)),
+        }
+    }
+    if !extras.is_empty() {
+        let extra = extras.into_iter().take(2).collect::<Vec<_>>().join(" · ");
+        parts.push(
+            Pill::builder()
+                .text(extra)
+                .extra_class("log-fields".to_string())
+                .build(),
+        );
+    }
+    parts
+}
+
+fn level_class(level: &str) -> &'static str {
+    match level.to_ascii_lowercase().as_str() {
+        "error" => "log-level-error",
+        "warn" | "warning" => "log-level-warn",
+        "debug" => "log-level-debug",
+        "trace" => "log-level-trace",
+        _ => "log-level-info",
+    }
+}
+
+fn method_class(method: &str) -> &'static str {
+    match method {
+        "GET" => "method-get",
+        "POST" => "method-post",
+        "PUT" => "method-put",
+        "PATCH" => "method-patch",
+        "DELETE" => "method-delete",
+        _ => "method-other",
+    }
+}
+
+fn status_class(status: &str) -> &'static str {
+    if let Some(code) = status.parse::<u16>().ok() {
+        if code >= 500 {
+            return "status-5xx";
+        }
+        if code >= 400 {
+            return "status-4xx";
+        }
+        if code >= 300 {
+            return "status-3xx";
+        }
+        if code >= 200 {
+            return "status-2xx";
+        }
+    }
+    "status-unknown"
+}
+
+fn field_value(entry: &TraceEntry, name: &str) -> Option<String> {
+    entry
+        .fields
+        .iter()
+        .find(|(field, _)| field == name)
+        .map(|(_, value)| value.clone())
+        .filter(|value| value != "-")
 }
