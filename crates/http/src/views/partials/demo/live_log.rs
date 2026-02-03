@@ -16,15 +16,13 @@ impl Render for LiveLog<'_> {
             maud::html! {
                 ul class="live-log-entries" {
                     @for entry in self.entries.iter().rev().take(20) {
-                        li {
-                            strong { (entry.timestamp.clone()) }
-                            " "
-                            (entry.target.clone())
-                            ": "
-                            (entry.message.clone())
+                        li class="log-entry" {
+                            span class="muted log-timestamp" { (entry.timestamp.clone()) }
+                            span class=(format!("pill log-level {}", level_class(&entry.level))) { (entry.level.clone()) }
+                            span class="pill log-target" { (entry.target.clone()) }
+                            span class="log-message" { (entry.message.clone()) }
                             @if let Some(fields) = compact_fields(entry) {
-                                " "
-                                span class="muted" { (fields) }
+                                span class="muted log-fields" { (fields) }
                             }
                         }
                     }
@@ -69,5 +67,15 @@ fn compact_fields(entry: &TraceEntry) -> Option<String> {
         None
     } else {
         Some(parts.join(" · "))
+    }
+}
+
+fn level_class(level: &str) -> &'static str {
+    match level.to_ascii_lowercase().as_str() {
+        "error" => "log-level-error",
+        "warn" | "warning" => "log-level-warn",
+        "debug" => "log-level-debug",
+        "trace" => "log-level-trace",
+        _ => "log-level-info",
     }
 }

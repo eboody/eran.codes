@@ -253,6 +253,70 @@ button.secondary,
     inset 0 -12px 12px -12px rgba(0, 0, 0, 0.35);
 }
 
+.live-log-entries {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+.log-entry {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.log-timestamp {
+  font-variant-numeric: tabular-nums;
+  font-size: 0.75rem;
+}
+
+.log-message {
+  font-weight: 600;
+}
+
+.log-fields {
+  font-size: 0.75rem;
+}
+
+.log-level {
+  text-transform: uppercase;
+}
+
+.log-level-info {
+  border-color: rgba(80, 160, 255, 0.6);
+  color: rgba(120, 190, 255, 0.9);
+}
+
+.log-level-warn {
+  border-color: rgba(255, 196, 80, 0.7);
+  color: rgba(255, 196, 80, 0.95);
+}
+
+.log-level-error {
+  border-color: rgba(255, 96, 96, 0.7);
+  color: rgba(255, 128, 128, 0.95);
+}
+
+.log-level-debug {
+  border-color: rgba(140, 210, 140, 0.65);
+  color: rgba(160, 220, 160, 0.9);
+}
+
+.log-level-trace {
+  border-color: rgba(160, 160, 180, 0.6);
+  color: rgba(180, 180, 200, 0.85);
+}
+
+.log-target {
+  background: rgba(255, 255, 255, 0.04);
+  border-color: rgba(255, 255, 255, 0.12);
+  color: var(--pico-muted-color);
+}
+
 .badge {
   display: inline-flex;
   align-items: center;
