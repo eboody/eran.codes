@@ -2,7 +2,7 @@ use bon::Builder;
 
 use crate::paths::Route;
 use crate::views::page::UserNav;
-use crate::views::partials::{ChatDemoSection, DemoResultPlaceholder, DemoSection, HighlightsSection, HomeHero};
+use crate::views::partials::{ChatDemoSection, DemoResultPlaceholder, DemoSection, HighlightsSection, HomeHero, SectionHeader};
 
 #[derive(Builder)]
 pub struct Home {
@@ -189,13 +189,14 @@ impl maud::Render for Home {
                     (chat_demo.render())
                 } @else {
                     section id=(ChatDemoSection::ANCHOR_ID) class="chat-panel" {
-                        header class="section-header" {
-                            div {
-                                h2 { "Live chat room" }
-                                p class="muted" { "Sign in to send messages and see the chat room." }
-                            }
-                            a class="button secondary" href=(Route::Login.as_str()) { "Sign in" }
-                        }
+                        (SectionHeader::builder()
+                            .title("Live chat room".to_string())
+                            .subtitle("Sign in to send messages and see the chat room.".to_string())
+                            .action(maud::html! {
+                                a class="button secondary" href=(Route::Login.as_str()) { "Sign in" }
+                            })
+                            .build()
+                            .render())
                     }
                 }
 
