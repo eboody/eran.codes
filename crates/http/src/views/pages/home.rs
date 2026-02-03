@@ -29,144 +29,117 @@ impl maud::Render for Home {
                     .render())
 
                 (DemoSection::builder()
-                    .title("Demo A: Identity & Session Durability".to_string())
+                    .title("Support systems inside the chat demo".to_string())
                     .content(maud::html! {
                         p {
-                            "Follow the full flow: "
-                            strong { (Route::Register.as_str()) }
-                            " → "
-                            strong { (Route::Login.as_str()) }
-                            " → "
-                            strong { (Route::Protected.as_str()) }
-                            "."
+                            "The chat capstone relies on the same foundations as the earlier demos. "
+                            "Use these controls to inspect the underlying systems without leaving the page."
                         }
-                        ul {
-                            li { "Redirected access is enforced on protected routes." }
-                            li { "Sessions are stored in Postgres via tower-sessions." }
-                            li { "Session cookies are signed, HttpOnly, SameSite Lax." }
-                            li { "Passwords are hashed with Argon2 in a credentials table." }
-                            li { "Migrations define the schema and session tables." }
-                        }
-                        div class="cta-row" {
-                            a class="button" href=(Route::Register.as_str()) { "Start demo" }
-                            a class="button secondary" href=(Route::Login.as_str()) { "Sign in" }
-                            button class="button secondary" data-on:click=(format!("@get('{}')", Route::PartialAuthStatus.as_str())) {
-                                "Check auth status"
-                            }
-                            button class="button secondary" data-on:click=(format!("@get('{}')", Route::PartialSessionStatus.as_str())) {
-                                "Show session details"
-                            }
-                        }
-                        (DemoResultPlaceholder::builder()
-                            .target_id("auth-status-target".to_string())
-                            .message("Click “Check auth status” to load live session info.".to_string())
-                            .build()
-                            .render())
-                        (DemoResultPlaceholder::builder()
-                            .target_id("session-status-target".to_string())
-                            .message("Click “Show session details” to load the session id and expiry.".to_string())
-                            .build()
-                            .render())
-                        div class="cta-row" {
-                            button class="button secondary" data-on:click=(format!("@get('{}')", Route::PartialDbCheck.with_query("email=demo@example.com"))) {
-                                "Check demo@example.com"
-                            }
-                            button class="button secondary" data-on:click=(format!("@get('{}')", Route::PartialDbCheck.with_query("email=missing@example.com"))) {
-                                "Check missing@example.com"
-                            }
-                        }
-                        (DemoResultPlaceholder::builder()
-                            .target_id("db-check-target".to_string())
-                            .message("Run a DB lookup to see the query and trace output.".to_string())
-                            .build()
-                            .render())
-                    })
-                    .build()
-                    .render())
-
-                (DemoSection::builder()
-                    .title("Demo B: Architecture Boundaries + Error Strategy".to_string())
-                    .content(maud::html! {
-                        p { "Follow a single request through each boundary." }
-                        div class="flow-map" {
-                            span class="step" { "http::dto::Register" }
-                            span class="arrow" { "→" }
-                            span class="step" { "app::user::RegisterUser" }
-                            span class="arrow" { "→" }
-                            span class="step" { "domain::user::{Username, Email}" }
-                            span class="arrow" { "→" }
-                            span class="step" { "infra::repo::SqlxUserRepository" }
-                        }
-                        p class="muted" { "Domain types avoid serde/DB concerns; app orchestrates policy; infra owns SQL." }
-                        p class="muted" { "Errors are mapped centrally into user-facing responses." }
-                        div class="cta-row" {
-                            button class="button secondary" data-on:click=(format!("@get('{}')", Route::PartialBoundaryCheck.with_query("case=valid"))) {
-                                "Validate sample input"
-                            }
-                            button class="button secondary" data-on:click=(format!("@get('{}')", Route::PartialBoundaryCheck.with_query("case=invalid"))) {
-                                "Validate invalid input"
-                            }
-                            a class="button secondary" href=(Route::ErrorTest.as_str()) { "Trigger full-page error" }
-                            button class="button secondary" data-on:click=(format!("@get('{}')", Route::ErrorTest.as_str())) {
-                                "Trigger Datastar error"
-                            }
-                        }
-                        (DemoResultPlaceholder::builder()
-                            .target_id("boundary-target".to_string())
-                            .message("Run a validation check to see domain constraints in action.".to_string())
-                            .build()
-                            .render())
-                    })
-                    .build()
-                    .render())
-
-                (DemoSection::builder()
-                    .title("Demo C: Observability + Realtime Delivery".to_string())
-                    .content(maud::html! {
-                        p { "Each request is wrapped in structured spans with key context fields." }
-                        ul {
-                            li { "request_id, session_id, user_id, route, and latency_ms." }
-                            li { "User id is injected from the auth middleware." }
-                            li { "Structured logs support JSON or pretty output." }
-                            li { "Single SSE connection per visitor for live updates." }
-                        }
-                        p class="muted" {
-                            "Configure with "
-                            code { "RUST_LOG" }
-                            " and "
-                            code { "LOG_FORMAT=json" }
-                            " for structured output."
-                        }
-                        button class="button secondary" data-on:click=(format!("@get('{}')", Route::PartialRequestMeta.as_str())) {
-                            "Fetch request metadata"
-                        }
-                        (DemoResultPlaceholder::builder()
-                            .target_id("request-meta-target".to_string())
-                            .message("Click “Fetch request metadata” to load request ids and timing.".to_string())
-                            .build()
-                            .render())
-                        p class="muted" { "Use the ping and signal demos to observe live updates." }
-                        div class="grid demos" data-signals=(format!("{{surrealMessage: '{}', originalSurrealMessage: '{}', surrealStatus: 'idle'}}", "Ready.", "Ready.")) {
+                        div class="grid demos" {
                             article {
-                                h3 { "SSE ping" }
-                                div id="ping-target" {
-                                    p { "No pings yet." }
+                                h3 { "Identity + session durability" }
+                                p class="muted" {
+                                    "Auth, sessions, and persistence are the base layer for chat."
                                 }
-                                button data-on:click=(format!("@get('{}')", Route::PartialPing.as_str())) { "Ping" }
+                                div class="cta-row" {
+                                    a class="button" href=(Route::Register.as_str()) { "Start demo" }
+                                    a class="button secondary" href=(Route::Login.as_str()) { "Sign in" }
+                                    button class="button secondary" data-on:click=(format!("@get('{}')", Route::PartialAuthStatus.as_str())) {
+                                        "Check auth status"
+                                    }
+                                    button class="button secondary" data-on:click=(format!("@get('{}')", Route::PartialSessionStatus.as_str())) {
+                                        "Show session details"
+                                    }
+                                }
+                                (DemoResultPlaceholder::builder()
+                                    .target_id("auth-status-target".to_string())
+                                    .message("Click “Check auth status” to load live session info.".to_string())
+                                    .build()
+                                    .render())
+                                (DemoResultPlaceholder::builder()
+                                    .target_id("session-status-target".to_string())
+                                    .message("Click “Show session details” to load the session id and expiry.".to_string())
+                                    .build()
+                                    .render())
+                                div class="cta-row" {
+                                    button class="button secondary" data-on:click=(format!("@get('{}')", Route::PartialDbCheck.with_query("email=demo@example.com"))) {
+                                        "Check demo@example.com"
+                                    }
+                                    button class="button secondary" data-on:click=(format!("@get('{}')", Route::PartialDbCheck.with_query("email=missing@example.com"))) {
+                                        "Check missing@example.com"
+                                    }
+                                }
+                                (DemoResultPlaceholder::builder()
+                                    .target_id("db-check-target".to_string())
+                                    .message("Run a DB lookup to see the query and trace output.".to_string())
+                                    .build()
+                                    .render())
                             }
                             article {
-                                h3 { "Datastar signals" }
-                                p data-text="$surrealMessage" {}
-                                small data-text="$surrealStatus" {}
-                                div class="grid" {
-                                    button
-                                        data-on:click="$surrealMessage = 'Front-end says hi!'; setTimeout(() => { $surrealMessage = $originalSurrealMessage; }, 1000)"
-                                    { "Front-end update" }
-                                    button data-on:click=(format!("@get('{}')", Route::PartialSurrealGuarded.as_str())) {
-                                        "Backend guarded"
+                                h3 { "Architecture boundaries + error strategy" }
+                                p class="muted" { "Follow a single request through each boundary." }
+                                div class="flow-map" {
+                                    span class="step" { "http::dto::Register" }
+                                    span class="arrow" { "→" }
+                                    span class="step" { "app::user::RegisterUser" }
+                                    span class="arrow" { "→" }
+                                    span class="step" { "domain::user::{Username, Email}" }
+                                    span class="arrow" { "→" }
+                                    span class="step" { "infra::repo::SqlxUserRepository" }
+                                }
+                                p class="muted" { "Domain types avoid serde/DB concerns; app orchestrates policy; infra owns SQL." }
+                                div class="cta-row" {
+                                    button class="button secondary" data-on:click=(format!("@get('{}')", Route::PartialBoundaryCheck.with_query("case=valid"))) {
+                                        "Validate sample input"
                                     }
-                                    button data-on:click=(format!("@get('{}')", Route::PartialSurrealCancel.as_str())) {
-                                        "Backend cancel"
+                                    button class="button secondary" data-on:click=(format!("@get('{}')", Route::PartialBoundaryCheck.with_query("case=invalid"))) {
+                                        "Validate invalid input"
+                                    }
+                                    a class="button secondary" href=(Route::ErrorTest.as_str()) { "Trigger full-page error" }
+                                    button class="button secondary" data-on:click=(format!("@get('{}')", Route::ErrorTest.as_str())) {
+                                        "Trigger Datastar error"
+                                    }
+                                }
+                                (DemoResultPlaceholder::builder()
+                                    .target_id("boundary-target".to_string())
+                                    .message("Run a validation check to see domain constraints in action.".to_string())
+                                    .build()
+                                    .render())
+                            }
+                            article data-signals=(format!("{{surrealMessage: '{}', originalSurrealMessage: '{}', surrealStatus: 'idle'}}", "Ready.", "Ready.")) {
+                                h3 { "Observability + realtime delivery" }
+                                p class="muted" { "Every request is wrapped in structured spans and SSE fanout." }
+                                button class="button secondary" data-on:click=(format!("@get('{}')", Route::PartialRequestMeta.as_str())) {
+                                    "Fetch request metadata"
+                                }
+                                (DemoResultPlaceholder::builder()
+                                    .target_id("request-meta-target".to_string())
+                                    .message("Click “Fetch request metadata” to load request ids and timing.".to_string())
+                                    .build()
+                                    .render())
+                                div class="grid" {
+                                    div {
+                                        h4 { "SSE ping" }
+                                        div id="ping-target" {
+                                            p { "No pings yet." }
+                                        }
+                                        button data-on:click=(format!("@get('{}')", Route::PartialPing.as_str())) { "Ping" }
+                                    }
+                                    div {
+                                        h4 { "Datastar signals" }
+                                        p data-text="$surrealMessage" {}
+                                        small data-text="$surrealStatus" {}
+                                        div class="grid" {
+                                            button
+                                                data-on:click="$surrealMessage = 'Front-end says hi!'; setTimeout(() => { $surrealMessage = $originalSurrealMessage; }, 1000)"
+                                            { "Front-end update" }
+                                            button data-on:click=(format!("@get('{}')", Route::PartialSurrealGuarded.as_str())) {
+                                                "Backend guarded"
+                                            }
+                                            button data-on:click=(format!("@get('{}')", Route::PartialSurrealCancel.as_str())) {
+                                                "Backend cancel"
+                                            }
+                                        }
                                     }
                                 }
                             }
