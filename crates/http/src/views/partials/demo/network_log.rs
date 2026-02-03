@@ -2,7 +2,7 @@ use bon::Builder;
 use maud::Render;
 
 use crate::trace_log::TraceEntry;
-use crate::views::partials::{LogPanel, Pill};
+use crate::views::partials::{LogPanel, LogRow, Pill};
 
 #[derive(Builder)]
 pub struct NetworkLog<'a> {
@@ -35,34 +35,14 @@ impl Render for NetworkLog<'_> {
             maud::html! { p class="muted" { "No requests yet. Trigger a demo action to populate this table." } }
         } else {
             maud::html! {
-                table {
-                    thead {
-                        tr {
-                            th { "Time" }
-                            th { "Source" }
-                            th { "Method" }
-                            th { "Path" }
-                            th { "User" }
-                            th { "Session" }
-                            th { "Status" }
-                            th { "Latency (ms)" }
-                            th { "At" }
-                        }
-                    }
-                    tbody {
-                        @for entry in request_rows.iter().rev().take(20) {
-                            tr {
-                                td { (entry.timestamp.clone()) }
-                                td { (source_badge(entry)) }
-                                    td { (method_pill(entry)) }
-                                    td { (path_pill(entry)) }
-                                td { (field_value(entry, "user_id")) }
-                                td { (field_value(entry, "session_id")) }
-                                    td { (status_pill(entry)) }
-                                td { (field_value(entry, "latency_ms")) }
-                                td { (field_value(entry, "sent_at")) }
-                            }
-                        }
+                ul class="live-log-entries" {
+                    @for entry in request_rows.iter().rev().take(20) {
+                        (LogRow::builder()
+                            .timestamp(entry.timestamp.clone())
+                            .message(entry.message.clone())
+                            .pills(request_pills(entry))
+                            .build()
+                            .render())
                     }
                 }
             }
@@ -174,14 +154,6 @@ fn field_value(entry: &TraceEntry, name: &str) -> String {
         .unwrap_or_else(|| "-".to_string())
 }
 
-fn source_badge(entry: &TraceEntry) -> maud::Markup {
-    let sender = field_value(entry, "sender");
-    match ChatRequestSource::from_sender(&sender) {
-        Some(source) => source.badge_with_mismatch(entry),
-        None => maud::html! {},
-    }
-}
-
 fn user_label(entry: &TraceEntry) -> maud::Markup {
     let user_id = field_value(entry, "user_id");
     if user_id == "-" {
@@ -223,42 +195,99 @@ fn sender_badge_class(sender: &str) -> &'static str {
     }
 }
 
-fn method_pill(entry: &TraceEntry) -> maud::Markup {
+fn request_pills(entry: &TraceEntry) -> Vec<Pill> {
+    let mut pills = Vec::new();
+    pills.push(source_pill(entry));
+    pills.push(method_pill(entry));
+    pills.push(path_pill(entry));
+    pills.push(status_pill(entry));
+    if let Some(latency) = latency_pill(entry) {
+        pills.push(latency);
+    }
+    if let Some(user) = user_pill(entry) {
+        pills.push(user);
+    }
+    pills
+}
+
+fn method_pill(entry: &TraceEntry) -> Pill {
     let method = field_value(entry, "method");
     if method == "-" {
-        return maud::html! { span class="muted" { "-" } };
+        return Pill::builder()
+            .text("-".to_string())
+            .extra_class("log-fields".to_string())
+            .build();
     }
     let class = format!("method {}", method_class(&method));
     Pill::builder()
         .text(method)
         .extra_class(class)
         .build()
-        .render()
 }
 
-fn path_pill(entry: &TraceEntry) -> maud::Markup {
+fn path_pill(entry: &TraceEntry) -> Pill {
     let path = field_value(entry, "path");
     if path == "-" {
-        return maud::html! { span class="muted" { "-" } };
+        return Pill::builder()
+            .text("-".to_string())
+            .extra_class("log-fields".to_string())
+            .build();
     }
     Pill::builder()
         .text(path)
         .extra_class("path".to_string())
         .build()
-        .render()
 }
 
-fn status_pill(entry: &TraceEntry) -> maud::Markup {
+fn status_pill(entry: &TraceEntry) -> Pill {
     let status = field_value(entry, "status");
     if status == "-" {
-        return maud::html! { span class="muted" { "-" } };
+        return Pill::builder()
+            .text("-".to_string())
+            .extra_class("log-fields".to_string())
+            .build();
     }
     let class = format!("status {}", status_class(&status));
     Pill::builder()
         .text(status)
         .extra_class(class)
         .build()
-        .render()
+}
+
+fn latency_pill(entry: &TraceEntry) -> Option<Pill> {
+    let value = field_value(entry, "latency_ms");
+    if value == "-" {
+        return None;
+    }
+    Some(
+        Pill::builder()
+            .text(format!("latency_ms={value}"))
+            .extra_class("log-fields".to_string())
+            .build(),
+    )
+}
+
+fn user_pill(entry: &TraceEntry) -> Option<Pill> {
+    let value = field_value(entry, "user_id");
+    if value == "-" {
+        return None;
+    }
+    let short = value.split('-').next().unwrap_or(value.as_str());
+    Some(
+        Pill::builder()
+            .text(format!("user={short}"))
+            .extra_class("log-fields".to_string())
+            .build(),
+    )
+}
+
+fn source_pill(entry: &TraceEntry) -> Pill {
+    let sender = field_value(entry, "sender");
+    let class = sender_badge_class(&sender);
+    Pill::builder()
+        .text(sender)
+        .extra_class(class.to_string())
+        .build()
 }
 
 fn method_class(method: &str) -> &'static str {
@@ -288,58 +317,4 @@ fn status_class(status: &str) -> &'static str {
         }
     }
     "status-unknown"
-}
-
-#[derive(Clone, Copy)]
-enum ChatRequestSource {
-    You,
-    Demo,
-}
-
-impl ChatRequestSource {
-    fn from_sender(sender: &str) -> Option<Self> {
-        match sender {
-            "you" => Some(Self::You),
-            "demo" => Some(Self::Demo),
-            _ => None,
-        }
-    }
-
-    fn badge(self) -> maud::Markup {
-        match self {
-            ChatRequestSource::You => maud::html! { span class="badge" { "You" } },
-            ChatRequestSource::Demo => {
-                maud::html! { span class="badge secondary" { "Demo" } }
-            }
-        }
-    }
-
-    fn badge_with_mismatch(self, entry: &TraceEntry) -> maud::Markup {
-        let badge = self.badge();
-        let user_id = field_value(entry, "user_id");
-        let expected = match self {
-            ChatRequestSource::You => "you",
-            ChatRequestSource::Demo => "demo",
-        };
-        let sender = field_value(entry, "sender");
-        let warn = sender != expected;
-        if warn {
-            return maud::html! {
-                (badge)
-                " "
-                span class="badge warning" { "Mismatch" }
-            };
-        }
-        if user_id == "-" {
-            return badge;
-        }
-        if warn {
-            return maud::html! {
-                (badge)
-                " "
-                span class="badge warning" { "Mismatch" }
-            };
-        }
-        badge
-    }
 }

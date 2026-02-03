@@ -2,7 +2,7 @@ use bon::Builder;
 use maud::Render;
 
 use crate::trace_log::TraceEntry;
-use crate::views::partials::{LogPanel, Pill};
+use crate::views::partials::{LogPanel, LogRow, Pill};
 
 #[derive(Builder)]
 pub struct LiveLog<'a> {
@@ -17,23 +17,12 @@ impl Render for LiveLog<'_> {
             maud::html! {
                 ul class="live-log-entries" {
                     @for entry in self.entries.iter().rev().take(20) {
-                        li class="log-entry" {
-                            span class="muted log-timestamp" { (entry.timestamp.clone()) }
-                            (Pill::builder()
-                                .text(entry.level.clone())
-                                .extra_class(format!("log-level {}", level_class(&entry.level)))
-                                .build()
-                                .render())
-                            (Pill::builder()
-                                .text(entry.target.clone())
-                                .extra_class("log-target".to_string())
-                                .build()
-                                .render())
-                            span class="log-message" { (entry.message.clone()) }
-                            @if let Some(fields) = compact_fields(entry) {
-                                (fields)
-                            }
-                        }
+                        (LogRow::builder()
+                            .timestamp(entry.timestamp.clone())
+                            .message(entry.message.clone())
+                            .pills(build_pills(entry))
+                            .build()
+                            .render())
                     }
                 }
             }
@@ -65,11 +54,26 @@ impl Render for LiveLog<'_> {
     }
 }
 
-fn compact_fields(entry: &TraceEntry) -> Option<maud::Markup> {
+fn build_pills(entry: &TraceEntry) -> Vec<Pill> {
+    let mut pills = vec![
+        Pill::builder()
+            .text(entry.level.clone())
+            .extra_class(format!("log-level {}", level_class(&entry.level)))
+            .build(),
+        Pill::builder()
+            .text(entry.target.clone())
+            .extra_class("log-target".to_string())
+            .build(),
+    ];
+    pills.extend(compact_fields(entry));
+    pills
+}
+
+fn compact_fields(entry: &TraceEntry) -> Vec<Pill> {
     if entry.fields.is_empty() {
-        return None;
+        return Vec::new();
     }
-    let mut parts: Vec<maud::Markup> = Vec::new();
+    let mut parts: Vec<Pill> = Vec::new();
     let mut extras: Vec<String> = Vec::new();
     for (name, value) in entry.fields.iter() {
         match name.as_str() {
@@ -78,8 +82,7 @@ fn compact_fields(entry: &TraceEntry) -> Option<maud::Markup> {
                     Pill::builder()
                         .text(value.to_string())
                         .extra_class(format!("method {}", method_class(value)))
-                        .build()
-                        .render(),
+                        .build(),
                 );
             }
             "path" => {
@@ -87,8 +90,7 @@ fn compact_fields(entry: &TraceEntry) -> Option<maud::Markup> {
                     Pill::builder()
                         .text(value.to_string())
                         .extra_class("path".to_string())
-                        .build()
-                        .render(),
+                        .build(),
                 );
             }
             "status" => {
@@ -96,8 +98,7 @@ fn compact_fields(entry: &TraceEntry) -> Option<maud::Markup> {
                     Pill::builder()
                         .text(value.to_string())
                         .extra_class(format!("status {}", status_class(value)))
-                        .build()
-                        .render(),
+                        .build(),
                 );
             }
             _ => extras.push(format!("{}={}", name, value)),
@@ -109,21 +110,10 @@ fn compact_fields(entry: &TraceEntry) -> Option<maud::Markup> {
             Pill::builder()
                 .text(extra)
                 .extra_class("log-fields".to_string())
-                .build()
-                .render(),
+                .build(),
         );
     }
-    if parts.is_empty() {
-        None
-    } else {
-        Some(maud::html! {
-            span class="log-fields" {
-                @for part in parts {
-                    (part)
-                }
-            }
-        })
-    }
+    parts
 }
 
 fn level_class(level: &str) -> &'static str {
