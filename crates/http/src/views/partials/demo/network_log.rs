@@ -203,9 +203,9 @@ fn request_pills(entry: &TraceEntry) -> Vec<Pill> {
             .extra_class(format!("log-level {}", level_class(&entry.level)))
             .build(),
     );
+    pills.push(status_pill(entry));
     pills.push(method_pill(entry));
     pills.push(path_pill(entry));
-    pills.push(status_pill(entry));
     pills.push(source_pill(entry));
     if let Some(latency) = latency_pill(entry) {
         pills.push(latency);

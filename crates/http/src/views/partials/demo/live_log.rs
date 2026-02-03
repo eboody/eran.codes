@@ -62,6 +62,14 @@ fn build_pills(entry: &TraceEntry) -> Vec<Pill> {
             .extra_class(format!("log-level {}", level_class(&entry.level)))
             .build(),
     );
+    if let Some(status) = field_value(entry, "status") {
+        pills.push(
+            Pill::builder()
+                .text(status.clone())
+                .extra_class(format!("status {}", status_class(&status)))
+                .build(),
+        );
+    }
     if let Some(method) = field_value(entry, "method") {
         pills.push(
             Pill::builder()
@@ -75,14 +83,6 @@ fn build_pills(entry: &TraceEntry) -> Vec<Pill> {
             Pill::builder()
                 .text(path)
                 .extra_class("path".to_string())
-                .build(),
-        );
-    }
-    if let Some(status) = field_value(entry, "status") {
-        pills.push(
-            Pill::builder()
-                .text(status.clone())
-                .extra_class(format!("status {}", status_class(&status)))
                 .build(),
         );
     }
