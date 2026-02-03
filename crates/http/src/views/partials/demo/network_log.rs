@@ -2,7 +2,7 @@ use bon::Builder;
 use maud::Render;
 
 use crate::trace_log::TraceEntry;
-use crate::views::partials::{LogPanel, LogRow, Pill};
+use crate::views::partials::{BadgeKind, LogPanel, LogRow, Pill};
 
 #[derive(Builder)]
 pub struct NetworkLog<'a> {
@@ -197,12 +197,7 @@ fn sender_badge_class(sender: &str) -> &'static str {
 
 fn request_pills(entry: &TraceEntry) -> Vec<Pill> {
     let mut pills = Vec::new();
-    pills.push(
-        Pill::builder()
-            .text(entry.level.clone())
-            .extra_class(format!("log-level {}", level_class(&entry.level)))
-            .build(),
-    );
+    pills.push(Pill::level(entry.level.clone()));
     pills.push(status_pill(entry));
     pills.push(method_pill(entry));
     pills.push(path_pill(entry));
@@ -219,45 +214,25 @@ fn request_pills(entry: &TraceEntry) -> Vec<Pill> {
 fn method_pill(entry: &TraceEntry) -> Pill {
     let method = field_value(entry, "method");
     if method == "-" {
-        return Pill::builder()
-            .text("-".to_string())
-            .extra_class("log-fields".to_string())
-            .build();
+        return Pill::fields("-".to_string());
     }
-    let class = format!("method {}", method_class(&method));
-    Pill::builder()
-        .text(method)
-        .extra_class(class)
-        .build()
+    Pill::method(method)
 }
 
 fn path_pill(entry: &TraceEntry) -> Pill {
     let path = field_value(entry, "path");
     if path == "-" {
-        return Pill::builder()
-            .text("-".to_string())
-            .extra_class("log-fields".to_string())
-            .build();
+        return Pill::fields("-".to_string());
     }
-    Pill::builder()
-        .text(path)
-        .extra_class("path".to_string())
-        .build()
+    Pill::path(path)
 }
 
 fn status_pill(entry: &TraceEntry) -> Pill {
     let status = field_value(entry, "status");
     if status == "-" {
-        return Pill::builder()
-            .text("-".to_string())
-            .extra_class("log-fields".to_string())
-            .build();
+        return Pill::fields("-".to_string());
     }
-    let class = format!("status {}", status_class(&status));
-    Pill::builder()
-        .text(status)
-        .extra_class(class)
-        .build()
+    Pill::status(status)
 }
 
 fn latency_pill(entry: &TraceEntry) -> Option<Pill> {
@@ -265,12 +240,7 @@ fn latency_pill(entry: &TraceEntry) -> Option<Pill> {
     if value == "-" {
         return None;
     }
-    Some(
-        Pill::builder()
-            .text(format!("latency_ms={value}"))
-            .extra_class("log-fields".to_string())
-            .build(),
-    )
+    Some(Pill::fields(format!("latency_ms={value}")))
 }
 
 fn user_pill(entry: &TraceEntry) -> Option<Pill> {
@@ -279,58 +249,15 @@ fn user_pill(entry: &TraceEntry) -> Option<Pill> {
         return None;
     }
     let short = value.split('-').next().unwrap_or(value.as_str());
-    Some(
-        Pill::builder()
-            .text(format!("user={short}"))
-            .extra_class("log-fields".to_string())
-            .build(),
-    )
+    Some(Pill::fields(format!("user={short}")))
 }
 
 fn source_pill(entry: &TraceEntry) -> Pill {
     let sender = field_value(entry, "sender");
-    let class = sender_badge_class(&sender);
-    Pill::builder()
-        .text(sender)
-        .extra_class(class.to_string())
-        .build()
-}
-
-fn method_class(method: &str) -> &'static str {
-    match method {
-        "GET" => "method-get",
-        "POST" => "method-post",
-        "PUT" => "method-put",
-        "PATCH" => "method-patch",
-        "DELETE" => "method-delete",
-        _ => "method-other",
-    }
-}
-
-fn level_class(level: &str) -> &'static str {
-    match level.to_ascii_lowercase().as_str() {
-        "error" => "log-level-error",
-        "warn" | "warning" => "log-level-warn",
-        "debug" => "log-level-debug",
-        "trace" => "log-level-trace",
-        _ => "log-level-info",
-    }
-}
-
-fn status_class(status: &str) -> &'static str {
-    if let Some(code) = status.parse::<u16>().ok() {
-        if code >= 500 {
-            return "status-5xx";
-        }
-        if code >= 400 {
-            return "status-4xx";
-        }
-        if code >= 300 {
-            return "status-3xx";
-        }
-        if code >= 200 {
-            return "status-2xx";
-        }
-    }
-    "status-unknown"
+    let kind = match sender.as_str() {
+        "you" => BadgeKind::You,
+        "demo" => BadgeKind::Demo,
+        _ => BadgeKind::Secondary,
+    };
+    Pill::badge(sender, kind)
 }

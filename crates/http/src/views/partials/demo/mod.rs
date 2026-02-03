@@ -19,7 +19,7 @@ pub use live_log::LiveLog;
 pub use log_panel::LogPanel;
 pub use log_row::LogRow;
 pub use network_log::NetworkLog;
-pub use pill::Pill;
+pub use pill::{BadgeKind, Pill};
 pub use section_header::SectionHeader;
 pub use ping::Ping;
 pub use request_meta::RequestMeta;
