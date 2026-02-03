@@ -141,6 +141,7 @@ pub async fn post_chat_message(
             .fields(vec![
                 ("direction".to_string(), "incoming".to_string()),
                 ("sender".to_string(), "you".to_string()),
+                ("receiver".to_string(), "server".to_string()),
                 ("user_id".to_string(), user.id.clone()),
                 ("body".to_string(), signals.body.clone()),
             ])
@@ -226,6 +227,7 @@ pub async fn post_demo_chat_message(
             .fields(vec![
                 ("direction".to_string(), "incoming".to_string()),
                 ("sender".to_string(), "demo".to_string()),
+                ("receiver".to_string(), "server".to_string()),
                 (
                     "user_id".to_string(),
                     demo_user.id.as_uuid().to_string(),
@@ -343,6 +345,7 @@ fn broadcast_message(
                 ("payload_bytes".to_string(), message_html.len().to_string()),
                 ("direction".to_string(), "outgoing".to_string()),
                 ("sender".to_string(), sender.to_string()),
+                ("receiver".to_string(), "clients".to_string()),
                 ("user_id".to_string(), user_id),
                 ("body".to_string(), body),
             ])

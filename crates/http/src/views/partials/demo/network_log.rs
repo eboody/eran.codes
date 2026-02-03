@@ -102,6 +102,7 @@ impl Render for NetworkLog<'_> {
                                 th { "Time" }
                                 th { "Direction" }
                                 th { "Sender" }
+                                th { "Receiver" }
                                 th { "User" }
                                 th { "Body" }
                             }
@@ -112,6 +113,7 @@ impl Render for NetworkLog<'_> {
                                     td { (entry.timestamp.clone()) }
                                     td { (field_value(entry, "direction")) }
                                     td { (field_value(entry, "sender")) }
+                                    td { (field_value(entry, "receiver")) }
                                     td { (field_value(entry, "user_id")) }
                                     td { (field_value(entry, "body")) }
                                 }

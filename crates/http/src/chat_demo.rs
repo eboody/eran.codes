@@ -17,7 +17,7 @@ pub async fn load_chat_context(
                 .build(),
         )
         .await?;
-    let message_views = to_message_views(&messages);
+    let message_views = to_message_views(state, &messages).await;
 
     Ok(ChatContext {
         room,
@@ -55,16 +55,29 @@ async fn ensure_room(
     Ok(room)
 }
 
-fn to_message_views(
+async fn to_message_views(
+    state: &crate::State,
     messages: &[domain::chat::Message],
 ) -> Vec<crate::views::partials::ChatMessage> {
+    let mut names = std::collections::HashMap::new();
+    for message in messages {
+        let user_id = message.user_id.as_uuid().to_string();
+        if names.contains_key(&user_id) {
+            continue;
+        }
+        if let Ok(Some(user)) = state.auth.get_user(&user_id).await {
+            names.insert(user_id, user.username);
+        }
+    }
+
     messages
         .iter()
         .map(|message| {
-            let author = format!(
-                "User {}",
-                &message.user_id.as_uuid().to_string()[..8]
-            );
+            let user_id = message.user_id.as_uuid().to_string();
+            let author = names
+                .get(&user_id)
+                .cloned()
+                .unwrap_or_else(|| format!("User {}", &user_id[..8]));
             crate::views::partials::ChatMessage::builder()
                 .message_id(message.id.as_uuid().to_string())
                 .author(author)
