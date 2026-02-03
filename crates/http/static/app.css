@@ -250,9 +250,10 @@ button.secondary,
 
 .log-entry {
   display: flex;
-  flex-wrap: wrap;
+  flex-wrap: nowrap;
   align-items: center;
   gap: 0.5rem;
+  width: max-content;
 }
 
 .log-timestamp {
@@ -262,13 +263,14 @@ button.secondary,
 
 .log-message {
   font-weight: 600;
+  white-space: nowrap;
 }
 
 .log-fields {
   font-size: 0.7rem;
   letter-spacing: 0.01em;
   display: inline-flex;
-  flex-wrap: wrap;
+  flex-wrap: nowrap;
   gap: 0.4rem;
 }
 

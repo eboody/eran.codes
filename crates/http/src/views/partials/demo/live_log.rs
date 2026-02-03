@@ -55,16 +55,43 @@ impl Render for LiveLog<'_> {
 }
 
 fn build_pills(entry: &TraceEntry) -> Vec<Pill> {
-    let mut pills = vec![
+    let mut pills = Vec::new();
+    pills.push(
         Pill::builder()
             .text(entry.level.clone())
             .extra_class(format!("log-level {}", level_class(&entry.level)))
             .build(),
+    );
+    if let Some(method) = field_value(entry, "method") {
+        pills.push(
+            Pill::builder()
+                .text(method.clone())
+                .extra_class(format!("method {}", method_class(&method)))
+                .build(),
+        );
+    }
+    if let Some(path) = field_value(entry, "path") {
+        pills.push(
+            Pill::builder()
+                .text(path)
+                .extra_class("path".to_string())
+                .build(),
+        );
+    }
+    if let Some(status) = field_value(entry, "status") {
+        pills.push(
+            Pill::builder()
+                .text(status.clone())
+                .extra_class(format!("status {}", status_class(&status)))
+                .build(),
+        );
+    }
+    pills.push(
         Pill::builder()
             .text(entry.target.clone())
             .extra_class("log-target".to_string())
             .build(),
-    ];
+    );
     pills.extend(compact_fields(entry));
     pills
 }
@@ -78,28 +105,13 @@ fn compact_fields(entry: &TraceEntry) -> Vec<Pill> {
     for (name, value) in entry.fields.iter() {
         match name.as_str() {
             "method" => {
-                parts.push(
-                    Pill::builder()
-                        .text(value.to_string())
-                        .extra_class(format!("method {}", method_class(value)))
-                        .build(),
-                );
+                continue;
             }
             "path" => {
-                parts.push(
-                    Pill::builder()
-                        .text(value.to_string())
-                        .extra_class("path".to_string())
-                        .build(),
-                );
+                continue;
             }
             "status" => {
-                parts.push(
-                    Pill::builder()
-                        .text(value.to_string())
-                        .extra_class(format!("status {}", status_class(value)))
-                        .build(),
-                );
+                continue;
             }
             _ => extras.push(format!("{}={}", name, value)),
         }
@@ -153,4 +165,13 @@ fn status_class(status: &str) -> &'static str {
         }
     }
     "status-unknown"
+}
+
+fn field_value(entry: &TraceEntry, name: &str) -> Option<String> {
+    entry
+        .fields
+        .iter()
+        .find(|(field, _)| field == name)
+        .map(|(_, value)| value.clone())
+        .filter(|value| value != "-")
 }

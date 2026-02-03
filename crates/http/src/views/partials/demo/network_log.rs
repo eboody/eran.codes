@@ -197,10 +197,16 @@ fn sender_badge_class(sender: &str) -> &'static str {
 
 fn request_pills(entry: &TraceEntry) -> Vec<Pill> {
     let mut pills = Vec::new();
-    pills.push(source_pill(entry));
+    pills.push(
+        Pill::builder()
+            .text(entry.level.clone())
+            .extra_class(format!("log-level {}", level_class(&entry.level)))
+            .build(),
+    );
     pills.push(method_pill(entry));
     pills.push(path_pill(entry));
     pills.push(status_pill(entry));
+    pills.push(source_pill(entry));
     if let Some(latency) = latency_pill(entry) {
         pills.push(latency);
     }
@@ -298,6 +304,16 @@ fn method_class(method: &str) -> &'static str {
         "PATCH" => "method-patch",
         "DELETE" => "method-delete",
         _ => "method-other",
+    }
+}
+
+fn level_class(level: &str) -> &'static str {
+    match level.to_ascii_lowercase().as_str() {
+        "error" => "log-level-error",
+        "warn" | "warning" => "log-level-warn",
+        "debug" => "log-level-debug",
+        "trace" => "log-level-trace",
+        _ => "log-level-info",
     }
 }
 
