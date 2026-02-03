@@ -2,7 +2,7 @@ use bon::Builder;
 use maud::Render;
 
 use crate::trace_log::TraceEntry;
-use crate::views::partials::LogPanel;
+use crate::views::partials::{LogPanel, Pill};
 
 #[derive(Builder)]
 pub struct LiveLog<'a> {
@@ -19,8 +19,16 @@ impl Render for LiveLog<'_> {
                     @for entry in self.entries.iter().rev().take(20) {
                         li class="log-entry" {
                             span class="muted log-timestamp" { (entry.timestamp.clone()) }
-                            span class=(format!("pill log-level {}", level_class(&entry.level))) { (entry.level.clone()) }
-                            span class="pill log-target" { (entry.target.clone()) }
+                            (Pill::builder()
+                                .text(entry.level.clone())
+                                .extra_class(format!("log-level {}", level_class(&entry.level)))
+                                .build()
+                                .render())
+                            (Pill::builder()
+                                .text(entry.target.clone())
+                                .extra_class("log-target".to_string())
+                                .build()
+                                .render())
                             span class="log-message" { (entry.message.clone()) }
                             @if let Some(fields) = compact_fields(entry) {
                                 (fields)
@@ -66,22 +74,44 @@ fn compact_fields(entry: &TraceEntry) -> Option<maud::Markup> {
     for (name, value) in entry.fields.iter() {
         match name.as_str() {
             "method" => {
-                parts.push(maud::html! {
-                    span class=(format!("pill method {}", method_class(value))) { (value) }
-                });
+                parts.push(
+                    Pill::builder()
+                        .text(value.to_string())
+                        .extra_class(format!("method {}", method_class(value)))
+                        .build()
+                        .render(),
+                );
             }
             "path" => {
-                parts.push(maud::html! { span class="pill path" { (value) } });
+                parts.push(
+                    Pill::builder()
+                        .text(value.to_string())
+                        .extra_class("path".to_string())
+                        .build()
+                        .render(),
+                );
             }
             "status" => {
-                parts.push(maud::html! { span class=(format!("pill status {}", status_class(value))) { (value) } });
+                parts.push(
+                    Pill::builder()
+                        .text(value.to_string())
+                        .extra_class(format!("status {}", status_class(value)))
+                        .build()
+                        .render(),
+                );
             }
             _ => extras.push(format!("{}={}", name, value)),
         }
     }
     if !extras.is_empty() {
         let extra = extras.into_iter().take(2).collect::<Vec<_>>().join(" · ");
-        parts.push(maud::html! { span class="pill log-fields" { (extra) } });
+        parts.push(
+            Pill::builder()
+                .text(extra)
+                .extra_class("log-fields".to_string())
+                .build()
+                .render(),
+        );
     }
     if parts.is_empty() {
         None

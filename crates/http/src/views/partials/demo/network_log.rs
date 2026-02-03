@@ -2,7 +2,7 @@ use bon::Builder;
 use maud::Render;
 
 use crate::trace_log::TraceEntry;
-use crate::views::partials::LogPanel;
+use crate::views::partials::{LogPanel, Pill};
 
 #[derive(Builder)]
 pub struct NetworkLog<'a> {
@@ -228,7 +228,12 @@ fn method_pill(entry: &TraceEntry) -> maud::Markup {
     if method == "-" {
         return maud::html! { span class="muted" { "-" } };
     }
-    maud::html! { span class=(format!("pill method {}", method_class(&method))) { (method) } }
+    let class = format!("method {}", method_class(&method));
+    Pill::builder()
+        .text(method)
+        .extra_class(class)
+        .build()
+        .render()
 }
 
 fn path_pill(entry: &TraceEntry) -> maud::Markup {
@@ -236,7 +241,11 @@ fn path_pill(entry: &TraceEntry) -> maud::Markup {
     if path == "-" {
         return maud::html! { span class="muted" { "-" } };
     }
-    maud::html! { span class="pill path" { (path) } }
+    Pill::builder()
+        .text(path)
+        .extra_class("path".to_string())
+        .build()
+        .render()
 }
 
 fn status_pill(entry: &TraceEntry) -> maud::Markup {
@@ -244,7 +253,12 @@ fn status_pill(entry: &TraceEntry) -> maud::Markup {
     if status == "-" {
         return maud::html! { span class="muted" { "-" } };
     }
-    maud::html! { span class=(format!("pill status {}", status_class(&status))) { (status) } }
+    let class = format!("status {}", status_class(&status));
+    Pill::builder()
+        .text(status)
+        .extra_class(class)
+        .build()
+        .render()
 }
 
 fn method_class(method: &str) -> &'static str {
