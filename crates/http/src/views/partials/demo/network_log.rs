@@ -154,11 +154,11 @@ fn user_label(entry: &TraceEntry) -> maud::Markup {
         .unwrap_or(user_id.as_str());
     let sender = field_value(entry, "sender");
     if sender == "you" {
-        maud::html! { span { "You (" (short_id) ")" } }
+        maud::html! { span class="badge you" { "You (" (short_id) ")" } }
     } else if sender == "demo" {
-        maud::html! { span { "Demo (" (short_id) ")" } }
+        maud::html! { span class="badge demo" { "Demo (" (short_id) ")" } }
     } else {
-        maud::html! { span { "User (" (short_id) ")" } }
+        maud::html! { span class="badge secondary" { "User (" (short_id) ")" } }
     }
 }
 
@@ -171,7 +171,16 @@ fn sender_label(entry: &TraceEntry) -> maud::Markup {
         _ => "User",
     };
     maud::html! {
-        span { (label) }
+        span class=(sender_badge_class(&sender)) { (label) }
+    }
+}
+
+fn sender_badge_class(sender: &str) -> &'static str {
+    match sender {
+        "you" => "badge you",
+        "demo" => "badge demo",
+        "-" => "badge secondary",
+        _ => "badge secondary",
     }
 }
 
