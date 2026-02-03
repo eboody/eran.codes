@@ -1,5 +1,5 @@
 use bon::Builder;
-use maud::Render;
+use maud::{PreEscaped, Render};
 
 use crate::paths::Route;
 use crate::views::partials::{ChatConnection, ChatPanel, ChatPanelRole};
@@ -49,6 +49,23 @@ impl Render for ChatDemoSection {
                         .messages(self.messages.clone())
                         .build()
                         .render())
+                }
+                script {
+                    (PreEscaped(r#"
+(() => {
+  const root = document.getElementById('chat-demo');
+  if (!root) return;
+  const windows = root.querySelectorAll('.chat-window');
+  windows.forEach((win) => {
+    const list = win.querySelector('.chat-messages');
+    if (!list) return;
+    const scroll = () => { win.scrollTop = win.scrollHeight; };
+    scroll();
+    const obs = new MutationObserver(scroll);
+    obs.observe(list, { childList: true });
+  });
+})();
+                    "#))
                 }
             }
         }
