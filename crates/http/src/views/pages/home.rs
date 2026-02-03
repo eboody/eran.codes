@@ -2,7 +2,7 @@ use bon::Builder;
 
 use crate::paths::Route;
 use crate::views::page::UserNav;
-use crate::views::partials::{ChatDemoSection, DemoResultPlaceholder, DemoSection, HighlightsSection, HomeHero, SectionHeader};
+use crate::views::partials::{ChatDemoSection, CtaRow, DemoResultPlaceholder, DemoSection, HighlightsSection, HomeHero, SectionHeader};
 
 #[derive(Builder)]
 pub struct Home {
@@ -41,16 +41,23 @@ impl maud::Render for Home {
                                 p class="muted" {
                                     "Auth, sessions, and persistence are the base layer for chat."
                                 }
-                                div class="cta-row" {
-                                    a class="button" href=(Route::Register.as_str()) { "Start demo" }
-                                    a class="button secondary" href=(Route::Login.as_str()) { "Sign in" }
-                                    button class="button secondary" data-on:click=(format!("@get('{}')", Route::PartialAuthStatus.as_str())) {
-                                        "Check auth status"
-                                    }
-                                    button class="button secondary" data-on:click=(format!("@get('{}')", Route::PartialSessionStatus.as_str())) {
-                                        "Show session details"
-                                    }
-                                }
+                                (CtaRow::builder()
+                                    .items(vec![
+                                        maud::html! { a class="button" href=(Route::Register.as_str()) { "Start demo" } },
+                                        maud::html! { a class="button secondary" href=(Route::Login.as_str()) { "Sign in" } },
+                                        maud::html! {
+                                            button class="button secondary" data-on:click=(format!("@get('{}')", Route::PartialAuthStatus.as_str())) {
+                                                "Check auth status"
+                                            }
+                                        },
+                                        maud::html! {
+                                            button class="button secondary" data-on:click=(format!("@get('{}')", Route::PartialSessionStatus.as_str())) {
+                                                "Show session details"
+                                            }
+                                        },
+                                    ])
+                                    .build()
+                                    .render())
                                 (DemoResultPlaceholder::builder()
                                     .target_id("auth-status-target".to_string())
                                     .message("Click “Check auth status” to load live session info.".to_string())
@@ -61,14 +68,21 @@ impl maud::Render for Home {
                                     .message("Click “Show session details” to load the session id and expiry.".to_string())
                                     .build()
                                     .render())
-                                div class="cta-row" {
-                                    button class="button secondary" data-on:click=(format!("@get('{}')", Route::PartialDbCheck.with_query("email=demo@example.com"))) {
-                                        "Check demo@example.com"
-                                    }
-                                    button class="button secondary" data-on:click=(format!("@get('{}')", Route::PartialDbCheck.with_query("email=missing@example.com"))) {
-                                        "Check missing@example.com"
-                                    }
-                                }
+                                (CtaRow::builder()
+                                    .items(vec![
+                                        maud::html! {
+                                            button class="button secondary" data-on:click=(format!("@get('{}')", Route::PartialDbCheck.with_query("email=demo@example.com"))) {
+                                                "Check demo@example.com"
+                                            }
+                                        },
+                                        maud::html! {
+                                            button class="button secondary" data-on:click=(format!("@get('{}')", Route::PartialDbCheck.with_query("email=missing@example.com"))) {
+                                                "Check missing@example.com"
+                                            }
+                                        },
+                                    ])
+                                    .build()
+                                    .render())
                                 (DemoResultPlaceholder::builder()
                                     .target_id("db-check-target".to_string())
                                     .message("Run a DB lookup to see the query and trace output.".to_string())
@@ -88,18 +102,27 @@ impl maud::Render for Home {
                                     span class="step" { "infra::repo::SqlxUserRepository" }
                                 }
                                 p class="muted" { "Domain types avoid serde/DB concerns; app orchestrates policy; infra owns SQL." }
-                                div class="cta-row" {
-                                    button class="button secondary" data-on:click=(format!("@get('{}')", Route::PartialBoundaryCheck.with_query("case=valid"))) {
-                                        "Validate sample input"
-                                    }
-                                    button class="button secondary" data-on:click=(format!("@get('{}')", Route::PartialBoundaryCheck.with_query("case=invalid"))) {
-                                        "Validate invalid input"
-                                    }
-                                    a class="button secondary" href=(Route::ErrorTest.as_str()) { "Trigger full-page error" }
-                                    button class="button secondary" data-on:click=(format!("@get('{}')", Route::ErrorTest.as_str())) {
-                                        "Trigger Datastar error"
-                                    }
-                                }
+                                (CtaRow::builder()
+                                    .items(vec![
+                                        maud::html! {
+                                            button class="button secondary" data-on:click=(format!("@get('{}')", Route::PartialBoundaryCheck.with_query("case=valid"))) {
+                                                "Validate sample input"
+                                            }
+                                        },
+                                        maud::html! {
+                                            button class="button secondary" data-on:click=(format!("@get('{}')", Route::PartialBoundaryCheck.with_query("case=invalid"))) {
+                                                "Validate invalid input"
+                                            }
+                                        },
+                                        maud::html! { a class="button secondary" href=(Route::ErrorTest.as_str()) { "Trigger full-page error" } },
+                                        maud::html! {
+                                            button class="button secondary" data-on:click=(format!("@get('{}')", Route::ErrorTest.as_str())) {
+                                                "Trigger Datastar error"
+                                            }
+                                        },
+                                    ])
+                                    .build()
+                                    .render())
                                 (DemoResultPlaceholder::builder()
                                     .target_id("boundary-target".to_string())
                                     .message("Run a validation check to see domain constraints in action.".to_string())

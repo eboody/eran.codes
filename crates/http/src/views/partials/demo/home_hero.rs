@@ -3,6 +3,7 @@ use maud::Render;
 
 use crate::paths::Route;
 use crate::views::page::UserNav;
+use crate::views::partials::CtaRow;
 
 #[derive(Clone, Debug, Builder)]
 pub struct HomeHero {
@@ -33,10 +34,13 @@ impl Render for HomeHero {
                     } @else {
                         p { "No active session." }
                         p class="muted" { "Create an account to see session-backed auth." }
-                        div class="cta-row" {
-                            a class="button" href=(Route::Register.as_str()) { "Create account" }
-                            a class="button secondary" href=(Route::Login.as_str()) { "Sign in" }
-                        }
+                        (CtaRow::builder()
+                            .items(vec![
+                                maud::html! { a class="button" href=(Route::Register.as_str()) { "Create account" } },
+                                maud::html! { a class="button secondary" href=(Route::Login.as_str()) { "Sign in" } },
+                            ])
+                            .build()
+                            .render())
                     }
                 }
             }

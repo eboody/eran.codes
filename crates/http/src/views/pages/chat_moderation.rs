@@ -1,7 +1,7 @@
 use bon::Builder;
 use maud::Render;
 
-use crate::views::partials::ModerationAction;
+use crate::views::partials::{CtaRow, ModerationAction};
 use crate::views::page::{Layout, UserNav};
 use crate::paths::Route;
 
@@ -40,11 +40,20 @@ impl Render for ChatModeration {
                                     }
                                     p { (&entry.body) }
                                     p class="muted" { "Reason: " (&entry.reason) }
-                                    form method="post" action=(Route::ChatModeration.as_str()) class="cta-row" {
+                                    form method="post" action=(Route::ChatModeration.as_str()) {
                                         input type="hidden" name="message_id" value=(entry.message_id.as_uuid().to_string());
                                         input type="hidden" name="reason" value=(entry.reason.clone());
-                                        button type="submit" name="decision" value=(ModerationAction::Approve.as_str()) class="button secondary" { "Approve" }
-                                        button type="submit" name="decision" value=(ModerationAction::Remove.as_str()) class="button" { "Remove" }
+                                        (CtaRow::builder()
+                                            .items(vec![
+                                                maud::html! {
+                                                    button type="submit" name="decision" value=(ModerationAction::Approve.as_str()) class="button secondary" { "Approve" }
+                                                },
+                                                maud::html! {
+                                                    button type="submit" name="decision" value=(ModerationAction::Remove.as_str()) class="button" { "Remove" }
+                                                },
+                                            ])
+                                            .build()
+                                            .render())
                                     }
                                 }
                             }
