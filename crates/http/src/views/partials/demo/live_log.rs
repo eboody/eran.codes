@@ -10,36 +10,56 @@ pub struct LiveLog<'a> {
 
 impl Render for LiveLog<'_> {
     fn render(&self) -> maud::Markup {
-        maud::html! {
-            article id="live-log-target" class="demo-result" {
-                p { strong { "Live backend log" } }
-                @if self.entries.is_empty() {
-                    p class="muted" { "No events yet. Trigger a demo action to start streaming." }
-                } @else {
-                    ul {
-                        @for entry in self.entries.iter().rev().take(20) {
-                            li {
-                                strong { (entry.timestamp.clone()) }
-                                " "
-                                (entry.level.clone())
-                                " "
-                                (entry.target.clone())
-                                ": "
-                                (entry.message.clone())
-                                @if !entry.fields.is_empty() {
-                                    ul class="muted" {
-                                        @for (name, value) in entry.fields.iter() {
-                                            li {
-                                                code { (name) }
-                                                ": "
-                                                (value.clone())
-                                            }
+        let body = if self.entries.is_empty() {
+            maud::html! { p class="muted" { "No events yet. Trigger a demo action to start streaming." } }
+        } else {
+            maud::html! {
+                ul {
+                    @for entry in self.entries.iter().rev().take(20) {
+                        li {
+                            strong { (entry.timestamp.clone()) }
+                            " "
+                            (entry.level.clone())
+                            " "
+                            (entry.target.clone())
+                            ": "
+                            (entry.message.clone())
+                            @if !entry.fields.is_empty() {
+                                ul class="muted" {
+                                    @for (name, value) in entry.fields.iter() {
+                                        li {
+                                            code { (name) }
+                                            ": "
+                                            (value.clone())
                                         }
                                     }
                                 }
                             }
                         }
                     }
+                }
+            }
+        };
+
+        maud::html! {
+            article id="live-log-target" class="demo-result live-log-panel" {
+                p { strong { "Live backend log" } }
+                div class="live-log-scroll" {
+                    (body)
+                }
+                script {
+                    (maud::PreEscaped(r#"
+(() => {
+  const root = document.getElementById('live-log-target');
+  if (!root) return;
+  const scroller = root.querySelector('.live-log-scroll');
+  if (!scroller) return;
+  const scroll = () => { scroller.scrollTop = scroller.scrollHeight; };
+  requestAnimationFrame(scroll);
+  const obs = new MutationObserver(scroll);
+  obs.observe(scroller, { childList: true, subtree: true });
+})();
+                    "#))
                 }
             }
         }
