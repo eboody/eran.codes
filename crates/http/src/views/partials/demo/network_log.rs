@@ -112,9 +112,9 @@ impl Render for NetworkLog<'_> {
                                 tr {
                                     td { (entry.timestamp.clone()) }
                                     td { (field_value(entry, "direction")) }
-                                    td { (field_value(entry, "sender")) }
+                                    td { (sender_label(entry)) }
                                     td { (field_value(entry, "receiver")) }
-                                    td { (field_value(entry, "user_id")) }
+                                    td { (user_label(entry)) }
                                     td { (field_value(entry, "body")) }
                                 }
                             }
@@ -140,6 +140,38 @@ fn source_badge(entry: &TraceEntry) -> maud::Markup {
     match ChatRequestSource::from_sender(&sender) {
         Some(source) => source.badge_with_mismatch(entry),
         None => maud::html! {},
+    }
+}
+
+fn user_label(entry: &TraceEntry) -> maud::Markup {
+    let user_id = field_value(entry, "user_id");
+    if user_id == "-" {
+        return maud::html! { span class="muted" { "unknown" } };
+    }
+    let short_id = user_id
+        .split('-')
+        .next()
+        .unwrap_or(user_id.as_str());
+    let sender = field_value(entry, "sender");
+    if sender == "you" {
+        maud::html! { span { "You (" (short_id) ")" } }
+    } else if sender == "demo" {
+        maud::html! { span { "Demo (" (short_id) ")" } }
+    } else {
+        maud::html! { span { "User (" (short_id) ")" } }
+    }
+}
+
+fn sender_label(entry: &TraceEntry) -> maud::Markup {
+    let sender = field_value(entry, "sender");
+    let label = match sender.as_str() {
+        "you" => "You",
+        "demo" => "Demo",
+        "-" => "Unknown",
+        _ => "User",
+    };
+    maud::html! {
+        span { (label) }
     }
 }
 
