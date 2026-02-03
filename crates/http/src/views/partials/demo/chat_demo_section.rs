@@ -59,8 +59,8 @@ impl Render for ChatDemoSection {
   windows.forEach((win) => {
     const list = win.querySelector('.chat-messages');
     if (!list) return;
-    const scroll = () => { win.scrollTop = win.scrollHeight; };
-    scroll();
+    const scroll = () => { list.scrollTop = list.scrollHeight; };
+    requestAnimationFrame(scroll);
     const obs = new MutationObserver(scroll);
     obs.observe(list, { childList: true });
   });

@@ -42,4 +42,5 @@ pub struct Message {
     pub body: MessageBody,
     pub status: MessageStatus,
     pub client_id: Option<String>,
+    pub created_at: std::time::SystemTime,
 }

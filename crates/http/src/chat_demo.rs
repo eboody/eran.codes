@@ -72,6 +72,7 @@ async fn to_message_views(
 
     messages
         .iter()
+        .rev()
         .map(|message| {
             let user_id = message.user_id.as_uuid().to_string();
             let author = names
@@ -81,9 +82,17 @@ async fn to_message_views(
             crate::views::partials::ChatMessage::builder()
                 .message_id(message.id.as_uuid().to_string())
                 .author(author)
+                .timestamp(format_message_time(message.created_at))
                 .body(message.body.to_string())
                 .status(format!("{:?}", message.status))
                 .build()
         })
         .collect()
+}
+
+pub fn format_message_time(value: std::time::SystemTime) -> String {
+    let time = time::OffsetDateTime::from(value);
+    let format = time::format_description::parse("[hour repr:24 padding:zero]:[minute padding:zero]")
+        .unwrap_or_else(|_| Vec::new());
+    time.format(&format).unwrap_or_else(|_| "--:--".to_string())
 }

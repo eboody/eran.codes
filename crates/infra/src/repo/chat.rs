@@ -7,6 +7,7 @@ use app::chat::{AuditEntry, Error, Result};
 use async_trait::async_trait;
 use domain::chat;
 use sqlx::{PgPool, Row};
+use sqlx::types::time;
 
 const RATE_LIMIT_WINDOW_SECS: i64 = 10;
 const RATE_LIMIT_MAX: i64 = 5;
@@ -156,11 +157,11 @@ impl app::chat::Repository for SqlxChatRepository {
         tracing::info!(
             target: "demo.db",
             message = "db query",
-            db_statement = "SELECT id, room_id, user_id, body, status, client_id FROM chat_messages WHERE room_id = $1 ORDER BY created_at DESC LIMIT $2"
+            db_statement = "SELECT id, room_id, user_id, body, status, client_id, created_at FROM chat_messages WHERE room_id = $1 ORDER BY created_at DESC LIMIT $2"
         );
         let rows = sqlx::query(
             r#"
-            SELECT id, room_id, user_id, body, status, client_id
+            SELECT id, room_id, user_id, body, status, client_id, created_at
             FROM chat_messages
             WHERE room_id = $1
             ORDER BY created_at DESC
@@ -181,6 +182,9 @@ impl app::chat::Repository for SqlxChatRepository {
             let status =
                 Self::status_from_db(row.get::<String, _>("status").as_str())?;
 
+            let created_at = offset_to_system_time(
+                row.get::<time::OffsetDateTime, _>("created_at"),
+            );
             messages.push(chat::Message {
                 id: chat::MessageId::from_uuid(
                     row.get::<uuid::Uuid, _>("id"),
@@ -194,6 +198,7 @@ impl app::chat::Repository for SqlxChatRepository {
                 body,
                 status,
                 client_id: row.get::<Option<String>, _>("client_id"),
+                created_at,
             });
         }
 
@@ -207,11 +212,11 @@ impl app::chat::Repository for SqlxChatRepository {
         tracing::info!(
             target: "demo.db",
             message = "db query",
-            db_statement = "SELECT id, room_id, user_id, body, status, client_id FROM chat_messages WHERE id = $1"
+            db_statement = "SELECT id, room_id, user_id, body, status, client_id, created_at FROM chat_messages WHERE id = $1"
         );
         let row = sqlx::query(
             r#"
-            SELECT id, room_id, user_id, body, status, client_id
+            SELECT id, room_id, user_id, body, status, client_id, created_at
             FROM chat_messages
             WHERE id = $1
             "#,
@@ -242,6 +247,9 @@ impl app::chat::Repository for SqlxChatRepository {
             body,
             status,
             client_id: row.get::<Option<String>, _>("client_id"),
+            created_at: offset_to_system_time(
+                row.get::<time::OffsetDateTime, _>("created_at"),
+            ),
         }))
     }
 
@@ -252,12 +260,12 @@ impl app::chat::Repository for SqlxChatRepository {
         tracing::info!(
             target: "demo.db",
             message = "db query",
-            db_statement = "INSERT INTO chat_messages (id, room_id, user_id, body, status, client_id) VALUES ($1, $2, $3, $4, $5, $6)"
+            db_statement = "INSERT INTO chat_messages (id, room_id, user_id, body, status, client_id, created_at) VALUES ($1, $2, $3, $4, $5, $6, $7)"
         );
         sqlx::query(
             r#"
-            INSERT INTO chat_messages (id, room_id, user_id, body, status, client_id)
-            VALUES ($1, $2, $3, $4, $5, $6)
+            INSERT INTO chat_messages (id, room_id, user_id, body, status, client_id, created_at)
+            VALUES ($1, $2, $3, $4, $5, $6, $7)
             "#,
         )
         .bind(message.id.as_uuid())
@@ -266,6 +274,7 @@ impl app::chat::Repository for SqlxChatRepository {
         .bind(message.body.to_string())
         .bind(Self::status_to_db(message.status))
         .bind(message.client_id.as_ref())
+        .bind(time::OffsetDateTime::from(message.created_at))
         .execute(&self.pg)
         .await
         .map_err(|error| Error::Repo(error.to_string()))?;
@@ -502,6 +511,20 @@ pub struct SqlxChatRateLimiter {
 impl SqlxChatRateLimiter {
     pub fn new(pg: PgPool) -> Self {
         Self { pg }
+    }
+}
+
+fn offset_to_system_time(value: time::OffsetDateTime) -> std::time::SystemTime {
+    let seconds = value.unix_timestamp();
+    let nanos = value.nanosecond();
+    if seconds >= 0 {
+        std::time::SystemTime::UNIX_EPOCH
+            + std::time::Duration::from_secs(seconds as u64)
+            + std::time::Duration::from_nanos(nanos as u64)
+    } else {
+        std::time::SystemTime::UNIX_EPOCH
+            - std::time::Duration::from_secs(seconds.unsigned_abs())
+            - std::time::Duration::from_nanos(nanos as u64)
     }
 }
 

@@ -5,6 +5,7 @@ use maud::Render;
 pub struct ChatMessage {
     pub message_id: String,
     pub author: String,
+    pub timestamp: String,
     pub body: String,
     pub status: String,
 }
@@ -15,6 +16,7 @@ impl Render for ChatMessage {
             li id=(format!("chat-message-{}", self.message_id)) class="chat-message" {
                 div class="meta" {
                     strong { (&self.author) }
+                    span class="timestamp" { (&self.timestamp) }
                     span class="status" { (&self.status) }
                 }
                 p { (&self.body) }

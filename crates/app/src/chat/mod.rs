@@ -318,6 +318,7 @@ impl Service {
             body,
             status,
             client_id: command.client_id,
+            created_at: self.clock.now(),
         };
 
         self.repo.insert_message(&message).await?;
