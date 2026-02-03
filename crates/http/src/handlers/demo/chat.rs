@@ -129,6 +129,24 @@ pub async fn post_chat_message(
         )
         .await?;
 
+    state.trace_log.record_sse_event(
+        request::current_context()
+            .and_then(|value| value.session_id)
+            .as_deref(),
+        crate::trace_log::TraceEntry::builder()
+            .timestamp(jiff::Timestamp::now().to_string())
+            .level("INFO".to_string())
+            .target("demo.chat".to_string())
+            .message("chat.message.incoming".to_string())
+            .fields(vec![
+                ("direction".to_string(), "incoming".to_string()),
+                ("sender".to_string(), "you".to_string()),
+                ("user_id".to_string(), user.id.clone()),
+                ("body".to_string(), signals.body.clone()),
+            ])
+            .build(),
+    );
+
     let message_html = views::partials::ChatMessage::builder()
         .message_id(message.id.as_uuid().to_string())
         .author(user.username.clone())
@@ -137,7 +155,13 @@ pub async fn post_chat_message(
         .build()
         .render()
         .into_string();
-    broadcast_message(&state, &message_html);
+    broadcast_message(
+        &state,
+        &message_html,
+        message.body.to_string(),
+        "you",
+        user.id.clone(),
+    );
 
     let response = match crate::request::current_kind() {
         crate::request::Kind::Datastar => (
@@ -190,6 +214,27 @@ pub async fn post_demo_chat_message(
         )
         .await?;
 
+    state.trace_log.record_sse_event(
+        request::current_context()
+            .and_then(|value| value.session_id)
+            .as_deref(),
+        crate::trace_log::TraceEntry::builder()
+            .timestamp(jiff::Timestamp::now().to_string())
+            .level("INFO".to_string())
+            .target("demo.chat".to_string())
+            .message("chat.message.incoming".to_string())
+            .fields(vec![
+                ("direction".to_string(), "incoming".to_string()),
+                ("sender".to_string(), "demo".to_string()),
+                (
+                    "user_id".to_string(),
+                    demo_user.id.as_uuid().to_string(),
+                ),
+                ("body".to_string(), signals.bot_body.clone()),
+            ])
+            .build(),
+    );
+
     let message_html = views::partials::ChatMessage::builder()
         .message_id(message.id.as_uuid().to_string())
         .author(demo_user.username.to_string())
@@ -198,7 +243,13 @@ pub async fn post_demo_chat_message(
         .build()
         .render()
         .into_string();
-    broadcast_message(&state, &message_html);
+    broadcast_message(
+        &state,
+        &message_html,
+        message.body.to_string(),
+        "demo",
+        demo_user.id.as_uuid().to_string(),
+    );
 
     let response = match crate::request::current_kind() {
         crate::request::Kind::Datastar => (
@@ -258,6 +309,9 @@ async fn ensure_demo_user(
 fn broadcast_message(
     state: &crate::State,
     message_html: &str,
+    body: String,
+    sender: &str,
+    user_id: String,
 ) {
     let event = PatchElements::new(message_html)
         .selector(".chat-messages")
@@ -287,6 +341,10 @@ fn broadcast_message(
                 ("selector".to_string(), ".chat-messages".to_string()),
                 ("mode".to_string(), "append".to_string()),
                 ("payload_bytes".to_string(), message_html.len().to_string()),
+                ("direction".to_string(), "outgoing".to_string()),
+                ("sender".to_string(), sender.to_string()),
+                ("user_id".to_string(), user_id),
+                ("body".to_string(), body),
             ])
             .build(),
     );

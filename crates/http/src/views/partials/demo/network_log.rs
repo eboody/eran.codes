@@ -20,6 +20,15 @@ impl Render for NetworkLog<'_> {
             .iter()
             .filter(|entry| entry.target == "demo.sse")
             .collect();
+        let chat_rows: Vec<&TraceEntry> = self
+            .entries
+            .iter()
+            .filter(|entry| {
+                entry.target == "demo.chat"
+                    || (entry.target == "demo.sse"
+                        && entry.message.contains("chat"))
+            })
+            .collect();
 
         maud::html! {
             article id="network-log-target" class="demo-result" {
@@ -79,6 +88,32 @@ impl Render for NetworkLog<'_> {
                                     td { (field_value(entry, "selector")) }
                                     td { (field_value(entry, "mode")) }
                                     td { (field_value(entry, "payload_bytes")) }
+                                }
+                            }
+                        }
+                    }
+                }
+                @if chat_rows.is_empty() {
+                    p class="muted" { "No chat messages yet. Send a message to see request/response flow." }
+                } @else {
+                    table {
+                        thead {
+                            tr {
+                                th { "Time" }
+                                th { "Direction" }
+                                th { "Sender" }
+                                th { "User" }
+                                th { "Body" }
+                            }
+                        }
+                        tbody {
+                            @for entry in chat_rows.iter().rev().take(20) {
+                                tr {
+                                    td { (entry.timestamp.clone()) }
+                                    td { (field_value(entry, "direction")) }
+                                    td { (field_value(entry, "sender")) }
+                                    td { (field_value(entry, "user_id")) }
+                                    td { (field_value(entry, "body")) }
                                 }
                             }
                         }
