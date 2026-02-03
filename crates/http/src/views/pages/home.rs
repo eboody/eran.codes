@@ -2,11 +2,12 @@ use bon::Builder;
 
 use crate::paths::Route;
 use crate::views::page::UserNav;
-use crate::views::partials::{DemoResultPlaceholder, DemoSection, HighlightsSection, HomeHero};
+use crate::views::partials::{ChatDemoSection, DemoResultPlaceholder, DemoSection, HighlightsSection, HomeHero};
 
 #[derive(Builder)]
 pub struct Home {
     pub user: Option<UserNav>,
+    pub chat_demo: Option<ChatDemoSection>,
 }
 
 impl maud::Render for Home {
@@ -261,11 +262,25 @@ impl maud::Render for Home {
                             li { "SSE broadcasts updates to all connected visitors." }
                         }
                         div class="cta-row" {
-                            a class="button" href=(Route::Chat.as_str()) { "Open chat demo" }
+                            a class="button" href=(format!("#{}", ChatDemoSection::ANCHOR_ID)) { "Jump to chat" }
                         }
                     })
                     .build()
                     .render())
+
+                @if let Some(chat_demo) = &self.chat_demo {
+                    (chat_demo.render())
+                } @else {
+                    section id=(ChatDemoSection::ANCHOR_ID) class="chat-panel" {
+                        header class="section-header" {
+                            div {
+                                h2 { "Live chat room" }
+                                p class="muted" { "Sign in to send messages and see the chat room." }
+                            }
+                            a class="button secondary" href=(Route::Login.as_str()) { "Sign in" }
+                        }
+                    }
+                }
 
             }
         };

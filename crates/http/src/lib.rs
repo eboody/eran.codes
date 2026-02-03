@@ -1,4 +1,5 @@
 mod auth;
+pub mod chat_demo;
 mod error;
 mod handlers;
 pub mod request;

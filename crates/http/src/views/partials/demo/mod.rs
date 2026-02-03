@@ -1,11 +1,11 @@
-moddef::moddef!(mod { auth_status, boundary_check, chat_message, chat_panel, chat_window, chat_connection, chat_hero, db_check, live_log, network_log, ping, request_meta, session_status, trace_log, moderation_action, key_value_list, demo_section, demo_result, home_hero, highlights_section });
+moddef::moddef!(mod { auth_status, boundary_check, chat_message, chat_panel, chat_window, chat_connection, chat_demo_section, db_check, live_log, network_log, ping, request_meta, session_status, trace_log, moderation_action, key_value_list, demo_section, demo_result, home_hero, highlights_section });
 
 pub use auth_status::AuthStatus;
 pub use boundary_check::BoundaryCheck;
 pub use chat_message::{ChatMessage, ChatMessages};
 pub use chat_panel::{ChatPanel, ChatPanelRole};
 pub use chat_connection::ChatConnection;
-pub use chat_hero::ChatHero;
+pub use chat_demo_section::ChatDemoSection;
 pub use moderation_action::ModerationAction;
 pub use key_value_list::KeyValueList;
 pub use demo_section::DemoSection;
