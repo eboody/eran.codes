@@ -1,7 +1,7 @@
 use bon::Builder;
 use maud::Render;
 
-use crate::views::partials::{KeyValueList, TraceLog};
+use crate::views::partials::{StatusCard, TraceLog};
 
 #[derive(Clone, Copy, Debug)]
 enum AuthStatusLabel {
@@ -51,10 +51,11 @@ impl Render for AuthStatus<'_> {
 
         maud::html! {
             article id="auth-status-target" {
-                div class="demo-result" {
-                    p { strong { (status.as_str()) } }
-                    (KeyValueList::builder().items(items).build().render())
-                }
+                (StatusCard::builder()
+                    .title(status.as_str().to_string())
+                    .items(items)
+                    .build()
+                    .render())
                 (TraceLog::builder().entries(&self.trace).build().render())
             }
         }
