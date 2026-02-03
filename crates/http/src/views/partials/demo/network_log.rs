@@ -38,6 +38,7 @@ impl Render for NetworkLog<'_> {
                                 th { "Session" }
                                 th { "Status" }
                                 th { "Latency (ms)" }
+                                th { "At" }
                             }
                         }
                         tbody {
@@ -51,6 +52,7 @@ impl Render for NetworkLog<'_> {
                                     td { (field_value(entry, "session_id")) }
                                     td { (field_value(entry, "status")) }
                                     td { (field_value(entry, "latency_ms")) }
+                                    td { (field_value(entry, "sent_at")) }
                                 }
                             }
                         }
@@ -99,7 +101,7 @@ fn field_value(entry: &TraceEntry, name: &str) -> String {
 fn source_badge(entry: &TraceEntry) -> maud::Markup {
     let sender = field_value(entry, "sender");
     match ChatRequestSource::from_sender(&sender) {
-        Some(source) => source.badge(),
+        Some(source) => source.badge_with_mismatch(entry),
         None => maud::html! {},
     }
 }
@@ -126,5 +128,34 @@ impl ChatRequestSource {
                 maud::html! { span class="badge secondary" { "Demo" } }
             }
         }
+    }
+
+    fn badge_with_mismatch(self, entry: &TraceEntry) -> maud::Markup {
+        let badge = self.badge();
+        let user_id = field_value(entry, "user_id");
+        let expected = match self {
+            ChatRequestSource::You => "you",
+            ChatRequestSource::Demo => "demo",
+        };
+        let sender = field_value(entry, "sender");
+        let warn = sender != expected;
+        if warn {
+            return maud::html! {
+                (badge)
+                " "
+                span class="badge warning" { "Mismatch" }
+            };
+        }
+        if user_id == "-" {
+            return badge;
+        }
+        if warn {
+            return maud::html! {
+                (badge)
+                " "
+                span class="badge warning" { "Mismatch" }
+            };
+        }
+        badge
     }
 }

@@ -322,6 +322,7 @@ pub async fn audit_middleware(
         value if value == Route::ChatMessagesDemo.as_str() => "demo",
         _ => "-",
     };
+    let sent_at = jiff::Timestamp::now().to_string();
 
     state.trace_log.record_with_session(
         &request_id,
@@ -346,6 +347,7 @@ pub async fn audit_middleware(
                     user_id.clone().unwrap_or_else(|| "-".to_string()),
                 ),
                 ("sender".to_string(), sender.to_string()),
+                ("sent_at".to_string(), sent_at),
             ])
             .build(),
     );
