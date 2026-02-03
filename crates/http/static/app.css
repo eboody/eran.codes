@@ -317,6 +317,71 @@ button.secondary,
   color: var(--pico-muted-color);
 }
 
+.pill.method {
+  text-transform: uppercase;
+}
+
+.pill.path {
+  font-family: "JetBrains Mono", "SF Mono", ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+  font-size: 0.72rem;
+  letter-spacing: 0.01em;
+}
+
+.method-get {
+  border-color: rgba(120, 190, 255, 0.6);
+  color: rgba(140, 210, 255, 0.95);
+}
+
+.method-post {
+  border-color: rgba(140, 210, 140, 0.7);
+  color: rgba(160, 220, 160, 0.95);
+}
+
+.method-put,
+.method-patch {
+  border-color: rgba(255, 196, 80, 0.7);
+  color: rgba(255, 196, 80, 0.95);
+}
+
+.method-delete {
+  border-color: rgba(255, 120, 120, 0.75);
+  color: rgba(255, 140, 140, 0.95);
+}
+
+.method-other {
+  border-color: rgba(180, 180, 200, 0.6);
+  color: rgba(200, 200, 220, 0.9);
+}
+
+.pill.status {
+  font-variant-numeric: tabular-nums;
+}
+
+.status-2xx {
+  border-color: rgba(120, 210, 140, 0.7);
+  color: rgba(150, 220, 160, 0.95);
+}
+
+.status-3xx {
+  border-color: rgba(120, 190, 255, 0.6);
+  color: rgba(140, 210, 255, 0.95);
+}
+
+.status-4xx {
+  border-color: rgba(255, 196, 80, 0.7);
+  color: rgba(255, 196, 80, 0.95);
+}
+
+.status-5xx {
+  border-color: rgba(255, 120, 120, 0.75);
+  color: rgba(255, 140, 140, 0.95);
+}
+
+.status-unknown {
+  border-color: rgba(180, 180, 200, 0.6);
+  color: rgba(200, 200, 220, 0.9);
+}
+
 .badge {
   display: inline-flex;
   align-items: center;

@@ -54,11 +54,11 @@ impl Render for NetworkLog<'_> {
                             tr {
                                 td { (entry.timestamp.clone()) }
                                 td { (source_badge(entry)) }
-                                td { (field_value(entry, "method")) }
-                                td { (field_value(entry, "path")) }
+                                    td { (method_pill(entry)) }
+                                    td { (path_pill(entry)) }
                                 td { (field_value(entry, "user_id")) }
                                 td { (field_value(entry, "session_id")) }
-                                td { (field_value(entry, "status")) }
+                                    td { (status_pill(entry)) }
                                 td { (field_value(entry, "latency_ms")) }
                                 td { (field_value(entry, "sent_at")) }
                             }
@@ -221,6 +221,59 @@ fn sender_badge_class(sender: &str) -> &'static str {
         "-" => "badge secondary",
         _ => "badge secondary",
     }
+}
+
+fn method_pill(entry: &TraceEntry) -> maud::Markup {
+    let method = field_value(entry, "method");
+    if method == "-" {
+        return maud::html! { span class="muted" { "-" } };
+    }
+    maud::html! { span class=(format!("pill method {}", method_class(&method))) { (method) } }
+}
+
+fn path_pill(entry: &TraceEntry) -> maud::Markup {
+    let path = field_value(entry, "path");
+    if path == "-" {
+        return maud::html! { span class="muted" { "-" } };
+    }
+    maud::html! { span class="pill path" { (path) } }
+}
+
+fn status_pill(entry: &TraceEntry) -> maud::Markup {
+    let status = field_value(entry, "status");
+    if status == "-" {
+        return maud::html! { span class="muted" { "-" } };
+    }
+    maud::html! { span class=(format!("pill status {}", status_class(&status))) { (status) } }
+}
+
+fn method_class(method: &str) -> &'static str {
+    match method {
+        "GET" => "method-get",
+        "POST" => "method-post",
+        "PUT" => "method-put",
+        "PATCH" => "method-patch",
+        "DELETE" => "method-delete",
+        _ => "method-other",
+    }
+}
+
+fn status_class(status: &str) -> &'static str {
+    if let Some(code) = status.parse::<u16>().ok() {
+        if code >= 500 {
+            return "status-5xx";
+        }
+        if code >= 400 {
+            return "status-4xx";
+        }
+        if code >= 300 {
+            return "status-3xx";
+        }
+        if code >= 200 {
+            return "status-2xx";
+        }
+    }
+    "status-unknown"
 }
 
 #[derive(Clone, Copy)]
