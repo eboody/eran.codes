@@ -16,6 +16,7 @@ use tracing::{Event, Level};
 use tracing_subscriber::{Layer, registry::LookupSpan};
 
 use crate::{request, sse, views};
+use crate::paths::Route;
 use bon::{bon, Builder};
 use maud::Render;
 
@@ -295,6 +296,8 @@ pub async fn audit_middleware(
         .unwrap_or_else(|| "unknown".to_string());
     let session_id = request::current_context()
         .and_then(|value| value.session_id);
+    let user_id = request::current_context()
+        .and_then(|value| value.user_id);
 
     state.trace_log.record_with_session(
         &request_id,
@@ -314,6 +317,11 @@ pub async fn audit_middleware(
 
     let response = next.run(req).await;
     let latency_ms = started_at.elapsed().as_millis().to_string();
+    let sender = match path.as_str() {
+        value if value == Route::ChatMessages.as_str() => "you",
+        value if value == Route::ChatMessagesDemo.as_str() => "demo",
+        _ => "-",
+    };
 
     state.trace_log.record_with_session(
         &request_id,
@@ -329,6 +337,15 @@ pub async fn audit_middleware(
                 ("status".to_string(), response.status().as_u16().to_string()),
                 ("latency_ms".to_string(), latency_ms),
                 ("request_id".to_string(), request_id.clone()),
+                (
+                    "session_id".to_string(),
+                    session_id.clone().unwrap_or_else(|| "-".to_string()),
+                ),
+                (
+                    "user_id".to_string(),
+                    user_id.clone().unwrap_or_else(|| "-".to_string()),
+                ),
+                ("sender".to_string(), sender.to_string()),
             ])
             .build(),
     );

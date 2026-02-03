@@ -34,6 +34,8 @@ impl Render for NetworkLog<'_> {
                                 th { "Source" }
                                 th { "Method" }
                                 th { "Path" }
+                                th { "User" }
+                                th { "Session" }
                                 th { "Status" }
                                 th { "Latency (ms)" }
                             }
@@ -45,6 +47,8 @@ impl Render for NetworkLog<'_> {
                                     td { (source_badge(entry)) }
                                     td { (field_value(entry, "method")) }
                                     td { (field_value(entry, "path")) }
+                                    td { (field_value(entry, "user_id")) }
+                                    td { (field_value(entry, "session_id")) }
                                     td { (field_value(entry, "status")) }
                                     td { (field_value(entry, "latency_ms")) }
                                 }
@@ -93,8 +97,8 @@ fn field_value(entry: &TraceEntry, name: &str) -> String {
 }
 
 fn source_badge(entry: &TraceEntry) -> maud::Markup {
-    let path = field_value(entry, "path");
-    match ChatRequestSource::from_path(&path) {
+    let sender = field_value(entry, "sender");
+    match ChatRequestSource::from_sender(&sender) {
         Some(source) => source.badge(),
         None => maud::html! {},
     }
@@ -107,14 +111,10 @@ enum ChatRequestSource {
 }
 
 impl ChatRequestSource {
-    fn from_path(path: &str) -> Option<Self> {
-        match path {
-            value if value == crate::paths::Route::ChatMessages.as_str() => {
-                Some(Self::You)
-            }
-            value if value == crate::paths::Route::ChatMessagesDemo.as_str() => {
-                Some(Self::Demo)
-            }
+    fn from_sender(sender: &str) -> Option<Self> {
+        match sender {
+            "you" => Some(Self::You),
+            "demo" => Some(Self::Demo),
             _ => None,
         }
     }
