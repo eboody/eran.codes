@@ -2,7 +2,7 @@ use bon::Builder;
 use maud::Render;
 
 use crate::trace_log::TraceEntry;
-use crate::views::partials::{BadgeKind, LogPanel, LogRow, Pill};
+use crate::views::partials::{BadgeKind, EmptyState, LogPanel, LogRow, Pill};
 
 #[derive(Builder)]
 pub struct NetworkLog<'a> {
@@ -32,7 +32,10 @@ impl Render for NetworkLog<'_> {
             .collect();
 
         let request_body = if request_rows.is_empty() {
-            maud::html! { p class="muted" { "No requests yet. Trigger a demo action to populate this table." } }
+            EmptyState::builder()
+                .message("No requests yet. Trigger a demo action to populate this table.".to_string())
+                .build()
+                .render()
         } else {
             maud::html! {
                 ul class="live-log-entries" {
@@ -49,7 +52,10 @@ impl Render for NetworkLog<'_> {
         };
 
         let sse_body = if sse_rows.is_empty() {
-            maud::html! { p class="muted" { "No SSE pushes yet. Send a chat message to broadcast an update." } }
+            EmptyState::builder()
+                .message("No SSE pushes yet. Send a chat message to broadcast an update.".to_string())
+                .build()
+                .render()
         } else {
             maud::html! {
                 table {
@@ -78,7 +84,10 @@ impl Render for NetworkLog<'_> {
         };
 
         let chat_body = if chat_rows.is_empty() {
-            maud::html! { p class="muted" { "No chat messages yet. Send a message to see request/response flow." } }
+            EmptyState::builder()
+                .message("No chat messages yet. Send a message to see request/response flow.".to_string())
+                .build()
+                .render()
         } else {
             maud::html! {
                 table {

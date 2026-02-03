@@ -2,7 +2,7 @@ use bon::Builder;
 use maud::Render;
 
 use crate::trace_log::TraceEntry;
-use crate::views::partials::{LogPanel, LogRow, Pill};
+use crate::views::partials::{EmptyState, LogPanel, LogRow, Pill};
 
 #[derive(Builder)]
 pub struct LiveLog<'a> {
@@ -12,7 +12,10 @@ pub struct LiveLog<'a> {
 impl Render for LiveLog<'_> {
     fn render(&self) -> maud::Markup {
         let body = if self.entries.is_empty() {
-            maud::html! { p class="muted" { "No events yet. Trigger a demo action to start streaming." } }
+            EmptyState::builder()
+                .message("No events yet. Trigger a demo action to start streaming.".to_string())
+                .build()
+                .render()
         } else {
             maud::html! {
                 ul class="live-log-entries" {

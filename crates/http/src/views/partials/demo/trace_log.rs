@@ -2,7 +2,7 @@ use bon::Builder;
 use maud::Render;
 
 use crate::trace_log::TraceEntry;
-use crate::views::partials::{LogPanel, LogRow, Pill};
+use crate::views::partials::{EmptyState, LogPanel, LogRow, Pill};
 
 #[derive(Builder)]
 pub struct TraceLog<'a> {
@@ -12,7 +12,10 @@ pub struct TraceLog<'a> {
 impl Render for TraceLog<'_> {
     fn render(&self) -> maud::Markup {
         let body = if self.entries.is_empty() {
-            maud::html! { p class="muted" { "No trace entries recorded yet." } }
+            EmptyState::builder()
+                .message("No trace entries recorded yet.".to_string())
+                .build()
+                .render()
         } else {
             maud::html! {
                 ul class="live-log-entries" {
