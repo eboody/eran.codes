@@ -2,6 +2,7 @@ use bon::Builder;
 use maud::Render;
 
 use crate::trace_log::TraceEntry;
+use crate::views::partials::LogPanel;
 
 #[derive(Builder)]
 pub struct LiveLog<'a> {
@@ -22,7 +23,7 @@ impl Render for LiveLog<'_> {
                             span class="pill log-target" { (entry.target.clone()) }
                             span class="log-message" { (entry.message.clone()) }
                             @if let Some(fields) = compact_fields(entry) {
-                                span class="muted log-fields" { (fields) }
+                                span class="pill log-fields" { (fields) }
                             }
                         }
                     }
@@ -31,17 +32,18 @@ impl Render for LiveLog<'_> {
         };
 
         maud::html! {
-            article id="live-log-target" class="demo-result live-log-panel" {
-                p { strong { "Live backend log" } }
-                div class="live-log-scroll" {
-                    (body)
-                }
+            section id="live-log-target" class="live-log-panels" {
+                (LogPanel::builder()
+                    .title("Live backend log".to_string())
+                    .body(body)
+                    .build()
+                    .render())
                 script {
                     (maud::PreEscaped(r#"
 (() => {
   const root = document.getElementById('live-log-target');
   if (!root) return;
-  const scroller = root.querySelector('.live-log-scroll');
+  const scroller = root.querySelector('.network-log-scroll');
   if (!scroller) return;
   const scroll = () => { scroller.scrollTop = scroller.scrollHeight; };
   requestAnimationFrame(scroll);
