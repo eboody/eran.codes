@@ -2,7 +2,7 @@ use bon::Builder;
 
 use crate::paths::Route;
 use crate::views::page::UserNav;
-use crate::views::partials::{ChatDemoSection, CtaRow, DemoResultPlaceholder, DemoSection, HighlightsSection, HomeHero, SectionHeader, SupportCard};
+use crate::views::partials::{ChatDemoSection, CtaRow, DemoResultPlaceholder, DemoSection, FlowMap, HighlightsSection, HomeHero, SectionHeader, SupportCard};
 
 #[derive(Builder)]
 pub struct Home {
@@ -94,17 +94,15 @@ impl maud::Render for Home {
                                 .title("Architecture boundaries + error strategy".to_string())
                                 .description("Follow a single request through each boundary.".to_string())
                                 .body(vec![
-                                    maud::html! {
-                                        div class="flow-map" {
-                                            span class="step" { "http::dto::Register" }
-                                            span class="arrow" { "→" }
-                                            span class="step" { "app::user::RegisterUser" }
-                                            span class="arrow" { "→" }
-                                            span class="step" { "domain::user::{Username, Email}" }
-                                            span class="arrow" { "→" }
-                                            span class="step" { "infra::repo::SqlxUserRepository" }
-                                        }
-                                    },
+                                    FlowMap::builder()
+                                        .steps(vec![
+                                            "http::dto::Register".to_string(),
+                                            "app::user::RegisterUser".to_string(),
+                                            "domain::user::{Username, Email}".to_string(),
+                                            "infra::repo::SqlxUserRepository".to_string(),
+                                        ])
+                                        .build()
+                                        .render(),
                                     maud::html! {
                                         p class="muted" { "Domain types avoid serde/DB concerns; app orchestrates policy; infra owns SQL." }
                                     },
