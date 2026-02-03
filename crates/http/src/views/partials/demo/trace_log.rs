@@ -13,12 +13,12 @@ impl Render for TraceLog<'_> {
     fn render(&self) -> maud::Markup {
         if self.entries.is_empty() {
             return maud::html! {
-                div class="demo-result muted" { "No trace entries recorded yet." }
+                div class="demo-result trace-log muted" { "No trace entries recorded yet." }
             };
         }
 
         maud::html! {
-            div class="demo-result" {
+            div class="demo-result trace-log" {
                 p { strong { "Trace log" } }
                 ul class="live-log-entries" {
                     @for entry in self.entries {

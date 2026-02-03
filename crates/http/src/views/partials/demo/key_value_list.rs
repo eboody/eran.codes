@@ -9,7 +9,7 @@ pub struct KeyValueList {
 impl Render for KeyValueList {
     fn render(&self) -> maud::Markup {
         maud::html! {
-            ul {
+            ul class="key-value-list" {
                 @for (label, value) in &self.items {
                     li { (label) ": " (value) }
                 }

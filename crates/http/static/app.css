@@ -84,6 +84,32 @@
   background: var(--pico-card-background-color);
 }
 
+.demos .demo-result {
+  background: transparent;
+  border-color: rgba(255, 255, 255, 0.08);
+  padding: 0.6rem 0.75rem;
+}
+
+.demos .demo-result + .demo-result {
+  margin-top: 0.6rem;
+}
+
+.key-value-list {
+  margin: 0.5rem 0 0;
+  padding-left: 1rem;
+  font-size: 0.82rem;
+  color: var(--pico-muted-color);
+}
+
+.key-value-list li {
+  margin: 0.2rem 0;
+  word-break: break-word;
+}
+
+.trace-log {
+  padding-top: 0.6rem;
+}
+
 .demos article {
   border: 1px solid var(--pico-muted-border-color);
   border-radius: 18px;
