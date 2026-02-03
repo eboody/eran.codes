@@ -1,7 +1,7 @@
 use bon::Builder;
 use maud::Render;
 
-use crate::views::partials::{KeyValueList, TraceLog};
+use crate::views::partials::{StatusCard, TraceLog};
 
 #[derive(Clone, Copy, Debug)]
 enum DbLookupStatus {
@@ -34,16 +34,14 @@ impl Render for DbCheck<'_> {
         };
         maud::html! {
             article id="db-check-target" {
-                div class="demo-result" {
-                    p { strong { "DB lookup" } }
-                    (KeyValueList::builder()
-                        .items(vec![
-                            ("email".to_string(), self.email.to_string()),
-                            ("result".to_string(), status.as_str().to_string()),
-                        ])
-                        .build()
-                        .render())
-                }
+                (StatusCard::builder()
+                    .title("DB lookup".to_string())
+                    .items(vec![
+                        ("email".to_string(), self.email.to_string()),
+                        ("result".to_string(), status.as_str().to_string()),
+                    ])
+                    .build()
+                    .render())
                 (TraceLog::builder().entries(&self.trace).build().render())
             }
         }

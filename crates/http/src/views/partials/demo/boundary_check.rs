@@ -1,7 +1,7 @@
 use bon::Builder;
 use maud::Render;
 
-use crate::views::partials::{KeyValueList, TraceLog};
+use crate::views::partials::{StatusCard, TraceLog};
 
 #[derive(Builder)]
 pub struct BoundaryCheck<'a> {
@@ -16,17 +16,15 @@ impl Render for BoundaryCheck<'_> {
     fn render(&self) -> maud::Markup {
         maud::html! {
             article id="boundary-target" {
-                div class="demo-result" {
-                    p { strong { (self.label) } }
-                    (KeyValueList::builder()
-                        .items(vec![
-                            ("username".to_string(), self.username.to_string()),
-                            ("email".to_string(), self.email.to_string()),
-                            ("result".to_string(), self.result.to_string()),
-                        ])
-                        .build()
-                        .render())
-                }
+                (StatusCard::builder()
+                    .title(self.label.to_string())
+                    .items(vec![
+                        ("username".to_string(), self.username.to_string()),
+                        ("email".to_string(), self.email.to_string()),
+                        ("result".to_string(), self.result.to_string()),
+                    ])
+                    .build()
+                    .render())
                 (TraceLog::builder().entries(&self.trace).build().render())
             }
         }

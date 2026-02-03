@@ -1,7 +1,7 @@
 use bon::Builder;
 use maud::Render;
 
-use crate::views::partials::{KeyValueList, TraceLog};
+use crate::views::partials::{StatusCard, TraceLog};
 
 #[derive(Builder)]
 pub struct SessionStatus<'a> {
@@ -14,16 +14,14 @@ impl Render for SessionStatus<'_> {
     fn render(&self) -> maud::Markup {
         maud::html! {
             article id="session-status-target" {
-                div class="demo-result" {
-                    p { strong { "Session details" } }
-                    (KeyValueList::builder()
-                        .items(vec![
-                            ("session_id".to_string(), self.session_id.unwrap_or("none").to_string()),
-                            ("expiry".to_string(), self.expiry.unwrap_or("none").to_string()),
-                        ])
-                        .build()
-                        .render())
-                }
+                (StatusCard::builder()
+                    .title("Session details".to_string())
+                    .items(vec![
+                        ("session_id".to_string(), self.session_id.unwrap_or("none").to_string()),
+                        ("expiry".to_string(), self.expiry.unwrap_or("none").to_string()),
+                    ])
+                    .build()
+                    .render())
                 (TraceLog::builder().entries(&self.trace).build().render())
             }
         }
