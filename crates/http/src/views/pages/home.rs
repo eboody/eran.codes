@@ -208,9 +208,6 @@ impl maud::Render for Home {
                             li { "Rate limiting + moderation queue are enforced in the app layer." }
                             li { "SSE broadcasts updates to all connected visitors." }
                         }
-                        div class="cta-row" {
-                            a class="button" href=(format!("#{}", ChatDemoSection::ANCHOR_ID)) { "Jump to chat" }
-                        }
                     })
                     .build()
                     .render())
