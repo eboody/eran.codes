@@ -246,7 +246,7 @@ where
             .unwrap_or_else(|| event.metadata().name().to_string());
 
         let entry = TraceEntry::builder()
-            .timestamp(jiff::Timestamp::now().to_string())
+            .timestamp(now_timestamp_short())
             .level(level.to_string())
             .target(event.metadata().target().to_string())
             .message(message)
@@ -303,7 +303,7 @@ pub async fn audit_middleware(
         &request_id,
         session_id.as_deref(),
         TraceEntry::builder()
-            .timestamp(jiff::Timestamp::now().to_string())
+            .timestamp(now_timestamp_short())
             .level("INFO".to_string())
             .target("demo.request".to_string())
             .message("request.start".to_string())
@@ -322,13 +322,13 @@ pub async fn audit_middleware(
         value if value == Route::ChatMessagesDemo.as_str() => "demo",
         _ => "-",
     };
-    let sent_at = jiff::Timestamp::now().to_string();
+    let sent_at = now_timestamp_short();
 
     state.trace_log.record_with_session(
         &request_id,
         session_id.as_deref(),
         TraceEntry::builder()
-            .timestamp(jiff::Timestamp::now().to_string())
+            .timestamp(now_timestamp_short())
             .level("INFO".to_string())
             .target("demo.request".to_string())
             .message("request.end".to_string())
@@ -357,4 +357,21 @@ pub async fn audit_middleware(
     }
 
     response
+}
+
+pub fn now_timestamp_short() -> String {
+    format_timestamp(jiff::Timestamp::now().to_string())
+}
+
+fn format_timestamp(raw: String) -> String {
+    let mut parts = raw.split('T');
+    let Some(date) = parts.next() else {
+        return raw;
+    };
+    let Some(time) = parts.next() else {
+        return raw;
+    };
+    let time = time.trim_end_matches('Z');
+    let time = time.split('.').next().unwrap_or(time);
+    format!("{date} {time}")
 }

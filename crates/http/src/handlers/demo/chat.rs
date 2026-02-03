@@ -134,7 +134,7 @@ pub async fn post_chat_message(
             .and_then(|value| value.session_id)
             .as_deref(),
         crate::trace_log::TraceEntry::builder()
-            .timestamp(jiff::Timestamp::now().to_string())
+            .timestamp(crate::trace_log::now_timestamp_short())
             .level("INFO".to_string())
             .target("demo.chat".to_string())
             .message("chat.message.incoming".to_string())
@@ -221,7 +221,7 @@ pub async fn post_demo_chat_message(
             .and_then(|value| value.session_id)
             .as_deref(),
         crate::trace_log::TraceEntry::builder()
-            .timestamp(jiff::Timestamp::now().to_string())
+            .timestamp(crate::trace_log::now_timestamp_short())
             .level("INFO".to_string())
             .target("demo.chat".to_string())
             .message("chat.message.incoming".to_string())
@@ -337,7 +337,7 @@ fn broadcast_message(
     state.trace_log.record_sse_event(
         session_id.as_deref(),
         crate::trace_log::TraceEntry::builder()
-            .timestamp(jiff::Timestamp::now().to_string())
+            .timestamp(crate::trace_log::now_timestamp_short())
             .level("INFO".to_string())
             .target("demo.sse".to_string())
             .message("chat message broadcast".to_string())
