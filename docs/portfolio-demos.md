@@ -1,30 +1,26 @@
-# Portfolio Demo Concepts
+# Portfolio Demo Concepts (Consolidated)
 
-Use this list when building or explaining demos in this repo.
+Use this list when building or explaining demos in this repo. The goal is conceptual clarity, not demo count.
 
-## Auth and Sessions
-- axum-login authentication flow with backend provider and AuthSession extractor.
-- Persistent sessions via tower-sessions + SQLx Postgres store.
-- Signed, HTTP-only session cookies with SameSite Lax and inactivity expiry.
-- Background session cleanup task for expired records.
-- Argon2 password hashing and separate credentials table.
+## Identity & Session Durability
+- Auth flow: axum-login provider + AuthSession extractor.
+- Sessions: tower-sessions + SQLx Postgres store with inactivity expiry and cleanup task.
+- Security posture: signed, HTTP-only session cookies with SameSite Lax.
+- Passwords: Argon2 hashing with a separate credentials table.
+- Migrations: schema is defined and evolved in SQL migrations.
 
-## UI and Interaction
-- Server-rendered HTML with Maud layouts and view modules.
-- SSE support with per-visitor signed session cookie.
-- Datastar-compatible request path (signals/patches available in codebase).
-- Live chat room demo: single EventSource, chat stream updates, and form-driven message posts.
-  - Flow: POST message → validate + persist → SSE `chat.message` → Datastar append.
-  - App surface: commands (`PostMessage`, `ListMessages`, `CreateRoom`, `JoinRoom`, `ModerateMessage`) and traits (`ChatRepository`, `ModerationQueue`, `RateLimiter`, `AuditLog`, `Clock`, `IdGenerator`).
-
-## Architecture and Ops
+## Architecture Boundaries + Error Strategy
 - Layered boundaries: domain/app/infra/http with explicit traits.
-- Repo traits + infra implementations for persistence.
-- Centralized HTTP error mapping to page/partial responses.
-- Tracing strategy with request spans and user-id injection.
-- SQL migrations as the schema source of truth.
-- Composition root wiring in src/main.rs for services and stores.
-- Chat room shows request → broadcast flow with persisted history, rate limits, and abuse controls.
-- Chat room enterprise checklist: messages + rooms schema, moderation queue, audit trail.
-  - Boundaries: domain newtypes, app commands/traits, infra SQLx, http DTOs/views.
-  - Migrations: `chat_rooms`, `chat_messages`, `chat_room_memberships`, `chat_moderation_queue`, `chat_audit_log`, `chat_rate_limits`.
+- Flow map: HTTP DTO → app command → domain newtypes → infra SQL.
+- Centralized error mapping for page + Datastar partial responses.
+
+## Observability + Realtime Delivery
+- Tracing: request spans with request_id, session_id, user_id, route, latency.
+- Live logs: backend + network logs streamed via SSE.
+- Realtime: single EventSource per visitor; Datastar patches for signals/fragments.
+
+## Live Chat System (Capstone)
+- Embedded chat demo (two senders) showing request → persist → broadcast.
+- Persistence: messages/rooms/memberships stored in Postgres.
+- Controls: rate limiting, moderation queue, audit trail.
+- SSE fanout: message broadcast via Datastar append.

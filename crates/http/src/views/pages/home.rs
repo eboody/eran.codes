@@ -29,7 +29,7 @@ impl maud::Render for Home {
                     .render())
 
                 (DemoSection::builder()
-                    .title("Demo 1: Auth flow walkthrough".to_string())
+                    .title("Demo A: Identity & Session Durability".to_string())
                     .content(maud::html! {
                         p {
                             "Follow the full flow: "
@@ -45,6 +45,7 @@ impl maud::Render for Home {
                             li { "Sessions are stored in Postgres via tower-sessions." }
                             li { "Session cookies are signed, HttpOnly, SameSite Lax." }
                             li { "Passwords are hashed with Argon2 in a credentials table." }
+                            li { "Migrations define the schema and session tables." }
                         }
                         div class="cta-row" {
                             a class="button" href=(Route::Register.as_str()) { "Start demo" }
@@ -52,36 +53,15 @@ impl maud::Render for Home {
                             button class="button secondary" data-on:click=(format!("@get('{}')", Route::PartialAuthStatus.as_str())) {
                                 "Check auth status"
                             }
+                            button class="button secondary" data-on:click=(format!("@get('{}')", Route::PartialSessionStatus.as_str())) {
+                                "Show session details"
+                            }
                         }
                         (DemoResultPlaceholder::builder()
                             .target_id("auth-status-target".to_string())
                             .message("Click “Check auth status” to load live session info.".to_string())
                             .build()
                             .render())
-                    })
-                    .build()
-                    .render())
-
-                (DemoSection::builder()
-                    .title("Demo 2: Persistent session resilience".to_string())
-                    .content(maud::html! {
-                        p {
-                            "Log in, restart the server, and stay authenticated. "
-                            "Sessions are stored in Postgres and expire on inactivity."
-                        }
-                        ol {
-                            li { "Sign in or register to create a session." }
-                            li { "Restart the server process." }
-                            li { "Reload " strong { (Route::Protected.as_str()) } " and remain signed in." }
-                        }
-                        p class="muted" {
-                            "Session records live in the "
-                            strong { "tower_sessions.session" }
-                            " table and are cleaned up automatically."
-                        }
-                        button class="button secondary" data-on:click=(format!("@get('{}')", Route::PartialSessionStatus.as_str())) {
-                            "Show session details"
-                        }
                         (DemoResultPlaceholder::builder()
                             .target_id("session-status-target".to_string())
                             .message("Click “Show session details” to load the session id and expiry.".to_string())
@@ -105,7 +85,7 @@ impl maud::Render for Home {
                     .render())
 
                 (DemoSection::builder()
-                    .title("Demo 3: Architecture boundary map".to_string())
+                    .title("Demo B: Architecture Boundaries + Error Strategy".to_string())
                     .content(maud::html! {
                         p { "Follow a single request through each boundary." }
                         div class="flow-map" {
@@ -117,15 +97,18 @@ impl maud::Render for Home {
                             span class="arrow" { "→" }
                             span class="step" { "infra::repo::SqlxUserRepository" }
                         }
-                        p class="muted" {
-                            "Domain types avoid serde/DB concerns; app orchestrates policy; infra owns SQL."
-                        }
+                        p class="muted" { "Domain types avoid serde/DB concerns; app orchestrates policy; infra owns SQL." }
+                        p class="muted" { "Errors are mapped centrally into user-facing responses." }
                         div class="cta-row" {
                             button class="button secondary" data-on:click=(format!("@get('{}')", Route::PartialBoundaryCheck.with_query("case=valid"))) {
                                 "Validate sample input"
                             }
                             button class="button secondary" data-on:click=(format!("@get('{}')", Route::PartialBoundaryCheck.with_query("case=invalid"))) {
                                 "Validate invalid input"
+                            }
+                            a class="button secondary" href=(Route::ErrorTest.as_str()) { "Trigger full-page error" }
+                            button class="button secondary" data-on:click=(format!("@get('{}')", Route::ErrorTest.as_str())) {
+                                "Trigger Datastar error"
                             }
                         }
                         (DemoResultPlaceholder::builder()
@@ -138,35 +121,14 @@ impl maud::Render for Home {
                     .render())
 
                 (DemoSection::builder()
-                    .title("Demo 4: Error handling showcase".to_string())
-                    .content(maud::html! {
-                        p { "Errors are mapped centrally into user-facing responses." }
-                        ul {
-                            li { "Consistent status + message rendering." }
-                            li { "HTML page fallback for standard requests." }
-                            li { "Datastar-aware partials for interactive flows." }
-                        }
-                        div class="cta-row" {
-                            a class="button secondary" href=(Route::ErrorTest.as_str()) { "Trigger full-page error" }
-                            button class="button secondary" data-on:click=(format!("@get('{}')", Route::ErrorTest.as_str())) {
-                                "Trigger Datastar error"
-                            }
-                        }
-                        p class="muted" {
-                            "Datastar errors appear in the alert banner above."
-                        }
-                    })
-                    .build()
-                    .render())
-
-                (DemoSection::builder()
-                    .title("Demo 5: Tracing and observability".to_string())
+                    .title("Demo C: Observability + Realtime Delivery".to_string())
                     .content(maud::html! {
                         p { "Each request is wrapped in structured spans with key context fields." }
                         ul {
                             li { "request_id, session_id, user_id, route, and latency_ms." }
                             li { "User id is injected from the auth middleware." }
                             li { "Structured logs support JSON or pretty output." }
+                            li { "Single SSE connection per visitor for live updates." }
                         }
                         p class="muted" {
                             "Configure with "
@@ -183,22 +145,7 @@ impl maud::Render for Home {
                             .message("Click “Fetch request metadata” to load request ids and timing.".to_string())
                             .build()
                             .render())
-                    })
-                    .build()
-                    .render())
-
-                (DemoSection::builder()
-                    .title("Demo 6: SSE and Datastar patches".to_string())
-                    .content(maud::html! {
-                        p { "Live updates stream over a single SSE connection per visitor." }
-                        ul {
-                            li { "Datastar patches update signals and fragments in place." }
-                            li { "Session-scoped SSE handle keyed by signed cookie." }
-                            li { "Client keeps one EventSource at /events." }
-                        }
-                        p class="muted" {
-                            "Use the ping and signal demos to observe live updates."
-                        }
+                        p class="muted" { "Use the ping and signal demos to observe live updates." }
                         div class="grid demos" data-signals=(format!("{{surrealMessage: '{}', originalSurrealMessage: '{}', surrealStatus: 'idle'}}", "Ready.", "Ready.")) {
                             article {
                                 h3 { "SSE ping" }
@@ -253,7 +200,7 @@ impl maud::Render for Home {
                 }
 
                 (DemoSection::builder()
-                    .title("Demo 9: Live chat room".to_string())
+                    .title("Demo D: Live Chat System (Capstone)".to_string())
                     .content(maud::html! {
                         p { "Enterprise chat flow with persistence, moderation, and SSE fanout." }
                         ul {
