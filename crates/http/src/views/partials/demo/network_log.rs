@@ -2,6 +2,7 @@ use bon::Builder;
 use maud::Render;
 
 use crate::trace_log::TraceEntry;
+use crate::views::partials::LogPanel;
 
 #[derive(Builder)]
 pub struct NetworkLog<'a> {
@@ -30,110 +31,132 @@ impl Render for NetworkLog<'_> {
             })
             .collect();
 
-        maud::html! {
-            article id="network-log-target" class="demo-result network-log" {
-                p { strong { "Live network log" } }
-                div class="network-log-scroll" {
-                    @if request_rows.is_empty() {
-                        p class="muted" { "No requests yet. Trigger a demo action to populate this table." }
-                    } @else {
-                        table {
-                            thead {
-                                tr {
-                                    th { "Time" }
-                                    th { "Source" }
-                                    th { "Method" }
-                                    th { "Path" }
-                                    th { "User" }
-                                    th { "Session" }
-                                    th { "Status" }
-                                    th { "Latency (ms)" }
-                                    th { "At" }
-                                }
-                            }
-                            tbody {
-                                @for entry in request_rows.iter().rev().take(20) {
-                                    tr {
-                                        td { (entry.timestamp.clone()) }
-                                        td { (source_badge(entry)) }
-                                        td { (field_value(entry, "method")) }
-                                        td { (field_value(entry, "path")) }
-                                        td { (field_value(entry, "user_id")) }
-                                        td { (field_value(entry, "session_id")) }
-                                        td { (field_value(entry, "status")) }
-                                        td { (field_value(entry, "latency_ms")) }
-                                        td { (field_value(entry, "sent_at")) }
-                                    }
-                                }
-                            }
+        let request_body = if request_rows.is_empty() {
+            maud::html! { p class="muted" { "No requests yet. Trigger a demo action to populate this table." } }
+        } else {
+            maud::html! {
+                table {
+                    thead {
+                        tr {
+                            th { "Time" }
+                            th { "Source" }
+                            th { "Method" }
+                            th { "Path" }
+                            th { "User" }
+                            th { "Session" }
+                            th { "Status" }
+                            th { "Latency (ms)" }
+                            th { "At" }
                         }
                     }
-                    @if sse_rows.is_empty() {
-                        p class="muted" { "No SSE pushes yet. Send a chat message to broadcast an update." }
-                    } @else {
-                        table {
-                            thead {
-                                tr {
-                                    th { "Time" }
-                                    th { "Event" }
-                                    th { "Selector" }
-                                    th { "Mode" }
-                                    th { "Payload (bytes)" }
-                                }
-                            }
-                            tbody {
-                                @for entry in sse_rows.iter().rev().take(20) {
-                                    tr {
-                                        td { (entry.timestamp.clone()) }
-                                        td { (entry.message.clone()) }
-                                        td { (field_value(entry, "selector")) }
-                                        td { (field_value(entry, "mode")) }
-                                        td { (field_value(entry, "payload_bytes")) }
-                                    }
-                                }
-                            }
-                        }
-                    }
-                    @if chat_rows.is_empty() {
-                        p class="muted" { "No chat messages yet. Send a message to see request/response flow." }
-                    } @else {
-                        table {
-                            thead {
-                                tr {
-                                    th { "Time" }
-                                    th { "Direction" }
-                                    th { "Sender" }
-                                    th { "Receiver" }
-                                    th { "User" }
-                                    th { "Body" }
-                                }
-                            }
-                            tbody {
-                                @for entry in chat_rows.iter().rev().take(20) {
-                                    tr {
-                                        td { (entry.timestamp.clone()) }
-                                        td { (field_value(entry, "direction")) }
-                                        td { (sender_label(entry)) }
-                                        td { (field_value(entry, "receiver")) }
-                                        td { (user_label(entry)) }
-                                        td { (field_value(entry, "body")) }
-                                    }
-                                }
+                    tbody {
+                        @for entry in request_rows.iter().rev().take(20) {
+                            tr {
+                                td { (entry.timestamp.clone()) }
+                                td { (source_badge(entry)) }
+                                td { (field_value(entry, "method")) }
+                                td { (field_value(entry, "path")) }
+                                td { (field_value(entry, "user_id")) }
+                                td { (field_value(entry, "session_id")) }
+                                td { (field_value(entry, "status")) }
+                                td { (field_value(entry, "latency_ms")) }
+                                td { (field_value(entry, "sent_at")) }
                             }
                         }
                     }
                 }
+            }
+        };
+
+        let sse_body = if sse_rows.is_empty() {
+            maud::html! { p class="muted" { "No SSE pushes yet. Send a chat message to broadcast an update." } }
+        } else {
+            maud::html! {
+                table {
+                    thead {
+                        tr {
+                            th { "Time" }
+                            th { "Event" }
+                            th { "Selector" }
+                            th { "Mode" }
+                            th { "Payload (bytes)" }
+                        }
+                    }
+                    tbody {
+                        @for entry in sse_rows.iter().rev().take(20) {
+                            tr {
+                                td { (entry.timestamp.clone()) }
+                                td { (entry.message.clone()) }
+                                td { (field_value(entry, "selector")) }
+                                td { (field_value(entry, "mode")) }
+                                td { (field_value(entry, "payload_bytes")) }
+                            }
+                        }
+                    }
+                }
+            }
+        };
+
+        let chat_body = if chat_rows.is_empty() {
+            maud::html! { p class="muted" { "No chat messages yet. Send a message to see request/response flow." } }
+        } else {
+            maud::html! {
+                table {
+                    thead {
+                        tr {
+                            th { "Time" }
+                            th { "Direction" }
+                            th { "Sender" }
+                            th { "Receiver" }
+                            th { "User" }
+                            th { "Body" }
+                        }
+                    }
+                    tbody {
+                        @for entry in chat_rows.iter().rev().take(20) {
+                            tr {
+                                td { (entry.timestamp.clone()) }
+                                td { (field_value(entry, "direction")) }
+                                td { (sender_label(entry)) }
+                                td { (field_value(entry, "receiver")) }
+                                td { (user_label(entry)) }
+                                td { (field_value(entry, "body")) }
+                            }
+                        }
+                    }
+                }
+            }
+        };
+
+        maud::html! {
+            section id="network-log-target" class="network-log-panels" {
+                (LogPanel::builder()
+                    .title("HTTP requests".to_string())
+                    .body(request_body)
+                    .build()
+                    .render())
+                (LogPanel::builder()
+                    .title("SSE pushes".to_string())
+                    .body(sse_body)
+                    .build()
+                    .render())
+                (LogPanel::builder()
+                    .title("Chat message flow".to_string())
+                    .body(chat_body)
+                    .build()
+                    .render())
                 script {
                     (maud::PreEscaped(r#"
 (() => {
   const root = document.getElementById('network-log-target');
   if (!root) return;
-  const scroller = root.querySelector('.network-log-scroll');
-  if (!scroller) return;
-  const scroll = () => { scroller.scrollTop = scroller.scrollHeight; };
-  requestAnimationFrame(scroll);
-  const obs = new MutationObserver(scroll);
-  obs.observe(scroller, { childList: true, subtree: true });
+  const panels = root.querySelectorAll('.network-log-scroll');
+  panels.forEach((panel) => {
+    const scroll = () => { panel.scrollTop = panel.scrollHeight; };
+    requestAnimationFrame(scroll);
+    const obs = new MutationObserver(scroll);
+    obs.observe(panel, { childList: true, subtree: true });
+  });
 })();
                     "#))
                 }
