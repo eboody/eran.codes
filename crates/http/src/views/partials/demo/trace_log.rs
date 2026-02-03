@@ -2,7 +2,7 @@ use bon::Builder;
 use maud::Render;
 
 use crate::trace_log::TraceEntry;
-use crate::views::partials::{LogRow, Pill};
+use crate::views::partials::{LogPanel, LogRow, Pill};
 
 #[derive(Builder)]
 pub struct TraceLog<'a> {
@@ -11,15 +11,10 @@ pub struct TraceLog<'a> {
 
 impl Render for TraceLog<'_> {
     fn render(&self) -> maud::Markup {
-        if self.entries.is_empty() {
-            return maud::html! {
-                div class="demo-result trace-log muted" { "No trace entries recorded yet." }
-            };
-        }
-
-        maud::html! {
-            div class="demo-result trace-log" {
-                p { strong { "Trace log" } }
+        let body = if self.entries.is_empty() {
+            maud::html! { p class="muted" { "No trace entries recorded yet." } }
+        } else {
+            maud::html! {
                 ul class="live-log-entries" {
                     @for entry in self.entries {
                         (LogRow::builder()
@@ -31,6 +26,14 @@ impl Render for TraceLog<'_> {
                     }
                 }
             }
+        };
+
+        maud::html! {
+            (LogPanel::builder()
+                .title("Trace log".to_string())
+                .body(body)
+                .build()
+                .render())
         }
     }
 }
