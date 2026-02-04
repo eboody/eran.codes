@@ -115,9 +115,31 @@ pub enum BadgeKind {
 impl BadgeKind {
     fn class(self) -> &'static str {
         match self {
-            BadgeKind::You => "badge you",
-            BadgeKind::Demo => "badge demo",
-            BadgeKind::Secondary => "badge secondary",
+            BadgeKind::You => "you",
+            BadgeKind::Demo => "demo",
+            BadgeKind::Secondary => "secondary",
+        }
+    }
+}
+
+#[derive(Clone, Copy, Debug)]
+#[allow(dead_code)]
+pub enum PillColor {
+    Slate,
+    Emerald,
+    Amber,
+    Rose,
+    Sky,
+}
+
+impl PillColor {
+    pub fn to_rgb(self) -> &'static str {
+        match self {
+            PillColor::Slate => "rgb(148, 163, 184)",
+            PillColor::Emerald => "rgb(52, 211, 153)",
+            PillColor::Amber => "rgb(251, 191, 36)",
+            PillColor::Rose => "rgb(251, 113, 133)",
+            PillColor::Sky => "rgb(56, 189, 248)",
         }
     }
 }
@@ -144,7 +166,7 @@ impl PillVariant {
             PillVariant::Path => Some("path"),
             PillVariant::Target => Some("log-target"),
             PillVariant::Fields => Some("log-fields"),
-            PillVariant::Badge(kind) => Some(kind.class()),
+            PillVariant::Badge(_) => None,
         }
     }
 }
@@ -160,6 +182,7 @@ pub struct Pill {
     pub text: String,
     #[builder(default)]
     pub variant: PillVariant,
+    pub color: Option<PillColor>,
 }
 
 impl Pill {
@@ -168,6 +191,7 @@ impl Pill {
         Self {
             text,
             variant: PillVariant::Level(kind),
+            color: None,
         }
     }
 
@@ -176,6 +200,7 @@ impl Pill {
         Self {
             text,
             variant: PillVariant::Method(kind),
+            color: None,
         }
     }
 
@@ -184,6 +209,7 @@ impl Pill {
         Self {
             text,
             variant: PillVariant::Status(kind),
+            color: None,
         }
     }
 
@@ -191,6 +217,7 @@ impl Pill {
         Self {
             text,
             variant: PillVariant::Path,
+            color: None,
         }
     }
 
@@ -198,6 +225,7 @@ impl Pill {
         Self {
             text,
             variant: PillVariant::Target,
+            color: None,
         }
     }
 
@@ -205,6 +233,7 @@ impl Pill {
         Self {
             text,
             variant: PillVariant::Fields,
+            color: Some(PillColor::Slate),
         }
     }
 
@@ -212,18 +241,25 @@ impl Pill {
         Self {
             text,
             variant: PillVariant::Badge(kind),
+            color: None,
         }
     }
 }
 
 impl Render for Pill {
     fn render(&self) -> maud::Markup {
-        let class = match self.variant.class() {
-            Some(variant) => format!("pill {}", variant),
-            None => "pill".to_string(),
+        let class = match self.variant {
+            PillVariant::Badge(kind) => format!("badge {}", kind.class()),
+            _ => match self.variant.class() {
+                Some(variant) => format!("pill {}", variant),
+                None => "pill".to_string(),
+            },
         };
+        let style = self
+            .color
+            .map(|color| format!("--pill-accent: {};", color.to_rgb()));
         maud::html! {
-            span class=(class) { (&self.text) }
+            span class=(class) style=[style] { (&self.text) }
         }
     }
 }

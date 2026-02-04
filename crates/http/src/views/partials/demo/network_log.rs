@@ -173,13 +173,14 @@ fn user_label(entry: &TraceEntry) -> maud::Markup {
         .next()
         .unwrap_or(user_id.as_str());
     let sender = field_value(entry, "sender");
-    if sender == "you" {
-        maud::html! { span class="badge you" { "You (" (short_id) ")" } }
+    let (label, kind) = if sender == "you" {
+        (format!("You ({short_id})"), BadgeKind::You)
     } else if sender == "demo" {
-        maud::html! { span class="badge demo" { "Demo (" (short_id) ")" } }
+        (format!("Demo ({short_id})"), BadgeKind::Demo)
     } else {
-        maud::html! { span class="badge secondary" { "User (" (short_id) ")" } }
-    }
+        (format!("User ({short_id})"), BadgeKind::Secondary)
+    };
+    Pill::badge(label, kind).render()
 }
 
 fn sender_label(entry: &TraceEntry) -> maud::Markup {
@@ -190,18 +191,12 @@ fn sender_label(entry: &TraceEntry) -> maud::Markup {
         "-" => "Unknown",
         _ => "User",
     };
-    maud::html! {
-        span class=(sender_badge_class(&sender)) { (label) }
-    }
-}
-
-fn sender_badge_class(sender: &str) -> &'static str {
-    match sender {
-        "you" => "badge you",
-        "demo" => "badge demo",
-        "-" => "badge secondary",
-        _ => "badge secondary",
-    }
+    let kind = match sender.as_str() {
+        "you" => BadgeKind::You,
+        "demo" => BadgeKind::Demo,
+        _ => BadgeKind::Secondary,
+    };
+    Pill::badge(label.to_string(), kind).render()
 }
 
 fn request_pills(entry: &TraceEntry) -> Vec<Pill> {
