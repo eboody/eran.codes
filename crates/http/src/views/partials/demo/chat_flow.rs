@@ -2,7 +2,7 @@ use bon::Builder;
 use maud::Render;
 
 use crate::trace_log::TraceEntry;
-use crate::views::partials::{BadgeKind, EmptyState, LogPanel, LogRow, Pill};
+use crate::views::partials::{BadgeKind, EmptyState, LogPanel, Pill};
 
 #[derive(Clone, Debug, Builder)]
 pub struct ChatFlow<'a> {
@@ -18,14 +18,28 @@ impl Render for ChatFlow<'_> {
                 .render()
         } else {
             maud::html! {
-                ul class="live-log-entries" {
-                    @for entry in self.entries.iter().rev().take(20) {
-                        (LogRow::builder()
-                            .timestamp(entry.timestamp.clone())
-                            .message(field_value(entry, "body"))
-                            .pills(chat_pills(entry))
-                            .build()
-                            .render())
+                table class="chat-flow-table" {
+                    thead {
+                        tr {
+                            th { "Time" }
+                            th { "Direction" }
+                            th { "Sender" }
+                            th { "Receiver" }
+                            th { "User" }
+                            th { "Body" }
+                        }
+                    }
+                    tbody {
+                        @for entry in self.entries.iter().rev().take(20) {
+                            tr {
+                                td { (entry.timestamp.clone()) }
+                                td { (direction_pill(entry).render()) }
+                                td { (sender_pill(entry).render()) }
+                                td { (receiver_pill(entry).render()) }
+                                td { (user_pill(entry).render()) }
+                                td { (field_value(entry, "body")) }
+                            }
+                        }
                     }
                 }
             }
@@ -37,16 +51,6 @@ impl Render for ChatFlow<'_> {
             .build()
             .render()
     }
-}
-
-fn chat_pills(entry: &TraceEntry) -> Vec<Pill> {
-    let mut pills = Vec::new();
-    pills.push(Pill::level(entry.level.clone()));
-    pills.push(direction_pill(entry));
-    pills.push(sender_pill(entry));
-    pills.push(receiver_pill(entry));
-    pills.push(user_pill(entry));
-    pills
 }
 
 fn direction_pill(entry: &TraceEntry) -> Pill {
