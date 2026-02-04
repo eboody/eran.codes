@@ -30,9 +30,9 @@ impl Render for ChatDemoSection {
                     .action(maud::html! {
                         a class="button secondary" href=(Route::ChatModeration.as_str()) { "Moderation queue" }
                     })
+                    .meta(maud::html! { p class="muted" { "Room: " (&self.room_name) } })
                     .build()
                     .render())
-                p class="muted" { "Room: " (&self.room_name) }
                 (ChatConnection::builder()
                     .connected_signal("$sseConnected".to_string())
                     .build()

@@ -6,6 +6,7 @@ pub struct SectionHeader {
     pub title: String,
     pub subtitle: Option<String>,
     pub action: Option<maud::Markup>,
+    pub meta: Option<maud::Markup>,
 }
 
 impl Render for SectionHeader {
@@ -21,6 +22,9 @@ impl Render for SectionHeader {
                 @if let Some(action) = &self.action {
                     (action.clone())
                 }
+            }
+            @if let Some(meta) = &self.meta {
+                div class="section-meta" { (meta.clone()) }
             }
         }
     }

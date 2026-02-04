@@ -117,6 +117,19 @@
   background: var(--pico-card-background-color);
 }
 
+.section-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  margin-bottom: 1rem;
+}
+
+.section-meta {
+  margin-top: -0.5rem;
+  margin-bottom: 0.5rem;
+}
+
 .flow-map {
   display: flex;
   flex-wrap: wrap;
