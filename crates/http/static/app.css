@@ -417,31 +417,20 @@ button.secondary,
   color: rgba(200, 200, 220, 0.9);
 }
 
-.badge {
-  display: inline-flex;
-  align-items: center;
-  padding: 0.2rem 0.6rem;
-  border-radius: 999px;
-  background: var(--pico-primary-background);
-  color: var(--pico-primary-inverse);
-  font-size: 0.7rem;
-  font-weight: 700;
-  text-transform: uppercase;
-  letter-spacing: 0.08em;
-}
-
-.badge.secondary {
+.pill.badge-secondary {
   background: transparent;
   color: var(--pico-color);
   border: 1px solid var(--pico-muted-border-color);
 }
 
-.badge.you {
+.pill.badge-you {
   background: #0f766e;
   color: #f8fafc;
+  border-color: #0f766e;
 }
 
-.badge.demo {
+.pill.badge-demo {
   background: #f59e0b;
   color: #1f2937;
+  border-color: #f59e0b;
 }

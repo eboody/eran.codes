@@ -115,9 +115,9 @@ pub enum BadgeKind {
 impl BadgeKind {
     fn class(self) -> &'static str {
         match self {
-            BadgeKind::You => "you",
-            BadgeKind::Demo => "demo",
-            BadgeKind::Secondary => "secondary",
+            BadgeKind::You => "badge-you",
+            BadgeKind::Demo => "badge-demo",
+            BadgeKind::Secondary => "badge-secondary",
         }
     }
 }
@@ -166,7 +166,7 @@ impl PillVariant {
             PillVariant::Path => Some("path"),
             PillVariant::Target => Some("log-target"),
             PillVariant::Fields => Some("log-fields"),
-            PillVariant::Badge(_) => None,
+            PillVariant::Badge(kind) => Some(kind.class()),
         }
     }
 }
@@ -248,12 +248,9 @@ impl Pill {
 
 impl Render for Pill {
     fn render(&self) -> maud::Markup {
-        let class = match self.variant {
-            PillVariant::Badge(kind) => format!("badge {}", kind.class()),
-            _ => match self.variant.class() {
-                Some(variant) => format!("pill {}", variant),
-                None => "pill".to_string(),
-            },
+        let class = match self.variant.class() {
+            Some(variant) => format!("pill {}", variant),
+            None => "pill".to_string(),
         };
         let style = self
             .color
