@@ -2,7 +2,7 @@ use bon::Builder;
 use maud::Render;
 
 use crate::trace_log::TraceEntry;
-use crate::views::partials::{ChatFlow, DataTable, EmptyState, LogPanel, LogRow, Pill, TableVariant};
+use crate::views::partials::{ChatFlow, DataTable, EmptyState, LogPanel, Pill, TableVariant};
 
 #[derive(Builder)]
 pub struct NetworkLog<'a> {
@@ -37,18 +37,34 @@ impl Render for NetworkLog<'_> {
                 .build()
                 .render()
         } else {
-            maud::html! {
-                ul class="live-log-entries" {
-                    @for entry in request_rows.iter().rev().take(20) {
-                        (LogRow::builder()
-                            .timestamp(entry.timestamp.clone())
-                            .message(entry.message.clone())
-                            .pills(request_pills(entry))
-                            .build()
-                            .render())
-                    }
-                }
-            }
+            let rows = request_rows
+                .iter()
+                .rev()
+                .take(20)
+                .map(|entry| {
+                    vec![
+                        maud::html! { (entry.timestamp.clone()) },
+                        maud::html! { (status_pill(entry).render()) },
+                        maud::html! { (method_pill(entry).render()) },
+                        maud::html! { (path_pill(entry).render()) },
+                        maud::html! { (source_pill(entry).render()) },
+                        maud::html! { (latency_pill(entry).map(|pill| pill.render()).unwrap_or_default()) },
+                    ]
+                })
+                .collect::<Vec<_>>();
+            DataTable::builder()
+                .headers(vec![
+                    "Time".to_string(),
+                    "Status".to_string(),
+                    "Method".to_string(),
+                    "Path".to_string(),
+                    "Source".to_string(),
+                    "Latency".to_string(),
+                ])
+                .rows(rows)
+                .variant(TableVariant::Default)
+                .build()
+                .render()
         };
 
         let sse_body = if sse_rows.is_empty() {
@@ -130,22 +146,6 @@ fn field_value(entry: &TraceEntry, name: &str) -> String {
         .unwrap_or_else(|| "-".to_string())
 }
 
-fn request_pills(entry: &TraceEntry) -> Vec<Pill> {
-    let mut pills = Vec::new();
-    pills.push(Pill::level(entry.level.clone()));
-    pills.push(status_pill(entry));
-    pills.push(method_pill(entry));
-    pills.push(path_pill(entry));
-    pills.push(source_pill(entry));
-    if let Some(latency) = latency_pill(entry) {
-        pills.push(latency);
-    }
-    if let Some(user) = user_pill(entry) {
-        pills.push(user);
-    }
-    pills
-}
-
 fn method_pill(entry: &TraceEntry) -> Pill {
     let method = field_value(entry, "method");
     if method == "-" {
@@ -176,15 +176,6 @@ fn latency_pill(entry: &TraceEntry) -> Option<Pill> {
         return None;
     }
     Some(Pill::fields(format!("latency_ms={value}")))
-}
-
-fn user_pill(entry: &TraceEntry) -> Option<Pill> {
-    let value = field_value(entry, "user_id");
-    if value == "-" {
-        return None;
-    }
-    let short = value.split('-').next().unwrap_or(value.as_str());
-    Some(Pill::fields(format!("user={short}")))
 }
 
 fn source_pill(entry: &TraceEntry) -> Pill {
