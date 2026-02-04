@@ -172,29 +172,21 @@ fn user_label(entry: &TraceEntry) -> maud::Markup {
         .split('-')
         .next()
         .unwrap_or(user_id.as_str());
-    let sender = field_value(entry, "sender");
-    let (label, kind) = if sender == "you" {
-        (format!("You ({short_id})"), BadgeKind::You)
-    } else if sender == "demo" {
-        (format!("Demo ({short_id})"), BadgeKind::Demo)
-    } else {
-        (format!("User ({short_id})"), BadgeKind::Secondary)
+    let sender = ChatSender::from_entry(entry);
+    let (label, kind) = match sender {
+        ChatSender::You => (format!("You ({short_id})"), BadgeKind::You),
+        ChatSender::Demo => (format!("Demo ({short_id})"), BadgeKind::Demo),
+        ChatSender::Unknown => (format!("User ({short_id})"), BadgeKind::Secondary),
     };
     Pill::badge(label, kind).render()
 }
 
 fn sender_label(entry: &TraceEntry) -> maud::Markup {
-    let sender = field_value(entry, "sender");
-    let label = match sender.as_str() {
-        "you" => "You",
-        "demo" => "Demo",
-        "-" => "Unknown",
-        _ => "User",
-    };
-    let kind = match sender.as_str() {
-        "you" => BadgeKind::You,
-        "demo" => BadgeKind::Demo,
-        _ => BadgeKind::Secondary,
+    let sender = ChatSender::from_entry(entry);
+    let (label, kind) = match sender {
+        ChatSender::You => ("You", BadgeKind::You),
+        ChatSender::Demo => ("Demo", BadgeKind::Demo),
+        ChatSender::Unknown => ("User", BadgeKind::Secondary),
     };
     Pill::badge(label.to_string(), kind).render()
 }
@@ -257,11 +249,29 @@ fn user_pill(entry: &TraceEntry) -> Option<Pill> {
 }
 
 fn source_pill(entry: &TraceEntry) -> Pill {
-    let sender = field_value(entry, "sender");
-    let kind = match sender.as_str() {
-        "you" => BadgeKind::You,
-        "demo" => BadgeKind::Demo,
-        _ => BadgeKind::Secondary,
+    let sender = ChatSender::from_entry(entry);
+    let (label, kind) = match sender {
+        ChatSender::You => ("you", BadgeKind::You),
+        ChatSender::Demo => ("demo", BadgeKind::Demo),
+        ChatSender::Unknown => ("unknown", BadgeKind::Secondary),
     };
-    Pill::badge(sender, kind)
+    Pill::badge(label.to_string(), kind)
+}
+
+#[derive(Clone, Copy, Debug)]
+enum ChatSender {
+    You,
+    Demo,
+    Unknown,
+}
+
+impl ChatSender {
+    fn from_entry(entry: &TraceEntry) -> Self {
+        let sender = field_value(entry, "sender");
+        match sender.as_str() {
+            "you" => Self::You,
+            "demo" => Self::Demo,
+            _ => Self::Unknown,
+        }
+    }
 }
