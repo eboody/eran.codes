@@ -2,7 +2,7 @@ use bon::Builder;
 use maud::Render;
 
 use crate::trace_log::TraceEntry;
-use crate::views::partials::{BadgeKind, EmptyState, LogPanel, Pill};
+use crate::views::partials::{BadgeKind, DataTable, EmptyState, LogPanel, Pill, TableVariant};
 
 #[derive(Clone, Debug, Builder)]
 pub struct ChatFlow<'a> {
@@ -17,32 +17,35 @@ impl Render for ChatFlow<'_> {
                 .build()
                 .render()
         } else {
-            maud::html! {
-                table class="chat-flow-table" {
-                    thead {
-                        tr {
-                            th { "Time" }
-                            th { "Direction" }
-                            th { "Sender" }
-                            th { "Receiver" }
-                            th { "User" }
-                            th { "Body" }
-                        }
-                    }
-                    tbody {
-                        @for entry in self.entries.iter().rev().take(20) {
-                            tr {
-                                td { (entry.timestamp.clone()) }
-                                td { (direction_pill(entry).render()) }
-                                td { (sender_pill(entry).render()) }
-                                td { (receiver_pill(entry).render()) }
-                                td { (user_pill(entry).render()) }
-                                td { (field_value(entry, "body")) }
-                            }
-                        }
-                    }
-                }
-            }
+            let rows = self
+                .entries
+                .iter()
+                .rev()
+                .take(20)
+                .map(|entry| {
+                    vec![
+                        maud::html! { (entry.timestamp.clone()) },
+                        maud::html! { (direction_pill(entry).render()) },
+                        maud::html! { (sender_pill(entry).render()) },
+                        maud::html! { (receiver_pill(entry).render()) },
+                        maud::html! { (user_pill(entry).render()) },
+                        maud::html! { (field_value(entry, "body")) },
+                    ]
+                })
+                .collect::<Vec<_>>();
+            DataTable::builder()
+                .headers(vec![
+                    "Time".to_string(),
+                    "Direction".to_string(),
+                    "Sender".to_string(),
+                    "Receiver".to_string(),
+                    "User".to_string(),
+                    "Body".to_string(),
+                ])
+                .rows(rows)
+                .variant(TableVariant::ChatFlow)
+                .build()
+                .render()
         };
 
         LogPanel::builder()

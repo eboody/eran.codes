@@ -2,7 +2,7 @@ use bon::Builder;
 use maud::Render;
 
 use crate::trace_log::TraceEntry;
-use crate::views::partials::{ChatFlow, EmptyState, LogPanel, LogRow, Pill};
+use crate::views::partials::{ChatFlow, DataTable, EmptyState, LogPanel, LogRow, Pill, TableVariant};
 
 #[derive(Builder)]
 pub struct NetworkLog<'a> {
@@ -57,30 +57,32 @@ impl Render for NetworkLog<'_> {
                 .build()
                 .render()
         } else {
-            maud::html! {
-                table {
-                    thead {
-                        tr {
-                            th { "Time" }
-                            th { "Event" }
-                            th { "Selector" }
-                            th { "Mode" }
-                            th { "Payload (bytes)" }
-                        }
-                    }
-                    tbody {
-                        @for entry in sse_rows.iter().rev().take(20) {
-                            tr {
-                                td { (entry.timestamp.clone()) }
-                                td { (entry.message.clone()) }
-                                td { (field_value(entry, "selector")) }
-                                td { (field_value(entry, "mode")) }
-                                td { (field_value(entry, "payload_bytes")) }
-                            }
-                        }
-                    }
-                }
-            }
+            let rows = sse_rows
+                .iter()
+                .rev()
+                .take(20)
+                .map(|entry| {
+                    vec![
+                        maud::html! { (entry.timestamp.clone()) },
+                        maud::html! { (entry.message.clone()) },
+                        maud::html! { (field_value(entry, "selector")) },
+                        maud::html! { (field_value(entry, "mode")) },
+                        maud::html! { (field_value(entry, "payload_bytes")) },
+                    ]
+                })
+                .collect::<Vec<_>>();
+            DataTable::builder()
+                .headers(vec![
+                    "Time".to_string(),
+                    "Event".to_string(),
+                    "Selector".to_string(),
+                    "Mode".to_string(),
+                    "Payload (bytes)".to_string(),
+                ])
+                .rows(rows)
+                .variant(TableVariant::Default)
+                .build()
+                .render()
         };
 
         maud::html! {

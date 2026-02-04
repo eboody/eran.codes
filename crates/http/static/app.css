@@ -317,24 +317,28 @@ button.secondary,
   gap: 0.4rem;
 }
 
-.chat-flow-table {
+.data-table {
   width: 100%;
   border-collapse: collapse;
   font-size: 0.78rem;
 }
 
-.chat-flow-table th,
-.chat-flow-table td {
+.data-table th,
+.data-table td {
   padding: 0.45rem 0.4rem;
   border-bottom: 1px solid rgba(255, 255, 255, 0.06);
   vertical-align: top;
 }
 
-.chat-flow-table th {
+.data-table th {
   text-align: left;
   color: var(--pico-muted-color);
   font-weight: 600;
   white-space: nowrap;
+}
+
+.data-table-chat td:last-child {
+  min-width: 140px;
 }
 
 .log-level {
