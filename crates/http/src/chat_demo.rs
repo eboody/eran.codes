@@ -92,7 +92,9 @@ async fn to_message_views(
 
 pub fn format_message_time(value: std::time::SystemTime) -> String {
     let time = time::OffsetDateTime::from(value);
-    let format = time::format_description::parse("[hour repr:24 padding:zero]:[minute padding:zero]")
+    let format = time::format_description::parse(
+        "[year]-[month]-[day] [hour repr:24 padding:zero]:[minute padding:zero]",
+    )
         .unwrap_or_else(|_| Vec::new());
     time.format(&format).unwrap_or_else(|_| "--:--".to_string())
 }
