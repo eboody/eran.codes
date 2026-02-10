@@ -84,12 +84,13 @@ async fn main() -> Result<()> {
 fn init_tracing(trace_log: http::trace_log::TraceLogStore) {
     let env_filter =
         EnvFilter::try_from_default_env().unwrap_or_else(|_| "info,http=debug".into());
-    let log_format = std::env::var("LOG_FORMAT").unwrap_or_else(|_| "pretty".to_string());
+    let log_format = LogFormat::from_env();
 
     let subscriber = tracing_subscriber::registry().with(env_filter);
     let trace_layer = http::trace_log::TraceLogLayer::new(trace_log);
 
-    if log_format == "json" {
+    match log_format {
+        LogFormat::Json => {
         subscriber
             .with(
                 tracing_subscriber::fmt::layer()
@@ -99,10 +100,56 @@ fn init_tracing(trace_log: http::trace_log::TraceLogStore) {
             )
             .with(trace_layer)
             .init();
-    } else {
+        }
+        LogFormat::Pretty => {
         subscriber
             .with(tracing_subscriber::fmt::layer().pretty())
             .with(trace_layer)
             .init();
+        }
+    }
+}
+
+#[derive(Clone, Copy, Debug)]
+enum LogFormat {
+    Json,
+    Pretty,
+}
+
+impl LogFormat {
+    fn from_env() -> Self {
+        LogFormatValue::from_env().into_format()
+    }
+}
+
+#[derive(Clone, Copy, Debug)]
+enum LogFormatValue {
+    Json,
+    Pretty,
+    Unknown,
+}
+
+impl LogFormatValue {
+    fn from_env() -> Self {
+        std::env::var("LOG_FORMAT")
+            .ok()
+            .as_deref()
+            .map(Self::from_str)
+            .unwrap_or(Self::Pretty)
+    }
+
+    fn from_str(value: &str) -> Self {
+        match value {
+            "json" => Self::Json,
+            "pretty" => Self::Pretty,
+            _ => Self::Unknown,
+        }
+    }
+
+    fn into_format(self) -> LogFormat {
+        match self {
+            Self::Json => LogFormat::Json,
+            Self::Pretty | Self::Unknown => LogFormat::Pretty,
+        }
     }
 }
