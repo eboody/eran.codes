@@ -2,26 +2,27 @@ use bon::Builder;
 use maud::Render;
 
 use crate::views::partials::{StatusCard, TraceLog};
+use crate::types::Text;
 
-#[derive(Builder)]
-pub struct BoundaryCheck<'a> {
-    pub label: &'a str,
-    pub username: &'a str,
-    pub email: &'a str,
-    pub result: &'a str,
+#[derive(Clone, Debug, Builder)]
+pub struct BoundaryCheck {
+    pub label: Text,
+    pub username: Text,
+    pub email: Text,
+    pub result: Text,
     pub trace: Vec<crate::trace_log::TraceEntry>,
 }
 
-impl Render for BoundaryCheck<'_> {
+impl Render for BoundaryCheck {
     fn render(&self) -> maud::Markup {
         maud::html! {
             article id="boundary-target" {
                 (StatusCard::builder()
-                    .title(self.label.to_string())
+                    .title(self.label.clone())
                     .items(vec![
-                        ("username".to_string(), self.username.to_string()),
-                        ("email".to_string(), self.email.to_string()),
-                        ("result".to_string(), self.result.to_string()),
+                        (Text::from("username"), self.username.clone()),
+                        (Text::from("email"), self.email.clone()),
+                        (Text::from("result"), self.result.clone()),
                     ])
                     .build()
                     .render())

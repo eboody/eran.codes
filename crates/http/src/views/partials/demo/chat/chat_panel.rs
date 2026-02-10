@@ -3,6 +3,7 @@ use maud::Render;
 
 use crate::views::partials::ChatWindow;
 use crate::paths::Route;
+use crate::types::Text;
 
 #[derive(Clone, Copy, Debug)]
 pub enum ChatPanelRole {
@@ -74,7 +75,7 @@ impl Render for ChatPanel {
         maud::html! {
             div class="chat-stack" {
                 (ChatWindow::builder()
-                    .maybe_title(Some(self.role.title().to_string()))
+                    .maybe_title(Some(Text::from(self.role.title())))
                     .messages(self.messages.clone())
                     .build()
                     .render())

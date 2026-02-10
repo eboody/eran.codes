@@ -2,8 +2,12 @@ use bon::Builder;
 use maud::Render;
 
 use crate::trace_log::TraceEntry;
-use crate::views::partials::{ChatFlow, DataTable, EmptyState, FieldValue, LogPanel, Pill, TableVariant};
-use crate::trace_log::{LogMessageKind, LogTargetKind};
+use crate::types::Text;
+use crate::views::partials::components::{
+    DataTable, EmptyState, FieldValue, LogPanel, Pill, TableVariant,
+};
+use crate::views::partials::ChatFlow;
+use crate::trace_log::{LogMessageKind, LogMessageKnown, LogTargetKind, LogTargetKnown};
 
 #[derive(Builder)]
 pub struct NetworkLog<'a> {
@@ -16,32 +20,46 @@ impl Render for NetworkLog<'_> {
             .entries
             .iter()
             .filter(|entry| {
-                matches!(LogTargetKind::from_str(&entry.target), LogTargetKind::DemoRequest)
-                    && matches!(LogMessageKind::from_str(&entry.message), LogMessageKind::RequestEnd)
+                matches!(
+                    LogTargetKind::from_str(&entry.target.to_string()),
+                    LogTargetKind::Known(LogTargetKnown::DemoRequest)
+                ) && matches!(
+                    LogMessageKind::from_str(&entry.message.to_string()),
+                    LogMessageKind::Known(LogMessageKnown::RequestEnd)
+                )
             })
             .collect();
         let sse_rows: Vec<&TraceEntry> = self
             .entries
             .iter()
-            .filter(|entry| matches!(LogTargetKind::from_str(&entry.target), LogTargetKind::DemoSse))
+            .filter(|entry| matches!(
+                LogTargetKind::from_str(&entry.target.to_string()),
+                LogTargetKind::Known(LogTargetKnown::DemoSse)
+            ))
             .collect();
         let chat_rows: Vec<&TraceEntry> = self
             .entries
             .iter()
             .filter(|entry| {
-                let target_kind = LogTargetKind::from_str(&entry.target);
-                let message_kind = LogMessageKind::from_str(&entry.message);
+                let target_kind = LogTargetKind::from_str(&entry.target.to_string());
+                let message_kind = LogMessageKind::from_str(&entry.message.to_string());
                 matches!(
                     (target_kind, message_kind),
-                    (LogTargetKind::DemoChat, LogMessageKind::ChatMessageIncoming)
-                        | (LogTargetKind::DemoSse, LogMessageKind::ChatMessageBroadcast)
+                    (
+                        LogTargetKind::Known(LogTargetKnown::DemoChat),
+                        LogMessageKind::Known(LogMessageKnown::ChatMessageIncoming)
+                    )
+                        | (
+                            LogTargetKind::Known(LogTargetKnown::DemoSse),
+                            LogMessageKind::Known(LogMessageKnown::ChatMessageBroadcast)
+                        )
                 )
             })
             .collect();
 
         let request_body = if request_rows.is_empty() {
             EmptyState::builder()
-                .message("No requests yet. Trigger a demo action to populate this table.".to_string())
+                .message(Text::from("No requests yet. Trigger a demo action to populate this table."))
                 .build()
                 .render()
         } else {
@@ -51,7 +69,7 @@ impl Render for NetworkLog<'_> {
                 .take(20)
                 .map(|entry| {
                     vec![
-                        maud::html! { (entry.timestamp.clone()) },
+                        maud::html! { (entry.timestamp.to_string()) },
                         maud::html! { (status_pill(entry).render()) },
                         maud::html! { (method_pill(entry).render()) },
                         maud::html! { (path_pill(entry).render()) },
@@ -62,12 +80,12 @@ impl Render for NetworkLog<'_> {
                 .collect::<Vec<_>>();
             DataTable::builder()
                 .headers(vec![
-                    "Time".to_string(),
-                    "Status".to_string(),
-                    "Method".to_string(),
-                    "Path".to_string(),
-                    "Source".to_string(),
-                    "Latency".to_string(),
+                    Text::from("Time"),
+                    Text::from("Status"),
+                    Text::from("Method"),
+                    Text::from("Path"),
+                    Text::from("Source"),
+                    Text::from("Latency"),
                 ])
                 .rows(rows)
                 .variant(TableVariant::Default)
@@ -77,7 +95,7 @@ impl Render for NetworkLog<'_> {
 
         let sse_body = if sse_rows.is_empty() {
             EmptyState::builder()
-                .message("No SSE pushes yet. Send a chat message to broadcast an update.".to_string())
+                .message(Text::from("No SSE pushes yet. Send a chat message to broadcast an update."))
                 .build()
                 .render()
         } else {
@@ -87,21 +105,21 @@ impl Render for NetworkLog<'_> {
                 .take(20)
                 .map(|entry| {
                     vec![
-                        maud::html! { (entry.timestamp.clone()) },
-                        maud::html! { (entry.message.clone()) },
-                        maud::html! { (field_value_text(entry, "selector")) },
-                        maud::html! { (field_value_text(entry, "mode")) },
-                        maud::html! { (field_value_text(entry, "payload_bytes")) },
+                        maud::html! { (entry.timestamp.to_string()) },
+                        maud::html! { (entry.message.to_string()) },
+                        maud::html! { (field_value_text(entry, &crate::types::LogFieldName::from("selector")).unwrap_or_else(|| Text::from("-")).to_string()) },
+                        maud::html! { (field_value_text(entry, &crate::types::LogFieldName::from("mode")).unwrap_or_else(|| Text::from("-")).to_string()) },
+                        maud::html! { (field_value_text(entry, &crate::types::LogFieldName::from("payload_bytes")).unwrap_or_else(|| Text::from("-")).to_string()) },
                     ]
                 })
                 .collect::<Vec<_>>();
             DataTable::builder()
                 .headers(vec![
-                    "Time".to_string(),
-                    "Event".to_string(),
-                    "Selector".to_string(),
-                    "Mode".to_string(),
-                    "Payload (bytes)".to_string(),
+                    Text::from("Time"),
+                    Text::from("Event"),
+                    Text::from("Selector"),
+                    Text::from("Mode"),
+                    Text::from("Payload (bytes)"),
                 ])
                 .rows(rows)
                 .variant(TableVariant::Default)
@@ -112,12 +130,12 @@ impl Render for NetworkLog<'_> {
         maud::html! {
             section id="network-log-target" class="network-log-panels" {
                 (LogPanel::builder()
-                    .title("HTTP requests".to_string())
+                    .title(Text::from("HTTP requests"))
                     .body(request_body)
                     .build()
                     .render())
                 (LogPanel::builder()
-                    .title("SSE pushes".to_string())
+                    .title(Text::from("SSE pushes"))
                     .body(sse_body)
                     .build()
                     .render())
@@ -145,51 +163,53 @@ impl Render for NetworkLog<'_> {
     }
 }
 
-fn field_value(entry: &TraceEntry, name: &str) -> FieldValue {
+fn field_value(entry: &TraceEntry, name: &crate::types::LogFieldName) -> FieldValue {
     entry
         .fields
         .iter()
         .find(|(field, _)| field == name)
-        .map(|(_, value)| FieldValue::from_str(value))
+        .map(|(_, value)| FieldValue::from_log_value(Some(value)))
         .unwrap_or(FieldValue::Missing)
 }
 
-fn field_value_text(entry: &TraceEntry, name: &str) -> String {
-    field_value(entry, name)
-        .into_option()
-        .unwrap_or_else(|| "-".to_string())
+fn field_value_text(entry: &TraceEntry, name: &crate::types::LogFieldName) -> Option<Text> {
+    field_value(entry, name).into_option()
 }
 
 fn method_pill(entry: &TraceEntry) -> Pill {
-    match field_value(entry, "method").into_option() {
+    match field_value(entry, &crate::types::LogFieldName::from("method")).into_option() {
         Some(method) => Pill::method(method),
-        None => Pill::fields("-".to_string()),
+        None => Pill::fields("-"),
     }
 }
 
 fn path_pill(entry: &TraceEntry) -> Pill {
-    match field_value(entry, "path").into_option() {
+    match field_value(entry, &crate::types::LogFieldName::from("path")).into_option() {
         Some(path) => Pill::path(path),
-        None => Pill::fields("-".to_string()),
+        None => Pill::fields("-"),
     }
 }
 
 fn status_pill(entry: &TraceEntry) -> Pill {
-    match field_value(entry, "status").into_option() {
+    match field_value(entry, &crate::types::LogFieldName::from("status")).into_option() {
         Some(status) => Pill::status(status),
-        None => Pill::fields("-".to_string()),
+        None => Pill::fields("-"),
     }
 }
 
 fn latency_pill(entry: &TraceEntry) -> Option<Pill> {
-    field_value(entry, "latency_ms")
+    field_value(entry, &crate::types::LogFieldName::from("latency_ms"))
         .into_option()
-        .map(|value| Pill::fields(format!("latency_ms={value}")))
+        .map(|value: Text| {
+            Pill::fields(format!("latency_ms={}", value.to_string()))
+        })
 }
 
 fn source_pill(entry: &TraceEntry) -> Pill {
-    match field_value(entry, "sender").into_option() {
-        Some(sender) => Pill::fields(format!("source={sender}")),
-        None => Pill::fields("source=unknown".to_string()),
+    let sender: Option<Text> =
+        field_value(entry, &crate::types::LogFieldName::from("sender")).into_option();
+    match sender {
+        Some(sender) => Pill::fields(format!("source={}", sender.to_string())),
+        None => Pill::fields("source=unknown"),
     }
 }

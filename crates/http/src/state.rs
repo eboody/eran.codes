@@ -30,9 +30,9 @@ impl DemoState {
 #[derive(Clone)]
 pub struct SurrealState {
     pub guard:
-        std::sync::Arc<dashmap::DashMap<String, std::sync::Arc<tokio::sync::Mutex<()>>>>,
+        std::sync::Arc<dashmap::DashMap<crate::types::SessionId, std::sync::Arc<tokio::sync::Mutex<()>>>>,
     pub cancel:
-        std::sync::Arc<dashmap::DashMap<String, tokio_util::sync::CancellationToken>>,
+        std::sync::Arc<dashmap::DashMap<crate::types::SessionId, tokio_util::sync::CancellationToken>>,
     pub seq: std::sync::Arc<AtomicU64>,
 }
 

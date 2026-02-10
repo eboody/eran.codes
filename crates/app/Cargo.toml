@@ -12,6 +12,9 @@ async-trait = "0.1.86"
 secrecy = "0.10.3"
 bon = "3.8.2"
 uuid = "1.12.1"
+nutype = { workspace = true }
+strum = { workspace = true }
+strum_macros = { workspace = true }
 
 [dev-dependencies]
 tokio = { version = "1", features = ["macros", "rt-multi-thread"] }

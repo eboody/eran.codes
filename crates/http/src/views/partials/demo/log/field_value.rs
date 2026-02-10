@@ -1,18 +1,20 @@
+use crate::types::{LogFieldValue, Text};
+
 #[derive(Clone, Debug)]
 pub enum FieldValue {
     Missing,
-    Value(String),
+    Value(Text),
 }
 
 impl FieldValue {
-    pub fn from_str(value: &str) -> Self {
+    pub fn from_log_value(value: Option<&LogFieldValue>) -> Self {
         match value {
-            "-" => Self::Missing,
-            _ => Self::Value(value.to_string()),
+            Some(LogFieldValue::Text(text)) => Self::Value(text.clone()),
+            _ => Self::Missing,
         }
     }
 
-    pub fn into_option(self) -> Option<String> {
+    pub fn into_option(self) -> Option<Text> {
         match self {
             Self::Missing => None,
             Self::Value(value) => Some(value),

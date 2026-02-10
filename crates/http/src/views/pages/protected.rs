@@ -3,11 +3,12 @@ use maud::Render;
 
 use crate::views::page::UserNav;
 use crate::paths::Route;
+use crate::types::Text;
 
 #[derive(Builder)]
 pub struct Protected {
-    pub username: String,
-    pub email: String,
+    pub username: Text,
+    pub email: Text,
     pub user: Option<UserNav>,
 }
 
@@ -17,9 +18,9 @@ impl Render for Protected {
             main class="container" {
                 article {
                     header {
-                        h1 { "Welcome, " (self.username) }
+                        h1 { "Welcome, " (self.username.to_string()) }
                     }
-                    p { "Signed in as " (self.email) "." }
+                    p { "Signed in as " (self.email.to_string()) "." }
                     form method="post" action=(Route::Logout.as_str()) {
                         button type="submit" { "Sign out" }
                     }

@@ -5,7 +5,7 @@ use axum::{
     body::Body,
     http::{Request, StatusCode},
 };
-use secrecy::ExposeSecret;
+use secrecy::{ExposeSecret, SecretString};
 use tower::ServiceExt;
 use tower_cookies::Key;
 use tower_sessions::MemoryStore;
@@ -28,7 +28,7 @@ impl user::Repository for TestUserRepo {
     async fn create_with_credentials(
         &self,
         _user: &domain_user::User,
-        _password_hash: &str,
+        _password_hash: &auth::PasswordHash,
     ) -> user::Result<()> {
         Ok(())
     }
@@ -37,14 +37,14 @@ impl user::Repository for TestUserRepo {
 struct TestHasher;
 
 impl auth::PasswordHasher for TestHasher {
-    fn hash(&self, _password: &str) -> auth::Result<String> {
-        Ok("hash".to_string())
+    fn hash(&self, _password: &str) -> auth::Result<auth::PasswordHash> {
+        Ok(auth::PasswordHash::new("hash"))
     }
 
     fn verify(
         &self,
         _password: &str,
-        _password_hash: &str,
+        _password_hash: &auth::PasswordHash,
     ) -> auth::Result<bool> {
         Ok(true)
     }
@@ -52,7 +52,7 @@ impl auth::PasswordHasher for TestHasher {
 
 struct TestAuthProvider;
 
-const USER_ID: &str = "d358d153-19a1-4a4c-8c52-73ff1a1f44d3";
+const USER_ID: uuid::Uuid = uuid::Uuid::from_u128(0xd358d153_19a1_4a4c_8c52_73ff1a1f44d3);
 
 #[derive(Clone, Copy, Debug)]
 enum TestCredential {
@@ -60,15 +60,17 @@ enum TestCredential {
 }
 
 impl TestCredential {
-    fn email(self) -> &'static str {
+    fn email(self) -> domain_user::Email {
         match self {
-            TestCredential::Demo => "demo@example.com",
+            TestCredential::Demo => {
+                domain_user::Email::try_new("demo@example.com").expect("email")
+            }
         }
     }
 
-    fn password(self) -> &'static str {
+    fn password(self) -> SecretString {
         match self {
-            TestCredential::Demo => "password",
+            TestCredential::Demo => SecretString::new("password".into()),
         }
     }
 }
@@ -81,7 +83,8 @@ impl auth::Provider for TestAuthProvider {
     ) -> auth::Result<Option<auth::AuthenticatedUser>> {
         let demo = TestCredential::Demo;
         if credentials.email == demo.email()
-            && credentials.password.expose_secret() == demo.password()
+            && credentials.password.expose_secret()
+                == demo.password().expose_secret()
         {
             return Ok(Some(test_user()));
         }
@@ -90,9 +93,9 @@ impl auth::Provider for TestAuthProvider {
 
     async fn get_user(
         &self,
-        user_id: &str,
+        user_id: &domain_user::Id,
     ) -> auth::Result<Option<auth::AuthenticatedUser>> {
-        if user_id == USER_ID {
+        if *user_id == domain_user::Id::from_uuid(USER_ID) {
             return Ok(Some(test_user()));
         }
         Ok(None)
@@ -100,11 +103,14 @@ impl auth::Provider for TestAuthProvider {
 }
 
 fn test_user() -> auth::AuthenticatedUser {
+    let username =
+        domain_user::Username::try_new("Demo").expect("username");
+    let email = TestCredential::Demo.email();
     auth::AuthenticatedUser::builder()
-        .id(USER_ID.to_string())
-        .username("Demo".to_string())
-        .email(TestCredential::Demo.email().to_string())
-        .session_hash("hash".to_string())
+        .id(domain_user::Id::from_uuid(USER_ID))
+        .username(username)
+        .email(email)
+        .session_hash(auth::SessionHash::new("hash"))
         .build()
 }
 

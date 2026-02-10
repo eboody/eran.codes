@@ -2,29 +2,45 @@ use bon::Builder;
 use maud::Render;
 
 use crate::views::partials::{StatusCard, TraceLog};
+use crate::types::Text;
 
-#[derive(Builder)]
-pub struct RequestMeta<'a> {
-    pub request_id: Option<&'a str>,
-    pub session_id: Option<&'a str>,
-    pub user_id: Option<&'a str>,
-    pub client_ip: Option<&'a str>,
-    pub user_agent: Option<&'a str>,
+#[derive(Clone, Debug, Builder)]
+pub struct RequestMeta {
+    pub request_id: Option<Text>,
+    pub session_id: Option<Text>,
+    pub user_id: Option<Text>,
+    pub client_ip: Option<Text>,
+    pub user_agent: Option<Text>,
     pub trace: Vec<crate::trace_log::TraceEntry>,
 }
 
-impl Render for RequestMeta<'_> {
+impl Render for RequestMeta {
     fn render(&self) -> maud::Markup {
         maud::html! {
             article id="request-meta-target" {
                 (StatusCard::builder()
-                    .title("Request metadata".to_string())
+                    .title(Text::from("Request metadata"))
                     .items(vec![
-                        ("request_id".to_string(), self.request_id.unwrap_or("none").to_string()),
-                        ("session_id".to_string(), self.session_id.unwrap_or("none").to_string()),
-                        ("user_id".to_string(), self.user_id.unwrap_or("none").to_string()),
-                        ("client_ip".to_string(), self.client_ip.unwrap_or("none").to_string()),
-                        ("user_agent".to_string(), self.user_agent.unwrap_or("none").to_string()),
+                        (
+                            Text::from("request_id"),
+                            self.request_id.clone().unwrap_or_else(|| Text::from("none")),
+                        ),
+                        (
+                            Text::from("session_id"),
+                            self.session_id.clone().unwrap_or_else(|| Text::from("none")),
+                        ),
+                        (
+                            Text::from("user_id"),
+                            self.user_id.clone().unwrap_or_else(|| Text::from("none")),
+                        ),
+                        (
+                            Text::from("client_ip"),
+                            self.client_ip.clone().unwrap_or_else(|| Text::from("none")),
+                        ),
+                        (
+                            Text::from("user_agent"),
+                            self.user_agent.clone().unwrap_or_else(|| Text::from("none")),
+                        ),
                     ])
                     .build()
                     .render())

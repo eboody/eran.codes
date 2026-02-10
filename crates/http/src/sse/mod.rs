@@ -3,6 +3,8 @@ use datastar::prelude::{DatastarEvent, ExecuteScript, PatchElements, PatchSignal
 use std::sync::Arc;
 use tokio::sync::broadcast;
 
+use crate::types::SessionId;
+
 pub const SESSION_COOKIE: &str = "session_id";
 
 mod session;
@@ -56,7 +58,7 @@ pub type SendResult<T> = Result<T, SendError>;
 
 #[derive(Clone, Default)]
 pub struct Registry {
-    sessions: Arc<DashMap<String, Session>>,
+    sessions: Arc<DashMap<SessionId, Session>>,
 }
 
 impl Registry {
@@ -68,7 +70,7 @@ impl Registry {
         &self,
         handle: &Handle,
     ) -> (broadcast::Receiver<Event>, SessionGuard) {
-        let session_id = handle.id().to_string();
+        let session_id = handle.id();
         let receiver = self
             .sessions
             .entry(session_id.clone())
@@ -94,13 +96,13 @@ impl Registry {
         );
         let session = self
             .sessions
-            .get(session_id)
+            .get(&session_id)
             .ok_or(SendError::SessionMissing)?;
 
         let result = session.send(event).map(|_| ());
         if result.is_err() {
             drop(session);
-            self.sessions.remove(session_id);
+            self.sessions.remove(&session_id);
             return Err(SendError::SendFailed);
         }
         Ok(())
@@ -108,7 +110,7 @@ impl Registry {
 
     pub fn send_by_id(
         &self,
-        session_id: &str,
+        session_id: &SessionId,
         event: Event,
     ) -> SendResult<()> {
         let event_type = format!("{:?}", event.as_datastar_event().event);
@@ -168,14 +170,14 @@ impl Registry {
 
     pub fn remove(
         &self,
-        session_id: &str,
+        session_id: &SessionId,
     ) {
         self.sessions.remove(session_id);
     }
 
     pub fn release(
         &self,
-        session_id: &str,
+        session_id: &SessionId,
     ) {
         if let Some(entry) = self.sessions.get(session_id) {
             let remaining = entry.release();
@@ -189,17 +191,17 @@ impl Registry {
 
 pub struct SessionGuard {
     registry: Registry,
-    session_id: String,
+    session_id: SessionId,
 }
 
 impl SessionGuard {
     pub fn new(
         registry: Registry,
-        session_id: impl Into<String>,
+        session_id: SessionId,
     ) -> Self {
         Self {
             registry,
-            session_id: session_id.into(),
+            session_id,
         }
     }
 }

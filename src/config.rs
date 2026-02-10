@@ -1,6 +1,7 @@
 use infra::config::InfraConfig;
+use nutype::nutype;
 
-use crate::error::{Error, Result};
+use crate::error::{EnvErrorReason, Error, Result};
 
 #[derive(Clone, Debug)]
 pub(crate) struct Config {
@@ -10,7 +11,7 @@ pub(crate) struct Config {
 
 #[derive(Clone, Debug)]
 pub struct HttpConfig {
-    pub host: String,
+    pub host: HostName,
     pub port: u16,
     pub session_secret: Vec<u8>,
     pub session_cleanup_interval_secs: u64,
@@ -31,13 +32,14 @@ impl HttpConfig {
             utils::envs::get_env_b64u_as_u8s("SESSION_SECRET")
                 .map_err(|_| Error::InvalidEnv {
                     key: "SESSION_SECRET",
-                    reason: "must be base64url without padding"
-                        .to_string(),
+                    reason: EnvErrorReason::new(
+                        "must be base64url without padding",
+                    ),
                 })?;
         if session_secret.len() < 64 {
             return Err(Error::InvalidEnv {
                 key: "SESSION_SECRET",
-                reason: "must be at least 64 bytes".to_string(),
+                reason: EnvErrorReason::new("must be at least 64 bytes"),
             });
         }
 
@@ -46,14 +48,18 @@ impl HttpConfig {
                 Ok(value) => value.parse().map_err(|_| {
                     Error::InvalidEnv {
                         key: "SESSION_CLEANUP_INTERVAL_SECS",
-                        reason: "must be a valid u64 integer".to_string(),
+                        reason: EnvErrorReason::new(
+                            "must be a valid u64 integer",
+                        ),
                     }
                 })?,
                 Err(std::env::VarError::NotPresent) => 3600,
                 Err(_) => {
                     return Err(Error::InvalidEnv {
                         key: "SESSION_CLEANUP_INTERVAL_SECS",
-                        reason: "must be a valid u64 integer".to_string(),
+                        reason: EnvErrorReason::new(
+                            "must be a valid u64 integer",
+                        ),
                     })
                 }
             };
@@ -61,17 +67,18 @@ impl HttpConfig {
         if session_cleanup_interval_secs == 0 {
             return Err(Error::InvalidEnv {
                 key: "SESSION_CLEANUP_INTERVAL_SECS",
-                reason: "must be greater than 0".to_string(),
+                reason: EnvErrorReason::new("must be greater than 0"),
             });
         }
 
         Ok(Self {
-            host,
+            host: HostName::new(host),
             port: port_str.parse().map_err(|_| {
                 Error::InvalidEnv {
                     key: "PORT",
-                    reason: "must be a valid u16 integer"
-                        .to_string(),
+                    reason: EnvErrorReason::new(
+                        "must be a valid u16 integer",
+                    ),
                 }
             })?,
             session_secret,
@@ -79,6 +86,12 @@ impl HttpConfig {
         })
     }
 }
+
+#[nutype(
+    sanitize(trim),
+    derive(Clone, Debug, PartialEq, Eq, Display)
+)]
+pub struct HostName(String);
 impl Config {
     pub fn load() -> Result<Self> {
         let infra = InfraConfig::from_env()

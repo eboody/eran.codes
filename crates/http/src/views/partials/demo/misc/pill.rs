@@ -1,26 +1,29 @@
+use std::str::FromStr;
+
 use bon::Builder;
 use maud::Render;
+use strum_macros::{Display, EnumString};
 
-#[derive(Clone, Copy, Debug)]
+use crate::types::Text;
+
+#[derive(Clone, Copy, Debug, Display, EnumString)]
 pub enum MethodKind {
+    #[strum(serialize = "GET")]
     Get,
+    #[strum(serialize = "POST")]
     Post,
+    #[strum(serialize = "PUT")]
     Put,
+    #[strum(serialize = "PATCH")]
     Patch,
+    #[strum(serialize = "DELETE")]
     Delete,
     Other,
 }
 
 impl MethodKind {
-    pub fn from_str(value: &str) -> Self {
-        match value {
-            "GET" => Self::Get,
-            "POST" => Self::Post,
-            "PUT" => Self::Put,
-            "PATCH" => Self::Patch,
-            "DELETE" => Self::Delete,
-            _ => Self::Other,
-        }
+    pub fn from_text(value: &Text) -> Self {
+        MethodKind::from_str(&value.to_string()).unwrap_or(Self::Other)
     }
 
     fn class(self) -> &'static str {
@@ -74,24 +77,24 @@ impl StatusKind {
     }
 }
 
-#[derive(Clone, Copy, Debug)]
+#[derive(Clone, Copy, Debug, Display, EnumString)]
+#[strum(ascii_case_insensitive)]
 pub enum LevelKind {
+    #[strum(serialize = "info")]
     Info,
+    #[strum(serialize = "warn", serialize = "warning")]
     Warn,
+    #[strum(serialize = "error")]
     Error,
+    #[strum(serialize = "debug")]
     Debug,
+    #[strum(serialize = "trace")]
     Trace,
 }
 
 impl LevelKind {
-    pub fn from_str(value: &str) -> Self {
-        match value.to_ascii_lowercase().as_str() {
-            "error" => Self::Error,
-            "warn" | "warning" => Self::Warn,
-            "debug" => Self::Debug,
-            "trace" => Self::Trace,
-            _ => Self::Info,
-        }
+    pub fn from_text(value: &Text) -> Self {
+        LevelKind::from_str(&value.to_string()).unwrap_or(Self::Info)
     }
 
     fn class(self) -> &'static str {
@@ -179,15 +182,16 @@ impl Default for PillVariant {
 
 #[derive(Clone, Debug, Builder)]
 pub struct Pill {
-    pub text: String,
+    pub text: Text,
     #[builder(default)]
     pub variant: PillVariant,
     pub color: Option<PillColor>,
 }
 
 impl Pill {
-    pub fn level(text: String) -> Self {
-        let kind = LevelKind::from_str(&text);
+    pub fn level(text: impl Into<Text>) -> Self {
+        let text = text.into();
+        let kind = LevelKind::from_text(&text);
         Self {
             text,
             variant: PillVariant::Level(kind),
@@ -195,8 +199,9 @@ impl Pill {
         }
     }
 
-    pub fn method(text: String) -> Self {
-        let kind = MethodKind::from_str(&text);
+    pub fn method(text: impl Into<Text>) -> Self {
+        let text = text.into();
+        let kind = MethodKind::from_text(&text);
         Self {
             text,
             variant: PillVariant::Method(kind),
@@ -204,8 +209,9 @@ impl Pill {
         }
     }
 
-    pub fn status(text: String) -> Self {
-        let kind = StatusKind::from_str(&text);
+    pub fn status(text: impl Into<Text>) -> Self {
+        let text = text.into();
+        let kind = StatusKind::from_str(&text.to_string());
         Self {
             text,
             variant: PillVariant::Status(kind),
@@ -213,7 +219,8 @@ impl Pill {
         }
     }
 
-    pub fn path(text: String) -> Self {
+    pub fn path(text: impl Into<Text>) -> Self {
+        let text = text.into();
         Self {
             text,
             variant: PillVariant::Path,
@@ -221,7 +228,8 @@ impl Pill {
         }
     }
 
-    pub fn target(text: String) -> Self {
+    pub fn target(text: impl Into<Text>) -> Self {
+        let text = text.into();
         Self {
             text,
             variant: PillVariant::Target,
@@ -229,7 +237,8 @@ impl Pill {
         }
     }
 
-    pub fn fields(text: String) -> Self {
+    pub fn fields(text: impl Into<Text>) -> Self {
+        let text = text.into();
         Self {
             text,
             variant: PillVariant::Fields,
@@ -237,7 +246,8 @@ impl Pill {
         }
     }
 
-    pub fn badge(text: String, kind: BadgeKind) -> Self {
+    pub fn badge(text: impl Into<Text>, kind: BadgeKind) -> Self {
+        let text = text.into();
         Self {
             text,
             variant: PillVariant::Badge(kind),
@@ -256,7 +266,7 @@ impl Render for Pill {
             .color
             .map(|color| format!("--pill-accent: {};", color.to_rgb()));
         maud::html! {
-            span class=(class) style=[style] { (&self.text) }
+            span class=(class) style=[style] { (self.text.to_string()) }
         }
     }
 }

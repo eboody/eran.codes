@@ -1,13 +1,14 @@
 use bon::Builder;
 use maud::Render;
 
-use crate::views::partials::EmptyState;
+use crate::views::partials::components::EmptyState;
+use crate::types::Text;
 
 #[derive(Clone, Debug, Builder)]
 pub struct LogPanel {
-    pub title: String,
+    pub title: Text,
     pub body: maud::Markup,
-    pub empty_message: Option<String>,
+    pub empty_message: Option<Text>,
 }
 
 impl Render for LogPanel {
@@ -19,7 +20,7 @@ impl Render for LogPanel {
         };
         maud::html! {
             article class="demo-result network-log-panel" {
-                p { strong { (&self.title) } }
+                p { strong { (self.title.to_string()) } }
                 div class="network-log-scroll" {
                     (body)
                 }

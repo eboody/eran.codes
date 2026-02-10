@@ -1,10 +1,11 @@
 use bon::Builder;
 use maud::Render;
+use crate::types::Text;
 
 #[derive(Clone, Debug, Builder)]
 pub struct SectionHeader {
-    pub title: String,
-    pub subtitle: Option<String>,
+    pub title: Text,
+    pub subtitle: Option<Text>,
     pub action: Option<maud::Markup>,
     pub meta: Option<maud::Markup>,
 }
@@ -14,9 +15,9 @@ impl Render for SectionHeader {
         maud::html! {
             header class="section-header" {
                 div {
-                    h2 { (&self.title) }
+                    h2 { (self.title.to_string()) }
                     @if let Some(subtitle) = &self.subtitle {
-                        p class="muted" { (subtitle) }
+                        p class="muted" { (subtitle.to_string()) }
                     }
                 }
                 @if let Some(action) = &self.action {

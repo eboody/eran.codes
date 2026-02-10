@@ -1,9 +1,10 @@
 use bon::Builder;
 use maud::Render;
+use crate::types::Text;
 
 #[derive(Clone, Debug, Builder)]
 pub struct KeyValueList {
-    pub items: Vec<(String, String)>,
+    pub items: Vec<(Text, Text)>,
 }
 
 impl Render for KeyValueList {
@@ -11,7 +12,7 @@ impl Render for KeyValueList {
         maud::html! {
             ul class="key-value-list" {
                 @for (label, value) in &self.items {
-                    li { (label) ": " (value) }
+                    li { (label.to_string()) ": " (value.to_string()) }
                 }
             }
         }

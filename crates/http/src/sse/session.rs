@@ -4,11 +4,12 @@ use tower_cookies::{Cookie, Cookies, Key};
 use uuid::Uuid;
 
 use super::{Event, SESSION_COOKIE};
+use crate::types::SessionId;
 
 const SESSION_CHANNEL_SIZE: usize = 32;
 
 pub struct Handle {
-    id: String,
+    id: SessionId,
 }
 
 impl Handle {
@@ -20,8 +21,8 @@ impl Handle {
         Self { id }
     }
 
-    pub fn id(&self) -> &str {
-        &self.id
+    pub fn id(&self) -> SessionId {
+        self.id.clone()
     }
 }
 
@@ -60,13 +61,13 @@ impl Session {
 fn ensure_session(
     cookies: &Cookies,
     key: &Key,
-) -> String {
+) -> SessionId {
     if let Some(cookie) = cookies.signed(key).get(SESSION_COOKIE) {
-        return cookie.value().to_string();
+        return SessionId::new(cookie.value());
     }
 
-    let session_id = Uuid::new_v4().to_string();
-    let cookie = Cookie::build((SESSION_COOKIE, session_id.clone()))
+    let session_id = SessionId::new(Uuid::new_v4().to_string());
+    let cookie = Cookie::build((SESSION_COOKIE, session_id.to_string()))
         .path("/")
         .http_only(true)
         .same_site(SameSite::Lax)

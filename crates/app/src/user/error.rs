@@ -5,7 +5,7 @@ pub type Result<T> = core::result::Result<T, Error>;
 #[derive(Debug, From)]
 pub enum Error {
     Domain(domain::user::Error),
-    Repo(String),
+    Repo(RepoErrorText),
     EmailTaken,
 }
 
@@ -19,3 +19,17 @@ impl core::fmt::Display for Error {
 }
 
 impl std::error::Error for Error {}
+
+use nutype::nutype;
+
+#[nutype(
+    sanitize(trim),
+    derive(Clone, Debug, PartialEq, Display)
+)]
+pub struct RepoErrorText(String);
+
+impl From<String> for RepoErrorText {
+    fn from(value: String) -> Self {
+        RepoErrorText::new(value)
+    }
+}

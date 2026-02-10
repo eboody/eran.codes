@@ -1,13 +1,14 @@
 use bon::Builder;
 use maud::Render;
+use crate::types::Text;
 
 #[derive(Clone, Debug, Builder)]
 pub struct ChatMessage {
-    pub message_id: String,
-    pub author: String,
-    pub timestamp: String,
-    pub body: String,
-    pub status: String,
+    pub message_id: Text,
+    pub author: Text,
+    pub timestamp: Text,
+    pub body: Text,
+    pub status: Text,
 }
 
 impl Render for ChatMessage {
@@ -15,11 +16,11 @@ impl Render for ChatMessage {
         maud::html! {
             li id=(format!("chat-message-{}", self.message_id)) class="chat-message" {
                 div class="meta" {
-                    strong { (&self.author) }
-                    span class="timestamp" { (&self.timestamp) }
-                    span class="status" { (&self.status) }
+                    strong { (self.author.to_string()) }
+                    span class="timestamp" { (self.timestamp.to_string()) }
+                    span class="status" { (self.status.to_string()) }
                 }
-                p { (&self.body) }
+                p { (self.body.to_string()) }
             }
         }
     }

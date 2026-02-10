@@ -10,9 +10,11 @@ mod views;
 mod router;
 mod state;
 pub mod paths;
+pub mod types;
 
 pub use error::{Error, Result};
 pub use router::router;
 pub use sse::Registry as SseRegistry;
 pub use state::{DemoState, State};
 pub use paths::Route;
+pub use types::*;

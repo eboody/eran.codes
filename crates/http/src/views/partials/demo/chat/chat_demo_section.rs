@@ -2,12 +2,13 @@ use bon::Builder;
 use maud::{PreEscaped, Render};
 
 use crate::paths::Route;
+use crate::types::Text;
 use crate::views::partials::{ChatConnection, ChatPanel, ChatPanelRole, SectionHeader};
 
 #[derive(Clone, Debug, Builder)]
 pub struct ChatDemoSection {
-    pub room_id: String,
-    pub room_name: String,
+    pub room_id: Text,
+    pub room_name: Text,
     pub messages: Vec<crate::views::partials::ChatMessage>,
 }
 
@@ -22,19 +23,19 @@ impl Render for ChatDemoSection {
                 class="chat-panel"
                 data-signals=(format!(
                     "{{roomId: '{}', body: '', botBody: '', sseConnected: false}}",
-                    self.room_id
+                    self.room_id.to_string()
                 )) {
                 (SectionHeader::builder()
-                    .title("Live chat room".to_string())
-                    .subtitle("Send messages as yourself or the demo user and watch SSE fanout.".to_string())
+                    .title(Text::from("Live chat room"))
+                    .subtitle(Text::from("Send messages as yourself or the demo user and watch SSE fanout."))
                     .action(maud::html! {
                         a class="button secondary" href=(Route::ChatModeration.as_str()) { "Moderation queue" }
                     })
-                    .meta(maud::html! { p class="muted" { "Room: " (&self.room_name) } })
+                    .meta(maud::html! { p class="muted" { "Room: " (self.room_name.to_string()) } })
                     .build()
                     .render())
                 (ChatConnection::builder()
-                    .connected_signal("$sseConnected".to_string())
+                    .connected_signal(Text::from("$sseConnected"))
                     .build()
                     .render())
                 div class="chat-columns" {

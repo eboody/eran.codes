@@ -1,8 +1,14 @@
+use std::str::FromStr;
+
 use bon::Builder;
 use maud::Render;
+use strum_macros::{Display, EnumString};
 
 use crate::trace_log::TraceEntry;
-use crate::views::partials::{EmptyState, FieldValue, LogPanel, LogRow, Pill};
+use crate::types::{LogFieldName, Text};
+use crate::views::partials::components::{
+    EmptyState, FieldValue, LogPanel, LogRow, Pill,
+};
 
 #[derive(Builder)]
 pub struct LiveLog<'a> {
@@ -13,7 +19,7 @@ impl Render for LiveLog<'_> {
     fn render(&self) -> maud::Markup {
         let body = if self.entries.is_empty() {
             EmptyState::builder()
-                .message("No events yet. Trigger a demo action to start streaming.".to_string())
+                .message(Text::from("No events yet. Trigger a demo action to start streaming."))
                 .build()
                 .render()
         } else {
@@ -26,15 +32,15 @@ impl Render for LiveLog<'_> {
                                 @if let Some(request_id) = &group.request_id {
                                     (Pill::fields(format!("request_id={}", short_request_id(request_id))).render())
                                 } @else {
-                                    (Pill::fields("request_id=unknown".to_string()).render())
+                                    (Pill::fields("request_id=unknown").render())
                                 }
                                 span class="muted" { (format!("{} events", group.entries.len())) }
                             }
                             ul class="live-log-entries" {
                                 @for entry in group.entries {
                                     (LogRow::builder()
-                                        .timestamp(entry.timestamp.clone())
-                                        .message(entry.message.clone())
+                                        .timestamp(Text::from(entry.timestamp.to_string()))
+                                        .message(Text::from(entry.message.to_string()))
                                         .pills(build_pills(entry))
                                         .build()
                                         .render())
@@ -49,7 +55,7 @@ impl Render for LiveLog<'_> {
         maud::html! {
             section id="live-log-target" class="live-log-panels" {
                 (LogPanel::builder()
-                    .title("Live backend log".to_string())
+                    .title(Text::from("Live backend log"))
                     .body(body)
                     .build()
                     .render())
@@ -73,7 +79,7 @@ impl Render for LiveLog<'_> {
 }
 
 struct LogGroup<'a> {
-    request_id: Option<String>,
+    request_id: Option<Text>,
     entries: Vec<&'a TraceEntry>,
 }
 
@@ -82,11 +88,11 @@ where
     I: IntoIterator<Item = &'a TraceEntry>,
 {
     let mut groups: Vec<LogGroup<'a>> = Vec::new();
-    let mut order: Vec<Option<String>> = Vec::new();
-    let mut map: std::collections::HashMap<Option<String>, Vec<&'a TraceEntry>> =
+    let mut order: Vec<Option<Text>> = Vec::new();
+    let mut map: std::collections::HashMap<Option<Text>, Vec<&'a TraceEntry>> =
         std::collections::HashMap::new();
     for entry in entries {
-        let request_id = field_value(entry, "request_id");
+        let request_id = field_value(entry, &LogFieldName::from("request_id"));
         if !map.contains_key(&request_id) {
             order.push(request_id.clone());
         }
@@ -103,23 +109,24 @@ where
     groups
 }
 
-fn short_request_id(value: &str) -> String {
-    value.split('-').next().unwrap_or(value).to_string()
+fn short_request_id(value: &Text) -> String {
+    let value = value.to_string();
+    value.split('-').next().unwrap_or(value.as_str()).to_string()
 }
 
 fn build_pills(entry: &TraceEntry) -> Vec<Pill> {
     let mut pills = Vec::new();
-    pills.push(Pill::level(entry.level.clone()));
-    if let Some(status) = field_value(entry, "status") {
+    pills.push(Pill::level(entry.level.to_string()));
+    if let Some(status) = field_value(entry, &LogFieldName::from("status")) {
         pills.push(Pill::status(status.clone()));
     }
-    if let Some(method) = field_value(entry, "method") {
+    if let Some(method) = field_value(entry, &LogFieldName::from("method")) {
         pills.push(Pill::method(method.clone()));
     }
-    if let Some(path) = field_value(entry, "path") {
+    if let Some(path) = field_value(entry, &LogFieldName::from("path")) {
         pills.push(Pill::path(path));
     }
-    pills.push(Pill::target(entry.target.clone()));
+    pills.push(Pill::target(entry.target.to_string()));
     pills.extend(compact_fields(entry));
     pills
 }
@@ -131,18 +138,14 @@ fn compact_fields(entry: &TraceEntry) -> Vec<Pill> {
     let mut parts: Vec<Pill> = Vec::new();
     let mut extras: Vec<String> = Vec::new();
     for (name, value) in entry.fields.iter() {
-        match name.as_str() {
-            "method" => {
-                continue;
-            }
-            "path" => {
-                continue;
-            }
-            "status" => {
-                continue;
-            }
-            _ => extras.push(format!("{}={}", name, value)),
+        let field_kind = LogFieldKey::from_str(&name.to_string()).ok();
+        if matches!(
+            field_kind,
+            Some(LogFieldKey::Method | LogFieldKey::Path | LogFieldKey::Status)
+        ) {
+            continue;
         }
+        extras.push(format!("{}={}", name.to_string(), value.to_string()));
     }
     if !extras.is_empty() {
         let extra = extras.into_iter().take(2).collect::<Vec<_>>().join(" · ");
@@ -151,11 +154,21 @@ fn compact_fields(entry: &TraceEntry) -> Vec<Pill> {
     parts
 }
 
-fn field_value(entry: &TraceEntry, name: &str) -> Option<String> {
+fn field_value(entry: &TraceEntry, name: &LogFieldName) -> Option<Text> {
     entry
         .fields
         .iter()
         .find(|(field, _)| field == name)
-        .map(|(_, value)| FieldValue::from_str(value))
+        .map(|(_, value)| FieldValue::from_log_value(Some(value)))
         .and_then(|value| value.into_option())
+}
+
+#[derive(Clone, Copy, Debug, PartialEq, Eq, Display, EnumString)]
+enum LogFieldKey {
+    #[strum(serialize = "method")]
+    Method,
+    #[strum(serialize = "path")]
+    Path,
+    #[strum(serialize = "status")]
+    Status,
 }

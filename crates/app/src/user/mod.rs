@@ -11,8 +11,8 @@ pub use error::{Error, Result};
 
 #[derive(Clone, Debug, Builder)]
 pub struct RegisterUser {
-    pub username: String,
-    pub email: String,
+    pub username: user::Username,
+    pub email: user::Email,
     pub password: SecretString,
 }
 
@@ -25,7 +25,7 @@ pub trait Repository: Send + Sync {
     async fn create_with_credentials(
         &self,
         user: &user::User,
-        password_hash: &str,
+        password_hash: &crate::auth::PasswordHash,
     ) -> Result<()>;
 }
 
@@ -49,26 +49,21 @@ impl Service {
         &self,
         command: RegisterUser,
     ) -> Result<user::Id> {
-        let username = user::Username::try_new(command.username)
-            .map_err(domain::user::Error::from)?;
-        let email = user::Email::try_new(command.email)
-            .map_err(domain::user::Error::from)?;
-
-        if self.users.find_by_email(&email).await?.is_some()
+        if self.users.find_by_email(&command.email).await?.is_some()
         {
             return Err(Error::EmailTaken);
         }
 
         let new_user = user::User {
             id: user::Id::new_v4(),
-            username,
-            email,
+            username: command.username,
+            email: command.email,
         };
 
         let password_hash = self
             .hasher
             .hash(command.password.expose_secret())
-            .map_err(|error| Error::Repo(error.to_string()))?;
+            .map_err(|error| Error::Repo(error.to_string().into()))?;
 
         self.users
             .create_with_credentials(&new_user, &password_hash)
@@ -79,10 +74,8 @@ impl Service {
 
     pub async fn find_by_email(
         &self,
-        email: String,
+        email: user::Email,
     ) -> Result<Option<user::User>> {
-        let email =
-            user::Email::try_new(email).map_err(domain::user::Error::from)?;
         self.users.find_by_email(&email).await
     }
 }
@@ -91,11 +84,9 @@ pub fn validate_input(
     username: &str,
     email: &str,
 ) -> Result<(user::Username, user::Email)> {
-    let username =
-        user::Username::try_new(username.to_owned())
-            .map_err(domain::user::Error::from)?;
+    let username = user::Username::try_new(username)
+        .map_err(domain::user::Error::from)?;
     let email =
-        user::Email::try_new(email.to_owned())
-            .map_err(domain::user::Error::from)?;
+        user::Email::try_new(email).map_err(domain::user::Error::from)?;
     Ok((username, email))
 }

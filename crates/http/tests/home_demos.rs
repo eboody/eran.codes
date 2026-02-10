@@ -27,7 +27,7 @@ impl user::Repository for TestUserRepo {
     async fn create_with_credentials(
         &self,
         _user: &domain_user::User,
-        _password_hash: &str,
+        _password_hash: &auth::PasswordHash,
     ) -> user::Result<()> {
         Ok(())
     }
@@ -36,14 +36,14 @@ impl user::Repository for TestUserRepo {
 struct TestHasher;
 
 impl auth::PasswordHasher for TestHasher {
-    fn hash(&self, _password: &str) -> auth::Result<String> {
-        Ok("hash".to_string())
+    fn hash(&self, _password: &str) -> auth::Result<auth::PasswordHash> {
+        Ok(auth::PasswordHash::new("hash"))
     }
 
     fn verify(
         &self,
         _password: &str,
-        _password_hash: &str,
+        _password_hash: &auth::PasswordHash,
     ) -> auth::Result<bool> {
         Ok(true)
     }

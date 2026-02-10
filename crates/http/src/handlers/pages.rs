@@ -1,6 +1,7 @@
 use axum::extract::Extension;
 
 use crate::views::{self, pages};
+use crate::types::Text;
 use crate::views::partials::ChatDemoSection;
 
 pub async fn health(Extension(_state): Extension<crate::State>) -> &'static str {
@@ -13,16 +14,21 @@ pub async fn home(
 ) -> crate::Result<axum::response::Html<String>> {
     let user = auth_session.user.as_ref().map(|user| {
         crate::views::page::UserNav::builder()
-            .username(user.username.clone())
-            .email(user.email.clone())
+            .username(Text::from(user.username.to_string()))
+            .email(Text::from(user.email.to_string()))
             .build()
     });
     let chat_demo = if let Some(user) = auth_session.user.as_ref() {
-        let context = crate::chat_demo::load_chat_context(&state, &user.id).await?;
+        let context =
+            crate::chat_demo::load_chat_context(&state, user.id.to_domain()?).await?;
         Some(
             ChatDemoSection::builder()
-                .room_id(context.room.id.as_uuid().to_string())
-                .room_name(context.room.name.to_string())
+                .room_id(crate::types::Text::from(
+                    context.room.id.as_uuid().to_string(),
+                ))
+                .room_name(crate::types::Text::from(
+                    context.room.name.to_string(),
+                ))
                 .messages(context.messages)
                 .build(),
         )

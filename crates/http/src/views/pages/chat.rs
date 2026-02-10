@@ -3,11 +3,12 @@ use maud::Render;
 
 use crate::views::page::{Layout, UserNav};
 use crate::views::partials::ChatMessage;
+use crate::types::Text;
 
 #[derive(Builder)]
 pub struct Chat {
-    pub room_id: String,
-    pub room_name: String,
+    pub room_id: Text,
+    pub room_name: Text,
     pub messages: Vec<ChatMessage>,
     #[builder(setters(name = with_user))]
     pub user: Option<UserNav>,
@@ -17,7 +18,7 @@ impl Render for Chat {
     fn render(&self) -> maud::Markup {
         let content = maud::html! {
             main class="container"
-                data-signals=(format!("{{roomId: '{}', body: '', botBody: '', sseConnected: false}}", self.room_id)) {
+                data-signals=(format!("{{roomId: '{}', body: '', botBody: '', sseConnected: false}}", self.room_id.to_string())) {
                 (crate::views::partials::ChatHero::builder()
                     .room_name(self.room_name.clone())
                     .room_id(self.room_id.clone())
@@ -26,7 +27,7 @@ impl Render for Chat {
 
                 section class="chat-panel" {
                     (crate::views::partials::ChatConnection::builder()
-                        .connected_signal("$sseConnected".to_string())
+                        .connected_signal(Text::from("$sseConnected"))
                         .build()
                         .render())
                     div class="chat-columns" {

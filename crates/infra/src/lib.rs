@@ -16,7 +16,7 @@ pub struct Infra {
 impl Infra {
     #[tracing::instrument(skip(cfg))]
     pub async fn init(cfg: &config::InfraConfig) -> Result<Self> {
-        let pool = PgPool::connect(&cfg.db.url)
+        let pool = PgPool::connect(cfg.db.url.as_ref())
             .await
             .map_err(error::Error::Pgsql)?;
 

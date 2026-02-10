@@ -42,7 +42,7 @@ impl Render for ChatModeration {
                                     p class="muted" { "Reason: " (&entry.reason) }
                                     form method="post" action=(Route::ChatModeration.as_str()) {
                                         input type="hidden" name="message_id" value=(entry.message_id.as_uuid().to_string());
-                                        input type="hidden" name="reason" value=(entry.reason.clone());
+                                        input type="hidden" name="reason" value=(entry.reason.to_string());
                                         (CtaRow::builder()
                                             .items(vec![
                                                 maud::html! {

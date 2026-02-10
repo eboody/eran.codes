@@ -7,6 +7,7 @@ use axum::{
 };
 
 use crate::sse::SESSION_COOKIE;
+use crate::types::{ClientIp, RequestId, SessionId, UserAgent, UserIdText};
 use std::cell::RefCell;
 use tracing::Span;
 use tower_cookies::{Cookies, Key};
@@ -57,20 +58,20 @@ pub async fn set_context_middleware(
 
 #[derive(Clone, Debug)]
 pub struct Context {
-    pub request_id: Option<String>,
-    pub session_id: Option<String>,
-    pub user_id: Option<String>,
-    pub client_ip: Option<String>,
-    pub user_agent: Option<String>,
+    pub request_id: Option<RequestId>,
+    pub session_id: Option<SessionId>,
+    pub user_id: Option<UserIdText>,
+    pub client_ip: Option<ClientIp>,
+    pub user_agent: Option<UserAgent>,
     pub kind: Kind,
 }
 
-pub fn set_user_id(user_id: impl Into<String>) {
+pub fn set_user_id(user_id: impl Into<UserIdText>) {
     let user_id = user_id.into();
     if let Ok(()) = REQUEST_CONTEXT.try_with(|context| {
         context.borrow_mut().user_id = Some(user_id.clone());
     }) {
-        Span::current().record("user_id", &user_id.as_str());
+        Span::current().record("user_id", &user_id.to_string().as_str());
     }
 }
 
@@ -81,11 +82,16 @@ fn context_from_request(
     let headers = req.headers();
     let cookies = req.extensions().get::<Cookies>();
     Context {
-        request_id: header_value(headers, header::HeaderName::from_static("x-request-id")),
-        session_id: cookies.and_then(|cookies| session_id_from_cookies(cookies, key)),
+        request_id: header_value(headers, header::HeaderName::from_static("x-request-id"))
+            .map(|value| RequestId::new(value)),
+        session_id: cookies
+            .and_then(|cookies| session_id_from_cookies(cookies, key))
+            .map(|value| SessionId::new(value)),
         user_id: None,
-        client_ip: client_ip_from_headers(headers),
-        user_agent: header_value(headers, header::USER_AGENT),
+        client_ip: client_ip_from_headers(headers)
+            .map(|value| ClientIp::new(value)),
+        user_agent: header_value(headers, header::USER_AGENT)
+            .map(|value| UserAgent::new(value)),
         kind: kind_from_headers(headers),
     }
 }
@@ -145,7 +151,7 @@ mod tests {
 
         let client_ip = client_ip_from_headers(&headers);
 
-        assert_eq!(client_ip.as_deref(), Some("203.0.113.5"));
+        assert_eq!(client_ip.map(|value| value.to_string()).as_deref(), Some("203.0.113.5"));
     }
 
     #[test]
@@ -168,7 +174,7 @@ mod tests {
 
         let session_id = session_id_from_cookies(&cookies, &key);
 
-        assert_eq!(session_id.as_deref(), Some("signed123"));
+        assert_eq!(session_id.map(|value| value.to_string()).as_deref(), Some("signed123"));
     }
 
     #[test]
@@ -187,7 +193,7 @@ mod tests {
 
         let context = context_from_request(&req, &key);
 
-        assert_eq!(context.session_id.as_deref(), Some("signed123"));
+        assert_eq!(context.session_id.map(|value| value.to_string()).as_deref(), Some("signed123"));
     }
 
     #[test]

@@ -20,6 +20,7 @@ domain = { path = "crates/domain" }
 app = { path = "crates/app" }
 http = { path = "crates/http" }
 utils = { path = "crates/utils" }
+nutype = { workspace = true }
 
 
 tokio = { version = "1", features = [
@@ -40,6 +41,8 @@ tracing = "0.1.44"
 [workspace.dependencies]
 nutype = "0.6.2"
 moddef = "0.3.0"
+strum = "0.26.3"
+strum_macros = "0.26.4"
 
 [workspace.metadata.scripts]
 crs = "cargo run-script"

@@ -91,7 +91,10 @@ dependencies = [
  "bon",
  "derive_more",
  "domain",
+ "nutype",
  "secrecy",
+ "strum",
+ "strum_macros",
  "tokio",
  "tracing",
  "uuid",
@@ -722,6 +725,8 @@ dependencies = [
  "derive_more",
  "moddef",
  "nutype",
+ "strum",
+ "strum_macros",
  "uuid",
 ]
 
@@ -786,6 +791,7 @@ dependencies = [
  "domain",
  "http 0.1.0",
  "infra",
+ "nutype",
  "tokio",
  "tower-cookies",
  "tower-sessions",
@@ -1143,9 +1149,12 @@ dependencies = [
  "maud",
  "maud-extensions",
  "moddef",
+ "nutype",
  "secrecy",
  "serde",
  "serde_json",
+ "strum",
+ "strum_macros",
  "time",
  "tokio",
  "tokio-util",
@@ -1428,6 +1437,7 @@ dependencies = [
  "bon",
  "derive_more",
  "domain",
+ "nutype",
  "password-hash",
  "rand_core 0.6.4",
  "reqwest",
@@ -2980,6 +2990,25 @@ name = "strsim"
 version = "0.11.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "7da8b5736845d9f2fcb837ea5d9e2628564b3b043a70948a3f0b778838c5fb4f"
+
+[[package]]
+name = "strum"
+version = "0.26.3"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "8fec0f0aef304996cf250b31b5a10dee7980c85da9d759361292b8bca5a18f06"
+
+[[package]]
+name = "strum_macros"
+version = "0.26.4"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "4c6bee85a5a24955dc440386795aa378cd9cf82acd5f764469152d2270e581be"
+dependencies = [
+ "heck",
+ "proc-macro2",
+ "quote",
+ "rustversion",
+ "syn",
+]
 
 [[package]]
 name = "subtle"

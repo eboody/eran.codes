@@ -1,12 +1,57 @@
 use bon::Builder;
 use nutype::nutype;
+use strum_macros::{Display, EnumString};
+
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, Display, EnumString)]
+pub enum RoomName {
+    #[strum(serialize = "Lobby")]
+    Lobby,
+    #[strum(serialize = "Demo")]
+    Demo,
+    #[strum(serialize = "Support")]
+    Support,
+}
 
 #[nutype(
     sanitize(trim),
     validate(not_empty, len_char_max = 64),
     derive(Debug, Clone, PartialEq, Display)
 )]
-pub struct RoomName(String);
+pub struct RoomNameText(String);
+
+#[derive(Debug, Clone, PartialEq)]
+pub enum RoomNameError {
+    Invalid(RoomNameTextError),
+    Unknown(RoomNameText),
+}
+
+impl std::fmt::Display for RoomNameError {
+    fn fmt(
+        &self,
+        f: &mut std::fmt::Formatter<'_>,
+    ) -> std::fmt::Result {
+        match self {
+            RoomNameError::Invalid(error) => {
+                write!(f, "{error}")
+            }
+            RoomNameError::Unknown(value) => {
+                write!(f, "{value}")
+            }
+        }
+    }
+}
+
+impl RoomName {
+    pub fn try_new(
+        value: impl AsRef<str>,
+    ) -> Result<Self, RoomNameError> {
+        let raw = RoomNameText::try_new(value.as_ref())
+            .map_err(RoomNameError::Invalid)?;
+        raw.to_string()
+            .parse()
+            .map_err(|_| RoomNameError::Unknown(raw))
+    }
+}
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub struct RoomId(uuid::Uuid);

@@ -1,10 +1,11 @@
 use bon::Builder;
 use maud::Render;
+use crate::types::Text;
 
 #[derive(Clone, Debug, Builder)]
 pub struct SupportCard {
-    pub title: String,
-    pub description: Option<String>,
+    pub title: Text,
+    pub description: Option<Text>,
     pub body: Vec<maud::Markup>,
 }
 
@@ -12,9 +13,9 @@ impl Render for SupportCard {
     fn render(&self) -> maud::Markup {
         maud::html! {
             article class="support-card" {
-                h3 { (&self.title) }
+                h3 { (self.title.to_string()) }
                 @if let Some(description) = &self.description {
-                    p class="muted" { (description) }
+                    p class="muted" { (description.to_string()) }
                 }
                 @for block in &self.body {
                     (block.clone())

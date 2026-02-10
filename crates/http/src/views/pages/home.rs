@@ -1,6 +1,7 @@
 use bon::Builder;
 
 use crate::paths::Route;
+use crate::types::Text;
 use crate::views::page::UserNav;
 use crate::views::partials::{ChatDemoSection, CtaRow, DemoResultPlaceholder, DemoSection, FlowMap, HighlightsSection, HomeHero, SectionHeader, SupportCard};
 
@@ -29,7 +30,7 @@ impl maud::Render for Home {
                     .render())
 
                 (DemoSection::builder()
-                    .title("Support systems inside the chat demo".to_string())
+                    .title(Text::from("Support systems inside the chat demo"))
                     .content(maud::html! {
                         p {
                             "The chat capstone relies on the same foundations as the earlier demos. "
@@ -37,8 +38,8 @@ impl maud::Render for Home {
                         }
                         div class="grid demos" {
                             (SupportCard::builder()
-                                .title("Identity + session durability".to_string())
-                                .description("Auth, sessions, and persistence are the base layer for chat.".to_string())
+                                .title(Text::from("Identity + session durability"))
+                                .description(Text::from("Auth, sessions, and persistence are the base layer for chat."))
                                 .body(vec![
                                     CtaRow::builder()
                                         .items(vec![
@@ -58,13 +59,13 @@ impl maud::Render for Home {
                                         .build()
                                         .render(),
                                     DemoResultPlaceholder::builder()
-                                        .target_id("auth-status-target".to_string())
-                                        .message("Click “Check auth status” to load live session info.".to_string())
+                                        .target_id(Text::from("auth-status-target"))
+                                        .message(Text::from("Click “Check auth status” to load live session info."))
                                         .build()
                                         .render(),
                                     DemoResultPlaceholder::builder()
-                                        .target_id("session-status-target".to_string())
-                                        .message("Click “Show session details” to load the session id and expiry.".to_string())
+                                        .target_id(Text::from("session-status-target"))
+                                        .message(Text::from("Click “Show session details” to load the session id and expiry."))
                                         .build()
                                         .render(),
                                     CtaRow::builder()
@@ -83,23 +84,23 @@ impl maud::Render for Home {
                                         .build()
                                         .render(),
                                     DemoResultPlaceholder::builder()
-                                        .target_id("db-check-target".to_string())
-                                        .message("Run a DB lookup to see the query and trace output.".to_string())
+                                        .target_id(Text::from("db-check-target"))
+                                        .message(Text::from("Run a DB lookup to see the query and trace output."))
                                         .build()
                                         .render(),
                                 ])
                                 .build()
                                 .render())
                             (SupportCard::builder()
-                                .title("Architecture boundaries + error strategy".to_string())
-                                .description("Follow a single request through each boundary.".to_string())
+                                .title(Text::from("Architecture boundaries + error strategy"))
+                                .description(Text::from("Follow a single request through each boundary."))
                                 .body(vec![
                                     FlowMap::builder()
                                         .steps(vec![
-                                            "http::dto::Register".to_string(),
-                                            "app::user::RegisterUser".to_string(),
-                                            "domain::user::{Username, Email}".to_string(),
-                                            "infra::repo::SqlxUserRepository".to_string(),
+                                            Text::from("http::dto::Register"),
+                                            Text::from("app::user::RegisterUser"),
+                                            Text::from("domain::user::{Username, Email}"),
+                                            Text::from("infra::repo::SqlxUserRepository"),
                                         ])
                                         .build()
                                         .render(),
@@ -128,16 +129,16 @@ impl maud::Render for Home {
                                         .build()
                                         .render(),
                                     DemoResultPlaceholder::builder()
-                                        .target_id("boundary-target".to_string())
-                                        .message("Run a validation check to see domain constraints in action.".to_string())
+                                        .target_id(Text::from("boundary-target"))
+                                        .message(Text::from("Run a validation check to see domain constraints in action."))
                                         .build()
                                         .render(),
                                 ])
                                 .build()
                                 .render())
                             (SupportCard::builder()
-                                .title("Observability + realtime delivery".to_string())
-                                .description("Every request is wrapped in structured spans and SSE fanout.".to_string())
+                                .title(Text::from("Observability + realtime delivery"))
+                                .description(Text::from("Every request is wrapped in structured spans and SSE fanout."))
                                 .body(vec![
                                     maud::html! {
                                         button class="button secondary" data-on:click=(format!("@get('{}')", Route::PartialRequestMeta.as_str())) {
@@ -145,8 +146,8 @@ impl maud::Render for Home {
                                         }
                                     },
                                     DemoResultPlaceholder::builder()
-                                        .target_id("request-meta-target".to_string())
-                                        .message("Click “Fetch request metadata” to load request ids and timing.".to_string())
+                                        .target_id(Text::from("request-meta-target"))
+                                        .message(Text::from("Click “Fetch request metadata” to load request ids and timing."))
                                         .build()
                                         .render(),
                                     maud::html! {
@@ -190,8 +191,8 @@ impl maud::Render for Home {
                         "Actions above stream real request, trace, and DB events into this log via SSE."
                     }
                     (DemoResultPlaceholder::builder()
-                        .target_id("live-log-target".to_string())
-                        .message("No events yet. Trigger a demo action to start streaming.".to_string())
+                        .target_id(Text::from("live-log-target"))
+                        .message(Text::from("No events yet. Trigger a demo action to start streaming."))
                         .build()
                         .render())
                 }
@@ -202,14 +203,14 @@ impl maud::Render for Home {
                         "Server-side request timings emulate a network tab view."
                     }
                     (DemoResultPlaceholder::builder()
-                        .target_id("network-log-target".to_string())
-                        .message("No requests yet. Trigger a demo action to populate this table.".to_string())
+                        .target_id(Text::from("network-log-target"))
+                        .message(Text::from("No requests yet. Trigger a demo action to populate this table."))
                         .build()
                         .render())
                 }
 
                 (DemoSection::builder()
-                    .title("Demo D: Live Chat System (Capstone)".to_string())
+                    .title(Text::from("Demo D: Live Chat System (Capstone)"))
                     .content(maud::html! {
                         p { "Enterprise chat flow with persistence, moderation, and SSE fanout." }
                         ul {
@@ -226,8 +227,8 @@ impl maud::Render for Home {
                 } @else {
                     section id=(ChatDemoSection::ANCHOR_ID) class="chat-panel" {
                         (SectionHeader::builder()
-                            .title("Live chat room".to_string())
-                            .subtitle("Sign in to send messages and see the chat room.".to_string())
+                            .title(Text::from("Live chat room"))
+                            .subtitle(Text::from("Sign in to send messages and see the chat room."))
                             .action(maud::html! {
                                 a class="button secondary" href=(Route::Login.as_str()) { "Sign in" }
                             })

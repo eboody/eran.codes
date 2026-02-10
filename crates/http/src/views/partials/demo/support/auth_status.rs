@@ -2,6 +2,7 @@ use bon::Builder;
 use maud::Render;
 
 use crate::views::partials::{StatusCard, TraceLog};
+use crate::types::Text;
 
 #[derive(Clone, Copy, Debug)]
 enum AuthStatusLabel {
@@ -18,17 +19,17 @@ impl AuthStatusLabel {
     }
 }
 
-#[derive(Builder)]
-pub struct AuthStatus<'a> {
-    pub user_id: Option<&'a str>,
-    pub username: Option<&'a str>,
-    pub email: Option<&'a str>,
-    pub session_id: Option<String>,
-    pub expiry: Option<String>,
+#[derive(Clone, Debug, Builder)]
+pub struct AuthStatus {
+    pub user_id: Option<Text>,
+    pub username: Option<Text>,
+    pub email: Option<Text>,
+    pub session_id: Option<Text>,
+    pub expiry: Option<Text>,
     pub trace: Vec<crate::trace_log::TraceEntry>,
 }
 
-impl Render for AuthStatus<'_> {
+impl Render for AuthStatus {
     fn render(&self) -> maud::Markup {
         let status = if self.user_id.is_some() {
             AuthStatusLabel::Authenticated
@@ -36,23 +37,36 @@ impl Render for AuthStatus<'_> {
             AuthStatusLabel::Anonymous
         };
         let items = vec![
-            ("user_id".to_string(), self.user_id.unwrap_or("none").to_string()),
-            ("username".to_string(), self.username.unwrap_or("none").to_string()),
-            ("email".to_string(), self.email.unwrap_or("none").to_string()),
             (
-                "session_id".to_string(),
-                self.session_id.as_deref().unwrap_or("none").to_string(),
+                Text::from("user_id"),
+                self.user_id.clone().unwrap_or_else(|| Text::from("none")),
             ),
             (
-                "expiry".to_string(),
-                self.expiry.as_deref().unwrap_or("none").to_string(),
+                Text::from("username"),
+                self.username.clone().unwrap_or_else(|| Text::from("none")),
+            ),
+            (
+                Text::from("email"),
+                self.email.clone().unwrap_or_else(|| Text::from("none")),
+            ),
+            (
+                Text::from("session_id"),
+                self.session_id
+                    .clone()
+                    .unwrap_or_else(|| Text::from("none")),
+            ),
+            (
+                Text::from("expiry"),
+                self.expiry
+                    .clone()
+                    .unwrap_or_else(|| Text::from("none")),
             ),
         ];
 
         maud::html! {
             article id="auth-status-target" {
                 (StatusCard::builder()
-                    .title(status.as_str().to_string())
+                    .title(Text::from(status.as_str()))
                     .items(items)
                     .build()
                     .render())

@@ -3,7 +3,10 @@ pub use SqlxChatModerationQueue as ModerationQueue;
 pub use SqlxChatRateLimiter as RateLimiter;
 pub use SqlxChatRepository as Repository;
 
-use app::chat::{AuditEntry, Error, Result};
+use app::chat::{
+    AuditEntry, Error, ModerationQueueStatus, ModerationReason, Result,
+    RoomRole,
+};
 use async_trait::async_trait;
 use domain::chat;
 use sqlx::{PgPool, Row};
@@ -24,15 +27,15 @@ impl SqlxChatRepository {
     fn status_from_db(
         value: &str,
     ) -> Result<chat::MessageStatus> {
-        match value {
-            "visible" => Ok(chat::MessageStatus::Visible),
-            "pending" => Ok(chat::MessageStatus::Pending),
-            "removed" => Ok(chat::MessageStatus::Removed),
-            _ => Err(Error::Repo(format!(
-                "unknown message status: {}",
-                value
-            ))),
-        }
+        value.parse::<chat::MessageStatus>().map_err(|_| {
+            Error::Repo(
+                app::chat::RepoErrorText::new(format!(
+                    "unknown message status: {}",
+                    value
+                ))
+                ,
+            )
+        })
     }
 
     fn status_to_db(
@@ -68,7 +71,7 @@ impl app::chat::Repository for SqlxChatRepository {
         .bind(room.created_by.as_uuid())
         .execute(&self.pg)
         .await
-        .map_err(|error| Error::Repo(error.to_string()))?;
+        .map_err(|error| Error::Repo(error.to_string().into()))?;
 
         Ok(())
     }
@@ -92,7 +95,7 @@ impl app::chat::Repository for SqlxChatRepository {
         .bind(room_id.as_uuid())
         .fetch_optional(&self.pg)
         .await
-        .map_err(|error| Error::Repo(error.to_string()))?;
+        .map_err(|error| Error::Repo(error.to_string().into()))?;
 
         let Some(row) = record else {
             return Ok(None);
@@ -100,7 +103,7 @@ impl app::chat::Repository for SqlxChatRepository {
 
         let name = row.get::<String, _>("name");
         let name = chat::RoomName::try_new(name)
-            .map_err(|error| Error::Repo(error.to_string()))?;
+            .map_err(|error| Error::Repo(error.to_string().into()))?;
 
         Ok(Some(chat::Room {
             id: chat::RoomId::from_uuid(row.get::<uuid::Uuid, _>("id")),
@@ -130,7 +133,7 @@ impl app::chat::Repository for SqlxChatRepository {
         .bind(name.to_string())
         .fetch_optional(&self.pg)
         .await
-        .map_err(|error| Error::Repo(error.to_string()))?;
+        .map_err(|error| Error::Repo(error.to_string().into()))?;
 
         let Some(row) = record else {
             return Ok(None);
@@ -138,7 +141,7 @@ impl app::chat::Repository for SqlxChatRepository {
 
         let name = row.get::<String, _>("name");
         let name = chat::RoomName::try_new(name)
-            .map_err(|error| Error::Repo(error.to_string()))?;
+            .map_err(|error| Error::Repo(error.to_string().into()))?;
 
         Ok(Some(chat::Room {
             id: chat::RoomId::from_uuid(row.get::<uuid::Uuid, _>("id")),
@@ -172,13 +175,13 @@ impl app::chat::Repository for SqlxChatRepository {
         .bind(limit as i64)
         .fetch_all(&self.pg)
         .await
-        .map_err(|error| Error::Repo(error.to_string()))?;
+        .map_err(|error| Error::Repo(error.to_string().into()))?;
 
         let mut messages = Vec::with_capacity(rows.len());
         for row in rows {
             let body = row.get::<String, _>("body");
             let body = chat::MessageBody::try_new(body)
-                .map_err(|error| Error::Repo(error.to_string()))?;
+                .map_err(|error| Error::Repo(error.to_string().into()))?;
             let status =
                 Self::status_from_db(row.get::<String, _>("status").as_str())?;
 
@@ -197,7 +200,12 @@ impl app::chat::Repository for SqlxChatRepository {
                 ),
                 body,
                 status,
-                client_id: row.get::<Option<String>, _>("client_id"),
+                client_id: row
+                    .get::<Option<String>, _>("client_id")
+                    .map(|value| {
+                        chat::ClientId::try_new(value)
+                            .expect("client id")
+                    }),
                 created_at,
             });
         }
@@ -224,7 +232,7 @@ impl app::chat::Repository for SqlxChatRepository {
         .bind(message_id.as_uuid())
         .fetch_optional(&self.pg)
         .await
-        .map_err(|error| Error::Repo(error.to_string()))?;
+        .map_err(|error| Error::Repo(error.to_string().into()))?;
 
         let Some(row) = row else {
             return Ok(None);
@@ -232,7 +240,7 @@ impl app::chat::Repository for SqlxChatRepository {
 
         let body = row.get::<String, _>("body");
         let body = chat::MessageBody::try_new(body)
-            .map_err(|error| Error::Repo(error.to_string()))?;
+            .map_err(|error| Error::Repo(error.to_string().into()))?;
         let status =
             Self::status_from_db(row.get::<String, _>("status").as_str())?;
 
@@ -246,7 +254,12 @@ impl app::chat::Repository for SqlxChatRepository {
             ),
             body,
             status,
-            client_id: row.get::<Option<String>, _>("client_id"),
+            client_id: row
+                .get::<Option<String>, _>("client_id")
+                .map(|value| {
+                    chat::ClientId::try_new(value)
+                        .expect("client id")
+                }),
             created_at: offset_to_system_time(
                 row.get::<time::OffsetDateTime, _>("created_at"),
             ),
@@ -273,11 +286,11 @@ impl app::chat::Repository for SqlxChatRepository {
         .bind(message.user_id.as_uuid())
         .bind(message.body.to_string())
         .bind(Self::status_to_db(message.status))
-        .bind(message.client_id.as_ref())
+        .bind(message.client_id.as_ref().map(|value| value.to_string()))
         .bind(time::OffsetDateTime::from(message.created_at))
         .execute(&self.pg)
         .await
-        .map_err(|error| Error::Repo(error.to_string()))?;
+        .map_err(|error| Error::Repo(error.to_string().into()))?;
 
         Ok(())
     }
@@ -286,7 +299,7 @@ impl app::chat::Repository for SqlxChatRepository {
         &self,
         room_id: &chat::RoomId,
         user_id: &chat::UserId,
-        role: &str,
+        role: RoomRole,
     ) -> Result<()> {
         tracing::info!(
             target: "demo.db",
@@ -302,10 +315,10 @@ impl app::chat::Repository for SqlxChatRepository {
         )
         .bind(room_id.as_uuid())
         .bind(user_id.as_uuid())
-        .bind(role)
+        .bind(role.to_string())
         .execute(&self.pg)
         .await
-        .map_err(|error| Error::Repo(error.to_string()))?;
+        .map_err(|error| Error::Repo(error.to_string().into()))?;
 
         Ok(())
     }
@@ -331,7 +344,7 @@ impl app::chat::Repository for SqlxChatRepository {
         .bind(user_id.as_uuid())
         .fetch_optional(&self.pg)
         .await
-        .map_err(|error| Error::Repo(error.to_string()))?;
+        .map_err(|error| Error::Repo(error.to_string().into()))?;
 
         Ok(row.is_some())
     }
@@ -357,7 +370,7 @@ impl app::chat::Repository for SqlxChatRepository {
         .bind(Self::status_to_db(status))
         .execute(&self.pg)
         .await
-        .map_err(|error| Error::Repo(error.to_string()))?;
+        .map_err(|error| Error::Repo(error.to_string().into()))?;
 
         Ok(())
     }
@@ -378,7 +391,7 @@ impl app::chat::ModerationQueue for SqlxChatModerationQueue {
     async fn enqueue(
         &self,
         message_id: &chat::MessageId,
-        reason: &str,
+        reason: &ModerationReason,
     ) -> Result<()> {
         tracing::info!(
             target: "demo.db",
@@ -392,10 +405,10 @@ impl app::chat::ModerationQueue for SqlxChatModerationQueue {
             "#,
         )
         .bind(message_id.as_uuid())
-        .bind(reason)
+        .bind(reason.to_string())
         .execute(&self.pg)
         .await
-        .map_err(|error| Error::Repo(error.to_string()))?;
+        .map_err(|error| Error::Repo(error.to_string().into()))?;
 
         Ok(())
     }
@@ -431,16 +444,35 @@ impl app::chat::ModerationQueue for SqlxChatModerationQueue {
         .bind(limit as i64)
         .fetch_all(&self.pg)
         .await
-        .map_err(|error| Error::Repo(error.to_string()))?;
+        .map_err(|error| Error::Repo(error.to_string().into()))?;
 
         let mut items = Vec::with_capacity(rows.len());
         for row in rows {
             let room_name = row.get::<String, _>("room_name");
             let room_name = chat::RoomName::try_new(room_name)
-                .map_err(|error| Error::Repo(error.to_string()))?;
+                .map_err(|error| Error::Repo(error.to_string().into()))?;
             let body = row.get::<String, _>("body");
             let body = chat::MessageBody::try_new(body)
-                .map_err(|error| Error::Repo(error.to_string()))?;
+                .map_err(|error| Error::Repo(error.to_string().into()))?;
+            let queue_status = row.get::<String, _>("status");
+            let queue_status =
+                queue_status.parse::<ModerationQueueStatus>().map_err(|_| {
+                    Error::Repo(
+                        app::chat::RepoErrorText::new(format!(
+                            "unknown moderation status: {}",
+                            queue_status
+                        ))
+                        ,
+                    )
+                })?;
+            let reason = ModerationReason::try_new(
+                row.get::<String, _>("reason"),
+            )
+            .map_err(|error| Error::Repo(error.to_string().into()))?;
+            let created_at = app::chat::TimestampText::try_new(
+                row.get::<String, _>("created_at"),
+            )
+            .map_err(|error| Error::Repo(error.to_string().into()))?;
 
             items.push(
                 app::chat::ModerationItem::builder()
@@ -455,9 +487,9 @@ impl app::chat::ModerationQueue for SqlxChatModerationQueue {
                         row.get::<uuid::Uuid, _>("user_id"),
                     ))
                     .body(body)
-                    .queue_status(row.get::<String, _>("status"))
-                    .reason(row.get::<String, _>("reason"))
-                    .created_at(row.get::<String, _>("created_at"))
+                    .queue_status(queue_status)
+                    .reason(reason)
+                    .created_at(created_at)
                     .build(),
             );
         }
@@ -470,11 +502,15 @@ impl app::chat::ModerationQueue for SqlxChatModerationQueue {
         message_id: &chat::MessageId,
         reviewer_id: &chat::UserId,
         decision: app::chat::ModerationDecision,
-        reason: Option<String>,
+        reason: Option<ModerationReason>,
     ) -> Result<()> {
         let status = match decision {
-            app::chat::ModerationDecision::Approve => "approved",
-            app::chat::ModerationDecision::Remove => "removed",
+            app::chat::ModerationDecision::Approve => {
+                ModerationQueueStatus::Approved
+            }
+            app::chat::ModerationDecision::Remove => {
+                ModerationQueueStatus::Removed
+            }
         };
 
         tracing::info!(
@@ -493,12 +529,12 @@ impl app::chat::ModerationQueue for SqlxChatModerationQueue {
             "#,
         )
         .bind(message_id.as_uuid())
-        .bind(status)
+        .bind(status.to_string())
         .bind(reviewer_id.as_uuid())
-        .bind(reason)
+        .bind(reason.map(|value| value.to_string()))
         .execute(&self.pg)
         .await
-        .map_err(|error| Error::Repo(error.to_string()))?;
+        .map_err(|error| Error::Repo(error.to_string().into()))?;
 
         Ok(())
     }
@@ -570,7 +606,7 @@ impl app::chat::RateLimiter for SqlxChatRateLimiter {
         .bind(RATE_LIMIT_MAX)
         .fetch_one(&self.pg)
         .await
-        .map_err(|error| Error::Repo(error.to_string()))?;
+        .map_err(|error| Error::Repo(error.to_string().into()))?;
 
         let allowed = row.get::<bool, _>("allowed");
         if allowed {
@@ -600,7 +636,12 @@ impl app::chat::AuditLog for SqlxChatAuditLog {
         let metadata = entry
             .metadata
             .into_iter()
-            .map(|(key, value)| (key, serde_json::Value::String(value)))
+            .map(|(key, value)| {
+                (
+                    key.to_string(),
+                    serde_json::Value::String(value.to_string()),
+                )
+            })
             .collect::<serde_json::Map<String, serde_json::Value>>();
         let metadata = serde_json::Value::Object(metadata);
 
@@ -617,11 +658,11 @@ impl app::chat::AuditLog for SqlxChatAuditLog {
         )
         .bind(entry.room_id.as_uuid())
         .bind(entry.actor_id.as_uuid())
-        .bind(entry.action)
+        .bind(entry.action.to_string())
         .bind(metadata)
         .execute(&self.pg)
         .await
-        .map_err(|error| Error::Repo(error.to_string()))?;
+        .map_err(|error| Error::Repo(error.to_string().into()))?;
 
         Ok(())
     }

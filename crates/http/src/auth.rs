@@ -6,26 +6,27 @@ use axum::{
 };
 use axum_login::{AuthUser, AuthnBackend, AuthSession};
 use bon::Builder;
+use nutype::nutype;
 
 use crate::{paths::Route, request};
 
 #[derive(Clone, Debug, Builder)]
 pub struct User {
-    pub id: String,
-    pub username: String,
-    pub email: String,
-    pub session_hash: String,
+    pub id: UserId,
+    pub username: domain::user::Username,
+    pub email: domain::user::Email,
+    pub session_hash_bytes: Vec<u8>,
 }
 
 impl AuthUser for User {
-    type Id = String;
+    type Id = UserId;
 
     fn id(&self) -> Self::Id {
         self.id.clone()
     }
 
     fn session_auth_hash(&self) -> &[u8] {
-        self.session_hash.as_bytes()
+        &self.session_hash_bytes
     }
 }
 
@@ -63,7 +64,8 @@ impl AuthnBackend for Backend {
         let auth = self.auth.clone();
         let user_id = user_id.clone();
         async move {
-            let user = auth.get_user(&user_id).await?;
+            let domain_id = user_id.to_domain()?;
+            let user = auth.get_user(&domain_id).await?;
             Ok(user.map(User::from))
         }
     }
@@ -72,11 +74,39 @@ impl AuthnBackend for Backend {
 impl From<app::auth::AuthenticatedUser> for User {
     fn from(user: app::auth::AuthenticatedUser) -> Self {
         Self::builder()
-            .id(user.id)
+            .id(UserId::from(user.id))
             .username(user.username)
             .email(user.email)
-            .session_hash(user.session_hash)
+            .session_hash_bytes(user.session_hash.to_string().into_bytes())
             .build()
+    }
+}
+
+#[nutype(
+    sanitize(trim),
+    derive(Clone, Debug, PartialEq, Eq, Hash, Display, Serialize, Deserialize)
+)]
+pub struct UserId(String);
+
+impl UserId {
+    pub fn to_domain(&self) -> Result<domain::user::Id, app::auth::Error> {
+        let parsed = self
+            .to_string()
+            .parse::<uuid::Uuid>()
+            .map_err(|error| {
+                app::auth::Error::Repository(
+                    app::auth::RepositoryErrorText::new(
+                        error.to_string(),
+                    ),
+                )
+            })?;
+        Ok(domain::user::Id::from_uuid(parsed))
+    }
+}
+
+impl From<domain::user::Id> for UserId {
+    fn from(value: domain::user::Id) -> Self {
+        UserId::new(value.as_uuid().to_string())
     }
 }
 
@@ -88,7 +118,7 @@ pub async fn set_user_context_middleware(
     next: Next,
 ) -> Response {
     if let Some(user) = auth_session.user.as_ref() {
-        request::set_user_id(&user.id);
+        request::set_user_id(user.id.to_string());
     }
 
     next.run(req).await

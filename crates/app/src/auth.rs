@@ -2,14 +2,17 @@ use std::sync::Arc;
 
 use async_trait::async_trait;
 use bon::Builder;
+use nutype::nutype;
 use secrecy::{ExposeSecret, SecretString};
+
+use domain::user;
 
 pub type Result<T> = core::result::Result<T, Error>;
 
 #[derive(Debug)]
 pub enum Error {
-    Repository(String),
-    Hash(String),
+    Repository(RepositoryErrorText),
+    Hash(HashErrorText),
 }
 
 impl core::fmt::Display for Error {
@@ -25,24 +28,24 @@ impl std::error::Error for Error {}
 
 #[derive(Clone, Debug, Builder)]
 pub struct Credentials {
-    pub email: String,
+    pub email: user::Email,
     pub password: SecretString,
 }
 
 #[derive(Clone, Debug, Builder)]
 pub struct AuthenticatedUser {
-    pub id: String,
-    pub username: String,
-    pub email: String,
-    pub session_hash: String,
+    pub id: user::Id,
+    pub username: user::Username,
+    pub email: user::Email,
+    pub session_hash: SessionHash,
 }
 
 #[derive(Clone, Debug, Builder)]
 pub struct AuthRecord {
-    pub id: String,
-    pub username: String,
-    pub email: String,
-    pub password_hash: String,
+    pub id: user::Id,
+    pub username: user::Username,
+    pub email: user::Email,
+    pub password_hash: PasswordHash,
 }
 
 #[async_trait]
@@ -53,7 +56,7 @@ pub trait Provider: Send + Sync {
     ) -> Result<Option<AuthenticatedUser>>;
     async fn get_user(
         &self,
-        user_id: &str,
+        user_id: &user::Id,
     ) -> Result<Option<AuthenticatedUser>>;
 }
 
@@ -82,7 +85,7 @@ impl Service {
 
     pub async fn get_user(
         &self,
-        user_id: &str,
+        user_id: &user::Id,
     ) -> Result<Option<AuthenticatedUser>> {
         self.provider.get_user(user_id).await
     }
@@ -101,7 +104,7 @@ impl Provider for DisabledProvider {
 
     async fn get_user(
         &self,
-        _user_id: &str,
+        _user_id: &user::Id,
     ) -> Result<Option<AuthenticatedUser>> {
         Ok(None)
     }
@@ -111,20 +114,20 @@ impl Provider for DisabledProvider {
 pub trait Repository: Send + Sync {
     async fn find_by_email(
         &self,
-        email: &str,
+        email: &user::Email,
     ) -> Result<Option<AuthRecord>>;
     async fn find_by_id(
         &self,
-        user_id: &str,
+        user_id: &user::Id,
     ) -> Result<Option<AuthRecord>>;
 }
 
 pub trait PasswordHasher: Send + Sync {
-    fn hash(&self, password: &str) -> Result<String>;
+    fn hash(&self, password: &str) -> Result<PasswordHash>;
     fn verify(
         &self,
         password: &str,
-        password_hash: &str,
+        password_hash: &PasswordHash,
     ) -> Result<bool>;
 }
 
@@ -168,14 +171,16 @@ impl Provider for ProviderImpl {
                 .id(record.id)
                 .username(record.username)
                 .email(record.email)
-                .session_hash(record.password_hash)
+                .session_hash(SessionHash::from_password_hash(
+                    &record.password_hash,
+                ))
                 .build(),
         ))
     }
 
     async fn get_user(
         &self,
-        user_id: &str,
+        user_id: &user::Id,
     ) -> Result<Option<AuthenticatedUser>> {
         let record = match self.repo.find_by_id(user_id).await? {
             Some(record) => record,
@@ -187,9 +192,54 @@ impl Provider for ProviderImpl {
                 .id(record.id)
                 .username(record.username)
                 .email(record.email)
-                .session_hash(record.password_hash)
+                .session_hash(SessionHash::from_password_hash(
+                    &record.password_hash,
+                ))
                 .build(),
         ))
+    }
+}
+
+#[nutype(
+    sanitize(trim),
+    derive(Clone, Debug, PartialEq, Display)
+)]
+pub struct RepositoryErrorText(String);
+
+impl From<String> for RepositoryErrorText {
+    fn from(value: String) -> Self {
+        RepositoryErrorText::new(value)
+    }
+}
+
+#[nutype(
+    sanitize(trim),
+    derive(Clone, Debug, PartialEq, Display)
+)]
+pub struct HashErrorText(String);
+
+impl From<String> for HashErrorText {
+    fn from(value: String) -> Self {
+        HashErrorText::new(value)
+    }
+}
+
+#[nutype(
+    sanitize(trim),
+    derive(Clone, Debug, PartialEq, Display)
+)]
+pub struct PasswordHash(String);
+
+#[nutype(
+    sanitize(trim),
+    derive(Clone, Debug, PartialEq, Display)
+)]
+pub struct SessionHash(String);
+
+impl SessionHash {
+    pub fn from_password_hash(value: &PasswordHash) -> Self {
+        SessionHash::new(value.to_string())
+            
     }
 }
 

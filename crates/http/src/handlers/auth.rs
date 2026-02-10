@@ -7,6 +7,7 @@ use bon::Builder;
 use serde::Deserialize;
 
 use crate::paths::Route;
+use crate::types::Text;
 use crate::views::{self, pages};
 use secrecy::SecretString;
 
@@ -46,17 +47,17 @@ pub async fn register_form(
 
 #[derive(Builder, Deserialize)]
 pub struct LoginForm {
-    pub email: String,
-    pub password: String,
-    pub next: Option<String>,
+    pub email: Text,
+    pub password: Text,
+    pub next: Option<Text>,
 }
 
 #[derive(Builder, Deserialize)]
 pub struct RegisterForm {
-    pub username: String,
-    pub email: String,
-    pub password: String,
-    pub next: Option<String>,
+    pub username: Text,
+    pub email: Text,
+    pub password: Text,
+    pub next: Option<Text>,
 }
 
 pub async fn login(
@@ -64,9 +65,12 @@ pub async fn login(
     Form(form): Form<LoginForm>,
 ) -> crate::Result<axum::response::Response> {
     let next = sanitize_next(form.next.clone());
+    let email = domain::user::Email::try_new(form.email.to_string())
+        .map_err(domain::user::Error::from)
+        .map_err(app::user::Error::from)?;
     let credentials = app::auth::Credentials::builder()
-        .email(form.email)
-        .password(SecretString::new(form.password.into()))
+        .email(email)
+        .password(SecretString::new(form.password.to_string().into()))
         .build();
 
     if let Some(user) = auth_session.authenticate(credentials).await? {
@@ -89,15 +93,21 @@ pub async fn register(
     Form(form): Form<RegisterForm>,
 ) -> crate::Result<axum::response::Response> {
     let next = sanitize_next(form.next.clone());
+    let email = domain::user::Email::try_new(form.email.to_string())
+        .map_err(domain::user::Error::from)
+        .map_err(app::user::Error::from)?;
+    let username = domain::user::Username::try_new(form.username.to_string())
+        .map_err(domain::user::Error::from)
+        .map_err(app::user::Error::from)?;
     let credentials = app::auth::Credentials::builder()
-        .email(form.email.clone())
-        .password(SecretString::new(form.password.clone().into()))
+        .email(email.clone())
+        .password(SecretString::new(form.password.to_string().into()))
         .build();
 
     let command = app::user::RegisterUser::builder()
-        .username(form.username)
-        .email(form.email)
-        .password(SecretString::new(form.password.into()))
+        .username(username)
+        .email(email)
+        .password(SecretString::new(form.password.to_string().into()))
         .build();
 
     match state.user.register_user(command).await {
@@ -143,12 +153,12 @@ pub async fn protected(
 
     Ok(views::render(
         pages::Protected::builder()
-            .username(user.username.clone())
-            .email(user.email.clone())
+            .username(Text::from(user.username.to_string()))
+            .email(Text::from(user.email.to_string()))
             .maybe_user(Some(
                 crate::views::page::UserNav::builder()
-                    .username(user.username)
-                    .email(user.email)
+                    .username(Text::from(user.username.to_string()))
+                    .email(Text::from(user.email.to_string()))
                     .build(),
             ))
             .build(),
@@ -158,10 +168,10 @@ pub async fn protected(
 
 #[derive(Deserialize)]
 pub struct NextQuery {
-    pub next: Option<String>,
+    pub next: Option<Text>,
 }
 
-fn sanitize_next(next: Option<String>) -> Option<String> {
+fn sanitize_next(next: Option<Text>) -> Option<String> {
     next.and_then(|value| NextPath::from(value).into_safe())
 }
 
@@ -171,15 +181,15 @@ fn redirect_to_next(next: Option<String>) -> Redirect {
 }
 
 #[derive(Clone, Debug)]
-struct NextPath(String);
+struct NextPath(Text);
 
 impl NextPath {
-    fn from(value: String) -> Self {
+    fn from(value: Text) -> Self {
         Self(value)
     }
 
     fn into_safe(self) -> Option<String> {
-        let value = self.0;
+        let value = self.0.to_string();
         if Self::is_safe(&value) {
             Some(value)
         } else {

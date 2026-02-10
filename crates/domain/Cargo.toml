@@ -13,3 +13,5 @@ bon = { version = "3.8.1", features = [
 ] }
 moddef = { workspace = true }
 uuid = { version = "1.12.1", features = ["v4"] }
+strum = { workspace = true }
+strum_macros = { workspace = true }

@@ -1,11 +1,12 @@
 use bon::Builder;
 use maud::{Markup, Render};
 use crate::paths::Route;
+use crate::types::Text;
 
 #[derive(Clone, Debug, Builder)]
 pub struct UserNav {
-    pub username: String,
-    pub email: String,
+    pub username: Text,
+    pub email: Text,
 }
 
 #[derive(Builder)]
@@ -43,7 +44,7 @@ impl Render for Layout<'_> {
                             @match &self.user {
                                 Some(user) => {
                                     ul {
-                                        li { span { "Signed in as " (user.username) } }
+                                        li { span { "Signed in as " (user.username.to_string()) } }
                                         li { a href=(Route::Protected.as_str()) { "Account" } }
                                         li {
                                             form method="post" action=(Route::Logout.as_str()) {

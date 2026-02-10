@@ -1,9 +1,10 @@
 use bon::Builder;
 use maud::Render;
+use crate::types::Text;
 
 #[derive(Clone, Debug, Builder)]
 pub struct FlowMap {
-    pub steps: Vec<String>,
+    pub steps: Vec<Text>,
 }
 
 impl Render for FlowMap {
@@ -14,7 +15,7 @@ impl Render for FlowMap {
                     @if idx > 0 {
                         span class="arrow" { "→" }
                     }
-                    span class="step" { (step) }
+                    span class="step" { (step.to_string()) }
                 }
             }
         }

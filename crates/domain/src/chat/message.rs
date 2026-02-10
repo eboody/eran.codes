@@ -27,10 +27,13 @@ impl MessageId {
     }
 }
 
-#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, strum_macros::Display, strum_macros::EnumString)]
 pub enum MessageStatus {
+    #[strum(serialize = "visible")]
     Visible,
+    #[strum(serialize = "pending")]
     Pending,
+    #[strum(serialize = "removed")]
     Removed,
 }
 
@@ -41,6 +44,13 @@ pub struct Message {
     pub user_id: UserId,
     pub body: MessageBody,
     pub status: MessageStatus,
-    pub client_id: Option<String>,
+    pub client_id: Option<ClientId>,
     pub created_at: std::time::SystemTime,
 }
+
+#[nutype(
+    sanitize(trim),
+    validate(not_empty, len_char_max = 128),
+    derive(Debug, Clone, PartialEq, Display)
+)]
+pub struct ClientId(String);

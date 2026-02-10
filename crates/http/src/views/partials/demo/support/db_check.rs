@@ -2,6 +2,7 @@ use bon::Builder;
 use maud::Render;
 
 use crate::views::partials::{StatusCard, TraceLog};
+use crate::types::Text;
 
 #[derive(Clone, Copy, Debug)]
 enum DbLookupStatus {
@@ -18,14 +19,14 @@ impl DbLookupStatus {
     }
 }
 
-#[derive(Builder)]
-pub struct DbCheck<'a> {
-    pub email: &'a str,
+#[derive(Clone, Debug, Builder)]
+pub struct DbCheck {
+    pub email: Text,
     pub exists: bool,
     pub trace: Vec<crate::trace_log::TraceEntry>,
 }
 
-impl Render for DbCheck<'_> {
+impl Render for DbCheck {
     fn render(&self) -> maud::Markup {
         let status = if self.exists {
             DbLookupStatus::Found
@@ -35,10 +36,10 @@ impl Render for DbCheck<'_> {
         maud::html! {
             article id="db-check-target" {
                 (StatusCard::builder()
-                    .title("DB lookup".to_string())
+                    .title(Text::from("DB lookup"))
                     .items(vec![
-                        ("email".to_string(), self.email.to_string()),
-                        ("result".to_string(), status.as_str().to_string()),
+                        (Text::from("email"), self.email.clone()),
+                        (Text::from("result"), Text::from(status.as_str())),
                     ])
                     .build()
                     .render())

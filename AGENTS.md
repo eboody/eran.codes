@@ -46,6 +46,8 @@
 - When multiple implementation paths exist, choose the most sensible default and proceed without asking unless a decision blocks progress.
 - Reference `docs/portfolio-demos-plan.md` and `docs/portfolio-demos.md` when deciding which demo UX to implement next.
 - When designing a feature, present both a simpler baseline (with a TODO placeholder) and an enterprise-level option so the user can choose.
+- Never use string literal comparisons or stringly-typed checks; define enums/newtypes (prefer `strum`/`nutype`) and match on those instead.
+- Avoid `String` fields in structs; use enums or newtypes instead (enforced by `scripts/ci/no-string-fields.sh`).
 - When a submodule name matches its primary type, keep the submodule private and re-export the type (e.g., `mod ping; pub use ping::Ping` → `views::partials::Ping`).
 - Prefer explicit re-exports over `pub use module::*` unless the module is intentionally a flat API surface.
 - Use `moddef::moddef!` for module declarations when it reduces repetition and aligns with the above naming conventions.
@@ -283,6 +285,7 @@ When asked to design or review a feature, produce:
 - Indentation: 4 spaces; follow idiomatic Rust formatting.
 - Naming: `snake_case` for functions/modules, `CamelCase` for types, `SCREAMING_SNAKE_CASE` for constants.
 - Layering: domain types and traits in `crates/domain`, business logic in `crates/app`, IO adapters in `crates/infra` and `crates/http`.
+- No stringly-typed struct fields: replace `String` fields with enums (for invariant sets) or `nutype` newtypes (for unbounded text/ids). Prefer `strum` for enum string representations.
 
 ## Testing Guidelines
 - Use `cargo test` for all tests; no special runner configured.

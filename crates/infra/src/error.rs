@@ -2,6 +2,7 @@
 use std::fmt;
 
 use derive_more::From;
+use nutype::nutype;
 
 #[derive(Debug, From)]
 pub enum Error {
@@ -10,7 +11,7 @@ pub enum Error {
     },
     InvalidEnv {
         key: &'static str,
-        value: String,
+        value: EnvValue,
         reason: &'static str,
     },
     Io(std::io::Error),
@@ -19,6 +20,12 @@ pub enum Error {
     #[from]
     Migrate(sqlx::migrate::MigrateError),
 }
+
+#[nutype(
+    sanitize(trim),
+    derive(Clone, Debug, PartialEq, Eq, Display)
+)]
+pub struct EnvValue(String);
 
 pub type Result<T> = std::result::Result<T, Error>;
 

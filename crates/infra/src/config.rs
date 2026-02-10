@@ -1,4 +1,5 @@
 use bon::Builder;
+use nutype::nutype;
 
 use crate::error::{Error, Result};
 
@@ -9,15 +10,13 @@ pub struct InfraConfig {
 
 #[derive(Clone, Debug, Builder)]
 pub struct DbConfig {
-    pub url: String,
+    pub url: DbUrl,
     pub max_connections: u32,
 }
 
 impl InfraConfig {
     pub fn from_env() -> Result<Self> {
-        let database_url = utils::envs::get_env(
-            "DATABASE_URL",
-        )
+        let database_url = utils::envs::get_env("DATABASE_URL")
         .map_err(|_| Error::MissingEnv {
             key: "DATABASE_URL",
         })?;
@@ -26,7 +25,7 @@ impl InfraConfig {
             Self::builder()
                 .db(
                     DbConfig::builder()
-                        .url(database_url)
+                        .url(DbUrl::new(database_url))
                         .max_connections(10)
                         .build(),
                 )
@@ -34,3 +33,9 @@ impl InfraConfig {
         )
     }
 }
+
+#[nutype(
+    sanitize(trim),
+    derive(Clone, Debug, PartialEq, Eq, Display, AsRef)
+)]
+pub struct DbUrl(String);

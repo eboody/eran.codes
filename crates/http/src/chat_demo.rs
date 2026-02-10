@@ -5,15 +5,16 @@ pub struct ChatContext {
 
 pub async fn load_chat_context(
     state: &crate::State,
-    user_id: &str,
+    user_id: domain::user::Id,
 ) -> Result<ChatContext, crate::error::Error> {
-    let room = ensure_room(state, user_id).await?;
+    let chat_user_id = chat::UserId::from_uuid(*user_id.as_uuid());
+    let room = ensure_room(state, chat_user_id).await?;
     let messages = state
         .chat
         .list_messages(
             app::chat::ListMessages::builder()
-                .room_id(room.id.as_uuid().to_string())
-                .user_id(user_id.to_string())
+                .room_id(room.id)
+                .user_id(chat_user_id)
                 .build(),
         )
         .await?;
@@ -27,16 +28,16 @@ pub async fn load_chat_context(
 
 async fn ensure_room(
     state: &crate::State,
-    user_id: &str,
+    user_id: chat::UserId,
 ) -> Result<domain::chat::Room, crate::error::Error> {
-    let room_name = "Lobby".to_string();
-    if let Some(room) = state.chat.find_room_by_name(room_name.clone()).await? {
+    let room_name = chat::RoomName::Lobby;
+    if let Some(room) = state.chat.find_room_by_name(room_name).await? {
         let _ = state
             .chat
             .join_room(
                 app::chat::JoinRoom::builder()
-                    .room_id(room.id.as_uuid().to_string())
-                    .user_id(user_id.to_string())
+                    .room_id(room.id)
+                    .user_id(user_id)
                     .build(),
             )
             .await;
@@ -48,7 +49,7 @@ async fn ensure_room(
         .create_room(
             app::chat::CreateRoom::builder()
                 .name(room_name)
-                .created_by(user_id.to_string())
+                .created_by(user_id)
                 .build(),
         )
         .await?;
@@ -61,7 +62,7 @@ async fn to_message_views(
 ) -> Vec<crate::views::partials::ChatMessage> {
     let mut names = std::collections::HashMap::new();
     for message in messages {
-        let user_id = message.user_id.as_uuid().to_string();
+        let user_id = domain::user::Id::from_uuid(*message.user_id.as_uuid());
         if names.contains_key(&user_id) {
             continue;
         }
@@ -74,17 +75,26 @@ async fn to_message_views(
         .iter()
         .rev()
         .map(|message| {
-            let user_id = message.user_id.as_uuid().to_string();
+            let user_id = domain::user::Id::from_uuid(*message.user_id.as_uuid());
             let author = names
                 .get(&user_id)
                 .cloned()
-                .unwrap_or_else(|| format!("User {}", &user_id[..8]));
+                .unwrap_or_else(|| {
+                    domain::user::Username::try_new(format!(
+                        "user-{}",
+                        &user_id.as_uuid().to_string()[..8]
+                    ))
+                    .unwrap_or_else(|_| {
+                        domain::user::Username::try_new("user")
+                            .expect("username")
+                    })
+                });
             crate::views::partials::ChatMessage::builder()
-                .message_id(message.id.as_uuid().to_string())
-                .author(author)
-                .timestamp(format_message_time(message.created_at))
-                .body(message.body.to_string())
-                .status(format!("{:?}", message.status))
+                .message_id(crate::types::Text::from(message.id.as_uuid().to_string()))
+                .author(crate::types::Text::from(author.to_string()))
+                .timestamp(crate::types::Text::from(format_message_time(message.created_at)))
+                .body(crate::types::Text::from(message.body.to_string()))
+                .status(crate::types::Text::from(format!("{:?}", message.status)))
                 .build()
         })
         .collect()
@@ -98,3 +108,4 @@ pub fn format_message_time(value: std::time::SystemTime) -> String {
         .unwrap_or_else(|_| Vec::new());
     time.format(&format).unwrap_or_else(|_| "--:--".to_string())
 }
+use domain::chat;

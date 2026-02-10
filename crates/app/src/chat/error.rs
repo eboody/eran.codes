@@ -3,8 +3,8 @@ pub type Result<T> = core::result::Result<T, Error>;
 #[derive(Debug)]
 pub enum Error {
     Domain(domain::chat::Error),
-    Repo(String),
-    InvalidId(String),
+    Repo(RepoErrorText),
+    InvalidId(InvalidIdText),
     RateLimited,
     RoomNotFound,
     MessageNotFound,
@@ -27,3 +27,29 @@ impl core::fmt::Display for Error {
 }
 
 impl std::error::Error for Error {}
+
+use nutype::nutype;
+
+#[nutype(
+    sanitize(trim),
+    derive(Clone, Debug, PartialEq, Display)
+)]
+pub struct RepoErrorText(String);
+
+impl From<String> for RepoErrorText {
+    fn from(value: String) -> Self {
+        RepoErrorText::new(value)
+    }
+}
+
+#[nutype(
+    sanitize(trim),
+    derive(Clone, Debug, PartialEq, Display)
+)]
+pub struct InvalidIdText(String);
+
+impl From<String> for InvalidIdText {
+    fn from(value: String) -> Self {
+        InvalidIdText::new(value)
+    }
+}

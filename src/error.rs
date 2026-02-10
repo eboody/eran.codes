@@ -2,6 +2,7 @@
 use std::{error::Error as StdError, fmt};
 
 use derive_more::From;
+use nutype::nutype;
 
 #[derive(Debug, From)]
 pub enum Error {
@@ -11,13 +12,19 @@ pub enum Error {
     },
     InvalidEnv {
         key: &'static str,
-        reason: String,
+        reason: EnvErrorReason,
     },
     #[from]
     Io(std::io::Error),
     // Http(http::error::Error),
     // Service(service::error::Error),
 }
+
+#[nutype(
+    sanitize(trim),
+    derive(Clone, Debug, PartialEq, Eq, Display)
+)]
+pub struct EnvErrorReason(String);
 
 pub type Result<T> = std::result::Result<T, Error>;
 

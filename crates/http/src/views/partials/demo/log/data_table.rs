@@ -1,5 +1,6 @@
 use bon::Builder;
 use maud::Render;
+use crate::types::Text;
 
 #[derive(Clone, Copy, Debug)]
 pub enum TableVariant {
@@ -24,7 +25,7 @@ impl Default for TableVariant {
 
 #[derive(Clone, Debug, Builder)]
 pub struct DataTable {
-    pub headers: Vec<String>,
+    pub headers: Vec<Text>,
     pub rows: Vec<Vec<maud::Markup>>,
     #[builder(default)]
     pub variant: TableVariant,
@@ -37,7 +38,7 @@ impl Render for DataTable {
                 thead {
                     tr {
                         @for header in &self.headers {
-                            th { (header) }
+                            th { (header.to_string()) }
                         }
                     }
                 }

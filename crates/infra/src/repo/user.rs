@@ -1,5 +1,6 @@
 pub use SqlxUserRepository as Repository;
 
+use app::auth::PasswordHash;
 use app::user::{Error, Repository as UserRepository, Result};
 use async_trait::async_trait;
 use domain::user;
@@ -32,7 +33,7 @@ impl UserRepository for SqlxUserRepository {
         .bind(email.to_string())
         .fetch_optional(&self.pg)
         .await
-        .map_err(|error| Error::Repo(error.to_string()))?;
+        .map_err(|error| Error::Repo(error.to_string().into()))?;
         tracing::info!(
             target: "demo.db",
             message = "db query complete",
@@ -48,9 +49,9 @@ impl UserRepository for SqlxUserRepository {
         let email = row.get::<String, _>("email");
 
         let username = user::Username::try_new(username)
-            .map_err(|error| Error::Repo(error.to_string()))?;
+            .map_err(|error| Error::Repo(error.to_string().into()))?;
         let email = user::Email::try_new(email)
-            .map_err(|error| Error::Repo(error.to_string()))?;
+            .map_err(|error| Error::Repo(error.to_string().into()))?;
 
         Ok(Some(user::User {
             id: user::Id::from_uuid(id),
@@ -62,7 +63,7 @@ impl UserRepository for SqlxUserRepository {
     async fn create_with_credentials(
         &self,
         user: &user::User,
-        password_hash: &str,
+        password_hash: &PasswordHash,
     ) -> Result<()> {
         let start = std::time::Instant::now();
         tracing::info!(
@@ -74,7 +75,7 @@ impl UserRepository for SqlxUserRepository {
             .pg
             .begin()
             .await
-            .map_err(|error| Error::Repo(error.to_string()))?;
+            .map_err(|error| Error::Repo(error.to_string().into()))?;
 
         sqlx::query(
             r#"
@@ -87,7 +88,7 @@ impl UserRepository for SqlxUserRepository {
         .bind(user.email.to_string())
         .execute(&mut *tx)
         .await
-        .map_err(|error| Error::Repo(error.to_string()))?;
+        .map_err(|error| Error::Repo(error.to_string().into()))?;
         tracing::info!(
             target: "demo.db",
             message = "db query complete",
@@ -107,10 +108,10 @@ impl UserRepository for SqlxUserRepository {
             "#,
         )
         .bind(user.id.as_uuid())
-        .bind(password_hash)
+        .bind(password_hash.to_string())
         .execute(&mut *tx)
         .await
-        .map_err(|error| Error::Repo(error.to_string()))?;
+        .map_err(|error| Error::Repo(error.to_string().into()))?;
         tracing::info!(
             target: "demo.db",
             message = "db query complete",
@@ -119,7 +120,7 @@ impl UserRepository for SqlxUserRepository {
 
         tx.commit()
             .await
-            .map_err(|error| Error::Repo(error.to_string()))?;
+            .map_err(|error| Error::Repo(error.to_string().into()))?;
 
         Ok(())
     }
