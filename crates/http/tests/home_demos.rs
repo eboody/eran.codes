@@ -242,18 +242,65 @@ async fn home_page_includes_demo_sections() {
         .unwrap();
     let body = String::from_utf8_lossy(&body);
 
-    assert!(body.contains("Demo 1: Auth flow walkthrough"));
-    assert!(body.contains("Demo 2: Persistent session resilience"));
-    assert!(body.contains("Demo 3: Architecture boundary map"));
-    assert!(body.contains("Demo 4: Error handling showcase"));
-    assert!(body.contains("Demo 5: Tracing and observability"));
-    assert!(body.contains("Demo 6: SSE and Datastar patches"));
-    assert!(body.contains("Check auth status"));
-    assert!(body.contains("Show session details"));
-    assert!(body.contains("Check demo@example.com"));
-    assert!(body.contains("Live backend log"));
-    assert!(body.contains("Start demo"));
-    assert!(body.contains("Sign in"));
-    assert!(body.contains("/register"));
-    assert!(body.contains("/login"));
+    for copy in HomeCopy::all() {
+        assert!(body.contains(copy.as_str()));
+    }
+}
+
+#[derive(Clone, Copy, Debug)]
+enum HomeCopy {
+    Demo1,
+    Demo2,
+    Demo3,
+    Demo4,
+    Demo5,
+    Demo6,
+    CheckAuth,
+    ShowSession,
+    CheckDemoEmail,
+    LiveBackendLog,
+    StartDemo,
+    SignIn,
+    RegisterPath,
+    LoginPath,
+}
+
+impl HomeCopy {
+    fn all() -> &'static [HomeCopy] {
+        &[
+            HomeCopy::Demo1,
+            HomeCopy::Demo2,
+            HomeCopy::Demo3,
+            HomeCopy::Demo4,
+            HomeCopy::Demo5,
+            HomeCopy::Demo6,
+            HomeCopy::CheckAuth,
+            HomeCopy::ShowSession,
+            HomeCopy::CheckDemoEmail,
+            HomeCopy::LiveBackendLog,
+            HomeCopy::StartDemo,
+            HomeCopy::SignIn,
+            HomeCopy::RegisterPath,
+            HomeCopy::LoginPath,
+        ]
+    }
+
+    fn as_str(self) -> &'static str {
+        match self {
+            HomeCopy::Demo1 => "Demo 1: Auth flow walkthrough",
+            HomeCopy::Demo2 => "Demo 2: Persistent session resilience",
+            HomeCopy::Demo3 => "Demo 3: Architecture boundary map",
+            HomeCopy::Demo4 => "Demo 4: Error handling showcase",
+            HomeCopy::Demo5 => "Demo 5: Tracing and observability",
+            HomeCopy::Demo6 => "Demo 6: SSE and Datastar patches",
+            HomeCopy::CheckAuth => "Check auth status",
+            HomeCopy::ShowSession => "Show session details",
+            HomeCopy::CheckDemoEmail => "Check demo@example.com",
+            HomeCopy::LiveBackendLog => "Live backend log",
+            HomeCopy::StartDemo => "Start demo",
+            HomeCopy::SignIn => "Sign in",
+            HomeCopy::RegisterPath => "/register",
+            HomeCopy::LoginPath => "/login",
+        }
+    }
 }

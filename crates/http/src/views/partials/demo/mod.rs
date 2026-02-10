@@ -1,4 +1,4 @@
-moddef::moddef!(mod { auth_status, boundary_check, chat_message, chat_panel, chat_window, chat_connection, chat_demo_section, db_check, live_log, log_panel, log_row, network_log, ping, request_meta, session_status, trace_log, moderation_action, key_value_list, demo_section, demo_result, home_hero, highlights_section, pill, section_header, status_card, cta_row, support_card, flow_map, empty_state, chat_flow, data_table });
+moddef::moddef!(mod { auth_status, boundary_check, chat_message, chat_panel, chat_window, chat_connection, chat_demo_section, db_check, live_log, log_panel, log_row, network_log, ping, request_meta, session_status, trace_log, moderation_action, key_value_list, demo_section, demo_result, home_hero, highlights_section, pill, section_header, status_card, cta_row, support_card, flow_map, empty_state, chat_flow, data_table, field_value });
 
 pub use auth_status::AuthStatus;
 pub use boundary_check::BoundaryCheck;
@@ -28,6 +28,7 @@ pub use flow_map::FlowMap;
 pub use empty_state::EmptyState;
 pub use chat_flow::ChatFlow;
 pub use data_table::{DataTable, TableVariant};
+pub use field_value::FieldValue;
 pub use ping::Ping;
 pub use request_meta::RequestMeta;
 pub use session_status::SessionStatus;

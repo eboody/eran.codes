@@ -162,16 +162,34 @@ pub struct NextQuery {
 }
 
 fn sanitize_next(next: Option<String>) -> Option<String> {
-    next.and_then(|value| {
-        if value.starts_with('/') && !value.starts_with("//") {
-            Some(value)
-        } else {
-            None
-        }
-    })
+    next.and_then(|value| NextPath::from(value).into_safe())
 }
 
 fn redirect_to_next(next: Option<String>) -> Redirect {
     let target = next.unwrap_or_else(|| Route::Protected.as_str().to_string());
     Redirect::to(&target)
+}
+
+#[derive(Clone, Debug)]
+struct NextPath(String);
+
+impl NextPath {
+    fn from(value: String) -> Self {
+        Self(value)
+    }
+
+    fn into_safe(self) -> Option<String> {
+        let value = self.0;
+        if Self::is_safe(&value) {
+            Some(value)
+        } else {
+            None
+        }
+    }
+
+    fn is_safe(value: &str) -> bool {
+        let bytes = value.as_bytes();
+        matches!(bytes.first(), Some(b'/'))
+            && !matches!(bytes.get(1), Some(b'/'))
+    }
 }

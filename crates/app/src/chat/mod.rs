@@ -418,7 +418,28 @@ fn should_moderate(
     body: &chat::MessageBody,
 ) -> bool {
     let value = body.to_string();
-    value.len() > 300 || value.contains("http://") || value.contains("https://")
+    value.len() > 300 || LinkPrefix::is_present(&value)
+}
+
+#[derive(Clone, Copy, Debug)]
+enum LinkPrefix {
+    Http,
+    Https,
+}
+
+impl LinkPrefix {
+    fn as_str(self) -> &'static str {
+        match self {
+            LinkPrefix::Http => "http://",
+            LinkPrefix::Https => "https://",
+        }
+    }
+
+    fn is_present(value: &str) -> bool {
+        [Self::Http, Self::Https]
+            .iter()
+            .any(|prefix| value.contains(prefix.as_str()))
+    }
 }
 
 impl Service {

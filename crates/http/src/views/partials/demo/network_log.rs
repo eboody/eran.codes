@@ -2,7 +2,8 @@ use bon::Builder;
 use maud::Render;
 
 use crate::trace_log::TraceEntry;
-use crate::views::partials::{ChatFlow, DataTable, EmptyState, LogPanel, Pill, TableVariant};
+use crate::views::partials::{ChatFlow, DataTable, EmptyState, FieldValue, LogPanel, Pill, TableVariant};
+use crate::trace_log::{LogMessageKind, LogTargetKind};
 
 #[derive(Builder)]
 pub struct NetworkLog<'a> {
@@ -14,20 +15,27 @@ impl Render for NetworkLog<'_> {
         let request_rows: Vec<&TraceEntry> = self
             .entries
             .iter()
-            .filter(|entry| entry.target == "demo.request" && entry.message == "request.end")
+            .filter(|entry| {
+                matches!(LogTargetKind::from_str(&entry.target), LogTargetKind::DemoRequest)
+                    && matches!(LogMessageKind::from_str(&entry.message), LogMessageKind::RequestEnd)
+            })
             .collect();
         let sse_rows: Vec<&TraceEntry> = self
             .entries
             .iter()
-            .filter(|entry| entry.target == "demo.sse")
+            .filter(|entry| matches!(LogTargetKind::from_str(&entry.target), LogTargetKind::DemoSse))
             .collect();
         let chat_rows: Vec<&TraceEntry> = self
             .entries
             .iter()
             .filter(|entry| {
-                entry.target == "demo.chat"
-                    || (entry.target == "demo.sse"
-                        && entry.message.contains("chat"))
+                let target_kind = LogTargetKind::from_str(&entry.target);
+                let message_kind = LogMessageKind::from_str(&entry.message);
+                matches!(
+                    (target_kind, message_kind),
+                    (LogTargetKind::DemoChat, LogMessageKind::ChatMessageIncoming)
+                        | (LogTargetKind::DemoSse, LogMessageKind::ChatMessageBroadcast)
+                )
             })
             .collect();
 
@@ -81,9 +89,9 @@ impl Render for NetworkLog<'_> {
                     vec![
                         maud::html! { (entry.timestamp.clone()) },
                         maud::html! { (entry.message.clone()) },
-                        maud::html! { (field_value(entry, "selector")) },
-                        maud::html! { (field_value(entry, "mode")) },
-                        maud::html! { (field_value(entry, "payload_bytes")) },
+                        maud::html! { (field_value_text(entry, "selector")) },
+                        maud::html! { (field_value_text(entry, "mode")) },
+                        maud::html! { (field_value_text(entry, "payload_bytes")) },
                     ]
                 })
                 .collect::<Vec<_>>();
@@ -137,49 +145,51 @@ impl Render for NetworkLog<'_> {
     }
 }
 
-fn field_value(entry: &TraceEntry, name: &str) -> String {
+fn field_value(entry: &TraceEntry, name: &str) -> FieldValue {
     entry
         .fields
         .iter()
         .find(|(field, _)| field == name)
-        .map(|(_, value)| value.clone())
+        .map(|(_, value)| FieldValue::from_str(value))
+        .unwrap_or(FieldValue::Missing)
+}
+
+fn field_value_text(entry: &TraceEntry, name: &str) -> String {
+    field_value(entry, name)
+        .into_option()
         .unwrap_or_else(|| "-".to_string())
 }
 
 fn method_pill(entry: &TraceEntry) -> Pill {
-    let method = field_value(entry, "method");
-    if method == "-" {
-        return Pill::fields("-".to_string());
+    match field_value(entry, "method").into_option() {
+        Some(method) => Pill::method(method),
+        None => Pill::fields("-".to_string()),
     }
-    Pill::method(method)
 }
 
 fn path_pill(entry: &TraceEntry) -> Pill {
-    let path = field_value(entry, "path");
-    if path == "-" {
-        return Pill::fields("-".to_string());
+    match field_value(entry, "path").into_option() {
+        Some(path) => Pill::path(path),
+        None => Pill::fields("-".to_string()),
     }
-    Pill::path(path)
 }
 
 fn status_pill(entry: &TraceEntry) -> Pill {
-    let status = field_value(entry, "status");
-    if status == "-" {
-        return Pill::fields("-".to_string());
+    match field_value(entry, "status").into_option() {
+        Some(status) => Pill::status(status),
+        None => Pill::fields("-".to_string()),
     }
-    Pill::status(status)
 }
 
 fn latency_pill(entry: &TraceEntry) -> Option<Pill> {
-    let value = field_value(entry, "latency_ms");
-    if value == "-" {
-        return None;
-    }
-    Some(Pill::fields(format!("latency_ms={value}")))
+    field_value(entry, "latency_ms")
+        .into_option()
+        .map(|value| Pill::fields(format!("latency_ms={value}")))
 }
 
 fn source_pill(entry: &TraceEntry) -> Pill {
-    let sender = field_value(entry, "sender");
-    let label = if sender == "-" { "unknown" } else { &sender };
-    Pill::fields(format!("source={label}"))
+    match field_value(entry, "sender").into_option() {
+        Some(sender) => Pill::fields(format!("source={sender}")),
+        None => Pill::fields("source=unknown".to_string()),
+    }
 }

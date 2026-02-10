@@ -54,14 +54,34 @@ struct TestAuthProvider;
 
 const USER_ID: &str = "d358d153-19a1-4a4c-8c52-73ff1a1f44d3";
 
+#[derive(Clone, Copy, Debug)]
+enum TestCredential {
+    Demo,
+}
+
+impl TestCredential {
+    fn email(self) -> &'static str {
+        match self {
+            TestCredential::Demo => "demo@example.com",
+        }
+    }
+
+    fn password(self) -> &'static str {
+        match self {
+            TestCredential::Demo => "password",
+        }
+    }
+}
+
 #[async_trait]
 impl auth::Provider for TestAuthProvider {
     async fn authenticate(
         &self,
         credentials: auth::Credentials,
     ) -> auth::Result<Option<auth::AuthenticatedUser>> {
-        if credentials.email == "demo@example.com"
-            && credentials.password.expose_secret() == "password"
+        let demo = TestCredential::Demo;
+        if credentials.email == demo.email()
+            && credentials.password.expose_secret() == demo.password()
         {
             return Ok(Some(test_user()));
         }
@@ -83,7 +103,7 @@ fn test_user() -> auth::AuthenticatedUser {
     auth::AuthenticatedUser::builder()
         .id(USER_ID.to_string())
         .username("Demo".to_string())
-        .email("demo@example.com".to_string())
+        .email(TestCredential::Demo.email().to_string())
         .session_hash("hash".to_string())
         .build()
 }
@@ -350,7 +370,7 @@ async fn login_sets_session_cookie_and_allows_chat() {
         .get_all(axum::http::header::SET_COOKIE)
         .iter()
         .filter_map(|value| value.to_str().ok())
-        .find(|value| value.starts_with("eran.sid="))
+        .find(|value| CookieName::SessionId.matches_cookie(value))
         .map(|value| value.to_string())
         .expect("eran.sid cookie");
 
@@ -370,4 +390,23 @@ async fn login_sets_session_cookie_and_allows_chat() {
         .unwrap();
 
     assert_eq!(response.status(), StatusCode::OK);
+}
+
+#[derive(Clone, Copy, Debug)]
+enum CookieName {
+    SessionId,
+}
+
+impl CookieName {
+    fn as_str(self) -> &'static str {
+        match self {
+            CookieName::SessionId => "eran.sid",
+        }
+    }
+
+    fn matches_cookie(self, value: &str) -> bool {
+        value.strip_prefix(self.as_str())
+            .and_then(|value| value.strip_prefix('='))
+            .is_some()
+    }
 }

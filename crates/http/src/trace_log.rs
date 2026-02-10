@@ -229,26 +229,31 @@ where
         event.record(&mut visitor);
 
         let level = *event.metadata().level();
+        let target = event.metadata().target();
+        let message = visitor
+            .message
+            .unwrap_or_else(|| event.metadata().name().to_string());
+        let target_kind = LogTargetKind::from_str(target);
+        let message_kind = LogMessageKind::from_str(&message);
+        if should_skip_event(&target_kind, &message_kind) {
+            return;
+        }
         let has_db = visitor
             .fields
             .iter()
-            .any(|(name, _)| name == "db_statement");
-        let is_demo = event.metadata().target().starts_with("demo");
+            .any(|(name, _)| matches!(FieldName::from_str(name), FieldName::DbStatement));
+        let is_demo = target_kind.is_demo();
         let is_info = matches!(level, Level::INFO | Level::WARN | Level::ERROR);
-        let is_sse = event.metadata().target().starts_with("demo.sse");
+        let is_sse = target_kind.is_demo_sse();
 
         if is_sse || !(is_info || has_db || is_demo) {
             return;
         }
 
-        let message = visitor
-            .message
-            .unwrap_or_else(|| event.metadata().name().to_string());
-
         let entry = TraceEntry::builder()
             .timestamp(now_timestamp_short())
             .level(level.to_string())
-            .target(event.metadata().target().to_string())
+            .target(target.to_string())
             .message(message)
             .fields(visitor.fields)
             .build();
@@ -259,6 +264,63 @@ where
         self.store
             .record_with_session(request_id, session_id, entry);
     }
+}
+
+#[derive(Clone, Debug)]
+pub enum LogTargetKind {
+    DemoRequest,
+    DemoSse,
+    DemoChat,
+    HttpRouterLayers,
+    Other(String),
+}
+
+impl LogTargetKind {
+    pub fn from_str(value: &str) -> Self {
+        match value {
+            "demo.request" => Self::DemoRequest,
+            "demo.sse" => Self::DemoSse,
+            "demo.chat" => Self::DemoChat,
+            "http::router::layers" => Self::HttpRouterLayers,
+            _ => Self::Other(value.to_string()),
+        }
+    }
+
+    pub fn is_demo(&self) -> bool {
+        matches!(self, Self::DemoRequest | Self::DemoSse | Self::DemoChat)
+    }
+
+    pub fn is_demo_sse(&self) -> bool {
+        matches!(self, Self::DemoSse)
+    }
+}
+
+#[derive(Clone, Debug)]
+pub enum LogMessageKind {
+    RequestEnd,
+    RequestCompleted,
+    ChatMessageIncoming,
+    ChatMessageBroadcast,
+    Other(String),
+}
+
+impl LogMessageKind {
+    pub fn from_str(value: &str) -> Self {
+        match value {
+            "request.end" => Self::RequestEnd,
+            "request completed" => Self::RequestCompleted,
+            "chat.message.incoming" => Self::ChatMessageIncoming,
+            "chat message broadcast" => Self::ChatMessageBroadcast,
+            _ => Self::Other(value.to_string()),
+        }
+    }
+}
+
+fn should_skip_event(target: &LogTargetKind, message: &LogMessageKind) -> bool {
+    matches!(
+        (target, message),
+        (LogTargetKind::HttpRouterLayers, LogMessageKind::RequestCompleted)
+    )
 }
 
 #[derive(Default)]
@@ -274,11 +336,31 @@ impl tracing::field::Visit for FieldVisitor {
         value: &dyn core::fmt::Debug,
     ) {
         let value = format!("{value:?}");
-        if field.name() == "message" {
-            self.message = Some(value);
-        } else {
-            self.fields
-                .push((field.name().to_string(), value));
+        match FieldName::from_str(field.name()) {
+            FieldName::Message => {
+                self.message = Some(value);
+            }
+            _ => {
+                self.fields
+                    .push((field.name().to_string(), value));
+            }
+        }
+    }
+}
+
+#[derive(Clone, Debug)]
+enum FieldName {
+    Message,
+    DbStatement,
+    Other,
+}
+
+impl FieldName {
+    fn from_str(value: &str) -> Self {
+        match value {
+            "message" => Self::Message,
+            "db_statement" => Self::DbStatement,
+            _ => Self::Other,
         }
     }
 }

@@ -2,7 +2,7 @@ use bon::Builder;
 use maud::Render;
 
 use crate::trace_log::TraceEntry;
-use crate::views::partials::{EmptyState, LogPanel, LogRow, Pill};
+use crate::views::partials::{EmptyState, FieldValue, LogPanel, LogRow, Pill};
 
 #[derive(Builder)]
 pub struct LiveLog<'a> {
@@ -156,6 +156,6 @@ fn field_value(entry: &TraceEntry, name: &str) -> Option<String> {
         .fields
         .iter()
         .find(|(field, _)| field == name)
-        .map(|(_, value)| value.clone())
-        .filter(|value| value != "-")
+        .map(|(_, value)| FieldValue::from_str(value))
+        .and_then(|value| value.into_option())
 }
