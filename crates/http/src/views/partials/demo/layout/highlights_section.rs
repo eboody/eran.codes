@@ -1,6 +1,7 @@
 use bon::Builder;
 use maud::Render;
 
+#[allow(dead_code)]
 #[derive(Clone, Copy, Debug)]
 pub enum HighlightCategory {
     AuthSessions,

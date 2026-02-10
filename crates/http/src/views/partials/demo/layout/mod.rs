@@ -4,8 +4,5 @@ pub use demo_section::DemoSection;
 pub use demo_result::DemoResultPlaceholder;
 pub use cta_row::CtaRow;
 pub use section_header::SectionHeader;
-pub use flow_map::FlowMap;
-pub use support_card::SupportCard;
 pub use home_hero::HomeHero;
-pub use highlights_section::{HighlightsSection, HighlightCategory};
 pub use feature_gallery::{DiagramPanel, DiagramRow, DiagramStatus, FeatureAccent, FeatureCard, FeatureGallery};
