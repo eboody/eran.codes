@@ -63,6 +63,54 @@ impl maud::Render for Home {
                     }
                 }
 
+                section class="portfolio-audit" {
+                    (SectionHeader::builder()
+                        .title(Text::from("Architecture Audit (What This Site Demonstrates)"))
+                        .subtitle(Text::from("A concise, end-to-end review of storage, representations, interactions, and idiomaticity across the workspace."))
+                        .build()
+                        .render())
+                    div class="audit-grid" {
+                        article class="audit-card" {
+                            h3 { "Storage layers" }
+                            p class="muted" { "Durable state in Postgres, transient state in SSE + in-memory logs, UI derived via Maud." }
+                            ul {
+                                li { "DB: users, credentials, chat rooms/messages, sessions, audit" }
+                                li { "In-memory: per-request + per-session trace buffers" }
+                                li { "UI: Maud components render typed values" }
+                            }
+                        }
+                        article class="audit-card" {
+                            h3 { "Representations in code" }
+                            p class="muted" { "Each layer owns its types to enforce invariants and boundaries." }
+                            ul {
+                                li { "Domain: newtypes + invariants, no serde/HTTP/DB" }
+                                li { "App: commands + traits for orchestration" }
+                                li { "Infra: SQL rows + concrete hashing" }
+                                li { "HTTP: DTOs + Renderable components" }
+                            }
+                        }
+                        article class="audit-card" {
+                            h3 { "Interactions" }
+                            p class="muted" { "Request flow is explicit, traceable, and layered." }
+                            ul {
+                                li { "HTTP parses -> App orchestrates -> Infra persists" }
+                                li { "SSE fanout for chat messages" }
+                                li { "Live vs diagnostic trace logs" }
+                            }
+                        }
+                        article class="audit-card" {
+                            h3 { "Idiomaticity & guardrails" }
+                            p class="muted" { "The codebase encodes standards as lint, builders, and docs." }
+                            ul {
+                                li { "Bon builders keep wiring readable" }
+                                li { "Render components + enums (no stringly logic)" }
+                                li { "CI checks: stringy logic, String fields, Render coverage" }
+                                li { "Module READMEs for architecture mapping" }
+                            }
+                        }
+                    }
+                }
+
                 (FeatureGallery::builder()
                     .title(Text::from("Feature gallery: realtime delivery, grounded in systems"))
                     .subtitle(Text::from("A quick visual scan of the core capabilities, followed by live diagrams that explain how requests and events flow through the stack."))
