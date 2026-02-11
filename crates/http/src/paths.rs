@@ -1,4 +1,5 @@
 use std::str::FromStr;
+use maud::Render;
 use strum_macros::{AsRefStr, Display, EnumString};
 
 #[derive(Clone, Copy, Debug, Display, EnumString, AsRefStr)]
@@ -77,5 +78,11 @@ impl Route {
 
     pub fn with_query(self, query: &str) -> String {
         format!("{}?{}", self.as_str(), query)
+    }
+}
+
+impl Render for Route {
+    fn render(&self) -> maud::Markup {
+        maud::html! { (self.as_str()) }
     }
 }
