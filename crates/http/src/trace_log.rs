@@ -414,31 +414,6 @@ pub async fn audit_middleware(
     let user_id = request::current_context()
         .and_then(|value| value.user_id);
 
-    state.trace_log.record_with_session(
-        &request_id,
-        session_id.as_ref(),
-        TraceEntry::builder()
-            .timestamp(now_timestamp_short())
-            .level(LogLevelText::new("INFO"))
-            .target(LogTargetText::new("demo.request"))
-            .message(LogMessageText::new("request.start"))
-            .fields(vec![
-                (
-                    LogFieldName::new("method"),
-                    LogFieldValue::new(method.clone()),
-                ),
-                (
-                    LogFieldName::new("path"),
-                    LogFieldValue::new(path.clone()),
-                ),
-                (
-                    LogFieldName::new("request_id"),
-                    LogFieldValue::new(request_id.to_string()),
-                ),
-            ])
-            .build(),
-    );
-
     let response = next.run(req).await;
     let latency_ms = started_at.elapsed().as_millis().to_string();
     let sender = match Route::from_path(path.as_str()) {
