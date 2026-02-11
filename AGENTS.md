@@ -50,6 +50,7 @@
 - When designing a feature, present both a simpler baseline (with a TODO placeholder) and an enterprise-level option so the user can choose.
 - Never use string literal comparisons or stringly-typed checks; define enums/newtypes (prefer `strum`/`nutype`) and match on those instead.
 - Avoid `String` fields in structs; use enums or newtypes instead (enforced by `scripts/ci/no-string-fields.sh`).
+- Public view partials must implement `maud::Render` (enforced by `scripts/ci/partials-render.sh`).
 - When a submodule name matches its primary type, keep the submodule private and re-export the type (e.g., `mod ping; pub use ping::Ping` → `views::partials::Ping`).
 - Prefer explicit re-exports over `pub use module::*` unless the module is intentionally a flat API surface.
 - Use `moddef::moddef!` for module declarations when it reduces repetition and aligns with the above naming conventions.
