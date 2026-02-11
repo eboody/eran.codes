@@ -34,15 +34,15 @@ tower-sessions-sqlx-store = { version = "0.15.0", features = ["postgres"] }
 tower-sessions = "0.14.0"
 tower-cookies = "0.11.0"
 
-derive_more = "2.1.0"
-tracing-subscriber = { version = "0.3.19", features = ["env-filter", "json"] }
+derive_more = "2.1.1"
+tracing-subscriber = { version = "0.3.22", features = ["env-filter", "json"] }
 tracing = "0.1.44"
 
 [workspace.dependencies]
 nutype = "0.6.2"
 moddef = "0.3.0"
-strum = "0.26.3"
-strum_macros = "0.26.4"
+strum = "0.27.2"
+strum_macros = "0.27.2"
 
 [workspace.metadata.scripts]
 crs = "cargo run-script"
