@@ -10,11 +10,11 @@ enum AuthStatusLabel {
     Anonymous,
 }
 
-impl AuthStatusLabel {
-    fn as_str(self) -> &'static str {
-        match self {
-            AuthStatusLabel::Authenticated => "Authenticated",
-            AuthStatusLabel::Anonymous => "Anonymous",
+impl From<AuthStatusLabel> for Text {
+    fn from(value: AuthStatusLabel) -> Self {
+        match value {
+            AuthStatusLabel::Authenticated => Text::from("Authenticated"),
+            AuthStatusLabel::Anonymous => Text::from("Anonymous"),
         }
     }
 }
@@ -66,7 +66,7 @@ impl Render for AuthStatus {
         maud::html! {
             article id="auth-status-target" {
                 (StatusCard::builder()
-                    .title(Text::from(status.as_str()))
+                    .title(Text::from(status))
                     .items(items)
                     .build()
                     .render())

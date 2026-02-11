@@ -17,8 +17,8 @@ impl Render for FeatureGallery {
             section class="feature-gallery" {
                 header class="feature-header" {
                     div {
-                        h2 { (self.title.to_string()) }
-                        p class="muted" { (self.subtitle.to_string()) }
+                        h2 { (&self.title) }
+                        p class="muted" { (&self.subtitle) }
                     }
                 }
                 div class="feature-layout" {
@@ -53,13 +53,13 @@ impl Render for FeatureCard {
         maud::html! {
             article class={ "feature-card " (accent_class) } {
                 @if let Some(badge) = &self.badge {
-                    span class="feature-badge" { (badge.to_string()) }
+                    span class="feature-badge" { (badge) }
                 }
-                h3 { (self.title.to_string()) }
-                p class="muted" { (self.description.to_string()) }
+                h3 { (&self.title) }
+                p class="muted" { (&self.description) }
                 ul class="feature-bullets" {
                     @for bullet in &self.bullets {
-                        li { (bullet.to_string()) }
+                        li { (bullet) }
                     }
                 }
             }
@@ -98,8 +98,8 @@ impl Render for DiagramPanel {
         maud::html! {
             article class="diagram-panel" {
                 header {
-                    h3 { (self.title.to_string()) }
-                    p class="muted" { (self.description.to_string()) }
+                    h3 { (&self.title) }
+                    p class="muted" { (&self.description) }
                 }
                 div class="diagram-rows" {
                     @for row in &self.rows {
@@ -123,8 +123,8 @@ impl Render for DiagramRow {
         maud::html! {
             div class="diagram-row" {
                 span class={ "status-dot " (self.status.class()) } {}
-                span class="diagram-label" { (self.label.to_string()) }
-                span class="diagram-value" { (self.value.to_string()) }
+                span class="diagram-label" { (&self.label) }
+                span class="diagram-value" { (&self.value) }
             }
         }
     }

@@ -38,7 +38,7 @@ impl Render for DataTable {
                 thead {
                     tr {
                         @for header in &self.headers {
-                            th { (header.to_string()) }
+                            th { (header) }
                         }
                     }
                 }

@@ -14,7 +14,7 @@ impl Render for StatusCard {
     fn render(&self) -> maud::Markup {
         maud::html! {
             div class="demo-result status-card" {
-                p { strong { (self.title.to_string()) } }
+                p { strong { (&self.title) } }
                 (KeyValueList::builder().items(self.items.clone()).build().render())
             }
         }

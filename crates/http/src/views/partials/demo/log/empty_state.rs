@@ -10,7 +10,7 @@ pub struct EmptyState {
 impl Render for EmptyState {
     fn render(&self) -> maud::Markup {
         maud::html! {
-            p class="muted empty-state" { (self.message.to_string()) }
+            p class="muted empty-state" { (&self.message) }
         }
     }
 }

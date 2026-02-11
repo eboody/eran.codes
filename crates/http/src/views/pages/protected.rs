@@ -18,10 +18,10 @@ impl Render for Protected {
             main class="container" {
                 article {
                     header {
-                        h1 { "Welcome, " (self.username.to_string()) }
+                        h1 { "Welcome, " (&self.username) }
                     }
-                    p { "Signed in as " (self.email.to_string()) "." }
-                    form method="post" action=(Route::Logout.as_str()) {
+                    p { "Signed in as " (&self.email) "." }
+                    form method="post" action=(Route::Logout) {
                         button type="submit" { "Sign out" }
                     }
                 }

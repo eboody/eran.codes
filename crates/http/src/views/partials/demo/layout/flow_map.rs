@@ -15,7 +15,7 @@ impl Render for FlowMap {
                     @if idx > 0 {
                         span class="arrow" { "→" }
                     }
-                    span class="step" { (step.to_string()) }
+                    span class="step" { (step) }
                 }
             }
         }

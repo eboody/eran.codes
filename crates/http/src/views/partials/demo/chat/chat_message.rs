@@ -16,11 +16,11 @@ impl Render for ChatMessage {
         maud::html! {
             li id=(format!("chat-message-{}", self.message_id)) class="chat-message" {
                 div class="meta" {
-                    strong { (self.author.to_string()) }
-                    span class="timestamp" { (self.timestamp.to_string()) }
-                    span class="status" { (self.status.to_string()) }
+                    strong { (&self.author) }
+                    span class="timestamp" { (&self.timestamp) }
+                    span class="status" { (&self.status) }
                 }
-                p { (self.body.to_string()) }
+                p { (&self.body) }
             }
         }
     }

@@ -38,8 +38,8 @@ impl Render for LiveLog<'_> {
                             ul class="live-log-entries" {
                                 @for entry in group.entries {
                                     (LogRow::builder()
-                                        .timestamp(Text::from(entry.timestamp.to_string()))
-                                        .message(Text::from(entry.message.to_string()))
+                                        .timestamp(Text::from(entry.timestamp.clone()))
+                                        .message(Text::from(entry.message.clone()))
                                         .pills(build_pills(entry))
                                         .build()
                                         .render())
@@ -116,7 +116,7 @@ fn short_request_id(value: &Text) -> String {
 
 fn build_pills(entry: &TraceEntry) -> Vec<Pill> {
     let mut pills = Vec::new();
-    pills.push(Pill::level(entry.level.to_string()));
+    pills.push(Pill::level(entry.level.clone()));
     if let Some(status) = field_value(entry, &LogFieldName::from(LogFieldKey::Status)) {
         pills.push(Pill::status(status.clone()));
     }
@@ -126,7 +126,7 @@ fn build_pills(entry: &TraceEntry) -> Vec<Pill> {
     if let Some(path) = field_value(entry, &LogFieldName::from(LogFieldKey::Path)) {
         pills.push(Pill::path(path));
     }
-    pills.push(Pill::target(entry.target.to_string()));
+    pills.push(Pill::target(entry.target.clone()));
     pills.extend(compact_fields(entry));
     pills
 }

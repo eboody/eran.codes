@@ -12,7 +12,7 @@ impl Render for KeyValueList {
         maud::html! {
             ul class="key-value-list" {
                 @for (label, value) in &self.items {
-                    li { (label.to_string()) ": " (value.to_string()) }
+                    li { (label) ": " (value) }
                 }
             }
         }

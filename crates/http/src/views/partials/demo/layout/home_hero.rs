@@ -30,14 +30,14 @@ impl Render for HomeHero {
                     @if let Some(user) = &self.user {
                         p { "Signed in as " strong { (&user.username) } "." }
                         p class="muted" { (&user.email) }
-                        a class="button" href=(Route::Protected.as_str()) { "Open account" }
+                        a class="button" href=(Route::Protected) { "Open account" }
                     } @else {
                         p { "No active session." }
                         p class="muted" { "Create an account to see session-backed auth." }
                         (CtaRow::builder()
                             .items(vec![
-                                maud::html! { a class="button" href=(Route::Register.as_str()) { "Create account" } },
-                                maud::html! { a class="button secondary" href=(Route::Login.as_str()) { "Sign in" } },
+                                maud::html! { a class="button" href=(Route::Register) { "Create account" } },
+                                maud::html! { a class="button secondary" href=(Route::Login) { "Sign in" } },
                             ])
                             .build()
                             .render())

@@ -33,10 +33,10 @@ impl ChatPanelRole {
         }
     }
 
-    fn action(&self) -> &'static str {
+    fn action(&self) -> Route {
         match self {
-            ChatPanelRole::You => Route::ChatMessages.as_str(),
-            ChatPanelRole::Demo => Route::ChatMessagesDemo.as_str(),
+            ChatPanelRole::You => Route::ChatMessages,
+            ChatPanelRole::Demo => Route::ChatMessagesDemo,
         }
     }
 

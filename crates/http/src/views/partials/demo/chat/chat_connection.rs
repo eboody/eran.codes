@@ -9,7 +9,7 @@ pub struct ChatConnection {
 
 impl Render for ChatConnection {
     fn render(&self) -> maud::Markup {
-        let connected = self.connected_signal.to_string();
+        let connected = &self.connected_signal;
         maud::html! {
             div class="pill-row" {
                 span class="pill secondary" data-show=(connected) { "SSE connected" }

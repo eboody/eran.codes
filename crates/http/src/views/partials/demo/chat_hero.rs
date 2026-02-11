@@ -20,11 +20,9 @@ impl Render for ChatHero {
                 }
                 aside class="hero-card" {
                     h3 { "Room" }
-                    p { (self.room_name.to_string()) }
-                    p class="muted" { "Room id: " (self.room_id.to_string()) }
-                    a class="button secondary" href=(Route::ChatModeration.as_str()) {
-                        "Moderation queue"
-                    }
+                    p { (&self.room_name) }
+                    p class="muted" { "Room id: " (&self.room_id) }
+                    a class="button secondary" href=(Route::ChatModeration) { "Moderation queue" }
                 }
             }
         }

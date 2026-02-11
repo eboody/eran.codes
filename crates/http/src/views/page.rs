@@ -33,21 +33,21 @@ impl Render for Layout<'_> {
                     script type="module" src="https://cdn.jsdelivr.net/gh/starfederation/datastar@1.0.0-RC.7/bundles/datastar.js" {}
                     script src="/static/css-scope-inline.js" {}
                 }
-                body data-init=(format!("@get('{}')", Route::Events.as_str())) {
+                body data-init=(format!("@get('{}')", Route::Events)) {
                     header class="container" {
                         nav {
                             ul {
                                 li {
-                                    a href=(Route::Home.as_str()) { "eran.codes" }
+                                    a href=(Route::Home) { "eran.codes" }
                                 }
                             }
                             @match &self.user {
                                 Some(user) => {
                                     ul {
-                                        li { span { "Signed in as " (user.username.to_string()) } }
-                                        li { a href=(Route::Protected.as_str()) { "Account" } }
+                                        li { span { "Signed in as " (&user.username) } }
+                                        li { a href=(Route::Protected) { "Account" } }
                                         li {
-                                            form method="post" action=(Route::Logout.as_str()) {
+                                            form method="post" action=(Route::Logout) {
                                                 button type="submit" class="secondary" { "Sign out" }
                                             }
                                         }
@@ -55,8 +55,8 @@ impl Render for Layout<'_> {
                                 }
                                 None => {
                                     ul {
-                                        li { a href=(Route::Login.as_str()) { "Sign in" } }
-                                        li { a href=(Route::Register.as_str()) { "Create account" } }
+                                        li { a href=(Route::Login) { "Sign in" } }
+                                        li { a href=(Route::Register) { "Create account" } }
                                     }
                                 }
                             }

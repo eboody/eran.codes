@@ -23,15 +23,15 @@ impl Render for ChatDemoSection {
                 class="chat-panel"
                 data-signals=(format!(
                     "{{roomId: '{}', body: '', botBody: '', sseConnected: false}}",
-                    self.room_id.to_string()
+                    self.room_id
                 )) {
                 (SectionHeader::builder()
                     .title(Text::from("Live chat room"))
                     .subtitle(Text::from("Send messages as yourself or the demo user and watch SSE fanout."))
                     .action(maud::html! {
-                        a class="button secondary" href=(Route::ChatModeration.as_str()) { "Moderation queue" }
+                        a class="button secondary" href=(Route::ChatModeration) { "Moderation queue" }
                     })
-                    .meta(maud::html! { p class="muted" { "Room: " (self.room_name.to_string()) } })
+                    .meta(maud::html! { p class="muted" { "Room: " (&self.room_name) } })
                     .build()
                     .render())
                 (ChatConnection::builder()

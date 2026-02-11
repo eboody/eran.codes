@@ -20,7 +20,7 @@ impl Render for LogPanel {
         };
         maud::html! {
             article class="demo-result network-log-panel" {
-                p { strong { (self.title.to_string()) } }
+                p { strong { (&self.title) } }
                 div class="network-log-scroll" {
                     (body)
                 }

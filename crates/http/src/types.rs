@@ -210,6 +210,30 @@ impl From<LogFieldKey> for LogFieldName {
     }
 }
 
+impl From<LogTargetText> for Text {
+    fn from(value: LogTargetText) -> Self {
+        Text::new(value.to_string())
+    }
+}
+
+impl From<LogMessageText> for Text {
+    fn from(value: LogMessageText) -> Self {
+        Text::new(value.to_string())
+    }
+}
+
+impl From<LogLevelText> for Text {
+    fn from(value: LogLevelText) -> Self {
+        Text::new(value.to_string())
+    }
+}
+
+impl From<TimestampText> for Text {
+    fn from(value: TimestampText) -> Self {
+        Text::new(value.to_string())
+    }
+}
+
 #[derive(Clone, Debug, PartialEq, Eq, Hash, Serialize, Deserialize)]
 pub enum LogFieldValue {
     Missing,

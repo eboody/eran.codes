@@ -20,3 +20,18 @@ impl ModerationAction {
         }
     }
 }
+
+impl std::fmt::Display for ModerationAction {
+    fn fmt(
+        &self,
+        f: &mut std::fmt::Formatter<'_>,
+    ) -> std::fmt::Result {
+        f.write_str(self.as_str())
+    }
+}
+
+impl maud::Render for ModerationAction {
+    fn render(&self) -> maud::Markup {
+        maud::html! { (self) }
+    }
+}

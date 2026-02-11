@@ -28,7 +28,7 @@ impl Render for Login<'_> {
                         p role="alert" { (message) }
                     }
 
-                    form method="post" action=(Route::Login.as_str()) {
+                    form method="post" action=(Route::Login) {
                         @if let Some(next) = self.next {
                             input type="hidden" name="next" value=(next);
                         }
@@ -45,9 +45,9 @@ impl Render for Login<'_> {
                     p {
                         "Need an account? "
                         @if let Some(next) = next_query {
-                            a href=(format!("{}?next={}", Route::Register.as_str(), next)) { "Create one" }
+                            a href=(format!("{}?next={}", Route::Register, next)) { "Create one" }
                         } @else {
-                            a href=(Route::Register.as_str()) { "Create one" }
+                            a href=(Route::Register) { "Create one" }
                         }
                     }
                 }

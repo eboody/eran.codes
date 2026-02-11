@@ -12,7 +12,7 @@ impl Render for DemoSection {
     fn render(&self) -> Markup {
         maud::html! {
             section {
-                h2 { (self.title.to_string()) }
+                h2 { (&self.title) }
                 article class="flow-card" {
                     (self.content.clone())
                 }

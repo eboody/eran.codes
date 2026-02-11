@@ -266,7 +266,7 @@ impl Render for Pill {
             .color
             .map(|color| format!("--pill-accent: {};", color.to_rgb()));
         maud::html! {
-            span class=(class) style=[style] { (self.text.to_string()) }
+            span class=(class) style=[style] { (&self.text) }
         }
     }
 }

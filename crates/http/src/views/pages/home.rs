@@ -200,7 +200,7 @@ impl maud::Render for Home {
                             .title(Text::from("Live chat room"))
                             .subtitle(Text::from("Sign in to send messages and see the chat room."))
                             .action(maud::html! {
-                                a class="button secondary" href=(Route::Login.as_str()) { "Sign in" }
+                                a class="button secondary" href=(Route::Login) { "Sign in" }
                             })
                             .build()
                             .render())

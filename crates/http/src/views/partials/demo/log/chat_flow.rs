@@ -30,12 +30,12 @@ impl Render for ChatFlow<'_> {
                 .take(20)
                 .map(|entry| {
                     vec![
-                        maud::html! { (entry.timestamp.to_string()) },
+                        maud::html! { (&entry.timestamp) },
                         maud::html! { (direction_pill(entry).render()) },
                         maud::html! { (sender_pill(entry).render()) },
                         maud::html! { (receiver_pill(entry).render()) },
                         maud::html! { (user_pill(entry).render()) },
-                        maud::html! { (field_value_text(entry, &LogFieldName::from(LogFieldKey::Body)).unwrap_or_else(|| Text::from("-")).to_string()) },
+                        maud::html! { (field_value_text(entry, &LogFieldName::from(LogFieldKey::Body)).unwrap_or_else(|| Text::from("-"))) },
                     ]
                 })
                 .collect::<Vec<_>>();
@@ -84,7 +84,7 @@ fn receiver_pill(entry: &TraceEntry) -> Pill {
     let receiver: Option<Text> =
         field_value(entry, &LogFieldName::from(LogFieldKey::Receiver)).into_option();
     match receiver {
-        Some(receiver) => Pill::fields(format!("to:{}", receiver.to_string())),
+        Some(receiver) => Pill::fields(format!("to:{}", receiver)),
         None => Pill::fields("to:unknown"),
     }
 }

@@ -40,16 +40,16 @@ impl Render for ChatModeration {
                                     }
                                     p { (&entry.body) }
                                     p class="muted" { "Reason: " (&entry.reason) }
-                                    form method="post" action=(Route::ChatModeration.as_str()) {
-                                        input type="hidden" name="message_id" value=(entry.message_id.as_uuid().to_string());
-                                        input type="hidden" name="reason" value=(entry.reason.to_string());
+                                    form method="post" action=(Route::ChatModeration) {
+                                        input type="hidden" name="message_id" value=(entry.message_id.as_uuid());
+                                        input type="hidden" name="reason" value=(&entry.reason);
                                         (CtaRow::builder()
                                             .items(vec![
                                                 maud::html! {
-                                                    button type="submit" name="decision" value=(ModerationAction::Approve.as_str()) class="button secondary" { "Approve" }
+                                                    button type="submit" name="decision" value=(ModerationAction::Approve) class="button secondary" { "Approve" }
                                                 },
                                                 maud::html! {
-                                                    button type="submit" name="decision" value=(ModerationAction::Remove.as_str()) class="button" { "Remove" }
+                                                    button type="submit" name="decision" value=(ModerationAction::Remove) class="button" { "Remove" }
                                                 },
                                             ])
                                             .build()

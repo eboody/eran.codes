@@ -16,7 +16,7 @@ impl Render for ChatWindow {
             div class="chat-window" {
                 @if let Some(title) = &self.title {
                     header {
-                        span class="role" { (title.to_string()) }
+                        span class="role" { (title) }
                     }
                 }
                 (ChatMessages::builder()

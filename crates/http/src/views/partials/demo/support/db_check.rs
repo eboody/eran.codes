@@ -10,11 +10,11 @@ enum DbLookupStatus {
     NotFound,
 }
 
-impl DbLookupStatus {
-    fn as_str(self) -> &'static str {
-        match self {
-            DbLookupStatus::Found => "found",
-            DbLookupStatus::NotFound => "not found",
+impl From<DbLookupStatus> for Text {
+    fn from(value: DbLookupStatus) -> Self {
+        match value {
+            DbLookupStatus::Found => Text::from("found"),
+            DbLookupStatus::NotFound => Text::from("not found"),
         }
     }
 }
@@ -39,7 +39,7 @@ impl Render for DbCheck {
                     .title(Text::from("DB lookup"))
                     .items(vec![
                         (Text::from("email"), self.email.clone()),
-                        (Text::from("result"), Text::from(status.as_str())),
+                        (Text::from("result"), Text::from(status)),
                     ])
                     .build()
                     .render())

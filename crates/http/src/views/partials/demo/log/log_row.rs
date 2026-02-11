@@ -16,11 +16,11 @@ impl Render for LogRow {
     fn render(&self) -> maud::Markup {
         maud::html! {
             li class="log-entry" {
-                span class="muted log-timestamp" { (self.timestamp.to_string()) }
+                span class="muted log-timestamp" { (&self.timestamp) }
                 @for pill in &self.pills {
                     (pill.render())
                 }
-                span class="log-message" { (self.message.to_string()) }
+                span class="log-message" { (&self.message) }
             }
         }
     }

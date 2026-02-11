@@ -15,9 +15,9 @@ impl Render for SectionHeader {
         maud::html! {
             header class="section-header" {
                 div {
-                    h2 { (self.title.to_string()) }
+                    h2 { (&self.title) }
                     @if let Some(subtitle) = &self.subtitle {
-                        p class="muted" { (subtitle.to_string()) }
+                        p class="muted" { (subtitle) }
                     }
                 }
                 @if let Some(action) = &self.action {
