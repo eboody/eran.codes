@@ -99,9 +99,12 @@ where
                         }
                         span.record("kind", context.kind.as_str());
                     }
-                    if let Some(route) = request.extensions().get::<MatchedPath>() {
-                        span.record("route", route.as_str());
-                    }
+                    let route = request
+                        .extensions()
+                        .get::<MatchedPath>()
+                        .map(|value| value.as_str())
+                        .unwrap_or_else(|| request.uri().path());
+                    span.record("route", route);
 
                     span
                 })

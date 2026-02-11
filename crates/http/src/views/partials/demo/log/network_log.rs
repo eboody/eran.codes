@@ -2,7 +2,7 @@ use bon::Builder;
 use maud::Render;
 
 use crate::trace_log::TraceEntry;
-use crate::types::Text;
+use crate::types::{LogFieldKey, Text};
 use crate::views::partials::components::{
     DataTable, EmptyState, FieldValue, LogPanel, Pill, TableVariant,
 };
@@ -107,9 +107,9 @@ impl Render for NetworkLog<'_> {
                     vec![
                         maud::html! { (entry.timestamp.to_string()) },
                         maud::html! { (entry.message.to_string()) },
-                        maud::html! { (field_value_text(entry, &crate::types::LogFieldName::from("selector")).unwrap_or_else(|| Text::from("-")).to_string()) },
-                        maud::html! { (field_value_text(entry, &crate::types::LogFieldName::from("mode")).unwrap_or_else(|| Text::from("-")).to_string()) },
-                        maud::html! { (field_value_text(entry, &crate::types::LogFieldName::from("payload_bytes")).unwrap_or_else(|| Text::from("-")).to_string()) },
+                        maud::html! { (field_value_text(entry, &crate::types::LogFieldName::from(LogFieldKey::Selector)).unwrap_or_else(|| Text::from("-")).to_string()) },
+                        maud::html! { (field_value_text(entry, &crate::types::LogFieldName::from(LogFieldKey::Mode)).unwrap_or_else(|| Text::from("-")).to_string()) },
+                        maud::html! { (field_value_text(entry, &crate::types::LogFieldName::from(LogFieldKey::PayloadBytes)).unwrap_or_else(|| Text::from("-")).to_string()) },
                     ]
                 })
                 .collect::<Vec<_>>();
@@ -177,28 +177,28 @@ fn field_value_text(entry: &TraceEntry, name: &crate::types::LogFieldName) -> Op
 }
 
 fn method_pill(entry: &TraceEntry) -> Pill {
-    match field_value(entry, &crate::types::LogFieldName::from("method")).into_option() {
+    match field_value(entry, &crate::types::LogFieldName::from(LogFieldKey::Method)).into_option() {
         Some(method) => Pill::method(method),
         None => Pill::fields("-"),
     }
 }
 
 fn path_pill(entry: &TraceEntry) -> Pill {
-    match field_value(entry, &crate::types::LogFieldName::from("path")).into_option() {
+    match field_value(entry, &crate::types::LogFieldName::from(LogFieldKey::Path)).into_option() {
         Some(path) => Pill::path(path),
         None => Pill::fields("-"),
     }
 }
 
 fn status_pill(entry: &TraceEntry) -> Pill {
-    match field_value(entry, &crate::types::LogFieldName::from("status")).into_option() {
+    match field_value(entry, &crate::types::LogFieldName::from(LogFieldKey::Status)).into_option() {
         Some(status) => Pill::status(status),
         None => Pill::fields("-"),
     }
 }
 
 fn latency_pill(entry: &TraceEntry) -> Option<Pill> {
-    field_value(entry, &crate::types::LogFieldName::from("latency_ms"))
+    field_value(entry, &crate::types::LogFieldName::from(LogFieldKey::LatencyMs))
         .into_option()
         .map(|value: Text| {
             Pill::fields(format!("latency_ms={}", value.to_string()))
@@ -207,7 +207,7 @@ fn latency_pill(entry: &TraceEntry) -> Option<Pill> {
 
 fn source_pill(entry: &TraceEntry) -> Pill {
     let sender: Option<Text> =
-        field_value(entry, &crate::types::LogFieldName::from("sender")).into_option();
+        field_value(entry, &crate::types::LogFieldName::from(LogFieldKey::Sender)).into_option();
     match sender {
         Some(sender) => Pill::fields(format!("source={}", sender.to_string())),
         None => Pill::fields("source=unknown"),

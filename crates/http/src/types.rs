@@ -2,6 +2,7 @@ use std::fmt;
 
 use nutype::nutype;
 use serde::{Deserialize, Serialize};
+use strum_macros::{Display, EnumString};
 
 #[nutype(
     sanitize(trim),
@@ -162,6 +163,50 @@ pub struct LogFieldName(String);
 impl From<&str> for LogFieldName {
     fn from(value: &str) -> Self {
         LogFieldName::new(value)
+    }
+}
+
+#[derive(Clone, Copy, Debug, PartialEq, Eq, Display, EnumString)]
+pub enum LogFieldKey {
+    #[strum(serialize = "message")]
+    Message,
+    #[strum(serialize = "db_statement")]
+    DbStatement,
+    #[strum(serialize = "method")]
+    Method,
+    #[strum(serialize = "path")]
+    Path,
+    #[strum(serialize = "status")]
+    Status,
+    #[strum(serialize = "latency_ms")]
+    LatencyMs,
+    #[strum(serialize = "request_id")]
+    RequestId,
+    #[strum(serialize = "session_id")]
+    SessionId,
+    #[strum(serialize = "user_id")]
+    UserId,
+    #[strum(serialize = "sender")]
+    Sender,
+    #[strum(serialize = "sent_at")]
+    SentAt,
+    #[strum(serialize = "direction")]
+    Direction,
+    #[strum(serialize = "receiver")]
+    Receiver,
+    #[strum(serialize = "body")]
+    Body,
+    #[strum(serialize = "selector")]
+    Selector,
+    #[strum(serialize = "mode")]
+    Mode,
+    #[strum(serialize = "payload_bytes")]
+    PayloadBytes,
+}
+
+impl From<LogFieldKey> for LogFieldName {
+    fn from(value: LogFieldKey) -> Self {
+        LogFieldName::new(value.to_string())
     }
 }
 

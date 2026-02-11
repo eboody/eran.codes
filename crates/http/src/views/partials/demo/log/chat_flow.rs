@@ -4,7 +4,7 @@ use maud::Render;
 use crate::trace_log::TraceEntry;
 use std::str::FromStr;
 
-use crate::types::{LogFieldName, Text};
+use crate::types::{LogFieldKey, LogFieldName, Text};
 use strum_macros::{Display, EnumString};
 use crate::views::partials::components::{
     BadgeKind, DataTable, EmptyState, FieldValue, LogPanel, Pill, TableVariant,
@@ -35,7 +35,7 @@ impl Render for ChatFlow<'_> {
                         maud::html! { (sender_pill(entry).render()) },
                         maud::html! { (receiver_pill(entry).render()) },
                         maud::html! { (user_pill(entry).render()) },
-                        maud::html! { (field_value_text(entry, &LogFieldName::from("body")).unwrap_or_else(|| Text::from("-")).to_string()) },
+                        maud::html! { (field_value_text(entry, &LogFieldName::from(LogFieldKey::Body)).unwrap_or_else(|| Text::from("-")).to_string()) },
                     ]
                 })
                 .collect::<Vec<_>>();
@@ -82,7 +82,7 @@ fn sender_pill(entry: &TraceEntry) -> Pill {
 
 fn receiver_pill(entry: &TraceEntry) -> Pill {
     let receiver: Option<Text> =
-        field_value(entry, &LogFieldName::from("receiver")).into_option();
+        field_value(entry, &LogFieldName::from(LogFieldKey::Receiver)).into_option();
     match receiver {
         Some(receiver) => Pill::fields(format!("to:{}", receiver.to_string())),
         None => Pill::fields("to:unknown"),
@@ -91,7 +91,7 @@ fn receiver_pill(entry: &TraceEntry) -> Pill {
 
 fn user_pill(entry: &TraceEntry) -> Pill {
     let user_id: Option<Text> =
-        field_value(entry, &LogFieldName::from("user_id")).into_option();
+        field_value(entry, &LogFieldName::from(LogFieldKey::UserId)).into_option();
     let Some(user_id) = user_id else {
         return Pill::fields("user:unknown");
     };
@@ -115,7 +115,7 @@ enum ChatSender {
 
 impl ChatSender {
     fn from_entry(entry: &TraceEntry) -> Self {
-        let sender = field_value_text(entry, &LogFieldName::from("sender"));
+        let sender = field_value_text(entry, &LogFieldName::from(LogFieldKey::Sender));
         let Some(sender) = sender else {
             return Self::Unknown;
         };
@@ -159,7 +159,7 @@ enum FlowDirection {
 
 impl FlowDirection {
     fn from_entry(entry: &TraceEntry) -> Self {
-        let direction = field_value_text(entry, &LogFieldName::from("direction"));
+        let direction = field_value_text(entry, &LogFieldName::from(LogFieldKey::Direction));
         let Some(direction) = direction else {
             return Self::Unknown;
         };

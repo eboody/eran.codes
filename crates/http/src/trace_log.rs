@@ -18,8 +18,8 @@ use tracing_subscriber::{Layer, registry::LookupSpan};
 
 use crate::{request, sse, views};
 use crate::types::{
-    LogFieldName, LogFieldValue, LogLevelText, LogMessageText, LogTargetText,
-    RequestId, SessionId, TimestampText,
+    LogFieldKey, LogFieldName, LogFieldValue, LogLevelText, LogMessageText,
+    LogTargetText, RequestId, SessionId, TimestampText,
 };
 use crate::paths::Route;
 use bon::{bon, Builder};
@@ -42,12 +42,14 @@ pub struct TraceLogStore {
     global: Arc<Mutex<VecDeque<TraceEntry>>>,
     max_entries: usize,
     sse: sse::Registry,
+    emit_sse: bool,
 }
 
 impl TraceLogStore {
     pub fn new(
         sse: sse::Registry,
         max_entries: usize,
+        emit_sse: bool,
     ) -> Self {
         Self {
             requests: Arc::new(DashMap::new()),
@@ -55,6 +57,7 @@ impl TraceLogStore {
             global: Arc::new(Mutex::new(VecDeque::new())),
             max_entries,
             sse,
+            emit_sse,
         }
     }
 
@@ -93,24 +96,26 @@ impl TraceLogStore {
             global.push_back(entry);
         }
 
-        if let Some(session_id) = session_id {
-            let entries = self.snapshot_session(session_id);
-            let live_log = views::partials::LiveLog::builder()
-                .entries(&entries)
-                .build()
-                .render()
-                .into_string();
-            let network_log = views::partials::NetworkLog::builder()
-                .entries(&entries)
-                .build()
-                .render()
-                .into_string();
-            let _ = self
-                .sse
-                .send_by_id(session_id, sse::Event::patch_elements(live_log));
-            let _ = self
-                .sse
-                .send_by_id(session_id, sse::Event::patch_elements(network_log));
+        if self.emit_sse {
+            if let Some(session_id) = session_id {
+                let entries = self.snapshot_session(session_id);
+                let live_log = views::partials::LiveLog::builder()
+                    .entries(&entries)
+                    .build()
+                    .render()
+                    .into_string();
+                let network_log = views::partials::NetworkLog::builder()
+                    .entries(&entries)
+                    .build()
+                    .render()
+                    .into_string();
+                let _ = self
+                    .sse
+                    .send_by_id(session_id, sse::Event::patch_elements(live_log));
+                let _ = self
+                    .sse
+                    .send_by_id(session_id, sse::Event::patch_elements(network_log));
+            }
         }
     }
 
@@ -137,24 +142,26 @@ impl TraceLogStore {
             global.push_back(entry);
         }
 
-        if let Some(session_id) = session_id {
-            let entries = self.snapshot_session(session_id);
-            let live_log = views::partials::LiveLog::builder()
-                .entries(&entries)
-                .build()
-                .render()
-                .into_string();
-            let network_log = views::partials::NetworkLog::builder()
-                .entries(&entries)
-                .build()
-                .render()
-                .into_string();
-            let _ = self
-                .sse
-                .send_by_id(session_id, sse::Event::patch_elements(live_log));
-            let _ = self
-                .sse
-                .send_by_id(session_id, sse::Event::patch_elements(network_log));
+        if self.emit_sse {
+            if let Some(session_id) = session_id {
+                let entries = self.snapshot_session(session_id);
+                let live_log = views::partials::LiveLog::builder()
+                    .entries(&entries)
+                    .build()
+                    .render()
+                    .into_string();
+                let network_log = views::partials::NetworkLog::builder()
+                    .entries(&entries)
+                    .build()
+                    .render()
+                    .into_string();
+                let _ = self
+                    .sse
+                    .send_by_id(session_id, sse::Event::patch_elements(live_log));
+                let _ = self
+                    .sse
+                    .send_by_id(session_id, sse::Event::patch_elements(network_log));
+            }
         }
     }
 
@@ -199,8 +206,9 @@ impl TraceLogStore {
     pub fn builder(
         #[builder(setters(name = with_sse))] sse: sse::Registry,
         #[builder(default = 50, setters(name = with_max_entries))] max_entries: usize,
+        #[builder(default = true, setters(name = with_emit_sse))] emit_sse: bool,
     ) -> Self {
-        Self::new(sse, max_entries)
+        Self::new(sse, max_entries, emit_sse)
     }
 }
 
@@ -258,10 +266,12 @@ where
         if target_kind.is_diagnostic() {
             return;
         }
-        let has_db = visitor
-            .fields
-            .iter()
-            .any(|(name, _)| matches!(FieldName::from_str(&name.to_string()), FieldName::Known(FieldNameKnown::DbStatement)));
+        let has_db = visitor.fields.iter().any(|(name, _)| {
+            matches!(
+                LogFieldKey::from_str(&name.to_string()),
+                Ok(LogFieldKey::DbStatement)
+            )
+        });
         let is_demo = target_kind.is_demo();
         let is_info = matches!(level, Level::INFO | Level::WARN | Level::ERROR);
         let is_sse = target_kind.is_demo_sse();
@@ -394,6 +404,8 @@ impl LogTargetKind {
 
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Display, EnumString)]
 pub enum LogMessageKnown {
+    #[strum(serialize = "request.start")]
+    RequestStart,
     #[strum(serialize = "request.end")]
     RequestEnd,
     #[strum(serialize = "request completed")]
@@ -441,8 +453,8 @@ impl tracing::field::Visit for FieldVisitor {
         value: &dyn core::fmt::Debug,
     ) {
         let value = format!("{value:?}");
-        match FieldName::from_str(field.name()) {
-            FieldName::Known(FieldNameKnown::Message) => {
+        match LogFieldKey::from_str(field.name()) {
+            Ok(LogFieldKey::Message) => {
                 self.message = Some(LogMessageText::new(value));
             }
             _ => {
@@ -453,28 +465,6 @@ impl tracing::field::Visit for FieldVisitor {
                     ));
             }
         }
-    }
-}
-
-#[derive(Clone, Copy, Debug, PartialEq, Eq, Display, EnumString)]
-enum FieldNameKnown {
-    #[strum(serialize = "message")]
-    Message,
-    #[strum(serialize = "db_statement")]
-    DbStatement,
-}
-
-#[derive(Clone, Debug)]
-enum FieldName {
-    Known(FieldNameKnown),
-    Other,
-}
-
-impl FieldName {
-    fn from_str(value: &str) -> Self {
-        FieldNameKnown::from_str(value)
-            .map(Self::Known)
-            .unwrap_or(Self::Other)
     }
 }
 
@@ -495,8 +485,8 @@ pub async fn audit_middleware(
         .and_then(|value| value.user_id);
 
     tracing::info!(
-        target: "demo.request.diagnostic",
-        message = "request.start",
+        target: LogTargetKnown::DemoRequestDiagnostic.as_str(),
+        message = LogMessageKnown::RequestStart.as_str(),
         method = %method,
         path = %path,
         request_id = %request_id
@@ -517,46 +507,46 @@ pub async fn audit_middleware(
         TraceEntry::builder()
             .timestamp(now_timestamp_short())
             .level(LogLevelText::new("INFO"))
-            .target(LogTargetText::new("demo.request"))
-            .message(LogMessageText::new("request.end"))
+            .target(LogTargetText::from(LogTargetKnown::DemoRequest))
+            .message(LogMessageText::from(LogMessageKnown::RequestEnd))
             .fields(vec![
                 (
-                    LogFieldName::new("method"),
+                    LogFieldName::from(LogFieldKey::Method),
                     LogFieldValue::new(method),
                 ),
-                (LogFieldName::new("path"), LogFieldValue::new(path)),
+                (LogFieldName::from(LogFieldKey::Path), LogFieldValue::new(path)),
                 (
-                    LogFieldName::new("status"),
+                    LogFieldName::from(LogFieldKey::Status),
                     LogFieldValue::new(response.status().as_u16().to_string()),
                 ),
                 (
-                    LogFieldName::new("latency_ms"),
+                    LogFieldName::from(LogFieldKey::LatencyMs),
                     LogFieldValue::new(latency_ms),
                 ),
                 (
-                    LogFieldName::new("request_id"),
+                    LogFieldName::from(LogFieldKey::RequestId),
                     LogFieldValue::new(request_id.to_string()),
                 ),
                 (
-                    LogFieldName::new("session_id"),
+                    LogFieldName::from(LogFieldKey::SessionId),
                     session_id
                         .clone()
                         .map(|value| LogFieldValue::new(value.to_string()))
                         .unwrap_or_else(LogFieldValue::missing),
                 ),
                 (
-                    LogFieldName::new("user_id"),
+                    LogFieldName::from(LogFieldKey::UserId),
                     user_id
                         .clone()
                         .map(|value| LogFieldValue::new(value.to_string()))
                         .unwrap_or_else(LogFieldValue::missing),
                 ),
                 (
-                    LogFieldName::new("sender"),
+                    LogFieldName::from(LogFieldKey::Sender),
                     LogFieldValue::new(sender.as_str()),
                 ),
                 (
-                    LogFieldName::new("sent_at"),
+                    LogFieldName::from(LogFieldKey::SentAt),
                     LogFieldValue::new(sent_at.to_string()),
                 ),
             ])
@@ -564,7 +554,7 @@ pub async fn audit_middleware(
     );
 
     if response.status() == StatusCode::INTERNAL_SERVER_ERROR {
-        tracing::error!(target: "demo.request", "response error");
+        tracing::error!(target: LogTargetKnown::DemoRequest.as_str(), "response error");
     }
 
     response
@@ -584,6 +574,42 @@ impl ChatSender {
             ChatSender::Demo => "demo",
             ChatSender::Unknown => "-",
         }
+    }
+}
+
+impl LogTargetKnown {
+    pub const fn as_str(self) -> &'static str {
+        match self {
+            LogTargetKnown::DemoRequest => "demo.request",
+            LogTargetKnown::DemoRequestDiagnostic => "demo.request.diagnostic",
+            LogTargetKnown::DemoSse => "demo.sse",
+            LogTargetKnown::DemoChat => "demo.chat",
+            LogTargetKnown::HttpRouterLayers => "http::router::layers",
+        }
+    }
+}
+
+impl LogMessageKnown {
+    pub const fn as_str(self) -> &'static str {
+        match self {
+            LogMessageKnown::RequestStart => "request.start",
+            LogMessageKnown::RequestEnd => "request.end",
+            LogMessageKnown::RequestCompleted => "request completed",
+            LogMessageKnown::ChatMessageIncoming => "chat.message.incoming",
+            LogMessageKnown::ChatMessageBroadcast => "chat message broadcast",
+        }
+    }
+}
+
+impl From<LogTargetKnown> for LogTargetText {
+    fn from(value: LogTargetKnown) -> Self {
+        LogTargetText::new(value.as_str())
+    }
+}
+
+impl From<LogMessageKnown> for LogMessageText {
+    fn from(value: LogMessageKnown) -> Self {
+        LogMessageText::new(value.as_str())
     }
 }
 

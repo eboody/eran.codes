@@ -9,7 +9,8 @@ use datastar::prelude::{ElementPatchMode, PatchElements};
 use serde::Deserialize;
 
 use crate::{paths::Route, request, views};
-use crate::types::Text;
+use crate::trace_log::{LogMessageKnown, LogTargetKnown};
+use crate::types::{LogFieldKey, Text};
 
 const DEMO_USER_EMAIL: &str = "demo.bot@example.com";
 const DEMO_USER_NAME: &str = "Demo Bot";
@@ -137,27 +138,29 @@ pub async fn post_chat_message(
         crate::trace_log::TraceEntry::builder()
             .timestamp(crate::trace_log::now_timestamp_short())
             .level(crate::types::LogLevelText::new("INFO"))
-            .target(crate::types::LogTargetText::new("demo.chat"))
-            .message(crate::types::LogMessageText::new("chat.message.incoming"))
+            .target(crate::types::LogTargetText::from(LogTargetKnown::DemoChat))
+            .message(crate::types::LogMessageText::from(
+                LogMessageKnown::ChatMessageIncoming,
+            ))
             .fields(vec![
                 (
-                    crate::types::LogFieldName::new("direction"),
+                    crate::types::LogFieldName::from(LogFieldKey::Direction),
                     crate::types::LogFieldValue::new("incoming"),
                 ),
                 (
-                    crate::types::LogFieldName::new("sender"),
+                    crate::types::LogFieldName::from(LogFieldKey::Sender),
                     crate::types::LogFieldValue::new("you"),
                 ),
                 (
-                    crate::types::LogFieldName::new("receiver"),
+                    crate::types::LogFieldName::from(LogFieldKey::Receiver),
                     crate::types::LogFieldValue::new("server"),
                 ),
                 (
-                    crate::types::LogFieldName::new("user_id"),
+                    crate::types::LogFieldName::from(LogFieldKey::UserId),
                     crate::types::LogFieldValue::new(user.id.to_string()),
                 ),
                 (
-                    crate::types::LogFieldName::new("body"),
+                    crate::types::LogFieldName::from(LogFieldKey::Body),
                     crate::types::LogFieldValue::new(signals.body.to_string()),
                 ),
             ])
@@ -239,29 +242,31 @@ pub async fn post_demo_chat_message(
         crate::trace_log::TraceEntry::builder()
             .timestamp(crate::trace_log::now_timestamp_short())
             .level(crate::types::LogLevelText::new("INFO"))
-            .target(crate::types::LogTargetText::new("demo.chat"))
-            .message(crate::types::LogMessageText::new("chat.message.incoming"))
+            .target(crate::types::LogTargetText::from(LogTargetKnown::DemoChat))
+            .message(crate::types::LogMessageText::from(
+                LogMessageKnown::ChatMessageIncoming,
+            ))
             .fields(vec![
                 (
-                    crate::types::LogFieldName::new("direction"),
+                    crate::types::LogFieldName::from(LogFieldKey::Direction),
                     crate::types::LogFieldValue::new("incoming"),
                 ),
                 (
-                    crate::types::LogFieldName::new("sender"),
+                    crate::types::LogFieldName::from(LogFieldKey::Sender),
                     crate::types::LogFieldValue::new("demo"),
                 ),
                 (
-                    crate::types::LogFieldName::new("receiver"),
+                    crate::types::LogFieldName::from(LogFieldKey::Receiver),
                     crate::types::LogFieldValue::new("server"),
                 ),
                 (
-                    crate::types::LogFieldName::new("user_id"),
+                    crate::types::LogFieldName::from(LogFieldKey::UserId),
                     crate::types::LogFieldValue::new(
                         demo_user.id.as_uuid().to_string(),
                     ),
                 ),
                 (
-                    crate::types::LogFieldName::new("body"),
+                    crate::types::LogFieldName::from(LogFieldKey::Body),
                     crate::types::LogFieldValue::new(signals.bot_body.to_string()),
                 ),
             ])
@@ -356,8 +361,8 @@ fn broadcast_message(
         .mode(ElementPatchMode::Append)
         .into_datastar_event();
     tracing::info!(
-        target: "demo.sse",
-        message = "chat message broadcast",
+        target: LogTargetKnown::DemoSse.as_str(),
+        message = LogMessageKnown::ChatMessageBroadcast.as_str(),
         selector = ".chat-messages",
         mode = "append",
         payload_bytes = message_html.len() as u64
@@ -373,39 +378,41 @@ fn broadcast_message(
         crate::trace_log::TraceEntry::builder()
             .timestamp(crate::trace_log::now_timestamp_short())
             .level(crate::types::LogLevelText::new("INFO"))
-            .target(crate::types::LogTargetText::new("demo.sse"))
-            .message(crate::types::LogMessageText::new("chat message broadcast"))
+            .target(crate::types::LogTargetText::from(LogTargetKnown::DemoSse))
+            .message(crate::types::LogMessageText::from(
+                LogMessageKnown::ChatMessageBroadcast,
+            ))
             .fields(vec![
                 (
-                    crate::types::LogFieldName::new("selector"),
+                    crate::types::LogFieldName::from(LogFieldKey::Selector),
                     crate::types::LogFieldValue::new(".chat-messages"),
                 ),
                 (
-                    crate::types::LogFieldName::new("mode"),
+                    crate::types::LogFieldName::from(LogFieldKey::Mode),
                     crate::types::LogFieldValue::new("append"),
                 ),
                 (
-                    crate::types::LogFieldName::new("payload_bytes"),
+                    crate::types::LogFieldName::from(LogFieldKey::PayloadBytes),
                     crate::types::LogFieldValue::new(message_html.len().to_string()),
                 ),
                 (
-                    crate::types::LogFieldName::new("direction"),
+                    crate::types::LogFieldName::from(LogFieldKey::Direction),
                     crate::types::LogFieldValue::new("outgoing"),
                 ),
                 (
-                    crate::types::LogFieldName::new("sender"),
+                    crate::types::LogFieldName::from(LogFieldKey::Sender),
                     crate::types::LogFieldValue::new(sender.as_str()),
                 ),
                 (
-                    crate::types::LogFieldName::new("receiver"),
+                    crate::types::LogFieldName::from(LogFieldKey::Receiver),
                     crate::types::LogFieldValue::new("clients"),
                 ),
                 (
-                    crate::types::LogFieldName::new("user_id"),
+                    crate::types::LogFieldName::from(LogFieldKey::UserId),
                     crate::types::LogFieldValue::new(user_id.to_string()),
                 ),
                 (
-                    crate::types::LogFieldName::new("body"),
+                    crate::types::LogFieldName::from(LogFieldKey::Body),
                     crate::types::LogFieldValue::new(body.to_string()),
                 ),
             ])

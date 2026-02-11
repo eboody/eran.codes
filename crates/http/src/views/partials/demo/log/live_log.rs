@@ -2,10 +2,9 @@ use std::str::FromStr;
 
 use bon::Builder;
 use maud::Render;
-use strum_macros::{Display, EnumString};
 
 use crate::trace_log::TraceEntry;
-use crate::types::{LogFieldName, Text};
+use crate::types::{LogFieldKey, LogFieldName, Text};
 use crate::views::partials::components::{
     EmptyState, FieldValue, LogPanel, LogRow, Pill,
 };
@@ -92,7 +91,8 @@ where
     let mut map: std::collections::HashMap<Option<Text>, Vec<&'a TraceEntry>> =
         std::collections::HashMap::new();
     for entry in entries {
-        let request_id = field_value(entry, &LogFieldName::from("request_id"));
+        let request_id =
+            field_value(entry, &LogFieldName::from(LogFieldKey::RequestId));
         if !map.contains_key(&request_id) {
             order.push(request_id.clone());
         }
@@ -117,13 +117,13 @@ fn short_request_id(value: &Text) -> String {
 fn build_pills(entry: &TraceEntry) -> Vec<Pill> {
     let mut pills = Vec::new();
     pills.push(Pill::level(entry.level.to_string()));
-    if let Some(status) = field_value(entry, &LogFieldName::from("status")) {
+    if let Some(status) = field_value(entry, &LogFieldName::from(LogFieldKey::Status)) {
         pills.push(Pill::status(status.clone()));
     }
-    if let Some(method) = field_value(entry, &LogFieldName::from("method")) {
+    if let Some(method) = field_value(entry, &LogFieldName::from(LogFieldKey::Method)) {
         pills.push(Pill::method(method.clone()));
     }
-    if let Some(path) = field_value(entry, &LogFieldName::from("path")) {
+    if let Some(path) = field_value(entry, &LogFieldName::from(LogFieldKey::Path)) {
         pills.push(Pill::path(path));
     }
     pills.push(Pill::target(entry.target.to_string()));
@@ -161,14 +161,4 @@ fn field_value(entry: &TraceEntry, name: &LogFieldName) -> Option<Text> {
         .find(|(field, _)| field == name)
         .map(|(_, value)| FieldValue::from_log_value(Some(value)))
         .and_then(|value| value.into_option())
-}
-
-#[derive(Clone, Copy, Debug, PartialEq, Eq, Display, EnumString)]
-enum LogFieldKey {
-    #[strum(serialize = "method")]
-    Method,
-    #[strum(serialize = "path")]
-    Path,
-    #[strum(serialize = "status")]
-    Status,
 }

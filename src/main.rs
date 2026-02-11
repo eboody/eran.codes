@@ -20,6 +20,7 @@ async fn main() -> Result<()> {
     let diagnostic_log = http::trace_log::TraceLogStore::builder()
         .with_sse(sse_registry.clone())
         .with_max_entries(100)
+        .with_emit_sse(false)
         .build();
     init_tracing(trace_log.clone(), diagnostic_log.clone());
 
