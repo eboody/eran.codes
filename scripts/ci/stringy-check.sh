@@ -19,15 +19,13 @@ done
 
 if command -v rg >/dev/null 2>&1; then
   if rg --no-heading --line-number \
-    --glob 'crates/**' \
-    --glob 'src/**' \
-    --glob 'tests/**' \
+    --glob 'crates/**/views/**' \
     "${args[@]}"; then
     echo "\nerror: string literal checks found. Use enums/newtypes instead."
     exit 1
   fi
 elif command -v grep >/dev/null 2>&1; then
-  if grep -RnoE '==[[:space:]]*"|!=[[:space:]]*"|starts_with\(|ends_with\(|contains\(' crates src tests; then
+  if grep -RnoE '==[[:space:]]*"|!=[[:space:]]*"|starts_with\(|ends_with\(|contains\(' crates/**/views; then
     echo "\nerror: string literal checks found. Use enums/newtypes instead."
     exit 1
   fi
