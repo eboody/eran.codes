@@ -17,12 +17,22 @@ for pattern in "${patterns[@]}"; do
   args+=( -e "$pattern" )
 done
 
-if rg --no-heading --line-number \
-  --glob 'crates/**' \
-  --glob 'src/**' \
-  --glob 'tests/**' \
-  "${args[@]}"; then
-  echo "\nerror: string literal checks found. Use enums/newtypes instead."
+if command -v rg >/dev/null 2>&1; then
+  if rg --no-heading --line-number \
+    --glob 'crates/**' \
+    --glob 'src/**' \
+    --glob 'tests/**' \
+    "${args[@]}"; then
+    echo "\nerror: string literal checks found. Use enums/newtypes instead."
+    exit 1
+  fi
+elif command -v grep >/dev/null 2>&1; then
+  if grep -RnoE '==[[:space:]]*"|!=[[:space:]]*"|starts_with\(|ends_with\(|contains\(' crates src tests; then
+    echo "\nerror: string literal checks found. Use enums/newtypes instead."
+    exit 1
+  fi
+else
+  echo "error: rg or grep is required for this check."
   exit 1
 fi
 
