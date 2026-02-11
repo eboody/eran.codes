@@ -27,8 +27,13 @@ Use Bon's typestate builder patterns for router/state configuration so call site
 
 ## Internal docs
 - `crates/http/src/README.md`
+- `crates/http/src/router/README.md`
+- `crates/http/src/sse/README.md`
 - `crates/http/src/handlers/README.md`
+- `crates/http/src/handlers/demo/README.md`
 - `crates/http/src/views/README.md`
+- `crates/http/src/views/pages/README.md`
+- `crates/http/src/views/partials/README.md`
 
 ## Static assets
 Static files are served from `crates/http/static/` at `/static`.

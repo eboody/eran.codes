@@ -33,6 +33,14 @@
 - `crates/app/README.md`
 - `crates/infra/README.md`
 - `crates/utils/README.md`
+- `crates/http/src/README.md`
+- `crates/http/src/router/README.md`
+- `crates/http/src/sse/README.md`
+- `crates/http/src/views/README.md`
+- `crates/http/src/views/pages/README.md`
+- `crates/http/src/views/partials/README.md`
+- `crates/http/src/handlers/README.md`
+- `crates/http/src/handlers/demo/README.md`
 - `maud-extensions/README.md`
 - `bon.md`
 - `docs/auth-sessions.md`
@@ -50,5 +58,10 @@
 - `crates/utils/README.md` (shared helpers)
 - `crates/http/README.md` (HTTP crate overview)
 - `crates/http/src/README.md` (HTTP internals)
+- `crates/http/src/router/README.md` (router wiring)
+- `crates/http/src/sse/README.md` (SSE registry)
 - `crates/http/src/handlers/README.md` (handler responsibilities)
+- `crates/http/src/handlers/demo/README.md` (demo handlers)
 - `crates/http/src/views/README.md` (Maud view structure)
+- `crates/http/src/views/pages/README.md` (page-level views)
+- `crates/http/src/views/partials/README.md` (component library)
