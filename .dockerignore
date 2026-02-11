@@ -1,0 +1,9 @@
+/.git
+/target
+/.sqlx
+/.cargo
+/.github
+**/*.rs.bk
+**/*.log
+**/.DS_Store
+**/node_modules
