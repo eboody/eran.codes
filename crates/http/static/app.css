@@ -223,6 +223,40 @@ button.secondary,
   margin-top: 2.5rem;
 }
 
+.portfolio-principles {
+  margin-top: 2.5rem;
+}
+
+.principles-grid {
+  display: grid;
+  gap: 1rem;
+  margin-top: 1.5rem;
+}
+
+@media (min-width: 900px) {
+  .principles-grid {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+}
+
+.principle-card {
+  border: 1px solid rgba(148, 163, 184, 0.2);
+  border-radius: 18px;
+  padding: 1.25rem;
+  background: rgba(15, 23, 42, 0.5);
+}
+
+.principle-card h3 {
+  margin-bottom: 0.4rem;
+}
+
+.principle-card ul {
+  margin: 0.8rem 0 0;
+  padding-left: 1.1rem;
+  color: var(--pico-muted-color);
+  font-size: 0.88rem;
+}
+
 .feature-header {
   display: flex;
   justify-content: space-between;

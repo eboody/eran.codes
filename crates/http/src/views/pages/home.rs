@@ -23,6 +23,46 @@ impl maud::Render for Home {
                     .build()
                     .render())
 
+                section class="portfolio-principles" {
+                    (SectionHeader::builder()
+                        .title(Text::from("How I Think About Systems"))
+                        .subtitle(Text::from("This portfolio emphasizes engineering judgment: correctness, clarity, and maintainability over surface area."))
+                        .build()
+                        .render())
+                    div class="principles-grid" {
+                        article class="principle-card" {
+                            h3 { "Correctness first" }
+                            p class="muted" {
+                                "Invariants live in domain types, policy lives in app services, and infra owns SQL + hashing."
+                            }
+                            ul {
+                                li { "Typed boundaries and newtypes for critical data" }
+                                li { "Explicit error mapping across layers" }
+                            }
+                        }
+                        article class="principle-card" {
+                            h3 { "Readable by design" }
+                            p class="muted" {
+                                "Builder pipelines and componentized Maud views keep call sites self-documenting."
+                            }
+                            ul {
+                                li { "Bon builders with descriptive steps" }
+                                li { "Reusable UI components (Render + enums)" }
+                            }
+                        }
+                        article class="principle-card" {
+                            h3 { "Maintainable over time" }
+                            p class="muted" {
+                                "Tracing, linting, and module READMEs turn architectural decisions into guardrails."
+                            }
+                            ul {
+                                li { "Live + diagnostic trace logs" }
+                                li { "CI checks for stringy logic + render coverage" }
+                            }
+                        }
+                    }
+                }
+
                 (FeatureGallery::builder()
                     .title(Text::from("Feature gallery: realtime delivery, grounded in systems"))
                     .subtitle(Text::from("A quick visual scan of the core capabilities, followed by live diagrams that explain how requests and events flow through the stack."))
