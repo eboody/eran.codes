@@ -29,10 +29,12 @@ impl DemoState {
 
 #[derive(Clone)]
 pub struct SurrealState {
-    pub guard:
-        std::sync::Arc<dashmap::DashMap<crate::types::SessionId, std::sync::Arc<tokio::sync::Mutex<()>>>>,
-    pub cancel:
-        std::sync::Arc<dashmap::DashMap<crate::types::SessionId, tokio_util::sync::CancellationToken>>,
+    pub guard: std::sync::Arc<
+        dashmap::DashMap<crate::types::SessionId, std::sync::Arc<tokio::sync::Mutex<()>>>,
+    >,
+    pub cancel: std::sync::Arc<
+        dashmap::DashMap<crate::types::SessionId, tokio_util::sync::CancellationToken>,
+    >,
     pub seq: std::sync::Arc<AtomicU64>,
 }
 
@@ -76,7 +78,8 @@ impl State {
         #[builder(setters(name = with_chat))] chat: app::chat::Service,
         #[builder(setters(name = with_sse))] sse: crate::sse::Registry,
         #[builder(setters(name = with_cookie_key))] cookie_key: Key,
-        #[builder(setters(name = with_trace_log))] trace_log: crate::trace_log::TraceLogStore,
+        #[builder(setters(name = with_trace_log))]
+        trace_log: crate::trace_log::TraceLogStore,
     ) -> Self {
         Self::new(user, auth, chat, sse, cookie_key, trace_log)
     }

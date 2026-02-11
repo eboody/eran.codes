@@ -96,8 +96,7 @@ fn init_tracing(
 
     let subscriber = tracing_subscriber::registry().with(env_filter);
     let trace_layer = http::trace_log::TraceLogLayer::new(trace_log);
-    let diagnostic_layer =
-        http::trace_log::DiagnosticTraceLogLayer::new(diagnostic_log);
+    let diagnostic_layer = http::trace_log::DiagnosticTraceLogLayer::new(diagnostic_log);
 
     match log_format {
         LogFormat::Json => {

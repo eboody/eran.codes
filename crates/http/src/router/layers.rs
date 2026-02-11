@@ -1,5 +1,6 @@
 use axum::Extension;
 use axum::Router;
+use axum::extract::MatchedPath;
 use axum::middleware::from_fn;
 use axum_login::AuthManagerLayerBuilder;
 use bon::Builder;
@@ -11,7 +12,6 @@ use tower_http::request_id::{MakeRequestUuid, PropagateRequestIdLayer, SetReques
 use tower_http::trace::TraceLayer;
 use tower_sessions::{Expiry, SessionManagerLayer, SessionStore};
 use tracing::field;
-use axum::extract::MatchedPath;
 
 use crate::State;
 
