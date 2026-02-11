@@ -17,7 +17,11 @@ async fn main() -> Result<()> {
     let trace_log = http::trace_log::TraceLogStore::builder()
         .with_sse(sse_registry.clone())
         .build();
-    init_tracing(trace_log.clone());
+    let diagnostic_log = http::trace_log::TraceLogStore::builder()
+        .with_sse(sse_registry.clone())
+        .with_max_entries(100)
+        .build();
+    init_tracing(trace_log.clone(), diagnostic_log.clone());
 
     let cfg = config::Config::load()?;
 
@@ -81,31 +85,38 @@ async fn main() -> Result<()> {
     Ok(())
 }
 
-fn init_tracing(trace_log: http::trace_log::TraceLogStore) {
+fn init_tracing(
+    trace_log: http::trace_log::TraceLogStore,
+    diagnostic_log: http::trace_log::TraceLogStore,
+) {
     let env_filter =
         EnvFilter::try_from_default_env().unwrap_or_else(|_| "info,http=debug".into());
     let log_format = LogFormat::from_env();
 
     let subscriber = tracing_subscriber::registry().with(env_filter);
     let trace_layer = http::trace_log::TraceLogLayer::new(trace_log);
+    let diagnostic_layer =
+        http::trace_log::DiagnosticTraceLogLayer::new(diagnostic_log);
 
     match log_format {
         LogFormat::Json => {
-        subscriber
-            .with(
-                tracing_subscriber::fmt::layer()
-                    .json()
-                    .with_current_span(true)
-                    .with_span_list(true),
-            )
-            .with(trace_layer)
-            .init();
+            subscriber
+                .with(
+                    tracing_subscriber::fmt::layer()
+                        .json()
+                        .with_current_span(true)
+                        .with_span_list(true),
+                )
+                .with(trace_layer)
+                .with(diagnostic_layer)
+                .init();
         }
         LogFormat::Pretty => {
-        subscriber
-            .with(tracing_subscriber::fmt::layer().pretty())
-            .with(trace_layer)
-            .init();
+            subscriber
+                .with(tracing_subscriber::fmt::layer().pretty())
+                .with(trace_layer)
+                .with(diagnostic_layer)
+                .init();
         }
     }
 }

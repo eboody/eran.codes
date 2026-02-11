@@ -11,6 +11,7 @@ use tower_http::request_id::{MakeRequestUuid, PropagateRequestIdLayer, SetReques
 use tower_http::trace::TraceLayer;
 use tower_sessions::{Expiry, SessionManagerLayer, SessionStore};
 use tracing::field;
+use axum::extract::MatchedPath;
 
 use crate::State;
 
@@ -97,6 +98,9 @@ where
                             span.record("user_agent", &user_agent.to_string().as_str());
                         }
                         span.record("kind", context.kind.as_str());
+                    }
+                    if let Some(route) = request.extensions().get::<MatchedPath>() {
+                        span.record("route", route.as_str());
                     }
 
                     span

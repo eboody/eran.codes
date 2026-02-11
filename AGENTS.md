@@ -29,6 +29,7 @@
 
 ## Tracing Strategy
 - Follow `docs/tracing.md` for required spans, context fields, and per-layer responsibilities.
+- When adding or modifying routes/handlers, ensure request spans record `route`, `path`, `method`, `request_id`, `session_id`, `user_id`, and `kind` (via `MatchedPath` when available), and update tracing if a new request flow is introduced.
 
 ## Bon Builders
 - Prefer the `bon` crate for configuration/builders whenever a constructor has many steps or the call site reads as a pipeline of abstract methods.

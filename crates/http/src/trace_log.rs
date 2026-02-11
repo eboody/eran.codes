@@ -214,6 +214,16 @@ impl TraceLogLayer {
     }
 }
 
+pub struct DiagnosticTraceLogLayer {
+    store: TraceLogStore,
+}
+
+impl DiagnosticTraceLogLayer {
+    pub fn new(store: TraceLogStore) -> Self {
+        Self { store }
+    }
+}
+
 impl<S> Layer<S> for TraceLogLayer
 where
     S: tracing::Subscriber + for<'a> LookupSpan<'a>,
@@ -245,6 +255,9 @@ where
         if should_skip_event(&target_kind, &message_kind) {
             return;
         }
+        if target_kind.is_diagnostic() {
+            return;
+        }
         let has_db = visitor
             .fields
             .iter()
@@ -273,10 +286,73 @@ where
     }
 }
 
+impl<S> Layer<S> for DiagnosticTraceLogLayer
+where
+    S: tracing::Subscriber + for<'a> LookupSpan<'a>,
+{
+    fn on_event(
+        &self,
+        event: &Event<'_>,
+        _ctx: tracing_subscriber::layer::Context<'_, S>,
+    ) {
+        let context = request::current_context();
+        let Some(request_id) = context
+            .as_ref()
+            .and_then(|value| value.request_id.as_ref())
+            .cloned()
+        else {
+            return;
+        };
+
+        let mut visitor = FieldVisitor::default();
+        event.record(&mut visitor);
+
+        let level = *event.metadata().level();
+        let target = event.metadata().target();
+        let message = visitor
+            .message
+            .unwrap_or_else(|| LogMessageText::new(event.metadata().name()));
+        let target_kind = LogTargetKind::from_str(target);
+        let message_kind = LogMessageKind::from_str(&message.to_string());
+
+        let is_request_start = matches!(
+            target_kind,
+            LogTargetKind::Known(LogTargetKnown::DemoRequestDiagnostic)
+        );
+        let is_request_completed = matches!(
+            (target_kind, message_kind),
+            (
+                LogTargetKind::Known(LogTargetKnown::HttpRouterLayers),
+                LogMessageKind::Known(LogMessageKnown::RequestCompleted)
+            )
+        );
+
+        if !(is_request_start || is_request_completed) {
+            return;
+        }
+
+        let entry = TraceEntry::builder()
+            .timestamp(now_timestamp_short())
+            .level(LogLevelText::new(level.to_string()))
+            .target(LogTargetText::new(target.to_string()))
+            .message(LogMessageText::new(message.to_string()))
+            .fields(visitor.fields)
+            .build();
+
+        let session_id = context
+            .as_ref()
+            .and_then(|value| value.session_id.as_ref());
+        self.store
+            .record_with_session(&request_id, session_id, entry);
+    }
+}
+
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Display, EnumString)]
 pub enum LogTargetKnown {
     #[strum(serialize = "demo.request")]
     DemoRequest,
+    #[strum(serialize = "demo.request.diagnostic")]
+    DemoRequestDiagnostic,
     #[strum(serialize = "demo.sse")]
     DemoSse,
     #[strum(serialize = "demo.chat")]
@@ -305,6 +381,10 @@ impl LogTargetKind {
                 | Self::Known(LogTargetKnown::DemoSse)
                 | Self::Known(LogTargetKnown::DemoChat)
         )
+    }
+
+    pub fn is_diagnostic(&self) -> bool {
+        matches!(self, Self::Known(LogTargetKnown::DemoRequestDiagnostic))
     }
 
     pub fn is_demo_sse(&self) -> bool {
@@ -413,6 +493,14 @@ pub async fn audit_middleware(
         .and_then(|value| value.session_id);
     let user_id = request::current_context()
         .and_then(|value| value.user_id);
+
+    tracing::info!(
+        target: "demo.request.diagnostic",
+        message = "request.start",
+        method = %method,
+        path = %path,
+        request_id = %request_id
+    );
 
     let response = next.run(req).await;
     let latency_ms = started_at.elapsed().as_millis().to_string();
