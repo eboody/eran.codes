@@ -8,11 +8,8 @@
 - `cargo run`
 
 ## Structure
-- `crates/domain`, `crates/app`, `crates/infra`, `crates/http`, `crates/utils`
-- `maud-extensions` (external crate)
-- `crates/http` handles SSE with one `/events` stream per visitor, keyed by a signed `session_id` cookie
-- `crates/http` integrates `axum-login` with `tower-sessions` for auth sessions (SQLx Postgres store)
-- Live chat demo is part of the home page, with Datastar-driven SSE updates
+- Workspace crates: `domain`, `app`, `infra`, `http`, `utils`
+- HTTP demo surface is on the home page with SSE-driven chat updates
 - Trace logging is split between live log (SSE) and diagnostic log (non-SSE)
 - Auth routes: `GET /register`, `POST /register`, `GET /login`, `POST /login`, `POST /logout`, `GET /protected`
 
@@ -32,6 +29,10 @@
 
 ## Docs
 - `crates/http/README.md`
+- `crates/domain/README.md`
+- `crates/app/README.md`
+- `crates/infra/README.md`
+- `crates/utils/README.md`
 - `maud-extensions/README.md`
 - `bon.md`
 - `docs/auth-sessions.md`
@@ -43,6 +44,10 @@
 
 ## README hierarchy
 - `README.md` (workspace overview)
+- `crates/domain/README.md` (domain invariants)
+- `crates/app/README.md` (use-case orchestration)
+- `crates/infra/README.md` (DB + external mechanisms)
+- `crates/utils/README.md` (shared helpers)
 - `crates/http/README.md` (HTTP crate overview)
 - `crates/http/src/README.md` (HTTP internals)
 - `crates/http/src/handlers/README.md` (handler responsibilities)
