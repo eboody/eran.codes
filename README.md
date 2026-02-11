@@ -22,6 +22,10 @@
 - `scripts/ci/no-string-fields.sh`
 - `scripts/ci/partials-render.sh`
 
+## Docker
+- Build: `docker build -t eran_codes .`
+- Run: `docker run -p 3000:3000 -e DATABASE_URL=... -e SESSION_SECRET=... eran_codes`
+
 ## Tracing
 - Use `RUST_LOG` to control output; see `.cargo/config.toml` for defaults.
 - New endpoints and use-cases must follow `docs/tracing.md`.
