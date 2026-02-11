@@ -13,3 +13,5 @@ jobs:
         run: scripts/ci/stringy-check.sh
       - name: no String fields
         run: scripts/ci/no-string-fields.sh
+      - name: partials render
+        run: scripts/ci/partials-render.sh
