@@ -6,7 +6,7 @@ COPY Cargo.toml Cargo.lock ./
 COPY crates ./crates
 COPY src ./src
 
-RUN cargo build --release
+RUN cargo build --release --locked
 
 FROM debian:bookworm-slim
 
