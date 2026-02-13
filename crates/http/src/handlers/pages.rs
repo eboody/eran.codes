@@ -5,7 +5,7 @@ use crate::types::Text;
 use crate::views::partials::ChatDemoSection;
 
 pub async fn health(Extension(_state): Extension<crate::State>) -> &'static str {
-    "ok"
+    "OK"
 }
 
 pub async fn home(
