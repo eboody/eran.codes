@@ -81,8 +81,6 @@ impl Render for ChatPanel {
                     .render())
                 form method="post"
                     action=(action)
-                    data-target=".chat-messages"
-                    data-swap="append"
                     data-on:submit=(format!("@post('{}'); ${} = ''", action, input_signal))
                 {
                     label {

@@ -185,11 +185,7 @@ pub async fn post_chat_message(
     );
 
     let response = match crate::request::current_kind() {
-        crate::request::Kind::Datastar => (
-            StatusCode::OK,
-            axum::response::Html(message_html),
-        )
-            .into_response(),
+        crate::request::Kind::Datastar => StatusCode::ACCEPTED.into_response(),
         crate::request::Kind::Page => {
             let target = format!(
                 "{}#{}",
@@ -291,11 +287,7 @@ pub async fn post_demo_chat_message(
     );
 
     let response = match crate::request::current_kind() {
-        crate::request::Kind::Datastar => (
-            StatusCode::OK,
-            axum::response::Html(message_html),
-        )
-            .into_response(),
+        crate::request::Kind::Datastar => StatusCode::ACCEPTED.into_response(),
         crate::request::Kind::Page => {
             let target = format!(
                 "{}#{}",
