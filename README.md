@@ -1,23 +1,37 @@
 # eran_codes
 
+This is my portfolio codebase. The point is not demo count, it is engineering quality: clear boundaries, typed invariants, readable composition, and observable runtime behavior.
+
+## What this project demonstrates
+- Domain/app/http/infra boundaries that are enforced in code, not just described in docs.
+- Durable auth + session handling with Postgres-backed session storage.
+- SSE + Datastar delivery for live UI updates.
+- Reusable Maud components instead of one-off template markup.
+- Trace/log architecture split into live user-facing signals vs diagnostic-only events.
+
 ## Quickstart
-- `HOST`, `PORT`, `DATABASE_URL`, `SESSION_SECRET` (base64url, no padding, 64 bytes)
-- Optional: `SESSION_CLEANUP_INTERVAL_SECS` (defaults to 3600)
-- `docker-compose up -d`
-- `cargo run --bin with_db -- sqlx migrate run --source crates/infra/migrations`
-- `cargo run`
+Required env vars:
+- `HOST`
+- `PORT`
+- `DATABASE_URL`
+- `SESSION_SECRET` (base64url, no padding, 64 bytes)
 
-## Structure
-- Workspace crates: `domain`, `app`, `infra`, `http`, `utils`
-- HTTP demo surface is on the home page with SSE-driven chat updates
-- Trace logging is split between live log (SSE) and diagnostic log (non-SSE)
-- Auth routes: `GET /register`, `POST /register`, `GET /login`, `POST /login`, `POST /logout`, `GET /protected`
+Optional env vars:
+- `SESSION_CLEANUP_INTERVAL_SECS` (defaults to `3600`)
 
-## Commands
+Run locally:
+1. `docker-compose up -d`
+2. `cargo run --bin with_db -- sqlx migrate run --source crates/infra/migrations`
+3. `cargo run`
+
+## Core commands
 - `cargo build`
 - `cargo test`
+- `cargo check`
 - `docker-compose up -d`
 - `cargo run --bin with_db -- sqlx migrate run --source crates/infra/migrations`
+
+CI guardrails:
 - `scripts/ci/stringy-check.sh`
 - `scripts/ci/no-string-fields.sh`
 - `scripts/ci/partials-render.sh`
@@ -26,26 +40,29 @@
 - Build: `docker build -t eran_codes .`
 - Run: `docker run -p 3000:3000 -e DATABASE_URL=... -e SESSION_SECRET=... eran_codes`
 
-## Tracing
-- Use `RUST_LOG` to control output; see `.cargo/config.toml` for defaults.
-- New endpoints and use-cases must follow `docs/tracing.md`.
-- Classify new tracing events as live-log vs diagnostic; diagnostics should not emit SSE.
+## Architecture audit
+Current architecture and quality audit:
+- `docs/project-audit.md`
 
-## Docs
-- `crates/http/README.md`
-- `crates/domain/README.md`
-- `crates/app/README.md`
-- `crates/infra/README.md`
-- `crates/utils/README.md`
-- `crates/http/src/README.md`
-- `crates/http/src/router/README.md`
-- `crates/http/src/sse/README.md`
-- `crates/http/src/views/README.md`
-- `crates/http/src/views/pages/README.md`
-- `crates/http/src/views/partials/README.md`
-- `crates/http/src/handlers/README.md`
-- `crates/http/src/handlers/demo/README.md`
-- `maud-extensions/README.md`
+Prioritized refactor plan from that audit:
+- `docs/refactor-plan.md`
+
+## Workspace structure
+- `crates/domain`: business types + invariants
+- `crates/app`: use-cases + orchestration traits
+- `crates/infra`: SQL/persistence + mechanism implementations
+- `crates/http`: routing, handlers, SSE, Maud views
+- `crates/utils`: shared helpers
+- `src/main.rs`: composition root
+
+## Tracing
+- Configure output with `RUST_LOG`.
+- Keep tracing conventions aligned with `docs/tracing.md`.
+- New request flows must classify events as `live` (SSE-visible) or `diagnostic` (non-SSE).
+
+## Documentation map
+Top-level:
+- `AGENTS.md`
 - `bon.md`
 - `docs/auth-sessions.md`
 - `docs/tracing.md`
@@ -53,19 +70,24 @@
 - `docs/datastar-signals.md`
 - `docs/datastar-expressions.md`
 - `docs/datastar-backend-requests.md`
+- `docs/portfolio-demos.md`
+- `docs/portfolio-demos-plan.md`
+- `docs/project-audit.md`
+- `docs/refactor-plan.md`
 
-## README hierarchy
-- `README.md` (workspace overview)
-- `crates/domain/README.md` (domain invariants)
-- `crates/app/README.md` (use-case orchestration)
-- `crates/infra/README.md` (DB + external mechanisms)
-- `crates/utils/README.md` (shared helpers)
-- `crates/http/README.md` (HTTP crate overview)
-- `crates/http/src/README.md` (HTTP internals)
-- `crates/http/src/router/README.md` (router wiring)
-- `crates/http/src/sse/README.md` (SSE registry)
-- `crates/http/src/handlers/README.md` (handler responsibilities)
-- `crates/http/src/handlers/demo/README.md` (demo handlers)
-- `crates/http/src/views/README.md` (Maud view structure)
-- `crates/http/src/views/pages/README.md` (page-level views)
-- `crates/http/src/views/partials/README.md` (component library)
+Crate-level:
+- `crates/domain/README.md`
+- `crates/app/README.md`
+- `crates/infra/README.md`
+- `crates/http/README.md`
+- `crates/utils/README.md`
+
+HTTP internals:
+- `crates/http/src/README.md`
+- `crates/http/src/router/README.md`
+- `crates/http/src/handlers/README.md`
+- `crates/http/src/handlers/demo/README.md`
+- `crates/http/src/sse/README.md`
+- `crates/http/src/views/README.md`
+- `crates/http/src/views/pages/README.md`
+- `crates/http/src/views/partials/README.md`
