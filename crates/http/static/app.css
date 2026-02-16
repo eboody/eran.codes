@@ -231,6 +231,10 @@ button.secondary,
   margin-top: 2.5rem;
 }
 
+.professionalism-breakdown {
+  margin-top: 2.5rem;
+}
+
 .principles-grid {
   display: grid;
   gap: 1rem;
@@ -289,6 +293,54 @@ button.secondary,
   padding-left: 1.1rem;
   color: var(--pico-muted-color);
   font-size: 0.88rem;
+}
+
+.professionalism-accordion-list {
+  display: grid;
+  gap: 0.9rem;
+  margin-top: 1.5rem;
+}
+
+.professionalism-accordion {
+  border: 1px solid rgba(148, 163, 184, 0.2);
+  border-radius: 16px;
+  background: rgba(15, 23, 42, 0.5);
+  padding: 0.1rem 0.9rem 0.9rem;
+}
+
+.professionalism-accordion summary {
+  cursor: pointer;
+  list-style: none;
+  display: flex;
+  align-items: center;
+  padding: 0.9rem 0;
+}
+
+.professionalism-accordion summary::-webkit-details-marker {
+  display: none;
+}
+
+.professionalism-accordion summary h3 {
+  margin: 0;
+  font-size: 1rem;
+}
+
+.professionalism-path {
+  margin: 0.45rem 0 0.65rem;
+  color: var(--pico-muted-color);
+  font-size: 0.85rem;
+}
+
+.professionalism-code {
+  margin: 0;
+  border: 1px solid rgba(148, 163, 184, 0.24);
+  border-radius: 12px;
+  background: rgba(2, 6, 23, 0.75);
+  padding: 0.9rem;
+  overflow-x: auto;
+  white-space: pre;
+  font-size: 0.82rem;
+  line-height: 1.45;
 }
 
 .feature-header {

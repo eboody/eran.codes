@@ -5,7 +5,8 @@ use crate::types::Text;
 use crate::views::page::UserNav;
 use crate::views::partials::{
     ChatDemoSection, DemoResultPlaceholder, DemoSection, DiagramPanel, DiagramRow,
-    DiagramStatus, FeatureAccent, FeatureCard, FeatureGallery, HomeHero, SectionHeader,
+    DiagramStatus, FeatureAccent, FeatureCard, FeatureGallery, HomeHero,
+    ProfessionalismBreakdown, ProfessionalismTopic, SectionHeader,
 };
 
 #[derive(Builder)]
@@ -130,6 +131,39 @@ impl maud::Render for Home {
                             }
                         }
                     }
+                }
+
+                section class="professionalism-breakdown" {
+                    ({
+                        SectionHeader::builder()
+                            .title(
+                                Text::from(
+                                    "Professionalism In Practice (Detailed Breakdown)",
+                                ),
+                            )
+                            .subtitle(
+                                Text::from(
+                                    "Concrete patterns from this codebase, with real snippets and why each choice is maintainable.",
+                                ),
+                            )
+                            .build()
+                            .render()
+                    })
+                    ({
+                        ProfessionalismBreakdown::builder()
+                            .topics(
+                                vec![
+                                    ProfessionalismTopic::BoundaryModeling,
+                                    ProfessionalismTopic::TypedInvariants,
+                                    ProfessionalismTopic::ErrorContracts,
+                                    ProfessionalismTopic::Observability,
+                                    ProfessionalismTopic::ReusableViews,
+                                    ProfessionalismTopic::ReadableWiring,
+                                ],
+                            )
+                            .build()
+                            .render()
+                    })
                 }
 
                 ({

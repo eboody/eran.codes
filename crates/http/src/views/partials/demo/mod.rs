@@ -7,5 +7,5 @@ pub(super) mod misc;
 pub use chat::{ChatConnection, ChatDemoSection, ChatMessage, ChatMessages, ChatPanel, ChatPanelRole, ChatWindow};
 pub use log::{ChatFlow, LiveLog, NetworkLog, TraceLog};
 pub use support::{AuthStatus, BoundaryCheck, DbCheck, KeyValueList, RequestMeta, SessionStatus, StatusCard};
-pub use layout::{CtaRow, DemoResultPlaceholder, DemoSection, DiagramPanel, DiagramRow, DiagramStatus, FeatureAccent, FeatureCard, FeatureGallery, HomeHero, SectionHeader};
+pub use layout::{CtaRow, DemoResultPlaceholder, DemoSection, DiagramPanel, DiagramRow, DiagramStatus, FeatureAccent, FeatureCard, FeatureGallery, HomeHero, ProfessionalismBreakdown, ProfessionalismTopic, SectionHeader};
 pub use misc::{ModerationAction, Ping};

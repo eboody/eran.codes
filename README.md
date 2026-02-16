@@ -74,6 +74,7 @@ Top-level:
 - `docs/portfolio-demos-plan.md`
 - `docs/project-audit.md`
 - `docs/refactor-plan.md`
+- `docs/professionalism-breakdown.md`
 
 Crate-level:
 - `crates/domain/README.md`
