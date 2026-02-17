@@ -83,8 +83,7 @@ impl auth::Provider for TestAuthProvider {
     ) -> auth::Result<Option<auth::AuthenticatedUser>> {
         let demo = TestCredential::Demo;
         if credentials.email == demo.email()
-            && credentials.password.expose_secret()
-                == demo.password().expose_secret()
+            && credentials.password.expose_secret() == demo.password().expose_secret()
         {
             return Ok(Some(test_user()));
         }
@@ -103,8 +102,7 @@ impl auth::Provider for TestAuthProvider {
 }
 
 fn test_user() -> auth::AuthenticatedUser {
-    let username =
-        domain_user::Username::try_new("Demo").expect("username");
+    let username = domain_user::Username::try_new("Demo").expect("username");
     let email = TestCredential::Demo.email();
     auth::AuthenticatedUser::builder()
         .id(domain_user::Id::from_uuid(USER_ID))
@@ -121,10 +119,7 @@ struct ChatRepo {
 
 #[async_trait]
 impl app::chat::Repository for ChatRepo {
-    async fn create_room(
-        &self,
-        _room: &domain_chat::Room,
-    ) -> app::chat::Result<()> {
+    async fn create_room(&self, _room: &domain_chat::Room) -> app::chat::Result<()> {
         let mut slot = self.room.lock().expect("room lock");
         *slot = Some(_room.clone());
         Ok(())
@@ -135,10 +130,7 @@ impl app::chat::Repository for ChatRepo {
         _room_id: &domain_chat::RoomId,
     ) -> app::chat::Result<Option<domain_chat::Room>> {
         let slot = self.room.lock().expect("room lock");
-        Ok(slot
-            .as_ref()
-            .filter(|room| &room.id == _room_id)
-            .cloned())
+        Ok(slot.as_ref().filter(|room| &room.id == _room_id).cloned())
     }
 
     async fn find_room_by_name(
@@ -146,10 +138,7 @@ impl app::chat::Repository for ChatRepo {
         _name: &domain_chat::RoomName,
     ) -> app::chat::Result<Option<domain_chat::Room>> {
         let slot = self.room.lock().expect("room lock");
-        Ok(slot
-            .as_ref()
-            .filter(|room| &room.name == _name)
-            .cloned())
+        Ok(slot.as_ref().filter(|room| &room.name == _name).cloned())
     }
 
     async fn list_messages(
@@ -178,7 +167,7 @@ impl app::chat::Repository for ChatRepo {
         &self,
         _room_id: &domain_chat::RoomId,
         _user_id: &domain_chat::UserId,
-        _role: &str,
+        _role: app::chat::RoomRole,
     ) -> app::chat::Result<()> {
         Ok(())
     }
@@ -207,7 +196,7 @@ impl app::chat::ModerationQueue for ModerationQueue {
     async fn enqueue(
         &self,
         _message_id: &domain_chat::MessageId,
-        _reason: &str,
+        _reason: &app::chat::ModerationReason,
     ) -> app::chat::Result<()> {
         Ok(())
     }
@@ -224,7 +213,7 @@ impl app::chat::ModerationQueue for ModerationQueue {
         _message_id: &domain_chat::MessageId,
         _reviewer_id: &domain_chat::UserId,
         _decision: app::chat::ModerationDecision,
-        _reason: Option<String>,
+        _reason: Option<app::chat::ModerationReason>,
     ) -> app::chat::Result<()> {
         Ok(())
     }
@@ -247,10 +236,7 @@ struct AuditLog;
 
 #[async_trait]
 impl app::chat::AuditLog for AuditLog {
-    async fn record(
-        &self,
-        _entry: app::chat::AuditEntry,
-    ) -> app::chat::Result<()> {
+    async fn record(&self, _entry: app::chat::AuditEntry) -> app::chat::Result<()> {
         Ok(())
     }
 }
@@ -380,11 +366,7 @@ async fn login_sets_session_cookie_and_allows_chat() {
         .map(|value| value.to_string())
         .expect("eran.sid cookie");
 
-    let cookie_header = set_cookie
-        .split(';')
-        .next()
-        .expect("cookie")
-        .to_string();
+    let cookie_header = set_cookie.split(';').next().expect("cookie").to_string();
     let response = app
         .oneshot(
             Request::get("/demo/chat")
@@ -395,7 +377,14 @@ async fn login_sets_session_cookie_and_allows_chat() {
         .await
         .unwrap();
 
-    assert_eq!(response.status(), StatusCode::OK);
+    assert_eq!(response.status(), StatusCode::SEE_OTHER);
+    let location = response
+        .headers()
+        .get(axum::http::header::LOCATION)
+        .expect("location header")
+        .to_str()
+        .expect("location value");
+    assert_eq!(location, "/#chat-demo");
 }
 
 #[derive(Clone, Copy, Debug)]
@@ -411,7 +400,8 @@ impl CookieName {
     }
 
     fn matches_cookie(self, value: &str) -> bool {
-        value.strip_prefix(self.as_str())
+        value
+            .strip_prefix(self.as_str())
             .and_then(|value| value.strip_prefix('='))
             .is_some()
     }

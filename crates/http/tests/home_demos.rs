@@ -83,10 +83,7 @@ struct ChatRepo;
 
 #[async_trait]
 impl app::chat::Repository for ChatRepo {
-    async fn create_room(
-        &self,
-        _room: &domain_chat::Room,
-    ) -> app::chat::Result<()> {
+    async fn create_room(&self, _room: &domain_chat::Room) -> app::chat::Result<()> {
         Ok(())
     }
 
@@ -130,7 +127,7 @@ impl app::chat::Repository for ChatRepo {
         &self,
         _room_id: &domain_chat::RoomId,
         _user_id: &domain_chat::UserId,
-        _role: &str,
+        _role: app::chat::RoomRole,
     ) -> app::chat::Result<()> {
         Ok(())
     }
@@ -159,7 +156,7 @@ impl app::chat::ModerationQueue for ModerationQueue {
     async fn enqueue(
         &self,
         _message_id: &domain_chat::MessageId,
-        _reason: &str,
+        _reason: &app::chat::ModerationReason,
     ) -> app::chat::Result<()> {
         Ok(())
     }
@@ -176,7 +173,7 @@ impl app::chat::ModerationQueue for ModerationQueue {
         _message_id: &domain_chat::MessageId,
         _reviewer_id: &domain_chat::UserId,
         _decision: app::chat::ModerationDecision,
-        _reason: Option<String>,
+        _reason: Option<app::chat::ModerationReason>,
     ) -> app::chat::Result<()> {
         Ok(())
     }
@@ -199,10 +196,7 @@ struct AuditLog;
 
 #[async_trait]
 impl app::chat::AuditLog for AuditLog {
-    async fn record(
-        &self,
-        _entry: app::chat::AuditEntry,
-    ) -> app::chat::Result<()> {
+    async fn record(&self, _entry: app::chat::AuditEntry) -> app::chat::Result<()> {
         Ok(())
     }
 }
@@ -237,9 +231,7 @@ async fn home_page_includes_demo_sections() {
 
     assert_eq!(response.status(), axum::http::StatusCode::OK);
 
-    let body = to_bytes(response.into_body(), usize::MAX)
-        .await
-        .unwrap();
+    let body = to_bytes(response.into_body(), usize::MAX).await.unwrap();
     let body = String::from_utf8_lossy(&body);
 
     for copy in HomeCopy::all() {
@@ -249,17 +241,12 @@ async fn home_page_includes_demo_sections() {
 
 #[derive(Clone, Copy, Debug)]
 enum HomeCopy {
-    Demo1,
-    Demo2,
-    Demo3,
-    Demo4,
-    Demo5,
-    Demo6,
-    CheckAuth,
-    ShowSession,
-    CheckDemoEmail,
+    ThinkingSystems,
+    AuditSection,
+    ProfessionalismSection,
+    FeatureGallery,
+    ChatRoom,
     LiveBackendLog,
-    StartDemo,
     SignIn,
     RegisterPath,
     LoginPath,
@@ -268,17 +255,12 @@ enum HomeCopy {
 impl HomeCopy {
     fn all() -> &'static [HomeCopy] {
         &[
-            HomeCopy::Demo1,
-            HomeCopy::Demo2,
-            HomeCopy::Demo3,
-            HomeCopy::Demo4,
-            HomeCopy::Demo5,
-            HomeCopy::Demo6,
-            HomeCopy::CheckAuth,
-            HomeCopy::ShowSession,
-            HomeCopy::CheckDemoEmail,
+            HomeCopy::ThinkingSystems,
+            HomeCopy::AuditSection,
+            HomeCopy::ProfessionalismSection,
+            HomeCopy::FeatureGallery,
+            HomeCopy::ChatRoom,
             HomeCopy::LiveBackendLog,
-            HomeCopy::StartDemo,
             HomeCopy::SignIn,
             HomeCopy::RegisterPath,
             HomeCopy::LoginPath,
@@ -287,17 +269,12 @@ impl HomeCopy {
 
     fn as_str(self) -> &'static str {
         match self {
-            HomeCopy::Demo1 => "Demo 1: Auth flow walkthrough",
-            HomeCopy::Demo2 => "Demo 2: Persistent session resilience",
-            HomeCopy::Demo3 => "Demo 3: Architecture boundary map",
-            HomeCopy::Demo4 => "Demo 4: Error handling showcase",
-            HomeCopy::Demo5 => "Demo 5: Tracing and observability",
-            HomeCopy::Demo6 => "Demo 6: SSE and Datastar patches",
-            HomeCopy::CheckAuth => "Check auth status",
-            HomeCopy::ShowSession => "Show session details",
-            HomeCopy::CheckDemoEmail => "Check demo@example.com",
-            HomeCopy::LiveBackendLog => "Live backend log",
-            HomeCopy::StartDemo => "Start demo",
+            HomeCopy::ThinkingSystems => "How I Think About Systems",
+            HomeCopy::AuditSection => "Architecture Audit (What This Site Demonstrates)",
+            HomeCopy::ProfessionalismSection => "Professionalism In Practice (Detailed Breakdown)",
+            HomeCopy::FeatureGallery => "Feature gallery: realtime delivery, grounded in systems",
+            HomeCopy::ChatRoom => "Live chat room",
+            HomeCopy::LiveBackendLog => "Live backend log (SSE)",
             HomeCopy::SignIn => "Sign in",
             HomeCopy::RegisterPath => "/register",
             HomeCopy::LoginPath => "/login",

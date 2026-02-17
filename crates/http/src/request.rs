@@ -1,7 +1,7 @@
 use axum::{
     body::Body,
     extract::Extension,
-    http::{header, HeaderMap, Request},
+    http::{HeaderMap, Request, header},
     middleware::Next,
     response::Response,
 };
@@ -9,8 +9,8 @@ use axum::{
 use crate::sse::SESSION_COOKIE;
 use crate::types::{ClientIp, RequestId, SessionId, UserAgent, UserIdText};
 use std::cell::RefCell;
-use tracing::Span;
 use tower_cookies::{Cookies, Key};
+use tracing::Span;
 
 #[derive(Clone, Copy, Debug)]
 pub enum Kind {
@@ -75,16 +75,12 @@ pub fn set_user_id(user_id: impl Into<UserIdText>) {
     }
 }
 
-fn context_from_request(
-    req: &Request<Body>,
-    key: &Key,
-) -> Context {
+fn context_from_request(req: &Request<Body>, key: &Key) -> Context {
     let headers = req.headers();
     let cookies = req.extensions().get::<Cookies>();
     Context {
         request_id: request_id_from_headers(headers),
-        session_id: cookies
-            .and_then(|cookies| session_id_from_cookies(cookies, key)),
+        session_id: cookies.and_then(|cookies| session_id_from_cookies(cookies, key)),
         user_id: None,
         client_ip: client_ip_from_headers(headers),
         user_agent: user_agent_from_headers(headers),
@@ -100,10 +96,7 @@ fn kind_from_headers(headers: &HeaderMap) -> Kind {
     }
 }
 
-fn session_id_from_cookies(
-    cookies: &Cookies,
-    key: &Key,
-) -> Option<SessionId> {
+fn session_id_from_cookies(cookies: &Cookies, key: &Key) -> Option<SessionId> {
     cookies
         .signed(key)
         .get(SESSION_COOKIE)
@@ -120,12 +113,10 @@ fn user_agent_from_headers(headers: &HeaderMap) -> Option<UserAgent> {
 }
 
 fn client_ip_from_headers(headers: &HeaderMap) -> Option<ClientIp> {
-    let forwarded = header_value(
-        headers,
-        header::HeaderName::from_static("x-forwarded-for"),
-    )
-    .and_then(|value| value.split(',').next().map(str::trim))
-    .map(ClientIp::new);
+    let forwarded =
+        header_value(headers, header::HeaderName::from_static("x-forwarded-for"))
+            .and_then(|value| value.split(',').next().map(str::trim))
+            .map(ClientIp::new);
 
     forwarded.or_else(|| {
         header_value(headers, header::HeaderName::from_static("x-real-ip"))
@@ -133,10 +124,7 @@ fn client_ip_from_headers(headers: &HeaderMap) -> Option<ClientIp> {
     })
 }
 
-fn header_value<'a>(
-    headers: &'a HeaderMap,
-    name: header::HeaderName,
-) -> Option<&'a str> {
+fn header_value<'a>(headers: &'a HeaderMap, name: header::HeaderName) -> Option<&'a str> {
     headers.get(name).and_then(|value| value.to_str().ok())
 }
 
@@ -200,10 +188,7 @@ mod tests {
             .signed(&key)
             .add(Cookie::new(SESSION_COOKIE, "signed123"));
 
-        let mut req = Request::builder()
-            .uri("/")
-            .body(Body::empty())
-            .unwrap();
+        let mut req = Request::builder().uri("/").body(Body::empty()).unwrap();
         req.extensions_mut().insert(cookies);
 
         let context = context_from_request(&req, &key);
@@ -228,7 +213,7 @@ mod tests {
 
         let context = context_from_request(&req, &key);
 
-        assert_eq!(context.session_id.as_deref(), None);
+        assert_eq!(context.session_id.map(|value| value.to_string()), None);
     }
 
     #[tokio::test]
@@ -246,7 +231,10 @@ mod tests {
             .scope(RefCell::new(context), async move {
                 set_user_id("user-123");
                 let updated = current_context().expect("context");
-                assert_eq!(updated.user_id.as_deref(), Some("user-123"));
+                assert_eq!(
+                    updated.user_id.map(|value| value.to_string()),
+                    Some("user-123".to_string())
+                );
             })
             .await;
     }
