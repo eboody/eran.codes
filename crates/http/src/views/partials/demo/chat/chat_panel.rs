@@ -72,6 +72,10 @@ impl Render for ChatPanel {
     fn render(&self) -> maud::Markup {
         let action = self.role.action();
         let input_signal = self.role.input_signal();
+        let submit_action = format!(
+            "event.preventDefault(); @post('{}'); ${} = ''",
+            action, input_signal
+        );
         maud::html! {
             div class="chat-stack" {
                 (ChatWindow::builder()
@@ -79,9 +83,10 @@ impl Render for ChatPanel {
                     .messages(self.messages.clone())
                     .build()
                     .render())
-                form method="post"
+                form class="chat-compose"
+                    method="post"
                     action=(action)
-                    data-on:submit=(format!("@post('{}'); ${} = ''", action, input_signal))
+                    data-on:submit=(submit_action)
                 {
                     label {
                         (self.role.input_label())
