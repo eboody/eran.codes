@@ -352,7 +352,22 @@ fn broadcast_message(
         mode = "append",
         payload_bytes = message_html.len() as u64
     );
-    let _ = state.sse.broadcast(crate::sse::Event::from_event(event));
+    match state.sse.broadcast(crate::sse::Event::from_event(event)) {
+        Ok(sent) => {
+            tracing::debug!(
+                target: LogTargetKnown::DemoSse.as_str(),
+                message = "sse broadcast delivered",
+                sessions = sent
+            );
+        }
+        Err(err) => {
+            tracing::warn!(
+                target: LogTargetKnown::DemoSse.as_str(),
+                message = "sse broadcast failed",
+                error = ?err
+            );
+        }
+    }
 
     let session_id = request::current_context().and_then(|value| value.session_id);
     state.trace_log.record_sse_event(

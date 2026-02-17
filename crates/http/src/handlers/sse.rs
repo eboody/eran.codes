@@ -1,5 +1,9 @@
 use async_stream::stream;
-use axum::{extract::Extension, response::Sse};
+use axum::{
+    extract::Extension,
+    http::header::{CACHE_CONTROL, HeaderName, HeaderValue},
+    response::Sse,
+};
 use core::convert::Infallible;
 use datastar::axum::ReadSignals;
 use serde::Deserialize;
@@ -230,10 +234,23 @@ pub async fn events(
         }
     };
 
-    Sse::new(stream).keep_alive(
+    let sse = Sse::new(stream).keep_alive(
         axum::response::sse::KeepAlive::new()
             .interval(Duration::from_secs(15))
             .text("keepalive"),
+    );
+    (
+        [
+            (
+                CACHE_CONTROL,
+                HeaderValue::from_static("no-cache, no-transform"),
+            ),
+            (
+                HeaderName::from_static("x-accel-buffering"),
+                HeaderValue::from_static("no"),
+            ),
+        ],
+        sse,
     )
 }
 
