@@ -82,16 +82,12 @@ fn context_from_request(
     let headers = req.headers();
     let cookies = req.extensions().get::<Cookies>();
     Context {
-        request_id: header_value(headers, header::HeaderName::from_static("x-request-id"))
-            .map(|value| RequestId::new(value)),
+        request_id: request_id_from_headers(headers),
         session_id: cookies
-            .and_then(|cookies| session_id_from_cookies(cookies, key))
-            .map(|value| SessionId::new(value)),
+            .and_then(|cookies| session_id_from_cookies(cookies, key)),
         user_id: None,
-        client_ip: client_ip_from_headers(headers)
-            .map(|value| ClientIp::new(value)),
-        user_agent: header_value(headers, header::USER_AGENT)
-            .map(|value| UserAgent::new(value)),
+        client_ip: client_ip_from_headers(headers),
+        user_agent: user_agent_from_headers(headers),
         kind: kind_from_headers(headers),
     }
 }
@@ -107,28 +103,41 @@ fn kind_from_headers(headers: &HeaderMap) -> Kind {
 fn session_id_from_cookies(
     cookies: &Cookies,
     key: &Key,
-) -> Option<String> {
+) -> Option<SessionId> {
     cookies
         .signed(key)
         .get(SESSION_COOKIE)
-        .map(|cookie| cookie.value().to_string())
+        .map(|cookie| SessionId::new(cookie.value()))
 }
 
-fn client_ip_from_headers(headers: &HeaderMap) -> Option<String> {
+fn request_id_from_headers(headers: &HeaderMap) -> Option<RequestId> {
+    header_value(headers, header::HeaderName::from_static("x-request-id"))
+        .map(RequestId::new)
+}
+
+fn user_agent_from_headers(headers: &HeaderMap) -> Option<UserAgent> {
+    header_value(headers, header::USER_AGENT).map(UserAgent::new)
+}
+
+fn client_ip_from_headers(headers: &HeaderMap) -> Option<ClientIp> {
     let forwarded = header_value(
         headers,
         header::HeaderName::from_static("x-forwarded-for"),
     )
-    .and_then(|value| value.split(',').next().map(|ip| ip.trim().to_string()));
+    .and_then(|value| value.split(',').next().map(str::trim))
+    .map(ClientIp::new);
 
-    forwarded.or_else(|| header_value(headers, header::HeaderName::from_static("x-real-ip")))
+    forwarded.or_else(|| {
+        header_value(headers, header::HeaderName::from_static("x-real-ip"))
+            .map(ClientIp::new)
+    })
 }
 
-fn header_value(
-    headers: &HeaderMap,
+fn header_value<'a>(
+    headers: &'a HeaderMap,
     name: header::HeaderName,
-) -> Option<String> {
-    headers.get(name).and_then(|value| value.to_str().ok()).map(str::to_string)
+) -> Option<&'a str> {
+    headers.get(name).and_then(|value| value.to_str().ok())
 }
 
 #[cfg(test)]
@@ -151,7 +160,10 @@ mod tests {
 
         let client_ip = client_ip_from_headers(&headers);
 
-        assert_eq!(client_ip.map(|value| value.to_string()).as_deref(), Some("203.0.113.5"));
+        assert_eq!(
+            client_ip.map(|value| value.to_string()).as_deref(),
+            Some("203.0.113.5")
+        );
     }
 
     #[test]
@@ -174,7 +186,10 @@ mod tests {
 
         let session_id = session_id_from_cookies(&cookies, &key);
 
-        assert_eq!(session_id.map(|value| value.to_string()).as_deref(), Some("signed123"));
+        assert_eq!(
+            session_id.map(|value| value.to_string()).as_deref(),
+            Some("signed123")
+        );
     }
 
     #[test]
@@ -193,7 +208,10 @@ mod tests {
 
         let context = context_from_request(&req, &key);
 
-        assert_eq!(context.session_id.map(|value| value.to_string()).as_deref(), Some("signed123"));
+        assert_eq!(
+            context.session_id.map(|value| value.to_string()).as_deref(),
+            Some("signed123")
+        );
     }
 
     #[test]

@@ -9,7 +9,7 @@ use app::chat::{
 };
 use async_trait::async_trait;
 use domain::chat;
-use sqlx::{PgPool, Row};
+use sqlx::{PgPool, Row, postgres::PgRow};
 use sqlx::types::time;
 
 const RATE_LIMIT_WINDOW_SECS: i64 = 10;
@@ -46,6 +46,59 @@ impl SqlxChatRepository {
             chat::MessageStatus::Pending => "pending",
             chat::MessageStatus::Removed => "removed",
         }
+    }
+
+    fn room_from_row(row: &PgRow) -> Result<chat::Room> {
+        let name = row.get::<String, _>("name");
+        let name = chat::RoomName::try_new(name)
+            .map_err(|error| Error::Repo(error.to_string().into()))?;
+
+        Ok(chat::Room {
+            id: chat::RoomId::from_uuid(row.get::<uuid::Uuid, _>("id")),
+            name,
+            created_by: chat::UserId::from_uuid(
+                row.get::<uuid::Uuid, _>("created_by"),
+            ),
+        })
+    }
+
+    fn client_id_from_db(
+        value: Option<String>,
+    ) -> Result<Option<chat::ClientId>> {
+        value
+            .map(|client_id| {
+                chat::ClientId::try_new(client_id)
+                    .map_err(|error| Error::Repo(error.to_string().into()))
+            })
+            .transpose()
+    }
+
+    fn message_from_row(row: &PgRow) -> Result<chat::Message> {
+        let body = row.get::<String, _>("body");
+        let body = chat::MessageBody::try_new(body)
+            .map_err(|error| Error::Repo(error.to_string().into()))?;
+        let status =
+            Self::status_from_db(row.get::<String, _>("status").as_str())?;
+
+        Ok(chat::Message {
+            id: chat::MessageId::from_uuid(
+                row.get::<uuid::Uuid, _>("id"),
+            ),
+            room_id: chat::RoomId::from_uuid(
+                row.get::<uuid::Uuid, _>("room_id"),
+            ),
+            user_id: chat::UserId::from_uuid(
+                row.get::<uuid::Uuid, _>("user_id"),
+            ),
+            body,
+            status,
+            client_id: Self::client_id_from_db(
+                row.get::<Option<String>, _>("client_id"),
+            )?,
+            created_at: offset_to_system_time(
+                row.get::<time::OffsetDateTime, _>("created_at"),
+            ),
+        })
     }
 }
 
@@ -97,21 +150,10 @@ impl app::chat::Repository for SqlxChatRepository {
         .await
         .map_err(|error| Error::Repo(error.to_string().into()))?;
 
-        let Some(row) = record else {
-            return Ok(None);
-        };
-
-        let name = row.get::<String, _>("name");
-        let name = chat::RoomName::try_new(name)
-            .map_err(|error| Error::Repo(error.to_string().into()))?;
-
-        Ok(Some(chat::Room {
-            id: chat::RoomId::from_uuid(row.get::<uuid::Uuid, _>("id")),
-            name,
-            created_by: chat::UserId::from_uuid(
-                row.get::<uuid::Uuid, _>("created_by"),
-            ),
-        }))
+        record
+            .as_ref()
+            .map(Self::room_from_row)
+            .transpose()
     }
 
     async fn find_room_by_name(
@@ -135,21 +177,10 @@ impl app::chat::Repository for SqlxChatRepository {
         .await
         .map_err(|error| Error::Repo(error.to_string().into()))?;
 
-        let Some(row) = record else {
-            return Ok(None);
-        };
-
-        let name = row.get::<String, _>("name");
-        let name = chat::RoomName::try_new(name)
-            .map_err(|error| Error::Repo(error.to_string().into()))?;
-
-        Ok(Some(chat::Room {
-            id: chat::RoomId::from_uuid(row.get::<uuid::Uuid, _>("id")),
-            name,
-            created_by: chat::UserId::from_uuid(
-                row.get::<uuid::Uuid, _>("created_by"),
-            ),
-        }))
+        record
+            .as_ref()
+            .map(Self::room_from_row)
+            .transpose()
     }
 
     async fn list_messages(
@@ -177,40 +208,10 @@ impl app::chat::Repository for SqlxChatRepository {
         .await
         .map_err(|error| Error::Repo(error.to_string().into()))?;
 
-        let mut messages = Vec::with_capacity(rows.len());
-        for row in rows {
-            let body = row.get::<String, _>("body");
-            let body = chat::MessageBody::try_new(body)
-                .map_err(|error| Error::Repo(error.to_string().into()))?;
-            let status =
-                Self::status_from_db(row.get::<String, _>("status").as_str())?;
-
-            let created_at = offset_to_system_time(
-                row.get::<time::OffsetDateTime, _>("created_at"),
-            );
-            messages.push(chat::Message {
-                id: chat::MessageId::from_uuid(
-                    row.get::<uuid::Uuid, _>("id"),
-                ),
-                room_id: chat::RoomId::from_uuid(
-                    row.get::<uuid::Uuid, _>("room_id"),
-                ),
-                user_id: chat::UserId::from_uuid(
-                    row.get::<uuid::Uuid, _>("user_id"),
-                ),
-                body,
-                status,
-                client_id: row
-                    .get::<Option<String>, _>("client_id")
-                    .map(|value| {
-                        chat::ClientId::try_new(value)
-                            .expect("client id")
-                    }),
-                created_at,
-            });
-        }
-
-        Ok(messages)
+        rows
+            .iter()
+            .map(Self::message_from_row)
+            .collect()
     }
 
     async fn find_message(
@@ -234,36 +235,7 @@ impl app::chat::Repository for SqlxChatRepository {
         .await
         .map_err(|error| Error::Repo(error.to_string().into()))?;
 
-        let Some(row) = row else {
-            return Ok(None);
-        };
-
-        let body = row.get::<String, _>("body");
-        let body = chat::MessageBody::try_new(body)
-            .map_err(|error| Error::Repo(error.to_string().into()))?;
-        let status =
-            Self::status_from_db(row.get::<String, _>("status").as_str())?;
-
-        Ok(Some(chat::Message {
-            id: chat::MessageId::from_uuid(row.get::<uuid::Uuid, _>("id")),
-            room_id: chat::RoomId::from_uuid(
-                row.get::<uuid::Uuid, _>("room_id"),
-            ),
-            user_id: chat::UserId::from_uuid(
-                row.get::<uuid::Uuid, _>("user_id"),
-            ),
-            body,
-            status,
-            client_id: row
-                .get::<Option<String>, _>("client_id")
-                .map(|value| {
-                    chat::ClientId::try_new(value)
-                        .expect("client id")
-                }),
-            created_at: offset_to_system_time(
-                row.get::<time::OffsetDateTime, _>("created_at"),
-            ),
-        }))
+        row.as_ref().map(Self::message_from_row).transpose()
     }
 
     async fn insert_message(

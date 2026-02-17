@@ -119,23 +119,36 @@ fn compact_fields(entry: &TraceEntry) -> Vec<Pill> {
     if entry.fields.is_empty() {
         return Vec::new();
     }
-    let mut parts: Vec<Pill> = Vec::new();
-    let mut extras: Vec<String> = Vec::new();
-    for (name, value) in entry.fields.iter() {
-        let field_kind = LogFieldKey::from_str(&name.to_string()).ok();
-        if matches!(
-            field_kind,
-            Some(LogFieldKey::Method | LogFieldKey::Path | LogFieldKey::Status)
-        ) {
-            continue;
-        }
-        extras.push(format!("{}={}", name.to_string(), value.to_string()));
+    entry
+        .fields
+        .iter()
+        .filter_map(|(name, value)| {
+            let field_kind = LogFieldKey::from_str(&name.to_string()).ok();
+            if matches!(
+                field_kind,
+                Some(LogFieldKey::Method | LogFieldKey::Path | LogFieldKey::Status)
+            ) {
+                return None;
+            }
+            let extra = CompactField {
+                name: name.clone(),
+                value: Text::from(value.to_string()),
+            };
+            Some(Pill::fields(extra.render()))
+        })
+        .take(2)
+        .collect()
+}
+
+struct CompactField {
+    name: LogFieldName,
+    value: Text,
+}
+
+impl CompactField {
+    fn render(&self) -> Text {
+        Text::from(format!("{}={}", self.name, self.value))
     }
-    if !extras.is_empty() {
-        let extra = extras.into_iter().take(2).collect::<Vec<_>>().join(" · ");
-        parts.push(Pill::fields(extra));
-    }
-    parts
 }
 
 fn field_value(entry: &TraceEntry, name: &LogFieldName) -> Option<Text> {

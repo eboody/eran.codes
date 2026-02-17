@@ -8,7 +8,7 @@ use argon2::{
 use async_trait::async_trait;
 use domain::user;
 use rand_core::OsRng;
-use sqlx::{PgPool, Row};
+use sqlx::{PgPool, Row, postgres::PgRow};
 
 pub struct AuthRepository {
     pg: PgPool,
@@ -23,6 +23,39 @@ impl AuthRepository {
         Error::Repository(
             app::auth::RepositoryErrorText::new(error.to_string())
                 ,
+        )
+    }
+
+    fn map_repo_text(
+        value: String,
+    ) -> app::auth::RepositoryErrorText {
+        app::auth::RepositoryErrorText::new(value)
+    }
+
+    fn auth_record_from_row(row: PgRow) -> Result<AuthRecord> {
+        let username = user::Username::try_new(
+            row.get::<String, _>("username"),
+        )
+        .map_err(|error| {
+            Error::Repository(Self::map_repo_text(error.to_string()))
+        })?;
+        let email = user::Email::try_new(row.get::<String, _>("email"))
+            .map_err(|error| {
+                Error::Repository(Self::map_repo_text(error.to_string()))
+            })?;
+        let password_hash = PasswordHash::new(row.get::<String, _>(
+            "password_hash",
+        ));
+
+        Ok(
+            AuthRecord::builder()
+                .id(user::Id::from_uuid(
+                    row.get::<uuid::Uuid, _>("id"),
+                ))
+                .username(username)
+                .email(email)
+                .password_hash(password_hash)
+                .build(),
         )
     }
 }
@@ -57,41 +90,7 @@ impl Repository for AuthRepository {
             db_duration_ms = start.elapsed().as_millis() as u64
         );
 
-        Ok(record.map(|row| {
-            let username = user::Username::try_new(
-                row.get::<String, _>("username"),
-            )
-            .map_err(|error| {
-                Error::Repository(
-                    app::auth::RepositoryErrorText::new(
-                        error.to_string(),
-                    )
-                    ,
-                )
-            })
-            .expect("username");
-            let email = user::Email::try_new(row.get::<String, _>("email"))
-                .map_err(|error| {
-                    Error::Repository(
-                        app::auth::RepositoryErrorText::new(
-                            error.to_string(),
-                        )
-                        ,
-                    )
-                })
-                .expect("email");
-            let password_hash =
-                PasswordHash::new(row.get::<String, _>("password_hash"));
-
-            AuthRecord::builder()
-                .id(user::Id::from_uuid(
-                    row.get::<uuid::Uuid, _>("id"),
-                ))
-                .username(username)
-                .email(email)
-                .password_hash(password_hash)
-                .build()
-        }))
+        record.map(Self::auth_record_from_row).transpose()
     }
 
     async fn find_by_id(
@@ -122,41 +121,7 @@ impl Repository for AuthRepository {
             db_duration_ms = start.elapsed().as_millis() as u64
         );
 
-        Ok(record.map(|row| {
-            let username = user::Username::try_new(
-                row.get::<String, _>("username"),
-            )
-            .map_err(|error| {
-                Error::Repository(
-                    app::auth::RepositoryErrorText::new(
-                        error.to_string(),
-                    )
-                    ,
-                )
-            })
-            .expect("username");
-            let email = user::Email::try_new(row.get::<String, _>("email"))
-                .map_err(|error| {
-                    Error::Repository(
-                        app::auth::RepositoryErrorText::new(
-                            error.to_string(),
-                        )
-                        ,
-                    )
-                })
-                .expect("email");
-            let password_hash =
-                PasswordHash::new(row.get::<String, _>("password_hash"));
-
-            AuthRecord::builder()
-                .id(user::Id::from_uuid(
-                    row.get::<uuid::Uuid, _>("id"),
-                ))
-                .username(username)
-                .email(email)
-                .password_hash(password_hash)
-                .build()
-        }))
+        record.map(Self::auth_record_from_row).transpose()
     }
 }
 

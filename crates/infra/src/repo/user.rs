@@ -4,7 +4,7 @@ use app::auth::PasswordHash;
 use app::user::{Error, Repository as UserRepository, Result};
 use async_trait::async_trait;
 use domain::user;
-use sqlx::Row;
+use sqlx::{Row, postgres::PgRow};
 
 #[allow(unused)]
 pub struct SqlxUserRepository {
@@ -40,24 +40,7 @@ impl UserRepository for SqlxUserRepository {
             db_duration_ms = start.elapsed().as_millis() as u64
         );
 
-        let Some(row) = record else {
-            return Ok(None);
-        };
-
-        let id = row.get::<uuid::Uuid, _>("id");
-        let username = row.get::<String, _>("username");
-        let email = row.get::<String, _>("email");
-
-        let username = user::Username::try_new(username)
-            .map_err(|error| Error::Repo(error.to_string().into()))?;
-        let email = user::Email::try_new(email)
-            .map_err(|error| Error::Repo(error.to_string().into()))?;
-
-        Ok(Some(user::User {
-            id: user::Id::from_uuid(id),
-            username,
-            email,
-        }))
+        record.map(Self::user_from_row).transpose()
     }
 
     async fn create_with_credentials(
@@ -129,6 +112,21 @@ impl UserRepository for SqlxUserRepository {
 impl SqlxUserRepository {
     pub fn new(pg: sqlx::PgPool) -> Self {
         Self { pg }
+    }
+
+    fn user_from_row(row: PgRow) -> Result<user::User> {
+        let username = user::Username::try_new(
+            row.get::<String, _>("username"),
+        )
+        .map_err(|error| Error::Repo(error.to_string().into()))?;
+        let email = user::Email::try_new(row.get::<String, _>("email"))
+            .map_err(|error| Error::Repo(error.to_string().into()))?;
+
+        Ok(user::User {
+            id: user::Id::from_uuid(row.get::<uuid::Uuid, _>("id")),
+            username,
+            email,
+        })
     }
 
     #[tracing::instrument(

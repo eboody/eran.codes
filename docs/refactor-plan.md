@@ -3,6 +3,12 @@
 Date: 2026-02-16
 Source: `docs/project-audit.md`
 
+## Status
+- Completed (2026-02-17): Priority 1
+- Completed (2026-02-17): Priority 2 (core repository conversion paths)
+- Completed (2026-02-17): Priority 3
+- Pending: Priority 4
+
 ## Priority 1: Tighten Request Metadata Typing
 Goal: remove remaining plain-string metadata paths in HTTP request context.
 
