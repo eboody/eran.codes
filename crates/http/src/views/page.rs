@@ -19,6 +19,7 @@ pub struct Layout<'a> {
 
 impl Render for Layout<'_> {
     fn render(&self) -> Markup {
+        let sse_tab_id = crate::types::SseTabId::new(uuid::Uuid::new_v4().to_string());
         maud::html! {
             (maud::DOCTYPE)
             html {
@@ -33,7 +34,10 @@ impl Render for Layout<'_> {
                     script type="module" src="https://cdn.jsdelivr.net/gh/starfederation/datastar@1.0.0-RC.7/bundles/datastar.js" {}
                     script src="/static/css-scope-inline.js" {}
                 }
-                body data-init=(format!("@get('{}')", Route::Events)) {
+                body
+                    data-signals=(format!("{{sseTabId: '{}'}}", sse_tab_id))
+                    data-init=(format!("@get('{}')", Route::Events))
+                {
                     header class="container" {
                         nav {
                             ul {

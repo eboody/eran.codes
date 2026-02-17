@@ -59,34 +59,13 @@ Signals:
 - `scripts/ci/partials-render.sh`
 - Per-module README structure
 
-## Weak Spots (Current)
+## Refactor Follow-Up Status
 
-### 1) Infra still has unavoidable string boundaries that can be tightened
-SQL row extraction necessarily starts from primitive values, but some conversions are still manual enough to risk drift.
-
-Examples:
-- `crates/infra/src/repo/chat.rs`
-- `crates/infra/src/repo/user.rs`
-- `crates/infra/src/auth.rs`
-
-### 2) Some request parsing paths still return plain `String`
-Request metadata extraction should converge on typed wrappers as early as practical.
-
-Example:
-- `crates/http/src/request.rs`
-
-### 3) Log row “extras” are still formatted ad-hoc in places
-The renderer is componentized, but some supplemental fields are still assembled as free-form strings instead of typed display units.
-
-Examples:
-- `crates/http/src/views/partials/demo/log/live_log.rs`
-- `crates/http/src/views/partials/demo/log/trace_log.rs`
-
-### 4) One architectural TODO remains in SSE behavior
-Per-tab SSE identity is still a known future task.
-
-Example:
-- `crates/http/src/handlers/sse.rs`
+The previously identified weak spots were addressed in the follow-up refactor:
+- Infra row-to-domain conversions are centralized in typed helpers in `chat`, `user`, and `auth` repositories.
+- Request metadata extraction in HTTP is typed at the boundary in `request.rs`.
+- Live/trace log "extras" rendering uses typed field units rather than ad-hoc string assembly.
+- SSE now supports typed per-tab stream identity (`sseTabId`) while preserving session-scoped fanout.
 
 ## Readability and Maintainability Assessment
 

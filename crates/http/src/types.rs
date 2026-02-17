@@ -56,6 +56,18 @@ impl From<&str> for SessionId {
     sanitize(trim),
     derive(Clone, Debug, PartialEq, Eq, Hash, Display, Serialize, Deserialize)
 )]
+pub struct SseTabId(String);
+
+impl From<&str> for SseTabId {
+    fn from(value: &str) -> Self {
+        SseTabId::new(value)
+    }
+}
+
+#[nutype(
+    sanitize(trim),
+    derive(Clone, Debug, PartialEq, Eq, Hash, Display, Serialize, Deserialize)
+)]
 pub struct UserIdText(String);
 
 impl From<&str> for UserIdText {
@@ -258,10 +270,7 @@ impl LogFieldValue {
 }
 
 impl fmt::Display for LogFieldValue {
-    fn fmt(
-        &self,
-        f: &mut fmt::Formatter<'_>,
-    ) -> fmt::Result {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         match self {
             Self::Missing => write!(f, "-"),
             Self::Text(value) => write!(f, "{value}"),

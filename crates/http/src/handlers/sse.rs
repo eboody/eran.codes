@@ -1,8 +1,5 @@
 use async_stream::stream;
-use axum::{
-    extract::Extension,
-    response::Sse,
-};
+use axum::{extract::Extension, response::Sse};
 use core::convert::Infallible;
 use datastar::axum::ReadSignals;
 use serde::Deserialize;
@@ -10,20 +7,24 @@ use tokio::sync::broadcast::error::RecvError;
 use tokio::time::{Duration, sleep};
 use tower_cookies::Cookies;
 
-use crate::types::{SessionId, Text};
+use crate::types::{SessionId, SseTabId, Text};
 
 #[derive(Debug, Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub(crate) struct SurrealSignals {
     surreal_message: Option<Text>,
     original_surreal_message: Option<Text>,
+    sse_tab_id: Option<SseTabId>,
     _surreal_status: Option<Text>,
 }
 
-fn surreal_payload(
-    message: &Text,
-    status: &Text,
-) -> crate::sse::Event {
+#[derive(Debug, Deserialize, Default)]
+#[serde(rename_all = "camelCase")]
+pub(crate) struct EventSignals {
+    sse_tab_id: Option<SseTabId>,
+}
+
+fn surreal_payload(message: &Text, status: &Text) -> crate::sse::Event {
     crate::sse::Event::patch_signals(serde_json::json!({
         "surrealMessage": message.to_string(),
         "surrealStatus": status.to_string(),
@@ -57,8 +58,11 @@ pub async fn surreal_message_guarded(
     Extension(cookies): Extension<Cookies>,
     ReadSignals(signals): ReadSignals<SurrealSignals>,
 ) -> impl axum::response::IntoResponse {
-    let session =
-        crate::sse::Handle::from_cookies(&cookies, &state.cookie_key);
+    let session = crate::sse::Handle::from_cookies_with_tab(
+        &cookies,
+        &state.cookie_key,
+        signals.sse_tab_id.clone(),
+    );
     let session_id = session.id();
     let sequence = state
         .demo
@@ -129,8 +133,11 @@ pub async fn surreal_message_cancel(
     Extension(cookies): Extension<Cookies>,
     ReadSignals(signals): ReadSignals<SurrealSignals>,
 ) -> impl axum::response::IntoResponse {
-    let session =
-        crate::sse::Handle::from_cookies(&cookies, &state.cookie_key);
+    let session = crate::sse::Handle::from_cookies_with_tab(
+        &cookies,
+        &state.cookie_key,
+        signals.sse_tab_id.clone(),
+    );
     let session_id = session.id();
     let sequence = state
         .demo
@@ -186,20 +193,24 @@ pub async fn surreal_message_cancel(
 pub async fn events(
     Extension(state): Extension<crate::State>,
     Extension(cookies): Extension<Cookies>,
+    ReadSignals(signals): ReadSignals<EventSignals>,
 ) -> impl axum::response::IntoResponse {
-    // TODO: Support per-tab SSE streams by mixing a tab id into the session key.
-    let session =
-        crate::sse::Handle::from_cookies(&cookies, &state.cookie_key);
+    let session = crate::sse::Handle::from_cookies_with_tab(
+        &cookies,
+        &state.cookie_key,
+        signals.sse_tab_id.clone(),
+    );
     let session_id = session.id();
     let (mut receiver, guard) = state.sse.subscribe(&session);
     let trace_guard = TraceLogGuard::new(state.trace_log.clone(), session_id.clone());
 
     tracing::info!(session_id = %session_id, "sse connected");
-    let _ = state
-        .sse
-        .send(&session, crate::sse::Event::patch_signals(serde_json::json!({
+    let _ = state.sse.send(
+        &session,
+        crate::sse::Event::patch_signals(serde_json::json!({
             "sseConnected": true
-        })));
+        })),
+    );
 
     let stream = stream! {
         let _guard = guard;
@@ -228,14 +239,8 @@ struct TraceLogGuard {
 }
 
 impl TraceLogGuard {
-    fn new(
-        store: crate::trace_log::TraceLogStore,
-        session_id: SessionId,
-    ) -> Self {
-        Self {
-            store,
-            session_id,
-        }
+    fn new(store: crate::trace_log::TraceLogStore, session_id: SessionId) -> Self {
+        Self { store, session_id }
     }
 }
 

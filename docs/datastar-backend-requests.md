@@ -22,6 +22,7 @@ Use this as a concise reference for backend requests and SSE patterns in this re
 - SSE streams can emit multiple events in a single response.
 - Use `PatchElements` and `PatchSignals` for DOM and signal updates.
 - Prefer SSE for multi-event workflows or real-time updates.
+- For per-tab identity in this repo, keep `sseTabId` in page-level `data-signals` so `/events` and follow-up actions carry the same typed tab id.
 
 ## data-indicator
 - `data-indicator:fetching` toggles `$fetching` true while the request is in flight.

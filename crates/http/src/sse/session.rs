@@ -3,26 +3,46 @@ use tower_cookies::cookie::SameSite;
 use tower_cookies::{Cookie, Cookies, Key};
 use uuid::Uuid;
 
-use super::{Event, SESSION_COOKIE};
-use crate::types::SessionId;
+use super::{Event, SESSION_COOKIE, StreamKey};
+use crate::types::{SessionId, SseTabId};
 
 const SESSION_CHANNEL_SIZE: usize = 32;
 
 pub struct Handle {
-    id: SessionId,
+    key: StreamKey,
 }
 
 impl Handle {
-    pub fn from_cookies(
+    pub fn from_cookies(cookies: &Cookies, key: &Key) -> Self {
+        let session_id = ensure_session(cookies, key);
+        Self::with_tab(session_id, None)
+    }
+
+    pub fn from_cookies_with_tab(
         cookies: &Cookies,
         key: &Key,
+        tab_id: Option<SseTabId>,
     ) -> Self {
-        let id = ensure_session(cookies, key);
-        Self { id }
+        let session_id = ensure_session(cookies, key);
+        Self::with_tab(session_id, tab_id)
+    }
+
+    pub fn with_tab(session_id: SessionId, tab_id: Option<SseTabId>) -> Self {
+        Self {
+            key: StreamKey::new(session_id, tab_id),
+        }
     }
 
     pub fn id(&self) -> SessionId {
-        self.id.clone()
+        self.key.session_id().clone()
+    }
+
+    pub fn tab_id(&self) -> Option<&SseTabId> {
+        self.key.tab_id()
+    }
+
+    pub fn stream_key(&self) -> &StreamKey {
+        &self.key
     }
 }
 
@@ -58,10 +78,7 @@ impl Session {
     }
 }
 
-fn ensure_session(
-    cookies: &Cookies,
-    key: &Key,
-) -> SessionId {
+fn ensure_session(cookies: &Cookies, key: &Key) -> SessionId {
     if let Some(cookie) = cookies.signed(key).get(SESSION_COOKIE) {
         return SessionId::new(cookie.value());
     }
