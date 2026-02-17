@@ -230,7 +230,11 @@ pub async fn events(
         }
     };
 
-    Sse::new(stream)
+    Sse::new(stream).keep_alive(
+        axum::response::sse::KeepAlive::new()
+            .interval(Duration::from_secs(15))
+            .text("keepalive"),
+    )
 }
 
 struct TraceLogGuard {
