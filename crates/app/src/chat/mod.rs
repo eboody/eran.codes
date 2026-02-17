@@ -4,7 +4,7 @@ use std::sync::Arc;
 use std::time::UNIX_EPOCH;
 
 use async_trait::async_trait;
-use bon::{bon, Builder};
+use bon::{Builder, bon};
 use nutype::nutype;
 use strum_macros::{Display, EnumString};
 
@@ -137,26 +137,14 @@ pub enum AuditKey {
     Role,
 }
 
-#[nutype(
-    sanitize(trim),
-    derive(Clone, Debug, PartialEq, Display)
-)]
+#[nutype(sanitize(trim), derive(Clone, Debug, PartialEq, Display))]
 pub struct AuditValue(String);
 
 #[async_trait]
 pub trait Repository: Send + Sync {
-    async fn create_room(
-        &self,
-        room: &chat::Room,
-    ) -> Result<()>;
-    async fn find_room(
-        &self,
-        room_id: &chat::RoomId,
-    ) -> Result<Option<chat::Room>>;
-    async fn find_room_by_name(
-        &self,
-        name: &chat::RoomName,
-    ) -> Result<Option<chat::Room>>;
+    async fn create_room(&self, room: &chat::Room) -> Result<()>;
+    async fn find_room(&self, room_id: &chat::RoomId) -> Result<Option<chat::Room>>;
+    async fn find_room_by_name(&self, name: &chat::RoomName) -> Result<Option<chat::Room>>;
     async fn list_messages(
         &self,
         room_id: &chat::RoomId,
@@ -166,10 +154,7 @@ pub trait Repository: Send + Sync {
         &self,
         message_id: &chat::MessageId,
     ) -> Result<Option<chat::Message>>;
-    async fn insert_message(
-        &self,
-        message: &chat::Message,
-    ) -> Result<()>;
+    async fn insert_message(&self, message: &chat::Message) -> Result<()>;
     async fn add_membership(
         &self,
         room_id: &chat::RoomId,
@@ -195,10 +180,7 @@ pub trait ModerationQueue: Send + Sync {
         message_id: &chat::MessageId,
         reason: &ModerationReason,
     ) -> Result<()>;
-    async fn list_pending(
-        &self,
-        limit: usize,
-    ) -> Result<Vec<ModerationItem>>;
+    async fn list_pending(&self, limit: usize) -> Result<Vec<ModerationItem>>;
     async fn complete(
         &self,
         message_id: &chat::MessageId,
@@ -210,19 +192,12 @@ pub trait ModerationQueue: Send + Sync {
 
 #[async_trait]
 pub trait RateLimiter: Send + Sync {
-    async fn check(
-        &self,
-        room_id: &chat::RoomId,
-        user_id: &chat::UserId,
-    ) -> Result<()>;
+    async fn check(&self, room_id: &chat::RoomId, user_id: &chat::UserId) -> Result<()>;
 }
 
 #[async_trait]
 pub trait AuditLog: Send + Sync {
-    async fn record(
-        &self,
-        entry: AuditEntry,
-    ) -> Result<()>;
+    async fn record(&self, entry: AuditEntry) -> Result<()>;
 }
 
 pub trait Clock: Send + Sync {
@@ -263,10 +238,7 @@ impl Service {
         }
     }
 
-    pub async fn create_room(
-        &self,
-        command: CreateRoom,
-    ) -> Result<chat::Room> {
+    pub async fn create_room(&self, command: CreateRoom) -> Result<chat::Room> {
         let room = chat::Room {
             id: self.ids.new_room_id(),
             name: command.name,
@@ -284,8 +256,7 @@ impl Service {
                 AuditAction::RoomCreate,
                 vec![(
                     AuditKey::RoomId,
-                    AuditValue::new(room.id.as_uuid().to_string())
-                        ,
+                    AuditValue::new(room.id.as_uuid().to_string()),
                 )],
             ))
             .await?;
@@ -293,10 +264,7 @@ impl Service {
         Ok(room)
     }
 
-    pub async fn join_room(
-        &self,
-        command: JoinRoom,
-    ) -> Result<()> {
+    pub async fn join_room(&self, command: JoinRoom) -> Result<()> {
         let Some(_) = self.repo.find_room(&command.room_id).await? else {
             return Err(Error::RoomNotFound);
         };
@@ -309,21 +277,14 @@ impl Service {
                 command.room_id,
                 command.user_id,
                 AuditAction::RoomJoin,
-                vec![(
-                    AuditKey::Role,
-                    AuditValue::new(command.role.to_string())
-                        ,
-                )],
+                vec![(AuditKey::Role, AuditValue::new(command.role.to_string()))],
             ))
             .await?;
 
         Ok(())
     }
 
-    pub async fn list_messages(
-        &self,
-        command: ListMessages,
-    ) -> Result<Vec<chat::Message>> {
+    pub async fn list_messages(&self, command: ListMessages) -> Result<Vec<chat::Message>> {
         let Some(_) = self.repo.find_room(&command.room_id).await? else {
             return Err(Error::RoomNotFound);
         };
@@ -341,10 +302,7 @@ impl Service {
             .await
     }
 
-    pub async fn list_moderation_queue(
-        &self,
-        limit: usize,
-    ) -> Result<Vec<ModerationItem>> {
+    pub async fn list_moderation_queue(&self, limit: usize) -> Result<Vec<ModerationItem>> {
         self.moderation.list_pending(limit).await
     }
 
@@ -355,10 +313,7 @@ impl Service {
         self.repo.find_room_by_name(&name).await
     }
 
-    pub async fn post_message(
-        &self,
-        command: PostMessage,
-    ) -> Result<chat::Message> {
+    pub async fn post_message(&self, command: PostMessage) -> Result<chat::Message> {
         let Some(_) = self.repo.find_room(&command.room_id).await? else {
             return Err(Error::RoomNotFound);
         };
@@ -398,8 +353,7 @@ impl Service {
             self.moderation
                 .enqueue(
                     &message.id,
-                    &ModerationReason::try_new("auto")
-                        .expect("moderation reason"),
+                    &ModerationReason::try_new("auto").expect("moderation reason"),
                 )
                 .await?;
         }
@@ -412,16 +366,9 @@ impl Service {
                 vec![
                     (
                         AuditKey::MessageId,
-                        AuditValue::new(
-                            message.id.as_uuid().to_string(),
-                        )
-                        ,
+                        AuditValue::new(message.id.as_uuid().to_string()),
                     ),
-                    (
-                        AuditKey::Status,
-                        AuditValue::new(format!("{:?}", status))
-                            ,
-                    ),
+                    (AuditKey::Status, AuditValue::new(format!("{:?}", status))),
                 ],
             ))
             .await?;
@@ -429,13 +376,8 @@ impl Service {
         Ok(message)
     }
 
-    pub async fn moderate_message(
-        &self,
-        command: ModerateMessage,
-    ) -> Result<()> {
-        let Some(message) =
-            self.repo.find_message(&command.message_id).await?
-        else {
+    pub async fn moderate_message(&self, command: ModerateMessage) -> Result<()> {
+        let Some(message) = self.repo.find_message(&command.message_id).await? else {
             return Err(Error::MessageNotFound);
         };
 
@@ -500,9 +442,7 @@ impl Service {
     }
 }
 
-fn should_moderate(
-    body: &chat::MessageBody,
-) -> bool {
+fn should_moderate(body: &chat::MessageBody) -> bool {
     let value = body.to_string();
     value.len() > 300 || LinkPrefix::is_present(&value)
 }
@@ -543,10 +483,7 @@ impl Service {
             .map(|value| value.as_millis().to_string())
             .unwrap_or_else(|_| "0".to_string());
 
-        metadata.push((
-            AuditKey::TimestampMs,
-            AuditValue::new(timestamp),
-        ));
+        metadata.push((AuditKey::TimestampMs, AuditValue::new(timestamp)));
 
         AuditEntry::builder()
             .room_id(room_id)
@@ -562,10 +499,10 @@ impl Service {
     #[builder]
     pub fn builder(
         #[builder(setters(name = with_repo))] repo: Arc<dyn Repository>,
-        #[builder(setters(name = with_moderation_queue))]
-        moderation: Arc<dyn ModerationQueue>,
-        #[builder(setters(name = with_rate_limiter))]
-        rate_limiter: Arc<dyn RateLimiter>,
+        #[builder(setters(name = with_moderation_queue))] moderation: Arc<
+            dyn ModerationQueue,
+        >,
+        #[builder(setters(name = with_rate_limiter))] rate_limiter: Arc<dyn RateLimiter>,
         #[builder(setters(name = with_audit_log))] audit: Arc<dyn AuditLog>,
         #[builder(setters(name = with_clock))] clock: Arc<dyn Clock>,
         #[builder(setters(name = with_id_generator))] ids: Arc<dyn IdGenerator>,

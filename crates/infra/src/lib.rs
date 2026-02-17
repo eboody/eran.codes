@@ -1,7 +1,7 @@
-pub mod config;
-mod error;
 pub mod auth;
 pub mod chat;
+pub mod config;
+mod error;
 pub use error::{Error, Result};
 mod repo;
 pub use repo::user;

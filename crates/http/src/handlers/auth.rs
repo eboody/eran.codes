@@ -20,12 +20,10 @@ pub async fn login_form(
         return Ok(redirect_to_next(next).into_response());
     }
 
-    Ok(views::render(
-        pages::Login::builder()
-            .maybe_next(next.as_deref())
-            .build(),
+    Ok(
+        views::render(pages::Login::builder().maybe_next(next.as_deref()).build())
+            .into_response(),
     )
-    .into_response())
 }
 
 pub async fn register_form(
@@ -190,16 +188,11 @@ impl NextPath {
 
     fn into_safe(self) -> Option<String> {
         let value = self.0.to_string();
-        if Self::is_safe(&value) {
-            Some(value)
-        } else {
-            None
-        }
+        if Self::is_safe(&value) { Some(value) } else { None }
     }
 
     fn is_safe(value: &str) -> bool {
         let bytes = value.as_bytes();
-        matches!(bytes.first(), Some(b'/'))
-            && !matches!(bytes.get(1), Some(b'/'))
+        matches!(bytes.first(), Some(b'/')) && !matches!(bytes.get(1), Some(b'/'))
     }
 }

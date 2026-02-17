@@ -40,7 +40,10 @@ impl Routes {
 fn base_routes() -> Router {
     use crate::paths::Route;
     Router::new()
-        .route(Route::PartialPing.as_str(), get(crate::handlers::ping_partial))
+        .route(
+            Route::PartialPing.as_str(),
+            get(crate::handlers::ping_partial),
+        )
         .route(
             Route::PartialAuthStatus.as_str(),
             get(crate::handlers::auth_status_partial),
@@ -57,7 +60,10 @@ fn base_routes() -> Router {
             Route::PartialBoundaryCheck.as_str(),
             get(crate::handlers::boundary_check_partial),
         )
-        .route(Route::PartialDbCheck.as_str(), get(crate::handlers::db_check_partial))
+        .route(
+            Route::PartialDbCheck.as_str(),
+            get(crate::handlers::db_check_partial),
+        )
         .route(
             Route::PartialSurrealGuarded.as_str(),
             get(crate::handlers::surreal_message_guarded),
@@ -83,15 +89,17 @@ fn pages_routes() -> Router {
 
     let chat = Router::new()
         .route(Route::Chat.as_str(), get(crate::handlers::chat_page))
-        .route(Route::ChatMessages.as_str(), post(crate::handlers::post_chat_message))
+        .route(
+            Route::ChatMessages.as_str(),
+            post(crate::handlers::post_chat_message),
+        )
         .route(
             Route::ChatMessagesDemo.as_str(),
             post(crate::handlers::post_demo_chat_message),
         )
         .route(
             Route::ChatModeration.as_str(),
-            get(crate::handlers::moderation_page)
-                .post(crate::handlers::moderate_message),
+            get(crate::handlers::moderation_page).post(crate::handlers::moderate_message),
         )
         .route_layer(from_fn(crate::auth::require_auth_middleware));
 
@@ -105,7 +113,10 @@ fn pages_routes() -> Router {
             Route::Register.as_str(),
             get(crate::handlers::register_form).post(crate::handlers::register),
         )
-        .route(Route::Logout.as_str(), axum::routing::post(crate::handlers::logout))
+        .route(
+            Route::Logout.as_str(),
+            axum::routing::post(crate::handlers::logout),
+        )
         .merge(protected)
         .merge(chat)
 }

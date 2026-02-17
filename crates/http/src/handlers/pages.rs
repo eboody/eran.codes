@@ -1,8 +1,8 @@
 use axum::extract::Extension;
 
-use crate::views::{self, pages};
 use crate::types::Text;
 use crate::views::partials::ChatDemoSection;
+use crate::views::{self, pages};
 
 pub async fn health(Extension(_state): Extension<crate::State>) -> &'static str {
     "OK"
@@ -26,9 +26,7 @@ pub async fn home(
                 .room_id(crate::types::Text::from(
                     context.room.id.as_uuid().to_string(),
                 ))
-                .room_name(crate::types::Text::from(
-                    context.room.name.to_string(),
-                ))
+                .room_name(crate::types::Text::from(context.room.name.to_string()))
                 .messages(context.messages)
                 .build(),
         )

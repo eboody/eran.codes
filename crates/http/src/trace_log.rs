@@ -16,13 +16,13 @@ use dashmap::DashMap;
 use tracing::{Event, Level};
 use tracing_subscriber::{Layer, registry::LookupSpan};
 
-use crate::{request, sse, views};
-use crate::types::{
-    LogFieldKey, LogFieldName, LogFieldValue, LogLevelText, LogMessageText,
-    LogTargetText, RequestId, SessionId, TimestampText,
-};
 use crate::paths::Route;
-use bon::{bon, Builder};
+use crate::types::{
+    LogFieldKey, LogFieldName, LogFieldValue, LogLevelText, LogMessageText, LogTargetText,
+    RequestId, SessionId, TimestampText,
+};
+use crate::{request, sse, views};
+use bon::{Builder, bon};
 use maud::Render;
 use strum_macros::{Display, EnumString};
 
@@ -46,11 +46,7 @@ pub struct TraceLogStore {
 }
 
 impl TraceLogStore {
-    pub fn new(
-        sse: sse::Registry,
-        max_entries: usize,
-        emit_sse: bool,
-    ) -> Self {
+    pub fn new(sse: sse::Registry, max_entries: usize, emit_sse: bool) -> Self {
         Self {
             requests: Arc::new(DashMap::new()),
             sessions: Arc::new(DashMap::new()),
@@ -119,11 +115,7 @@ impl TraceLogStore {
         }
     }
 
-    pub fn record_sse_event(
-        &self,
-        session_id: Option<&SessionId>,
-        entry: TraceEntry,
-    ) {
+    pub fn record_sse_event(&self, session_id: Option<&SessionId>, entry: TraceEntry) {
         if let Some(session_id) = session_id {
             let mut session_queue = self
                 .sessions
@@ -165,30 +157,21 @@ impl TraceLogStore {
         }
     }
 
-    pub fn snapshot_request(
-        &self,
-        request_id: &RequestId,
-    ) -> Vec<TraceEntry> {
+    pub fn snapshot_request(&self, request_id: &RequestId) -> Vec<TraceEntry> {
         self.requests
             .get(request_id)
             .map(|queue| queue.iter().cloned().collect())
             .unwrap_or_default()
     }
 
-    pub fn snapshot_session(
-        &self,
-        session_id: &SessionId,
-    ) -> Vec<TraceEntry> {
+    pub fn snapshot_session(&self, session_id: &SessionId) -> Vec<TraceEntry> {
         self.sessions
             .get(session_id)
             .map(|queue| queue.iter().cloned().collect())
             .unwrap_or_default()
     }
 
-    pub fn clear_session(
-        &self,
-        session_id: &SessionId,
-    ) {
+    pub fn clear_session(&self, session_id: &SessionId) {
         self.sessions.remove(session_id);
     }
 
@@ -236,11 +219,7 @@ impl<S> Layer<S> for TraceLogLayer
 where
     S: tracing::Subscriber + for<'a> LookupSpan<'a>,
 {
-    fn on_event(
-        &self,
-        event: &Event<'_>,
-        _ctx: tracing_subscriber::layer::Context<'_, S>,
-    ) {
+    fn on_event(&self, event: &Event<'_>, _ctx: tracing_subscriber::layer::Context<'_, S>) {
         let context = request::current_context();
         let Some(request_id) = context
             .as_ref()
@@ -288,9 +267,7 @@ where
             .fields(visitor.fields)
             .build();
 
-        let session_id = context
-            .as_ref()
-            .and_then(|value| value.session_id.as_ref());
+        let session_id = context.as_ref().and_then(|value| value.session_id.as_ref());
         self.store
             .record_with_session(&request_id, session_id, entry);
     }
@@ -300,11 +277,7 @@ impl<S> Layer<S> for DiagnosticTraceLogLayer
 where
     S: tracing::Subscriber + for<'a> LookupSpan<'a>,
 {
-    fn on_event(
-        &self,
-        event: &Event<'_>,
-        _ctx: tracing_subscriber::layer::Context<'_, S>,
-    ) {
+    fn on_event(&self, event: &Event<'_>, _ctx: tracing_subscriber::layer::Context<'_, S>) {
         let context = request::current_context();
         let Some(request_id) = context
             .as_ref()
@@ -349,9 +322,7 @@ where
             .fields(visitor.fields)
             .build();
 
-        let session_id = context
-            .as_ref()
-            .and_then(|value| value.session_id.as_ref());
+        let session_id = context.as_ref().and_then(|value| value.session_id.as_ref());
         self.store
             .record_with_session(&request_id, session_id, entry);
     }
@@ -459,10 +430,7 @@ impl tracing::field::Visit for FieldVisitor {
             }
             _ => {
                 self.fields
-                    .push((
-                        LogFieldName::new(field.name()),
-                        LogFieldValue::new(value),
-                    ));
+                    .push((LogFieldName::new(field.name()), LogFieldValue::new(value)));
             }
         }
     }
@@ -479,10 +447,8 @@ pub async fn audit_middleware(
     let request_id = request::current_context()
         .and_then(|value| value.request_id)
         .unwrap_or_else(RequestId::unknown);
-    let session_id = request::current_context()
-        .and_then(|value| value.session_id);
-    let user_id = request::current_context()
-        .and_then(|value| value.user_id);
+    let session_id = request::current_context().and_then(|value| value.session_id);
+    let user_id = request::current_context().and_then(|value| value.user_id);
 
     tracing::info!(
         target: LogTargetKnown::DemoRequestDiagnostic.as_str(),
@@ -514,7 +480,10 @@ pub async fn audit_middleware(
                     LogFieldName::from(LogFieldKey::Method),
                     LogFieldValue::new(method),
                 ),
-                (LogFieldName::from(LogFieldKey::Path), LogFieldValue::new(path)),
+                (
+                    LogFieldName::from(LogFieldKey::Path),
+                    LogFieldValue::new(path),
+                ),
                 (
                     LogFieldName::from(LogFieldKey::Status),
                     LogFieldValue::new(response.status().as_u16().to_string()),

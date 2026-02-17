@@ -1,16 +1,12 @@
-use axum::{
-    extract::Extension,
-    http::StatusCode,
-    response::IntoResponse,
-};
-use maud::Render;
+use axum::{extract::Extension, http::StatusCode, response::IntoResponse};
 use datastar::axum::ReadSignals;
 use datastar::prelude::{ElementPatchMode, PatchElements};
+use maud::Render;
 use serde::Deserialize;
 
-use crate::{paths::Route, request, views};
 use crate::trace_log::{LogMessageKnown, LogTargetKnown};
 use crate::types::{LogFieldKey, Text};
+use crate::{paths::Route, request, views};
 
 const DEMO_USER_EMAIL: &str = "demo.bot@example.com";
 const DEMO_USER_NAME: &str = "Demo Bot";
@@ -85,15 +81,16 @@ pub async fn moderate_message(
         .as_ref()
         .ok_or(crate::error::Error::Internal)?;
 
-    let decision = match crate::views::partials::ModerationAction::parse(&form.decision.to_string()) {
-        Some(crate::views::partials::ModerationAction::Approve) => {
-            app::chat::ModerationDecision::Approve
-        }
-        Some(crate::views::partials::ModerationAction::Remove) => {
-            app::chat::ModerationDecision::Remove
-        }
-        None => return Err(crate::error::Error::Internal),
-    };
+    let decision =
+        match crate::views::partials::ModerationAction::parse(&form.decision.to_string()) {
+            Some(crate::views::partials::ModerationAction::Approve) => {
+                app::chat::ModerationDecision::Approve
+            }
+            Some(crate::views::partials::ModerationAction::Remove) => {
+                app::chat::ModerationDecision::Remove
+            }
+            None => return Err(crate::error::Error::Internal),
+        };
 
     state
         .chat
@@ -170,7 +167,9 @@ pub async fn post_chat_message(
     let message_html = views::partials::ChatMessage::builder()
         .message_id(crate::types::Text::from(message.id.as_uuid().to_string()))
         .author(crate::types::Text::from(user.username.to_string()))
-        .timestamp(crate::types::Text::from(crate::chat_demo::format_message_time(message.created_at)))
+        .timestamp(crate::types::Text::from(
+            crate::chat_demo::format_message_time(message.created_at),
+        ))
         .body(crate::types::Text::from(message.body.to_string()))
         .status(crate::types::Text::from(format!("{:?}", message.status)))
         .build()
@@ -257,9 +256,7 @@ pub async fn post_demo_chat_message(
                 ),
                 (
                     crate::types::LogFieldName::from(LogFieldKey::UserId),
-                    crate::types::LogFieldValue::new(
-                        demo_user.id.as_uuid().to_string(),
-                    ),
+                    crate::types::LogFieldValue::new(demo_user.id.as_uuid().to_string()),
                 ),
                 (
                     crate::types::LogFieldName::from(LogFieldKey::Body),
@@ -272,7 +269,9 @@ pub async fn post_demo_chat_message(
     let message_html = views::partials::ChatMessage::builder()
         .message_id(crate::types::Text::from(message.id.as_uuid().to_string()))
         .author(crate::types::Text::from(demo_user.username.to_string()))
-        .timestamp(crate::types::Text::from(crate::chat_demo::format_message_time(message.created_at)))
+        .timestamp(crate::types::Text::from(
+            crate::chat_demo::format_message_time(message.created_at),
+        ))
         .body(crate::types::Text::from(message.body.to_string()))
         .status(crate::types::Text::from(format!("{:?}", message.status)))
         .build()
@@ -308,17 +307,11 @@ async fn ensure_demo_user(
         .map_err(|_| crate::error::Error::Internal)?;
     let demo_username = domain::user::Username::try_new(DEMO_USER_NAME)
         .map_err(|_| crate::error::Error::Internal)?;
-    if let Some(user) = state
-        .user
-        .find_by_email(demo_email.clone())
-        .await?
-    {
+    if let Some(user) = state.user.find_by_email(demo_email.clone()).await? {
         return Ok(user);
     }
 
-    let password = secrecy::SecretString::new(
-        uuid::Uuid::new_v4().to_string().into(),
-    );
+    let password = secrecy::SecretString::new(uuid::Uuid::new_v4().to_string().into());
     match state
         .user
         .register_user(
@@ -359,12 +352,9 @@ fn broadcast_message(
         mode = "append",
         payload_bytes = message_html.len() as u64
     );
-    let _ = state
-        .sse
-        .broadcast(crate::sse::Event::from_event(event));
+    let _ = state.sse.broadcast(crate::sse::Event::from_event(event));
 
-    let session_id = request::current_context()
-        .and_then(|value| value.session_id);
+    let session_id = request::current_context().and_then(|value| value.session_id);
     state.trace_log.record_sse_event(
         session_id.as_ref(),
         crate::trace_log::TraceEntry::builder()
@@ -427,18 +417,14 @@ impl ChatSender {
     }
 }
 
-fn parse_room_id(
-    value: &str,
-) -> Result<domain::chat::RoomId, crate::error::Error> {
+fn parse_room_id(value: &str) -> Result<domain::chat::RoomId, crate::error::Error> {
     let id = value
         .parse::<uuid::Uuid>()
         .map_err(|_| crate::error::Error::Internal)?;
     Ok(domain::chat::RoomId::from_uuid(id))
 }
 
-fn parse_message_id(
-    value: &str,
-) -> Result<domain::chat::MessageId, crate::error::Error> {
+fn parse_message_id(value: &str) -> Result<domain::chat::MessageId, crate::error::Error> {
     let id = value
         .parse::<uuid::Uuid>()
         .map_err(|_| crate::error::Error::Internal)?;
@@ -448,8 +434,7 @@ fn parse_message_id(
 fn parse_message_body(
     value: &str,
 ) -> Result<domain::chat::MessageBody, crate::error::Error> {
-    domain::chat::MessageBody::try_new(value)
-        .map_err(|_| crate::error::Error::Internal)
+    domain::chat::MessageBody::try_new(value).map_err(|_| crate::error::Error::Internal)
 }
 
 fn parse_reason(
@@ -463,8 +448,6 @@ fn parse_reason(
         .transpose()
 }
 
-fn chat_user_id_from_user_id(
-    value: domain::user::Id,
-) -> domain::chat::UserId {
+fn chat_user_id_from_user_id(value: domain::user::Id) -> domain::chat::UserId {
     domain::chat::UserId::from_uuid(*value.as_uuid())
 }

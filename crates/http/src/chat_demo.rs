@@ -76,23 +76,21 @@ async fn to_message_views(
         .rev()
         .map(|message| {
             let user_id = domain::user::Id::from_uuid(*message.user_id.as_uuid());
-            let author = names
-                .get(&user_id)
-                .cloned()
-                .unwrap_or_else(|| {
-                    domain::user::Username::try_new(format!(
-                        "user-{}",
-                        &user_id.as_uuid().to_string()[..8]
-                    ))
-                    .unwrap_or_else(|_| {
-                        domain::user::Username::try_new("user")
-                            .expect("username")
-                    })
-                });
+            let author = names.get(&user_id).cloned().unwrap_or_else(|| {
+                domain::user::Username::try_new(format!(
+                    "user-{}",
+                    &user_id.as_uuid().to_string()[..8]
+                ))
+                .unwrap_or_else(|_| {
+                    domain::user::Username::try_new("user").expect("username")
+                })
+            });
             crate::views::partials::ChatMessage::builder()
                 .message_id(crate::types::Text::from(message.id.as_uuid().to_string()))
                 .author(crate::types::Text::from(author.to_string()))
-                .timestamp(crate::types::Text::from(format_message_time(message.created_at)))
+                .timestamp(crate::types::Text::from(format_message_time(
+                    message.created_at,
+                )))
                 .body(crate::types::Text::from(message.body.to_string()))
                 .status(crate::types::Text::from(format!("{:?}", message.status)))
                 .build()
@@ -105,7 +103,7 @@ pub fn format_message_time(value: std::time::SystemTime) -> String {
     let format = time::format_description::parse(
         "[year]-[month]-[day] [hour repr:24 padding:zero]:[minute padding:zero]",
     )
-        .unwrap_or_else(|_| Vec::new());
+    .unwrap_or_else(|_| Vec::new());
     time.format(&format).unwrap_or_else(|_| "--:--".to_string())
 }
 use domain::chat;

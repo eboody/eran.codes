@@ -18,10 +18,7 @@ impl From<domain::chat::Error> for Error {
 }
 
 impl core::fmt::Display for Error {
-    fn fmt(
-        &self,
-        f: &mut core::fmt::Formatter,
-    ) -> core::fmt::Result {
+    fn fmt(&self, f: &mut core::fmt::Formatter) -> core::fmt::Result {
         write!(f, "{self:#?}")
     }
 }
@@ -30,10 +27,7 @@ impl std::error::Error for Error {}
 
 use nutype::nutype;
 
-#[nutype(
-    sanitize(trim),
-    derive(Clone, Debug, PartialEq, Display)
-)]
+#[nutype(sanitize(trim), derive(Clone, Debug, PartialEq, Display))]
 pub struct RepoErrorText(String);
 
 impl From<String> for RepoErrorText {
@@ -42,10 +36,7 @@ impl From<String> for RepoErrorText {
     }
 }
 
-#[nutype(
-    sanitize(trim),
-    derive(Clone, Debug, PartialEq, Display)
-)]
+#[nutype(sanitize(trim), derive(Clone, Debug, PartialEq, Display))]
 pub struct InvalidIdText(String);
 
 impl From<String> for InvalidIdText {

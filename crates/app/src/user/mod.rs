@@ -18,10 +18,7 @@ pub struct RegisterUser {
 
 #[async_trait]
 pub trait Repository: Send + Sync {
-    async fn find_by_email(
-        &self,
-        email: &user::Email,
-    ) -> Result<Option<user::User>>;
+    async fn find_by_email(&self, email: &user::Email) -> Result<Option<user::User>>;
     async fn create_with_credentials(
         &self,
         user: &user::User,
@@ -45,12 +42,8 @@ impl Service {
     }
 
     #[tracing::instrument(skip(self))]
-    pub async fn register_user(
-        &self,
-        command: RegisterUser,
-    ) -> Result<user::Id> {
-        if self.users.find_by_email(&command.email).await?.is_some()
-        {
+    pub async fn register_user(&self, command: RegisterUser) -> Result<user::Id> {
+        if self.users.find_by_email(&command.email).await?.is_some() {
             return Err(Error::EmailTaken);
         }
 
@@ -72,10 +65,7 @@ impl Service {
         Ok(new_user.id)
     }
 
-    pub async fn find_by_email(
-        &self,
-        email: user::Email,
-    ) -> Result<Option<user::User>> {
+    pub async fn find_by_email(&self, email: user::Email) -> Result<Option<user::User>> {
         self.users.find_by_email(&email).await
     }
 }
@@ -84,9 +74,7 @@ pub fn validate_input(
     username: &str,
     email: &str,
 ) -> Result<(user::Username, user::Email)> {
-    let username = user::Username::try_new(username)
-        .map_err(domain::user::Error::from)?;
-    let email =
-        user::Email::try_new(email).map_err(domain::user::Error::from)?;
+    let username = user::Username::try_new(username).map_err(domain::user::Error::from)?;
+    let email = user::Email::try_new(email).map_err(domain::user::Error::from)?;
     Ok((username, email))
 }

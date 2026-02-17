@@ -21,29 +21,19 @@ pub enum Error {
     Migrate(sqlx::migrate::MigrateError),
 }
 
-#[nutype(
-    sanitize(trim),
-    derive(Clone, Debug, PartialEq, Eq, Display)
-)]
+#[nutype(sanitize(trim), derive(Clone, Debug, PartialEq, Eq, Display))]
 pub struct EnvValue(String);
 
 pub type Result<T> = std::result::Result<T, Error>;
 
 impl fmt::Display for Error {
-    fn fmt(
-        &self,
-        f: &mut fmt::Formatter<'_>,
-    ) -> fmt::Result {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         match self {
-            Error::MissingEnv { key } => write!(
-                f,
-                "missing required environment variable `{key}`"
-            ),
+            Error::MissingEnv { key } => {
+                write!(f, "missing required environment variable `{key}`")
+            }
             Error::InvalidEnv { key, reason, .. } => {
-                write!(
-                    f,
-                    "invalid value for `{key}`: {reason}"
-                )
+                write!(f, "invalid value for `{key}`: {reason}")
             }
             Error::Io(e) => write!(f, "io error: {e}"),
             Error::Pgsql(e) => {
@@ -60,9 +50,7 @@ impl fmt::Display for Error {
 }
 
 impl std::error::Error for Error {
-    fn source(
-        &self,
-    ) -> Option<&(dyn std::error::Error + 'static)> {
+    fn source(&self) -> Option<&(dyn std::error::Error + 'static)> {
         match self {
             Error::Io(e) => Some(e),
             _ => None,

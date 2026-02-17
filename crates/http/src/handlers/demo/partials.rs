@@ -1,8 +1,4 @@
-use axum::{
-    extract::Extension,
-    http::StatusCode,
-    response::IntoResponse,
-};
+use axum::{extract::Extension, http::StatusCode, response::IntoResponse};
 use maud::Render;
 use serde::Deserialize;
 use tower_sessions::Session;
@@ -115,7 +111,12 @@ pub async fn boundary_check_partial(
     Extension(state): Extension<crate::State>,
 ) -> impl IntoResponse {
     tracing::info!(target: "demo.boundary", "boundary check requested");
-    let (label, username, email) = match query.case.as_ref().map(|value| value.to_string()).as_deref() {
+    let (label, username, email) = match query
+        .case
+        .as_ref()
+        .map(|value| value.to_string())
+        .as_deref()
+    {
         Some("invalid") => ("Invalid input", " ", "not-an-email"),
         _ => ("Valid input", "demo_user", "demo@example.com"),
     };

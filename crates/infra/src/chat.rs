@@ -1,6 +1,4 @@
-pub use crate::repo::chat::{
-    AuditLog, ModerationQueue, RateLimiter, Repository,
-};
+pub use crate::repo::chat::{AuditLog, ModerationQueue, RateLimiter, Repository};
 
 use app::chat::{Clock, IdGenerator};
 use domain::chat;

@@ -16,10 +16,7 @@ pub enum Error {
 }
 
 impl core::fmt::Display for Error {
-    fn fmt(
-        &self,
-        f: &mut core::fmt::Formatter,
-    ) -> core::fmt::Result {
+    fn fmt(&self, f: &mut core::fmt::Formatter) -> core::fmt::Result {
         write!(f, "{self:?}")
     }
 }
@@ -54,10 +51,7 @@ pub trait Provider: Send + Sync {
         &self,
         credentials: Credentials,
     ) -> Result<Option<AuthenticatedUser>>;
-    async fn get_user(
-        &self,
-        user_id: &user::Id,
-    ) -> Result<Option<AuthenticatedUser>>;
+    async fn get_user(&self, user_id: &user::Id) -> Result<Option<AuthenticatedUser>>;
 }
 
 #[derive(Clone)]
@@ -83,10 +77,7 @@ impl Service {
         self.provider.authenticate(credentials).await
     }
 
-    pub async fn get_user(
-        &self,
-        user_id: &user::Id,
-    ) -> Result<Option<AuthenticatedUser>> {
+    pub async fn get_user(&self, user_id: &user::Id) -> Result<Option<AuthenticatedUser>> {
         self.provider.get_user(user_id).await
     }
 }
@@ -102,33 +93,20 @@ impl Provider for DisabledProvider {
         Ok(None)
     }
 
-    async fn get_user(
-        &self,
-        _user_id: &user::Id,
-    ) -> Result<Option<AuthenticatedUser>> {
+    async fn get_user(&self, _user_id: &user::Id) -> Result<Option<AuthenticatedUser>> {
         Ok(None)
     }
 }
 
 #[async_trait]
 pub trait Repository: Send + Sync {
-    async fn find_by_email(
-        &self,
-        email: &user::Email,
-    ) -> Result<Option<AuthRecord>>;
-    async fn find_by_id(
-        &self,
-        user_id: &user::Id,
-    ) -> Result<Option<AuthRecord>>;
+    async fn find_by_email(&self, email: &user::Email) -> Result<Option<AuthRecord>>;
+    async fn find_by_id(&self, user_id: &user::Id) -> Result<Option<AuthRecord>>;
 }
 
 pub trait PasswordHasher: Send + Sync {
     fn hash(&self, password: &str) -> Result<PasswordHash>;
-    fn verify(
-        &self,
-        password: &str,
-        password_hash: &PasswordHash,
-    ) -> Result<bool>;
+    fn verify(&self, password: &str, password_hash: &PasswordHash) -> Result<bool>;
 }
 
 #[derive(Clone)]
@@ -138,10 +116,7 @@ pub struct ProviderImpl {
 }
 
 impl ProviderImpl {
-    pub fn new(
-        repo: Arc<dyn Repository>,
-        hasher: Arc<dyn PasswordHasher>,
-    ) -> Self {
+    pub fn new(repo: Arc<dyn Repository>, hasher: Arc<dyn PasswordHasher>) -> Self {
         Self { repo, hasher }
     }
 }
@@ -157,10 +132,9 @@ impl Provider for ProviderImpl {
             None => return Ok(None),
         };
 
-        let verified = self.hasher.verify(
-            credentials.password.expose_secret(),
-            &record.password_hash,
-        )?;
+        let verified = self
+            .hasher
+            .verify(credentials.password.expose_secret(), &record.password_hash)?;
 
         if !verified {
             return Ok(None);
@@ -171,17 +145,12 @@ impl Provider for ProviderImpl {
                 .id(record.id)
                 .username(record.username)
                 .email(record.email)
-                .session_hash(SessionHash::from_password_hash(
-                    &record.password_hash,
-                ))
+                .session_hash(SessionHash::from_password_hash(&record.password_hash))
                 .build(),
         ))
     }
 
-    async fn get_user(
-        &self,
-        user_id: &user::Id,
-    ) -> Result<Option<AuthenticatedUser>> {
+    async fn get_user(&self, user_id: &user::Id) -> Result<Option<AuthenticatedUser>> {
         let record = match self.repo.find_by_id(user_id).await? {
             Some(record) => record,
             None => return Ok(None),
@@ -192,18 +161,13 @@ impl Provider for ProviderImpl {
                 .id(record.id)
                 .username(record.username)
                 .email(record.email)
-                .session_hash(SessionHash::from_password_hash(
-                    &record.password_hash,
-                ))
+                .session_hash(SessionHash::from_password_hash(&record.password_hash))
                 .build(),
         ))
     }
 }
 
-#[nutype(
-    sanitize(trim),
-    derive(Clone, Debug, PartialEq, Display)
-)]
+#[nutype(sanitize(trim), derive(Clone, Debug, PartialEq, Display))]
 pub struct RepositoryErrorText(String);
 
 impl From<String> for RepositoryErrorText {
@@ -212,10 +176,7 @@ impl From<String> for RepositoryErrorText {
     }
 }
 
-#[nutype(
-    sanitize(trim),
-    derive(Clone, Debug, PartialEq, Display)
-)]
+#[nutype(sanitize(trim), derive(Clone, Debug, PartialEq, Display))]
 pub struct HashErrorText(String);
 
 impl From<String> for HashErrorText {
@@ -224,22 +185,15 @@ impl From<String> for HashErrorText {
     }
 }
 
-#[nutype(
-    sanitize(trim),
-    derive(Clone, Debug, PartialEq, Display)
-)]
+#[nutype(sanitize(trim), derive(Clone, Debug, PartialEq, Display))]
 pub struct PasswordHash(String);
 
-#[nutype(
-    sanitize(trim),
-    derive(Clone, Debug, PartialEq, Display)
-)]
+#[nutype(sanitize(trim), derive(Clone, Debug, PartialEq, Display))]
 pub struct SessionHash(String);
 
 impl SessionHash {
     pub fn from_password_hash(value: &PasswordHash) -> Self {
         SessionHash::new(value.to_string())
-            
     }
 }
 
@@ -253,17 +207,11 @@ mod tests {
 
     #[async_trait]
     impl Repository for TestRepo {
-        async fn find_by_email(
-            &self,
-            _email: &str,
-        ) -> Result<Option<AuthRecord>> {
+        async fn find_by_email(&self, _email: &str) -> Result<Option<AuthRecord>> {
             Ok(self.record.clone())
         }
 
-        async fn find_by_id(
-            &self,
-            _user_id: &str,
-        ) -> Result<Option<AuthRecord>> {
+        async fn find_by_id(&self, _user_id: &str) -> Result<Option<AuthRecord>> {
             Ok(self.record.clone())
         }
     }
@@ -277,11 +225,7 @@ mod tests {
             Ok("hash".to_string())
         }
 
-        fn verify(
-            &self,
-            _password: &str,
-            _password_hash: &str,
-        ) -> Result<bool> {
+        fn verify(&self, _password: &str, _password_hash: &str) -> Result<bool> {
             Ok(self.ok)
         }
     }

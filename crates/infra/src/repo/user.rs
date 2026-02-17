@@ -13,10 +13,7 @@ pub struct SqlxUserRepository {
 
 #[async_trait]
 impl UserRepository for SqlxUserRepository {
-    async fn find_by_email(
-        &self,
-        email: &user::Email,
-    ) -> Result<Option<user::User>> {
+    async fn find_by_email(&self, email: &user::Email) -> Result<Option<user::User>> {
         let start = std::time::Instant::now();
         tracing::info!(
             target: "demo.db",
@@ -115,10 +112,8 @@ impl SqlxUserRepository {
     }
 
     fn user_from_row(row: PgRow) -> Result<user::User> {
-        let username = user::Username::try_new(
-            row.get::<String, _>("username"),
-        )
-        .map_err(|error| Error::Repo(error.to_string().into()))?;
+        let username = user::Username::try_new(row.get::<String, _>("username"))
+            .map_err(|error| Error::Repo(error.to_string().into()))?;
         let email = user::Email::try_new(row.get::<String, _>("email"))
             .map_err(|error| Error::Repo(error.to_string().into()))?;
 
@@ -137,12 +132,10 @@ impl SqlxUserRepository {
         )
     )]
     pub async fn count(&self) -> crate::error::Result<i64> {
-        let row = sqlx::query(
-            "SELECT COUNT(*)::bigint AS count FROM users",
-        )
-        .fetch_one(&self.pg)
-        .await
-        .map_err(crate::error::Error::Pgsql)?;
+        let row = sqlx::query("SELECT COUNT(*)::bigint AS count FROM users")
+            .fetch_one(&self.pg)
+            .await
+            .map_err(crate::error::Error::Pgsql)?;
 
         let count = row.get::<i64, _>("count");
         tracing::Span::current().record("db.rows", 1);

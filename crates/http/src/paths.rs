@@ -1,5 +1,5 @@
-use std::str::FromStr;
 use maud::Render;
+use std::str::FromStr;
 use strum_macros::{AsRefStr, Display, EnumString};
 
 #[derive(Clone, Copy, Debug, Display, EnumString, AsRefStr)]

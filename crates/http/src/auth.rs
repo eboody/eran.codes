@@ -4,7 +4,7 @@ use axum::{
     middleware::Next,
     response::{IntoResponse, Redirect, Response},
 };
-use axum_login::{AuthUser, AuthnBackend, AuthSession};
+use axum_login::{AuthSession, AuthUser, AuthnBackend};
 use bon::Builder;
 use nutype::nutype;
 
@@ -49,7 +49,8 @@ impl AuthnBackend for Backend {
     fn authenticate(
         &self,
         credentials: Self::Credentials,
-    ) -> impl core::future::Future<Output = Result<Option<Self::User>, Self::Error>> + Send {
+    ) -> impl core::future::Future<Output = Result<Option<Self::User>, Self::Error>> + Send
+    {
         let auth = self.auth.clone();
         async move {
             let user = auth.authenticate(credentials).await?;
@@ -60,7 +61,8 @@ impl AuthnBackend for Backend {
     fn get_user(
         &self,
         user_id: &<Self::User as AuthUser>::Id,
-    ) -> impl core::future::Future<Output = Result<Option<Self::User>, Self::Error>> + Send {
+    ) -> impl core::future::Future<Output = Result<Option<Self::User>, Self::Error>> + Send
+    {
         let auth = self.auth.clone();
         let user_id = user_id.clone();
         async move {
@@ -90,16 +92,11 @@ pub struct UserId(String);
 
 impl UserId {
     pub fn to_domain(&self) -> Result<domain::user::Id, app::auth::Error> {
-        let parsed = self
-            .to_string()
-            .parse::<uuid::Uuid>()
-            .map_err(|error| {
-                app::auth::Error::Repository(
-                    app::auth::RepositoryErrorText::new(
-                        error.to_string(),
-                    ),
-                )
-            })?;
+        let parsed = self.to_string().parse::<uuid::Uuid>().map_err(|error| {
+            app::auth::Error::Repository(app::auth::RepositoryErrorText::new(
+                error.to_string(),
+            ))
+        })?;
         Ok(domain::user::Id::from_uuid(parsed))
     }
 }
