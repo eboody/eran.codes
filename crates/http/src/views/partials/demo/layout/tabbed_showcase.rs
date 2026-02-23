@@ -6,19 +6,19 @@ use crate::types::Text;
 use crate::views::partials::components::{CodeBlock, CodeLanguage};
 
 #[derive(Clone, Debug, Builder)]
-pub struct TabbedShowcaseRow {
+pub(crate) struct TabbedShowcaseRow {
     pub label: Text,
     pub value: Text,
 }
 
 #[derive(Clone, Debug, Builder)]
-pub struct TabbedShowcaseAction {
+pub(crate) struct TabbedShowcaseAction {
     pub label: Text,
     pub href: Text,
 }
 
 #[derive(Clone, Debug, Builder)]
-pub struct TabbedShowcaseMockPanel {
+pub(crate) struct TabbedShowcaseMockPanel {
     pub title: Text,
     pub subtitle: Text,
     pub rows: Vec<TabbedShowcaseRow>,
@@ -133,7 +133,7 @@ struct TabPalette {
 }
 
 #[derive(Clone, Debug, Builder)]
-pub struct TabbedShowcaseTab {
+pub(crate) struct TabbedShowcaseTab {
     pub tab_icon: Option<Text>,
     pub tab_label: Text,
     pub title: Text,
