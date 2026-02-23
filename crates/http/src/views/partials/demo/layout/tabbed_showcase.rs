@@ -87,49 +87,68 @@ impl ShowcaseColor {
         let use_dark_text = contrast_ratio(avg_bg, black) >= contrast_ratio(avg_bg, white);
 
         let copy_text = if use_dark_text {
-            "hsl(222 47% 11%)"
+            CssColor::hsl(Hsl::new(RgbHue::from_degrees(222.0), 0.47, 0.11))
         } else {
-            "hsl(210 40% 98%)"
+            CssColor::hsl(Hsl::new(RgbHue::from_degrees(210.0), 0.40, 0.98))
         };
         let copy_muted = if use_dark_text {
-            "hsl(222 47% 11% / 0.82)"
+            CssColor::hsla(Hsl::new(RgbHue::from_degrees(222.0), 0.47, 0.11), 0.82)
         } else {
-            "hsl(210 40% 98% / 0.86)"
+            CssColor::hsla(Hsl::new(RgbHue::from_degrees(210.0), 0.40, 0.98), 0.86)
         };
         let chip_bg = if use_dark_text {
-            "hsl(0 0% 100% / 0.68)"
+            CssColor::hsla(Hsl::new(RgbHue::from_degrees(0.0), 0.0, 1.0), 0.68)
         } else {
-            "hsl(223 47% 11% / 0.28)"
+            CssColor::hsla(Hsl::new(RgbHue::from_degrees(223.0), 0.47, 0.11), 0.28)
         };
         let chip_border = if use_dark_text {
-            "hsl(223 47% 11% / 0.24)"
+            CssColor::hsla(Hsl::new(RgbHue::from_degrees(223.0), 0.47, 0.11), 0.24)
         } else {
-            "hsl(210 40% 98% / 0.34)"
+            CssColor::hsla(Hsl::new(RgbHue::from_degrees(210.0), 0.40, 0.98), 0.34)
         };
 
         TabPalette {
-            accent: hsl_css(base),
-            tab_soft: hsl_css(tab_soft_hsl),
-            grad_start: hsl_css(grad_start_hsl),
-            grad_end: hsl_css(grad_end_hsl),
-            copy_text: copy_text.to_owned(),
-            copy_muted: copy_muted.to_owned(),
-            chip_bg: chip_bg.to_owned(),
-            chip_border: chip_border.to_owned(),
+            accent: CssColor::hsl(base),
+            tab_soft: CssColor::hsl(tab_soft_hsl),
+            grad_start: CssColor::hsl(grad_start_hsl),
+            grad_end: CssColor::hsl(grad_end_hsl),
+            copy_text,
+            copy_muted,
+            chip_bg,
+            chip_border,
+        }
+    }
+}
+
+#[derive(Clone, Copy, Debug)]
+struct CssColor {
+    hsl: Hsl,
+    alpha: Option<f32>,
+}
+
+impl CssColor {
+    fn hsl(hsl: Hsl) -> Self {
+        Self { hsl, alpha: None }
+    }
+
+    fn hsla(hsl: Hsl, alpha: f32) -> Self {
+        Self {
+            hsl,
+            alpha: Some(alpha.clamp(0.0, 1.0)),
         }
     }
 }
 
 #[derive(Clone, Debug)]
 struct TabPalette {
-    accent: String,
-    tab_soft: String,
-    grad_start: String,
-    grad_end: String,
-    copy_text: String,
-    copy_muted: String,
-    chip_bg: String,
-    chip_border: String,
+    accent: CssColor,
+    tab_soft: CssColor,
+    grad_start: CssColor,
+    grad_end: CssColor,
+    copy_text: CssColor,
+    copy_muted: CssColor,
+    chip_bg: CssColor,
+    chip_border: CssColor,
 }
 
 #[derive(Clone, Debug, Builder)]
@@ -193,9 +212,9 @@ impl Render for TabbedShowcase {
                                     data-tab-index=(index)
                                     for=(tab_id)
                                     style={
-                                        " --tab-accent: " (palette.accent) ";"
-                                        " --tab-accent-soft: " (palette.tab_soft) ";"
-                                        " color: " (palette.accent) ";"
+                                        " --tab-accent: " (css_color(palette.accent)) ";"
+                                        " --tab-accent-soft: " (css_color(palette.tab_soft)) ";"
+                                        " color: " (css_color(palette.accent)) ";"
                                     }
                                 {
                                     @if let Some(icon) = &tab.tab_icon {
@@ -231,13 +250,13 @@ impl Render for TabbedShowcase {
                                     div
                                         class="tabbed-showcase-copy"
                                         style={
-                                            " --tab-accent: " (palette.accent) ";" 
-                                            " --tab-grad-start: " (palette.grad_start) ";"
-                                            " --tab-grad-end: " (palette.grad_end) ";"
-                                            " --tab-copy-text: " (palette.copy_text) ";"
-                                            " --tab-copy-muted: " (palette.copy_muted) ";"
-                                            " --tab-chip-bg: " (palette.chip_bg) ";"
-                                            " --tab-chip-border: " (palette.chip_border) ";"
+                                            " --tab-accent: " (css_color(palette.accent)) ";"
+                                            " --tab-grad-start: " (css_color(palette.grad_start)) ";"
+                                            " --tab-grad-end: " (css_color(palette.grad_end)) ";"
+                                            " --tab-copy-text: " (css_color(palette.copy_text)) ";"
+                                            " --tab-copy-muted: " (css_color(palette.copy_muted)) ";"
+                                            " --tab-chip-bg: " (css_color(palette.chip_bg)) ";"
+                                            " --tab-chip-border: " (css_color(palette.chip_border)) ";"
                                         }
                                     {
                                         h3 { (&tab.title) }
@@ -312,6 +331,23 @@ fn hsl_css(color: Hsl) -> String {
         color.hue.into_degrees(),
         color.saturation * 100.0,
         color.lightness * 100.0
+    )
+}
+
+fn css_color(color: CssColor) -> String {
+    match color.alpha {
+        Some(alpha) => hsla_css(color.hsl, alpha),
+        None => hsl_css(color.hsl),
+    }
+}
+
+fn hsla_css(color: Hsl, alpha: f32) -> String {
+    format!(
+        "hsl({:.1} {:.1}% {:.1}% / {:.2})",
+        color.hue.into_degrees(),
+        color.saturation * 100.0,
+        color.lightness * 100.0,
+        alpha
     )
 }
 

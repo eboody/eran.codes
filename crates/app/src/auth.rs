@@ -201,17 +201,33 @@ impl SessionHash {
 mod tests {
     use super::*;
 
+    fn test_email() -> user::Email {
+        user::Email::try_new("user@example.com".to_owned()).unwrap()
+    }
+
+    fn test_username() -> user::Username {
+        user::Username::try_new("user".to_owned()).unwrap()
+    }
+
+    fn test_user_id() -> user::Id {
+        user::Id::from_uuid(uuid::Uuid::new_v4())
+    }
+
+    fn test_password_hash() -> PasswordHash {
+        PasswordHash::new("hash")
+    }
+
     struct TestRepo {
         record: Option<AuthRecord>,
     }
 
     #[async_trait]
     impl Repository for TestRepo {
-        async fn find_by_email(&self, _email: &str) -> Result<Option<AuthRecord>> {
+        async fn find_by_email(&self, _email: &user::Email) -> Result<Option<AuthRecord>> {
             Ok(self.record.clone())
         }
 
-        async fn find_by_id(&self, _user_id: &str) -> Result<Option<AuthRecord>> {
+        async fn find_by_id(&self, _user_id: &user::Id) -> Result<Option<AuthRecord>> {
             Ok(self.record.clone())
         }
     }
@@ -221,11 +237,11 @@ mod tests {
     }
 
     impl PasswordHasher for TestHasher {
-        fn hash(&self, _password: &str) -> Result<String> {
-            Ok("hash".to_string())
+        fn hash(&self, _password: &str) -> Result<PasswordHash> {
+            Ok(test_password_hash())
         }
 
-        fn verify(&self, _password: &str, _password_hash: &str) -> Result<bool> {
+        fn verify(&self, _password: &str, _password_hash: &PasswordHash) -> Result<bool> {
             Ok(self.ok)
         }
     }
@@ -235,10 +251,10 @@ mod tests {
         let repo = Arc::new(TestRepo {
             record: Some(
                 AuthRecord::builder()
-                    .id("user-1".to_string())
-                    .username("user".to_string())
-                    .email("user@example.com".to_string())
-                    .password_hash("hash".to_string())
+                    .id(test_user_id())
+                    .username(test_username())
+                    .email(test_email())
+                    .password_hash(test_password_hash())
                     .build(),
             ),
         });
@@ -248,7 +264,7 @@ mod tests {
         let user = provider
             .authenticate(
                 Credentials::builder()
-                    .email("user@example.com".to_string())
+                    .email(test_email())
                     .password(SecretString::new("pw".into()))
                     .build(),
             )
@@ -263,10 +279,10 @@ mod tests {
         let repo = Arc::new(TestRepo {
             record: Some(
                 AuthRecord::builder()
-                    .id("user-1".to_string())
-                    .username("user".to_string())
-                    .email("user@example.com".to_string())
-                    .password_hash("hash".to_string())
+                    .id(test_user_id())
+                    .username(test_username())
+                    .email(test_email())
+                    .password_hash(test_password_hash())
                     .build(),
             ),
         });
@@ -276,7 +292,7 @@ mod tests {
         let user = provider
             .authenticate(
                 Credentials::builder()
-                    .email("user@example.com".to_string())
+                    .email(test_email())
                     .password(SecretString::new("pw".into()))
                     .build(),
             )
