@@ -1,4 +1,4 @@
-moddef::moddef!(mod { demo_section, demo_result, cta_row, section_header, flow_map, support_card, home_hero, highlights_section, feature_gallery, tabbed_showcase, capability_showcase, professionalism_in_practice_tabs });
+moddef::moddef!(mod { demo_section, demo_result, cta_row, section_header, home_hero, feature_gallery, tabbed_showcase, capability_showcase, professionalism_in_practice_tabs });
 
 pub use demo_section::DemoSection;
 pub use demo_result::DemoResultPlaceholder;

@@ -85,7 +85,6 @@ impl ShowcaseColor {
         let black = Srgb::new(0.043, 0.071, 0.125);
         let white = Srgb::new(0.973, 0.98, 0.988);
         let use_dark_text = contrast_ratio(avg_bg, black) >= contrast_ratio(avg_bg, white);
-        let opposite_hue = (base.hue.into_degrees() + 180.0).rem_euclid(360.0);
 
         let copy_text = if use_dark_text {
             "hsl(222 47% 11%)"
@@ -117,7 +116,6 @@ impl ShowcaseColor {
             copy_muted: copy_muted.to_owned(),
             chip_bg: chip_bg.to_owned(),
             chip_border: chip_border.to_owned(),
-            opposite_hue,
         }
     }
 }
@@ -132,7 +130,6 @@ struct TabPalette {
     copy_muted: String,
     chip_bg: String,
     chip_border: String,
-    opposite_hue: f32,
 }
 
 #[derive(Clone, Debug, Builder)]
@@ -241,7 +238,6 @@ impl Render for TabbedShowcase {
                                             " --tab-copy-muted: " (palette.copy_muted) ";"
                                             " --tab-chip-bg: " (palette.chip_bg) ";"
                                             " --tab-chip-border: " (palette.chip_border) ";"
-                                            " --tab-opposite-h: " (palette.opposite_hue) ";"
                                         }
                                     {
                                         h3 { (&tab.title) }

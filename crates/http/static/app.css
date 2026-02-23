@@ -100,13 +100,6 @@
   gap: 0.6rem;
 }
 
-.highlights article {
-  border: 1px solid var(--pico-muted-border-color);
-  border-radius: 18px;
-  padding: 1.5rem;
-  background: var(--pico-card-background-color);
-}
-
 .flow-card {
   border: 1px dashed var(--pico-muted-border-color);
   border-radius: 20px;
@@ -176,32 +169,6 @@
 .section-meta {
   margin-top: -0.5rem;
   margin-bottom: 0.5rem;
-}
-
-.flow-map {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 0.4rem;
-  align-items: center;
-  margin: 0.8rem 0 1rem;
-}
-
-.flow-map .step {
-  border: 1px solid var(--pico-muted-border-color);
-  border-radius: 999px;
-  padding: 0.3rem 0.8rem;
-  font-size: 0.8rem;
-  font-weight: 600;
-}
-
-.flow-map .arrow {
-  font-weight: 700;
-  color: var(--pico-muted-color);
-}
-
-.highlights ul {
-  margin: 0.8rem 0 0;
-  padding-left: 1.1rem;
 }
 
 button,
