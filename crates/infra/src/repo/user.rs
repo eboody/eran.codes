@@ -6,7 +6,6 @@ use async_trait::async_trait;
 use domain::user;
 use sqlx::{Row, postgres::PgRow};
 
-#[allow(unused)]
 pub struct SqlxUserRepository {
     pg: sqlx::PgPool,
 }
@@ -122,23 +121,5 @@ impl SqlxUserRepository {
             username,
             email,
         })
-    }
-
-    #[tracing::instrument(
-        skip(self),
-        fields(
-            db.statement = "SELECT COUNT(*)::bigint AS count FROM users",
-            db.rows = tracing::field::Empty
-        )
-    )]
-    pub async fn count(&self) -> crate::error::Result<i64> {
-        let row = sqlx::query("SELECT COUNT(*)::bigint AS count FROM users")
-            .fetch_one(&self.pg)
-            .await
-            .map_err(crate::error::Error::Pgsql)?;
-
-        let count = row.get::<i64, _>("count");
-        tracing::Span::current().record("db.rows", 1);
-        Ok(count)
     }
 }

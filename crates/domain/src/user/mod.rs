@@ -1,7 +1,6 @@
-moddef::moddef!(mod { error, new_user, repo, user });
+moddef::moddef!(mod { error, repo, user });
 
 pub use error::{Error, Result};
-pub use new_user::NewUser;
 use nutype::nutype;
 pub use repo::Repository;
 pub use user::User;

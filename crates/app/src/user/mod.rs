@@ -26,7 +26,6 @@ pub trait Repository: Send + Sync {
     ) -> Result<()>;
 }
 
-#[allow(unused)]
 #[derive(Clone)]
 pub struct Service {
     users: Arc<dyn Repository>,

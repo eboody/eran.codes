@@ -25,8 +25,17 @@ The tabbed showcase previously computed and passed `--tab-opposite-h` without ac
 - Existing component exports in `partials/mod.rs` retained where still consumed by pages/handlers.
 - Theme token set in `app.css` retained because it now normalizes light/dark behavior for custom sections.
 
-## Residual risk areas (not removed in this pass)
+## Additional confirmed noise (follow-up pass)
 
-- `#![allow(unused_imports)]` in `crates/http/src/views/partials/components/mod.rs` can mask future drift.
-- Several broad re-export modules can hide local dead code without failing build.
-- No automated unused-module gate currently exists for view partials.
+### C) Unused domain type and stale suppressions
+
+- `crates/domain/src/user/new_user.rs` was exported but not used anywhere in workspace flows.
+- `#[allow(unused)]` markers in:
+  - `crates/app/src/user/mod.rs`
+  - `crates/infra/src/repo/user.rs`
+- `#![allow(unused_imports)]` in `crates/http/src/views/partials/components/mod.rs`
+
+### D) Over-broad re-exports and dead styling hook
+
+- `crates/http/src/views/partials/demo/misc/mod.rs` and `crates/http/src/views/partials/components/mod.rs` were exporting symbols not consumed by current call sites.
+- `PillColor` and inline `--pill-accent` styling path in `crates/http/src/views/partials/demo/misc/pill.rs` had one active value path and extra unused variants.

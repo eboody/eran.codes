@@ -24,3 +24,33 @@ This log tracks code removed or simplified as part of this audit pass.
 - `cargo test -p http@0.1.0 --test home_demos`
 
 All passed after cleanup.
+
+## Follow-up cleanup pass
+
+### Removed files
+
+- `crates/domain/src/user/new_user.rs`
+
+### Updated files
+
+- `crates/domain/src/user/mod.rs`
+  - Removed `new_user` module declaration and `NewUser` re-export.
+- `crates/infra/src/repo/user.rs`
+  - Removed unused `count` helper and stale `#[allow(unused)]`.
+- `crates/app/src/user/mod.rs`
+  - Removed stale `#[allow(unused)]` on `Service`.
+- `crates/http/src/views/partials/components/mod.rs`
+  - Removed broad `allow(unused_imports)` and narrowed exports to consumed symbols.
+- `crates/http/src/views/partials/demo/misc/mod.rs`
+  - Narrowed exports to consumed symbols.
+- `crates/http/src/views/partials/demo/misc/pill.rs`
+  - Removed unused `PillColor` enum and inline style path; kept class-based variant rendering.
+- `crates/http/static/app.css`
+  - Added `.log-fields` class style to replace inline pill accent usage.
+
+### Verification
+
+- `RUSTC_WRAPPER= cargo check --all-targets`
+- `RUSTC_WRAPPER= cargo test -p http@0.1.0 --test home_demos`
+
+All passed after follow-up cleanup.

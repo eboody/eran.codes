@@ -702,6 +702,11 @@ button.secondary,
   color: var(--pico-muted-color);
 }
 
+.log-fields {
+  color: rgb(148, 163, 184);
+  border-color: rgb(148, 163, 184);
+}
+
 .pill.method {
   text-transform: uppercase;
 }
