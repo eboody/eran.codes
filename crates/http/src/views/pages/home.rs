@@ -4,9 +4,9 @@ use crate::paths::Route;
 use crate::types::Text;
 use crate::views::page::UserNav;
 use crate::views::partials::{
-    ChatDemoSection, DemoResultPlaceholder, DemoSection, DiagramPanel, DiagramRow,
-    DiagramStatus, FeatureAccent, FeatureCard, FeatureGallery, HomeHero,
-    ProfessionalismBreakdown, ProfessionalismTopic, SectionHeader,
+    CapabilityShowcase, ChatDemoSection, DemoResultPlaceholder, DemoSection,
+    DiagramPanel, DiagramRow, DiagramStatus, FeatureAccent, FeatureCard,
+    FeatureGallery, HomeHero, ProfessionalismInPracticeTabs, SectionHeader,
 };
 
 #[derive(Builder)]
@@ -20,6 +20,8 @@ impl maud::Render for Home {
         let content = maud::html! {
             main class="container" {
                 (HomeHero::builder().maybe_user(self.user.clone()).build().render())
+
+                (CapabilityShowcase::builder().build().render())
 
                 section class="portfolio-principles" {
                     ({
@@ -133,38 +135,7 @@ impl maud::Render for Home {
                     }
                 }
 
-                section class="professionalism-breakdown" {
-                    ({
-                        SectionHeader::builder()
-                            .title(
-                                Text::from(
-                                    "Professionalism In Practice (Detailed Breakdown)",
-                                ),
-                            )
-                            .subtitle(
-                                Text::from(
-                                    "Concrete patterns from this codebase, with real snippets and why each choice is maintainable.",
-                                ),
-                            )
-                            .build()
-                            .render()
-                    })
-                    ({
-                        ProfessionalismBreakdown::builder()
-                            .topics(
-                                vec![
-                                    ProfessionalismTopic::BoundaryModeling,
-                                    ProfessionalismTopic::TypedInvariants,
-                                    ProfessionalismTopic::ErrorContracts,
-                                    ProfessionalismTopic::Observability,
-                                    ProfessionalismTopic::ReusableViews,
-                                    ProfessionalismTopic::ReadableWiring,
-                                ],
-                            )
-                            .build()
-                            .render()
-                    })
-                }
+                (ProfessionalismInPracticeTabs::builder().build().render())
 
                 ({
                     FeatureGallery::builder()
@@ -384,24 +355,26 @@ impl maud::Render for Home {
                     })
                 }
 
-                ({
-                    DemoSection::builder()
-                        .title(Text::from("Demo D: Live Chat System (Capstone)"))
-                        .content(
-                            maud::html! {
-                                p {
-                                "Enterprise chat flow with persistence, moderation, and SSE fanout."
-                                } ul { li {
-                                "Messages are stored in Postgres and reloaded on entry." }
-                                li {
-                                "Rate limiting + moderation queue are enforced in the app layer."
-                                } li { "SSE broadcasts updates to all connected visitors." }
-                                }
-                            },
-                        )
-                        .build()
-                        .render()
-                })
+                section id="live-chat-demo" {
+                    ({
+                        DemoSection::builder()
+                            .title(Text::from("Demo D: Live Chat System (Capstone)"))
+                            .content(
+                                maud::html! {
+                                    p {
+                                    "Enterprise chat flow with persistence, moderation, and SSE fanout."
+                                    } ul { li {
+                                    "Messages are stored in Postgres and reloaded on entry." }
+                                    li {
+                                    "Rate limiting + moderation queue are enforced in the app layer."
+                                    } li { "SSE broadcasts updates to all connected visitors." }
+                                    }
+                                },
+                            )
+                            .build()
+                            .render()
+                    })
+                }
 
                 @if let Some(chat_demo) = &self.chat_demo { (chat_demo.render()) } @else {
                     section id=(ChatDemoSection::ANCHOR_ID) class="chat-panel" {
