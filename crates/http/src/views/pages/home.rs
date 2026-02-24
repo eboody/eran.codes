@@ -4,9 +4,8 @@ use crate::paths::Route;
 use crate::types::Text;
 use crate::views::page::UserNav;
 use crate::views::partials::{
-    CapabilityShowcase, ChatDemoSection, DemoResultPlaceholder,
-    DiagramPanel, DiagramRow, DiagramStatus, FeatureAccent, FeatureCard,
-    FeatureGallery, HomeHero, ProfessionalismInPracticeTabs, SectionHeader,
+    CapabilityShowcase, ChatDemoSection, DemoResultPlaceholder, HomeHero,
+    ProfessionalismInPracticeTabs, SectionHeader,
 };
 
 #[derive(Builder)]
@@ -21,338 +20,36 @@ impl maud::Render for Home {
             main class="container" {
                 (HomeHero::builder().maybe_user(self.user.clone()).build().render())
 
-                (CapabilityShowcase::builder().build().render())
-
-                section class="portfolio-principles" {
+                section class="proof-first" {
                     ({
                         SectionHeader::builder()
-                            .title(Text::from("How I Think About Systems"))
+                            .title(Text::from("Live Proof, Not Slideware"))
                             .subtitle(
                                 Text::from(
-                                    "This portfolio emphasizes engineering judgment: correctness, clarity, and maintainability over surface area.",
+                                    "This site is both my portfolio and a working app platform. The sections below are wired to real runtime behavior, not static mockups.",
                                 ),
                             )
                             .build()
                             .render()
                     })
-                    div class="principles-grid" {
-                        article class="principle-card" {
-                            h3 { "Correctness first" }
-                            p class="muted" {
-                                "Invariants live in domain types, policy lives in app services, and infra owns SQL + hashing."
-                            }
-                            ul {
-                                li { "Typed boundaries and newtypes for critical data" }
-                                li { "Explicit error mapping across layers" }
-                            }
+                    div class="impact-metrics" {
+                        article class="metric-card" {
+                            p class="metric-value" { "4 Layers" }
+                            p class="metric-label" { "domain -> app -> infra -> http" }
                         }
-                        article class="principle-card" {
-                            h3 { "Readable by design" }
-                            p class="muted" {
-                                "Builder pipelines and componentized Maud views keep call sites self-documenting."
-                            }
-                            ul {
-                                li { "Bon builders with descriptive steps" }
-                                li { "Reusable UI components (Render + enums)" }
-                            }
+                        article class="metric-card" {
+                            p class="metric-value" { "1 SSE Stream" }
+                            p class="metric-label" { "Per visitor session, fanout across tabs" }
                         }
-                        article class="principle-card" {
-                            h3 { "Maintainable over time" }
-                            p class="muted" {
-                                "Tracing, linting, and module READMEs turn architectural decisions into guardrails."
-                            }
-                            ul {
-                                li { "Live + diagnostic trace logs" }
-                                li { "CI checks for stringy logic + render coverage" }
-                            }
+                        article class="metric-card" {
+                            p class="metric-value" { "Typed Contracts" }
+                            p class="metric-label" { "DTO -> command -> domain -> SQL row" }
+                        }
+                        article class="metric-card" {
+                            p class="metric-value" { "Guardrails On" }
+                            p class="metric-label" { "CI checks + centralized error mapping" }
                         }
                     }
-                }
-
-                section class="portfolio-audit" {
-                    ({
-                        SectionHeader::builder()
-                            .title(
-                                Text::from(
-                                    "Architecture Audit (What This Site Demonstrates)",
-                                ),
-                            )
-                            .subtitle(
-                                Text::from(
-                                    "A concise, end-to-end review of storage, representations, interactions, and idiomaticity across the workspace.",
-                                ),
-                            )
-                            .build()
-                            .render()
-                    })
-                    div class="audit-grid" {
-                        article class="audit-card" {
-                            h3 { "Storage layers" }
-                            p class="muted" {
-                                "Durable state in Postgres, transient state in SSE + in-memory logs, UI derived via Maud."
-                            }
-                            ul {
-                                li {
-                                    "DB: users, credentials, chat rooms/messages, sessions, audit"
-                                }
-                                li { "In-memory: per-request + per-session trace buffers" }
-                                li { "UI: Maud components render typed values" }
-                            }
-                        }
-                        article class="audit-card" {
-                            h3 { "Representations in code" }
-                            p class="muted" {
-                                "Each layer owns its types to enforce invariants and boundaries."
-                            }
-                            ul {
-                                li { "Domain: newtypes + invariants, no serde/HTTP/DB" }
-                                li { "App: commands + traits for orchestration" }
-                                li { "Infra: SQL rows + concrete hashing" }
-                                li { "HTTP: DTOs + Renderable components" }
-                            }
-                        }
-                        article class="audit-card" {
-                            h3 { "Interactions" }
-                            p class="muted" { "Request flow is explicit, traceable, and layered." }
-                            ul {
-                                li { "HTTP parses -> App orchestrates -> Infra persists" }
-                                li { "SSE fanout for chat messages" }
-                                li { "Live vs diagnostic trace logs" }
-                            }
-                        }
-                        article class="audit-card" {
-                            h3 { "Idiomaticity & guardrails" }
-                            p class="muted" {
-                                "The codebase encodes standards as lint, builders, and docs."
-                            }
-                            ul {
-                                li { "Bon builders keep wiring readable" }
-                                li { "Render components + enums (no stringly logic)" }
-                                li { "CI checks: stringy logic, String fields, Render coverage" }
-                                li { "Module READMEs for architecture mapping" }
-                            }
-                        }
-                    }
-                }
-
-                (ProfessionalismInPracticeTabs::builder().build().render())
-
-                ({
-                    FeatureGallery::builder()
-                        .title(
-                            Text::from(
-                                "Feature Gallery: Real-Time Delivery, Grounded in Systems",
-                            ),
-                        )
-                        .subtitle(
-                            Text::from(
-                                "A quick visual scan of the core capabilities, followed by live diagrams that explain how requests and events flow through the stack.",
-                            ),
-                        )
-                        .features(
-                            vec![
-                                FeatureCard::builder()
-                                    .title(Text::from("Realtime chat fanout"))
-                                    .description(
-                                        Text::from(
-                                            "SSE push with durable message storage and moderation gates.",
-                                        ),
-                                    )
-                                    .bullets(
-                                        vec![
-                                            Text::from("Postgres-backed message history"),
-                                            Text::from("Per-room moderation queues"),
-                                            Text::from("Single SSE stream per session"),
-                                        ],
-                                    )
-                                    .accent(FeatureAccent::Indigo)
-                                    .badge(Text::from("Live"))
-                                    .build(),
-                                FeatureCard::builder()
-                                    .title(Text::from("Session durability"))
-                                    .description(
-                                        Text::from(
-                                            "Signed cookies + DB sessions keep identities consistent.",
-                                        ),
-                                    )
-                                    .bullets(
-                                        vec![
-                                            Text::from("Encrypted session cookies"),
-                                            Text::from("User id attached to tracing"),
-                                            Text::from("Session store persistence"),
-                                        ],
-                                    )
-                                    .accent(FeatureAccent::Emerald)
-                                    .badge(Text::from("Auth"))
-                                    .build(),
-                                FeatureCard::builder()
-                                    .title(Text::from("Boundary-safe flows"))
-                                    .description(
-                                        Text::from(
-                                            "Typed DTOs, commands, and domain invariants protect policy.",
-                                        ),
-                                    )
-                                    .bullets(
-                                        vec![
-                                            Text::from("Domain invariants via newtypes"),
-                                            Text::from("App commands orchestrate policy"),
-                                            Text::from("Infra owns SQL & hashing"),
-                                        ],
-                                    )
-                                    .accent(FeatureAccent::Amber)
-                                    .badge(Text::from("Architecture"))
-                                    .build(),
-                                FeatureCard::builder()
-                                    .title(Text::from("Observability woven in"))
-                                    .description(
-                                        Text::from(
-                                            "Spans, trace logs, and live network views in one place.",
-                                        ),
-                                    )
-                                    .bullets(
-                                        vec![
-                                            Text::from("Structured request spans"),
-                                            Text::from("SSE event visibility"),
-                                            Text::from("Request grouping by trigger"),
-                                        ],
-                                    )
-                                    .accent(FeatureAccent::Rose)
-                                    .badge(Text::from("Tracing"))
-                                    .build(),
-                            ],
-                        )
-                        .diagrams(
-                            vec![
-                                DiagramPanel::builder()
-                                    .title(Text::from("Realtime request flow"))
-                                    .description(
-                                        Text::from("What happens when a user sends a message."),
-                                    )
-                                    .rows(
-                                        vec![
-                                            DiagramRow::builder()
-                                                .label(Text::from("POST /demo/chat/messages"))
-                                                .value(Text::from("Accepted · 202"))
-                                                .status(DiagramStatus::Active)
-                                                .build(),
-                                            DiagramRow::builder()
-                                                .label(Text::from("App: rate limit + moderation"))
-                                                .value(Text::from("ok · queue=clean"))
-                                                .status(DiagramStatus::Info)
-                                                .build(),
-                                            DiagramRow::builder()
-                                                .label(Text::from("DB write"))
-                                                .value(Text::from("chat_messages"))
-                                                .status(DiagramStatus::Active)
-                                                .build(),
-                                            DiagramRow::builder()
-                                                .label(Text::from("Rate limit window"))
-                                                .value(Text::from("near cap"))
-                                                .status(DiagramStatus::Warning)
-                                                .build(),
-                                            DiagramRow::builder()
-                                                .label(Text::from("SSE broadcast"))
-                                                .value(Text::from("append .chat-messages"))
-                                                .status(DiagramStatus::Active)
-                                                .build(),
-                                        ],
-                                    )
-                                    .build(),
-                                DiagramPanel::builder()
-                                    .title(Text::from("Identity + session durability"))
-                                    .description(
-                                        Text::from(
-                                            "Signed cookies keep a single SSE stream per visitor.",
-                                        ),
-                                    )
-                                    .rows(
-                                        vec![
-                                            DiagramRow::builder()
-                                                .label(Text::from("session_id cookie"))
-                                                .value(Text::from("signed · http-only"))
-                                                .status(DiagramStatus::Active)
-                                                .build(),
-                                            DiagramRow::builder()
-                                                .label(Text::from("session store"))
-                                                .value(Text::from("postgres"))
-                                                .status(DiagramStatus::Info)
-                                                .build(),
-                                            DiagramRow::builder()
-                                                .label(Text::from("sse stream"))
-                                                .value(Text::from("one per visitor"))
-                                                .status(DiagramStatus::Passive)
-                                                .build(),
-                                        ],
-                                    )
-                                    .build(),
-                                DiagramPanel::builder()
-                                    .title(Text::from("Boundary handoff"))
-                                    .description(
-                                        Text::from("Each layer owns its responsibilities."),
-                                    )
-                                    .rows(
-                                        vec![
-                                            DiagramRow::builder()
-                                                .label(Text::from("HTTP DTO"))
-                                                .value(Text::from("request parsing"))
-                                                .status(DiagramStatus::Info)
-                                                .build(),
-                                            DiagramRow::builder()
-                                                .label(Text::from("App command"))
-                                                .value(Text::from("policy + orchestration"))
-                                                .status(DiagramStatus::Active)
-                                                .build(),
-                                            DiagramRow::builder()
-                                                .label(Text::from("Domain types"))
-                                                .value(Text::from("invariants"))
-                                                .status(DiagramStatus::Active)
-                                                .build(),
-                                            DiagramRow::builder()
-                                                .label(Text::from("Infra repo"))
-                                                .value(Text::from("SQL + hashing"))
-                                                .status(DiagramStatus::Passive)
-                                                .build(),
-                                        ],
-                                    )
-                                    .build(),
-                            ],
-                        )
-                        .build()
-                        .render()
-                })
-
-                section {
-                    h2 { "Live backend log (SSE)" }
-                    p class="muted" {
-                        "Actions above stream real request, trace, and DB events into this log via SSE."
-                    }
-                    ({
-                        DemoResultPlaceholder::builder()
-                            .target_id(Text::from("live-log-target"))
-                            .message(
-                                Text::from(
-                                    "No events yet. Trigger a demo action to start streaming.",
-                                ),
-                            )
-                            .build()
-                            .render()
-                    })
-                }
-
-                section {
-                    h2 { "Live network log (SSE)" }
-                    p class="muted" { "Server-side request timings emulate a network tab view." }
-                    ({
-                        DemoResultPlaceholder::builder()
-                            .target_id(Text::from("network-log-target"))
-                            .message(
-                                Text::from(
-                                    "No requests yet. Trigger a demo action to populate this table.",
-                                ),
-                            )
-                            .build()
-                            .render()
-                    })
                 }
 
                 @if let Some(chat_demo) = &self.chat_demo { (chat_demo.render()) } @else {
@@ -376,6 +73,100 @@ impl maud::Render for Home {
                         })
                     }
                 }
+
+                section class="operations-surface" {
+                    ({
+                        SectionHeader::builder()
+                            .title(Text::from("Operational View"))
+                            .subtitle(
+                                Text::from(
+                                    "Run the chat demo and watch request, DB, and SSE behavior stream in real time.",
+                                ),
+                            )
+                            .build()
+                            .render()
+                    })
+                    div class="operations-grid" {
+                        ({
+                            DemoResultPlaceholder::builder()
+                                .target_id(Text::from("live-log-target"))
+                                .message(
+                                    Text::from(
+                                        "No backend events yet. Trigger a demo action to start streaming.",
+                                    ),
+                                )
+                                .build()
+                                .render()
+                        })
+                        ({
+                            DemoResultPlaceholder::builder()
+                                .target_id(Text::from("network-log-target"))
+                                .message(
+                                    Text::from(
+                                        "No network events yet. Trigger a demo action to populate this table.",
+                                    ),
+                                )
+                                .build()
+                                .render()
+                        })
+                    }
+                }
+
+                section class="selected-work" {
+                    ({
+                        SectionHeader::builder()
+                            .title(Text::from("Selected Work"))
+                            .subtitle(
+                                Text::from(
+                                    "Three high-signal slices from this project, each tied to working routes and code.",
+                                ),
+                            )
+                            .build()
+                            .render()
+                    })
+                    div class="selected-work-grid" {
+                        article class="selected-work-card" {
+                            p class="selected-work-kicker" { "Capstone" }
+                            h3 { "Live chat platform" }
+                            p class="muted" {
+                                "End-to-end message path with persistence, moderation, rate limiting, and SSE fanout."
+                            }
+                            ul {
+                                li { "Routes: /demo/chat/messages, /chat/moderation" }
+                                li { "Outcome: real-time multi-client updates from a persisted source of truth" }
+                            }
+                            a class="button secondary" href="#chat-demo" { "Open live demo" }
+                        }
+                        article class="selected-work-card" {
+                            p class="selected-work-kicker" { "Security" }
+                            h3 { "Auth + session durability" }
+                            p class="muted" {
+                                "axum-login and tower-sessions on top of Postgres-backed storage with encrypted cookies."
+                            }
+                            ul {
+                                li { "Routes: /register, /login, /protected" }
+                                li { "Outcome: stable identity context across request and SSE flows" }
+                            }
+                            a class="button secondary" href=(Route::Register) { "Walk auth flow" }
+                        }
+                        article class="selected-work-card" {
+                            p class="selected-work-kicker" { "Observability" }
+                            h3 { "Live + diagnostic traces" }
+                            p class="muted" {
+                                "Typed log targets/messages separate operational signal from deep diagnostics."
+                            }
+                            ul {
+                                li { "Live panels: backend stream + network table + chat flow" }
+                                li { "Outcome: failures are easier to localize without noisy dashboards" }
+                            }
+                            a class="button secondary" href="#portfolio-showcase" { "View system maps" }
+                        }
+                    }
+                }
+
+                (CapabilityShowcase::builder().build().render())
+
+                (ProfessionalismInPracticeTabs::builder().build().render())
             }
         };
 

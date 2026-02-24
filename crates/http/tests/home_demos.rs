@@ -253,14 +253,14 @@ async fn home_page_includes_demo_sections() {
 
 #[derive(Clone, Copy, Debug)]
 enum HomeCopy {
-    ThinkingSystems,
-    AuditSection,
+    LiveProof,
+    OperationalView,
+    SelectedWork,
     ProfessionalismSection,
-    FeatureGallery,
+    CapabilityShowcase,
     ChatRoom,
     ChatAnchor,
     ReadOnlyPreview,
-    LiveBackendLog,
     TablistRole,
     TabRole,
     TabpanelRole,
@@ -276,14 +276,14 @@ enum HomeCopy {
 impl HomeCopy {
     fn all() -> &'static [HomeCopy] {
         &[
-            HomeCopy::ThinkingSystems,
-            HomeCopy::AuditSection,
+            HomeCopy::LiveProof,
+            HomeCopy::OperationalView,
+            HomeCopy::SelectedWork,
             HomeCopy::ProfessionalismSection,
-            HomeCopy::FeatureGallery,
+            HomeCopy::CapabilityShowcase,
             HomeCopy::ChatRoom,
             HomeCopy::ChatAnchor,
             HomeCopy::ReadOnlyPreview,
-            HomeCopy::LiveBackendLog,
             HomeCopy::TablistRole,
             HomeCopy::TabRole,
             HomeCopy::TabpanelRole,
@@ -299,18 +299,16 @@ impl HomeCopy {
 
     fn as_str(self) -> &'static str {
         match self {
-            HomeCopy::ThinkingSystems => "How I Think About Systems",
-            HomeCopy::AuditSection => "Architecture Audit (What This Site Demonstrates)",
+            HomeCopy::LiveProof => "Live Proof, Not Slideware",
+            HomeCopy::OperationalView => "Operational View",
+            HomeCopy::SelectedWork => "Selected Work",
             HomeCopy::ProfessionalismSection => {
                 "Professionalism In Practice (Detailed Breakdown)"
             }
-            HomeCopy::FeatureGallery => {
-                "Feature Gallery: Real-Time Delivery, Grounded in Systems"
-            }
+            HomeCopy::CapabilityShowcase => "Capability Showcase",
             HomeCopy::ChatRoom => "Live chat room",
             HomeCopy::ChatAnchor => "id=\"chat-demo\"",
             HomeCopy::ReadOnlyPreview => "Read-only preview.",
-            HomeCopy::LiveBackendLog => "Live backend log (SSE)",
             HomeCopy::TablistRole => "role=\"tablist\"",
             HomeCopy::TabRole => "role=\"tab\"",
             HomeCopy::TabpanelRole => "role=\"tabpanel\"",

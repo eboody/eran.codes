@@ -327,8 +327,8 @@ button.secondary,
   }
 
   .feature-card:hover,
-  .principle-card:hover,
-  .audit-card:hover,
+  .selected-work-card:hover,
+  .metric-card:hover,
   .diagram-panel:hover {
     transform: translateY(-2px);
     box-shadow: var(--portfolio-shadow);
@@ -337,10 +337,11 @@ button.secondary,
 
 @media (prefers-reduced-motion: no-preference) {
   .hero,
+  .proof-first,
+  .selected-work,
+  .operations-surface,
   .tabbed-showcase-section,
-  .portfolio-principles,
-  .portfolio-audit,
-  .feature-gallery,
+  #professionalism-practice,
   #chat-demo,
   #live-log-target,
   #network-log-target {
@@ -351,15 +352,15 @@ button.secondary,
     animation-delay: 70ms;
   }
 
-  .portfolio-principles {
+  .proof-first {
     animation-delay: 90ms;
   }
 
-  .portfolio-audit {
+  .selected-work {
     animation-delay: 120ms;
   }
 
-  .feature-gallery {
+  .operations-surface {
     animation-delay: 160ms;
   }
 }
@@ -407,80 +408,93 @@ button.secondary,
   margin-bottom: 0.5rem;
 }
 
-.feature-gallery {
+.proof-first,
+.operations-surface,
+.selected-work,
+.tabbed-showcase-section,
+#professionalism-practice {
   margin-top: 2.5rem;
 }
 
-.portfolio-principles {
-  margin-top: 2.5rem;
-}
-
-.portfolio-audit {
-  margin-top: 2.5rem;
-}
-
-.professionalism-breakdown {
-  margin-top: 2.5rem;
-}
-
-.principles-grid {
+.impact-metrics {
   display: grid;
-  gap: 1rem;
-  margin-top: 1.5rem;
+  gap: 0.9rem;
+  margin-top: 1rem;
 }
 
 @media (min-width: 900px) {
-  .principles-grid {
+  .impact-metrics {
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+  }
+}
+
+.metric-card {
+  border: 1px solid color-mix(in srgb, var(--pico-muted-color) 24%, transparent);
+  border-radius: 14px;
+  padding: 0.85rem 0.95rem;
+  background: color-mix(in srgb, var(--pico-card-background-color) 92%, transparent);
+}
+
+.metric-value {
+  margin: 0;
+  font-size: 1.05rem;
+  font-weight: 700;
+  letter-spacing: -0.015em;
+}
+
+.metric-label {
+  margin: 0.2rem 0 0;
+  font-size: 0.82rem;
+  color: var(--pico-muted-color);
+}
+
+.operations-grid {
+  display: grid;
+  gap: 1rem;
+}
+
+@media (min-width: 980px) {
+  .operations-grid {
+    grid-template-columns: 1fr 1fr;
+  }
+}
+
+.selected-work-grid {
+  display: grid;
+  gap: 1rem;
+}
+
+@media (min-width: 980px) {
+  .selected-work-grid {
     grid-template-columns: repeat(3, minmax(0, 1fr));
   }
 }
 
-.principle-card {
-  border: 1px solid var(--portfolio-card-border);
-  border-radius: 18px;
-  padding: 1.25rem;
-  background: var(--portfolio-card-bg);
+.selected-work-card {
+  border: 1px solid color-mix(in srgb, var(--pico-muted-color) 24%, transparent);
+  border-radius: 16px;
+  padding: 1rem;
+  background: color-mix(in srgb, var(--pico-card-background-color) 90%, transparent);
 }
 
-.principle-card h3 {
-  margin-bottom: 0.4rem;
+.selected-work-card h3 {
+  margin-bottom: 0.35rem;
 }
 
-.principle-card ul {
-  margin: 0.8rem 0 0;
-  padding-left: 1.1rem;
+.selected-work-kicker {
+  margin: 0 0 0.25rem;
+  font-size: 0.72rem;
+  font-weight: 700;
+  letter-spacing: 0.07em;
+  text-transform: uppercase;
   color: var(--pico-muted-color);
-  font-size: 0.88rem;
 }
 
-.audit-grid {
-  display: grid;
-  gap: 1rem;
-  margin-top: 1.5rem;
-}
-
-@media (min-width: 900px) {
-  .audit-grid {
-    grid-template-columns: repeat(2, minmax(0, 1fr));
-  }
-}
-
-.audit-card {
-  border: 1px solid var(--portfolio-card-border);
-  border-radius: 18px;
-  padding: 1.25rem;
-  background: var(--portfolio-card-bg);
-}
-
-.audit-card h3 {
-  margin-bottom: 0.4rem;
-}
-
-.audit-card ul {
-  margin: 0.8rem 0 0;
-  padding-left: 1.1rem;
+.selected-work-card ul {
+  margin: 0.75rem 0 0.9rem;
+  padding-left: 1rem;
+  font-size: 0.84rem;
   color: var(--pico-muted-color);
-  font-size: 0.88rem;
 }
 
 .professionalism-path {
@@ -943,6 +957,22 @@ button.secondary,
     border-radius: 20px;
     margin-top: 1rem;
     margin-bottom: 1.3rem;
+  }
+
+  .proof-first,
+  .operations-surface,
+  .selected-work,
+  .tabbed-showcase-section,
+  #professionalism-practice {
+    margin-top: 1.8rem;
+  }
+
+  .metric-card {
+    padding: 0.8rem 0.85rem;
+  }
+
+  .metric-value {
+    font-size: 0.98rem;
   }
 
   .chat-columns {
