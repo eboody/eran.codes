@@ -23,6 +23,25 @@
   margin-top: 1rem;
 }
 
+.hero-conversion-links {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.7rem;
+  margin-top: 0.8rem;
+}
+
+.hero-conversion-links a {
+  font-size: 0.86rem;
+  text-decoration: none;
+  color: var(--pico-muted-color);
+  border-bottom: 1px solid color-mix(in srgb, var(--pico-muted-color) 35%, transparent);
+}
+
+.hero-conversion-links a:hover {
+  color: var(--pico-color);
+  border-bottom-color: var(--pico-primary);
+}
+
 .hero-card {
   background: var(--pico-card-background-color);
   padding: 1.5rem;
@@ -169,6 +188,22 @@
 .section-meta {
   margin-top: -0.5rem;
   margin-bottom: 0.5rem;
+}
+
+.portfolio-nav-links {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.25rem;
+}
+
+.portfolio-nav-links a {
+  font-size: 0.82rem;
+  color: var(--pico-muted-color);
+}
+
+.portfolio-nav-links a:hover {
+  color: var(--pico-color);
 }
 
 button,

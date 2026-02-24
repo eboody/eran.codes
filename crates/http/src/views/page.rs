@@ -3,6 +3,12 @@ use maud::{Markup, Render};
 use crate::paths::Route;
 use crate::types::Text;
 
+pub(crate) const PORTFOLIO_RESUME_URL: &str = "/static/resume.txt";
+pub(crate) const PORTFOLIO_GITHUB_URL: &str = "https://github.com/eboody/eran.codes";
+pub(crate) const PORTFOLIO_LINKEDIN_URL: &str =
+    "https://www.linkedin.com/search/results/all/?keywords=Eran%20Boodnero";
+pub(crate) const PORTFOLIO_CONTACT_URL: &str = "mailto:eboodnero@gmail.com";
+
 #[derive(Clone, Debug, Builder)]
 pub struct UserNav {
     pub username: Text,
@@ -28,6 +34,32 @@ impl Render for Layout<'_> {
                     ul {
                         li {
                             a href=(Route::Home) { "eran.codes" }
+                        }
+                    }
+                    ul class="portfolio-nav-links" {
+                        li {
+                            a href=(PORTFOLIO_RESUME_URL) { "Resume" }
+                        }
+                        li {
+                            a
+                                href=(PORTFOLIO_GITHUB_URL)
+                                target="_blank"
+                                rel="noopener noreferrer"
+                            {
+                                "GitHub"
+                            }
+                        }
+                        li {
+                            a
+                                href=(PORTFOLIO_LINKEDIN_URL)
+                                target="_blank"
+                                rel="noopener noreferrer"
+                            {
+                                "LinkedIn"
+                            }
+                        }
+                        li {
+                            a href=(PORTFOLIO_CONTACT_URL) { "Contact" }
                         }
                     }
                     @match &self.user {

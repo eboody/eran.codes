@@ -1,0 +1,26 @@
+Eran Boodnero
+Rust Engineer | Systems Architecture | Real-Time Web Apps
+
+Summary
+- Builds production-grade Rust services with clear domain/app/infra/http boundaries.
+- Focuses on correctness, operational clarity, and maintainable architecture.
+- Strong with Axum, SQLx/Postgres, SSE, tracing, and typed invariants.
+
+Current Portfolio Project
+- End-to-end app platform with:
+  - Auth sessions (axum-login + tower-sessions)
+  - Durable persistence (SQLx + Postgres)
+  - Realtime updates (SSE + Datastar)
+  - Typed boundaries and centralized error contracts
+  - Live/diagnostic observability surfaces
+
+Selected Skills
+- Rust, Axum, SQLx, Postgres
+- Domain modeling, trait-based boundaries, newtypes/enums
+- Secure auth/session design and password hashing strategy
+- Tracing architecture and production diagnostics
+
+Links
+- GitHub repo: https://github.com/eboody/eran.codes
+- Contact: mailto:eboodnero@gmail.com
+
