@@ -29,9 +29,9 @@ impl Render for Layout<'_> {
     fn render(&self) -> Markup {
         let sse_tab_id = crate::types::SseTabId::new(uuid::Uuid::new_v4().to_string());
         let body_content = maud::html! {
-            header class="container" {
-                nav {
-                    ul {
+            header class="container site-nav-wrap" {
+                nav class="site-nav" {
+                    ul class="site-brand-links" {
                         li {
                             a href=(Route::Home) { "eran.codes" }
                         }
@@ -64,7 +64,7 @@ impl Render for Layout<'_> {
                     }
                     @match &self.user {
                         Some(user) => {
-                            ul {
+                            ul class="site-auth-links" {
                                 li { span { "Signed in as " (&user.username) } }
                                 li { a href=(Route::Protected) { "Account" } }
                                 li {
@@ -75,7 +75,7 @@ impl Render for Layout<'_> {
                             }
                         }
                         None => {
-                            ul {
+                            ul class="site-auth-links" {
                                 li { a href=(Route::Login) { "Sign in" } }
                                 li { a href=(Route::Register) { "Create account" } }
                             }
@@ -95,6 +95,9 @@ impl Render for Layout<'_> {
                     title { (self.title) }
                     link rel="icon" type="image/png" sizes="1024x1024" href="/static/eran.codes.png";
                     link rel="apple-touch-icon" sizes="1024x1024" href="/static/eran.codes.png";
+                    link rel="preconnect" href="https://fonts.googleapis.com";
+                    link rel="preconnect" href="https://fonts.gstatic.com" crossorigin;
+                    link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600&display=swap";
                     link rel="stylesheet" href="/static/pico.min.css";
                     link rel="stylesheet" href="/static/app.css";
                     script type="module" {
@@ -108,13 +111,14 @@ document.addEventListener("DOMContentLoaded", async () => {
                 }
                 @if self.enable_sse {
                     body
+                        class="portfolio-shell"
                         data-signals=(format!("{{sseTabId: '{}'}}", sse_tab_id))
                         data-init=(format!("@get('{}')", Route::Events))
                     {
                         (body_content)
                     }
                 } @else {
-                    body {
+                    body class="portfolio-shell" {
                         (body_content)
                     }
                 }
