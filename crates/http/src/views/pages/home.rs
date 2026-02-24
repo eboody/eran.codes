@@ -403,6 +403,7 @@ impl maud::Render for Home {
         crate::views::page::Layout::builder()
             .title("Home")
             .content(content)
+            .enable_sse(true)
             .maybe_with_user(self.user.clone())
             .build()
             .render()

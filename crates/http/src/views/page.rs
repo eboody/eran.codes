@@ -15,11 +15,45 @@ pub struct Layout<'a> {
     pub content: Markup,
     #[builder(setters(name = with_user))]
     pub user: Option<UserNav>,
+    #[builder(default)]
+    pub enable_sse: bool,
 }
 
 impl Render for Layout<'_> {
     fn render(&self) -> Markup {
         let sse_tab_id = crate::types::SseTabId::new(uuid::Uuid::new_v4().to_string());
+        let body_content = maud::html! {
+            header class="container" {
+                nav {
+                    ul {
+                        li {
+                            a href=(Route::Home) { "eran.codes" }
+                        }
+                    }
+                    @match &self.user {
+                        Some(user) => {
+                            ul {
+                                li { span { "Signed in as " (&user.username) } }
+                                li { a href=(Route::Protected) { "Account" } }
+                                li {
+                                    form method="post" action=(Route::Logout) {
+                                        button type="submit" class="secondary" { "Sign out" }
+                                    }
+                                }
+                            }
+                        }
+                        None => {
+                            ul {
+                                li { a href=(Route::Login) { "Sign in" } }
+                                li { a href=(Route::Register) { "Create account" } }
+                            }
+                        }
+                    }
+                }
+            }
+            div id="error-target" {}
+            (self.content.clone())
+        };
         maud::html! {
             (maud::DOCTYPE)
             html {
@@ -40,40 +74,17 @@ document.addEventListener("DOMContentLoaded", async () => {
                     }
                     script src="/static/css-scope-inline.js" {}
                 }
-                body
-                    data-signals=(format!("{{sseTabId: '{}'}}", sse_tab_id))
-                    data-init=(format!("@get('{}')", Route::Events))
-                {
-                    header class="container" {
-                        nav {
-                            ul {
-                                li {
-                                    a href=(Route::Home) { "eran.codes" }
-                                }
-                            }
-                            @match &self.user {
-                                Some(user) => {
-                                    ul {
-                                        li { span { "Signed in as " (&user.username) } }
-                                        li { a href=(Route::Protected) { "Account" } }
-                                        li {
-                                            form method="post" action=(Route::Logout) {
-                                                button type="submit" class="secondary" { "Sign out" }
-                                            }
-                                        }
-                                    }
-                                }
-                                None => {
-                                    ul {
-                                        li { a href=(Route::Login) { "Sign in" } }
-                                        li { a href=(Route::Register) { "Create account" } }
-                                    }
-                                }
-                            }
-                        }
+                @if self.enable_sse {
+                    body
+                        data-signals=(format!("{{sseTabId: '{}'}}", sse_tab_id))
+                        data-init=(format!("@get('{}')", Route::Events))
+                    {
+                        (body_content)
                     }
-                    div id="error-target" {}
-                    (self.content.clone())
+                } @else {
+                    body {
+                        (body_content)
+                    }
                 }
             }
         }
