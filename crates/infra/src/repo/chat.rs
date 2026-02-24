@@ -499,13 +499,12 @@ impl app::chat::RateLimiter for SqlxChatRateLimiter {
                     count = CASE
                         WHEN chat_rate_limits.window_start < now() - ($3 || ' seconds')::interval
                             THEN 1
-                        WHEN chat_rate_limits.count < $4
-                            THEN chat_rate_limits.count + 1
                         ELSE chat_rate_limits.count
+                            + 1
                     END
                 RETURNING window_start, count
             )
-            SELECT (window_start >= now() - ($3 || ' seconds')::interval AND count <= $4) AS allowed
+            SELECT (count <= $4) AS allowed
             FROM updated
             "#,
         )

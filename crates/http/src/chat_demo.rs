@@ -32,7 +32,7 @@ async fn ensure_room(
 ) -> Result<domain::chat::Room, crate::error::Error> {
     let room_name = chat::RoomName::Lobby;
     if let Some(room) = state.chat.find_room_by_name(room_name).await? {
-        let _ = state
+        state
             .chat
             .join_room(
                 app::chat::JoinRoom::builder()
@@ -40,7 +40,7 @@ async fn ensure_room(
                     .user_id(user_id)
                     .build(),
             )
-            .await;
+            .await?;
         return Ok(room);
     }
 

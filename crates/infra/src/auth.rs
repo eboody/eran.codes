@@ -5,7 +5,7 @@ use argon2::{
 use async_trait::async_trait;
 use domain::user;
 use rand_core::OsRng;
-use sqlx::{PgPool, Row, postgres::PgRow};
+use sqlx::{PgPool, Row, postgres::PgRow, types::time};
 
 pub struct AuthRepository {
     pg: PgPool,
@@ -24,18 +24,33 @@ impl AuthRepository {
         app::auth::RepositoryErrorText::new(value)
     }
 
+    fn session_hash_from_credentials(
+        user_id: &uuid::Uuid,
+        updated_at: time::OffsetDateTime,
+    ) -> app::auth::SessionHash {
+        let version = updated_at.unix_timestamp_nanos();
+        app::auth::SessionHash::new(format!("auth-v1:{user_id}:{version}"))
+    }
+
     fn auth_record_from_row(row: PgRow) -> Result<AuthRecord> {
+        let user_id = row.get::<uuid::Uuid, _>("id");
         let username = user::Username::try_new(row.get::<String, _>("username"))
             .map_err(|error| Error::Repository(Self::map_repo_text(error.to_string())))?;
         let email = user::Email::try_new(row.get::<String, _>("email"))
             .map_err(|error| Error::Repository(Self::map_repo_text(error.to_string())))?;
         let password_hash = PasswordHash::new(row.get::<String, _>("password_hash"));
+        let credential_updated_at =
+            row.get::<time::OffsetDateTime, _>("credential_updated_at");
 
         Ok(AuthRecord::builder()
-            .id(user::Id::from_uuid(row.get::<uuid::Uuid, _>("id")))
+            .id(user::Id::from_uuid(user_id))
             .username(username)
             .email(email)
             .password_hash(password_hash)
+            .session_hash(Self::session_hash_from_credentials(
+                &user_id,
+                credential_updated_at,
+            ))
             .build())
     }
 }
@@ -47,11 +62,11 @@ impl Repository for AuthRepository {
         tracing::info!(
             target: "demo.db",
             message = "db query",
-            db_statement = "SELECT u.id, u.username, u.email, c.password_hash FROM users u JOIN credentials c ON c.user_id = u.id WHERE u.email = $1"
+            db_statement = "SELECT u.id, u.username, u.email, c.password_hash, c.updated_at FROM users u JOIN credentials c ON c.user_id = u.id WHERE u.email = $1"
         );
         let record = sqlx::query(
             r#"
-            SELECT u.id, u.username, u.email, c.password_hash
+            SELECT u.id, u.username, u.email, c.password_hash, c.updated_at AS credential_updated_at
             FROM users u
             JOIN credentials c ON c.user_id = u.id
             WHERE u.email = $1
@@ -75,11 +90,11 @@ impl Repository for AuthRepository {
         tracing::info!(
             target: "demo.db",
             message = "db query",
-            db_statement = "SELECT u.id, u.username, u.email, c.password_hash FROM users u JOIN credentials c ON c.user_id = u.id WHERE u.id = $1"
+            db_statement = "SELECT u.id, u.username, u.email, c.password_hash, c.updated_at FROM users u JOIN credentials c ON c.user_id = u.id WHERE u.id = $1"
         );
         let record = sqlx::query(
             r#"
-            SELECT u.id, u.username, u.email, c.password_hash
+            SELECT u.id, u.username, u.email, c.password_hash, c.updated_at AS credential_updated_at
             FROM users u
             JOIN credentials c ON c.user_id = u.id
             WHERE u.id = $1

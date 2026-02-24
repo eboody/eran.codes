@@ -63,10 +63,7 @@ impl TraceLogStore {
         session_id: Option<&SessionId>,
         entry: TraceEntry,
     ) {
-        let mut queue = self
-            .requests
-            .entry(request_id.clone())
-            .or_insert_with(VecDeque::new);
+        let mut queue = self.requests.entry(request_id.clone()).or_default();
         if queue.len() >= self.max_entries {
             queue.pop_front();
         }
@@ -75,10 +72,7 @@ impl TraceLogStore {
         let entry = queue.back().cloned().expect("entry");
 
         if let Some(session_id) = session_id {
-            let mut session_queue = self
-                .sessions
-                .entry(session_id.clone())
-                .or_insert_with(VecDeque::new);
+            let mut session_queue = self.sessions.entry(session_id.clone()).or_default();
             if session_queue.len() >= self.max_entries {
                 session_queue.pop_front();
             }
@@ -92,35 +86,32 @@ impl TraceLogStore {
             global.push_back(entry);
         }
 
-        if self.emit_sse {
-            if let Some(session_id) = session_id {
-                let entries = self.snapshot_session(session_id);
-                let live_log = views::partials::LiveLog::builder()
-                    .entries(&entries)
-                    .build()
-                    .render()
-                    .into_string();
-                let network_log = views::partials::NetworkLog::builder()
-                    .entries(&entries)
-                    .build()
-                    .render()
-                    .into_string();
-                let _ = self
-                    .sse
-                    .send_by_id(session_id, sse::Event::patch_elements(live_log));
-                let _ = self
-                    .sse
-                    .send_by_id(session_id, sse::Event::patch_elements(network_log));
-            }
+        if self.emit_sse
+            && let Some(session_id) = session_id
+        {
+            let entries = self.snapshot_session(session_id);
+            let live_log = views::partials::LiveLog::builder()
+                .entries(&entries)
+                .build()
+                .render()
+                .into_string();
+            let network_log = views::partials::NetworkLog::builder()
+                .entries(&entries)
+                .build()
+                .render()
+                .into_string();
+            let _ = self
+                .sse
+                .send_by_id(session_id, sse::Event::patch_elements(live_log));
+            let _ = self
+                .sse
+                .send_by_id(session_id, sse::Event::patch_elements(network_log));
         }
     }
 
     pub fn record_sse_event(&self, session_id: Option<&SessionId>, entry: TraceEntry) {
         if let Some(session_id) = session_id {
-            let mut session_queue = self
-                .sessions
-                .entry(session_id.clone())
-                .or_insert_with(VecDeque::new);
+            let mut session_queue = self.sessions.entry(session_id.clone()).or_default();
             if session_queue.len() >= self.max_entries {
                 session_queue.pop_front();
             }
@@ -134,26 +125,26 @@ impl TraceLogStore {
             global.push_back(entry);
         }
 
-        if self.emit_sse {
-            if let Some(session_id) = session_id {
-                let entries = self.snapshot_session(session_id);
-                let live_log = views::partials::LiveLog::builder()
-                    .entries(&entries)
-                    .build()
-                    .render()
-                    .into_string();
-                let network_log = views::partials::NetworkLog::builder()
-                    .entries(&entries)
-                    .build()
-                    .render()
-                    .into_string();
-                let _ = self
-                    .sse
-                    .send_by_id(session_id, sse::Event::patch_elements(live_log));
-                let _ = self
-                    .sse
-                    .send_by_id(session_id, sse::Event::patch_elements(network_log));
-            }
+        if self.emit_sse
+            && let Some(session_id) = session_id
+        {
+            let entries = self.snapshot_session(session_id);
+            let live_log = views::partials::LiveLog::builder()
+                .entries(&entries)
+                .build()
+                .render()
+                .into_string();
+            let network_log = views::partials::NetworkLog::builder()
+                .entries(&entries)
+                .build()
+                .render()
+                .into_string();
+            let _ = self
+                .sse
+                .send_by_id(session_id, sse::Event::patch_elements(live_log));
+            let _ = self
+                .sse
+                .send_by_id(session_id, sse::Event::patch_elements(network_log));
         }
     }
 
@@ -237,8 +228,8 @@ where
         let message = visitor
             .message
             .unwrap_or_else(|| LogMessageText::new(event.metadata().name()));
-        let target_kind = LogTargetKind::from_str(target);
-        let message_kind = LogMessageKind::from_str(&message.to_string());
+        let target_kind = LogTargetKind::parse(target);
+        let message_kind = LogMessageKind::parse(&message.to_string());
         if should_skip_event(&target_kind, &message_kind) {
             return;
         }
@@ -295,8 +286,8 @@ where
         let message = visitor
             .message
             .unwrap_or_else(|| LogMessageText::new(event.metadata().name()));
-        let target_kind = LogTargetKind::from_str(target);
-        let message_kind = LogMessageKind::from_str(&message.to_string());
+        let target_kind = LogTargetKind::parse(target);
+        let message_kind = LogMessageKind::parse(&message.to_string());
 
         let is_request_start = matches!(
             target_kind,
@@ -349,7 +340,7 @@ pub enum LogTargetKind {
 }
 
 impl LogTargetKind {
-    pub fn from_str(value: &str) -> Self {
+    pub fn parse(value: &str) -> Self {
         LogTargetKnown::from_str(value)
             .map(Self::Known)
             .unwrap_or_else(|_| Self::Other(LogTargetText::new(value)))
@@ -394,7 +385,7 @@ pub enum LogMessageKind {
 }
 
 impl LogMessageKind {
-    pub fn from_str(value: &str) -> Self {
+    pub fn parse(value: &str) -> Self {
         LogMessageKnown::from_str(value)
             .map(Self::Known)
             .unwrap_or_else(|_| Self::Other(LogMessageText::new(value)))

@@ -21,6 +21,12 @@ pub struct DemoState {
 
 impl DemoState {
     pub fn new() -> Self {
+        Self::default()
+    }
+}
+
+impl Default for DemoState {
+    fn default() -> Self {
         Self {
             surreal: SurrealState::new(),
         }
@@ -30,16 +36,22 @@ impl DemoState {
 #[derive(Clone)]
 pub struct SurrealState {
     pub guard: std::sync::Arc<
-        dashmap::DashMap<crate::types::SessionId, std::sync::Arc<tokio::sync::Mutex<()>>>,
+        dashmap::DashMap<crate::sse::StreamKey, std::sync::Arc<tokio::sync::Mutex<()>>>,
     >,
     pub cancel: std::sync::Arc<
-        dashmap::DashMap<crate::types::SessionId, tokio_util::sync::CancellationToken>,
+        dashmap::DashMap<crate::sse::StreamKey, tokio_util::sync::CancellationToken>,
     >,
     pub seq: std::sync::Arc<AtomicU64>,
 }
 
 impl SurrealState {
     pub fn new() -> Self {
+        Self::default()
+    }
+}
+
+impl Default for SurrealState {
+    fn default() -> Self {
         Self {
             guard: std::sync::Arc::new(dashmap::DashMap::new()),
             cancel: std::sync::Arc::new(dashmap::DashMap::new()),

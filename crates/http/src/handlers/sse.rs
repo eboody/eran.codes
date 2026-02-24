@@ -67,7 +67,7 @@ pub async fn surreal_message_guarded(
         &state.cookie_key,
         signals.sse_tab_id.clone(),
     );
-    let session_id = session.id();
+    let stream_key = session.stream_key().clone();
     let sequence = state
         .demo
         .surreal
@@ -80,7 +80,7 @@ pub async fn surreal_message_guarded(
         .demo
         .surreal
         .guard
-        .entry(session_id.clone())
+        .entry(stream_key)
         .or_insert_with(|| std::sync::Arc::new(tokio::sync::Mutex::new(())))
         .clone();
 
@@ -142,7 +142,7 @@ pub async fn surreal_message_cancel(
         &state.cookie_key,
         signals.sse_tab_id.clone(),
     );
-    let session_id = session.id();
+    let stream_key = session.stream_key().clone();
     let sequence = state
         .demo
         .surreal
@@ -152,12 +152,7 @@ pub async fn surreal_message_cancel(
     let original = surreal_original(signals);
 
     let token = tokio_util::sync::CancellationToken::new();
-    if let Some(previous) = state
-        .demo
-        .surreal
-        .cancel
-        .insert(session_id.clone(), token.clone())
-    {
+    if let Some(previous) = state.demo.surreal.cancel.insert(stream_key, token.clone()) {
         previous.cancel();
     }
 
@@ -205,8 +200,16 @@ pub async fn events(
         signals.sse_tab_id.clone(),
     );
     let session_id = session.id();
+    let stream_key = session.stream_key().clone();
     let (mut receiver, guard) = state.sse.subscribe(&session);
-    let trace_guard = TraceLogGuard::new(state.trace_log.clone(), session_id.clone());
+    let cleanup_guard = ConnectionCleanupGuard::new(
+        state.trace_log.clone(),
+        state.sse.clone(),
+        session_id.clone(),
+        stream_key,
+        state.demo.surreal.guard.clone(),
+        state.demo.surreal.cancel.clone(),
+    );
 
     tracing::info!(session_id = %session_id, "sse connected");
     let _ = state.sse.send(
@@ -217,8 +220,8 @@ pub async fn events(
     );
 
     let stream = stream! {
+        let _cleanup_guard = cleanup_guard;
         let _guard = guard;
-        let _trace_guard = trace_guard;
         loop {
             match receiver.recv().await {
                 Ok(event) => {
@@ -254,19 +257,151 @@ pub async fn events(
     )
 }
 
-struct TraceLogGuard {
-    store: crate::trace_log::TraceLogStore,
+struct ConnectionCleanupGuard {
+    trace_log: crate::trace_log::TraceLogStore,
+    sse: crate::sse::Registry,
     session_id: SessionId,
+    stream_key: crate::sse::StreamKey,
+    surreal_guard: std::sync::Arc<
+        dashmap::DashMap<crate::sse::StreamKey, std::sync::Arc<tokio::sync::Mutex<()>>>,
+    >,
+    surreal_cancel: std::sync::Arc<
+        dashmap::DashMap<crate::sse::StreamKey, tokio_util::sync::CancellationToken>,
+    >,
 }
 
-impl TraceLogGuard {
-    fn new(store: crate::trace_log::TraceLogStore, session_id: SessionId) -> Self {
-        Self { store, session_id }
+impl ConnectionCleanupGuard {
+    #[allow(clippy::too_many_arguments)]
+    fn new(
+        trace_log: crate::trace_log::TraceLogStore,
+        sse: crate::sse::Registry,
+        session_id: SessionId,
+        stream_key: crate::sse::StreamKey,
+        surreal_guard: std::sync::Arc<
+            dashmap::DashMap<crate::sse::StreamKey, std::sync::Arc<tokio::sync::Mutex<()>>>,
+        >,
+        surreal_cancel: std::sync::Arc<
+            dashmap::DashMap<crate::sse::StreamKey, tokio_util::sync::CancellationToken>,
+        >,
+    ) -> Self {
+        Self {
+            trace_log,
+            sse,
+            session_id,
+            stream_key,
+            surreal_guard,
+            surreal_cancel,
+        }
     }
 }
 
-impl Drop for TraceLogGuard {
+impl Drop for ConnectionCleanupGuard {
     fn drop(&mut self) {
-        self.store.clear_session(&self.session_id);
+        if let Some((_, token)) = self.surreal_cancel.remove(&self.stream_key) {
+            token.cancel();
+        }
+        self.surreal_guard.remove(&self.stream_key);
+
+        if !self.sse.has_streams_for_session(&self.session_id) {
+            self.trace_log.clear_session(&self.session_id);
+        }
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use crate::trace_log::TraceEntry;
+    use crate::types::{
+        LogLevelText, LogMessageText, LogTargetText, RequestId, TimestampText,
+    };
+    use dashmap::DashMap;
+
+    fn trace_entry(message: &str) -> TraceEntry {
+        TraceEntry::builder()
+            .timestamp(TimestampText::new("2026-02-24 00:00:00"))
+            .level(LogLevelText::new("INFO"))
+            .target(LogTargetText::new("demo.request"))
+            .message(LogMessageText::new(message))
+            .fields(Vec::new())
+            .build()
+    }
+
+    #[test]
+    fn cleanup_keeps_trace_entries_until_last_tab_disconnects() {
+        let registry = crate::sse::Registry::new();
+        let trace_log = crate::trace_log::TraceLogStore::builder()
+            .with_sse(registry.clone())
+            .with_emit_sse(false)
+            .build();
+        let session_id = SessionId::new("session-1");
+        let tab_a =
+            crate::sse::Handle::with_tab(session_id.clone(), Some(SseTabId::new("tab-a")));
+        let tab_b =
+            crate::sse::Handle::with_tab(session_id.clone(), Some(SseTabId::new("tab-b")));
+        let (_rx_a, guard_a) = registry.subscribe(&tab_a);
+        let (_rx_b, guard_b) = registry.subscribe(&tab_b);
+
+        let surreal_guard = std::sync::Arc::new(DashMap::<
+            crate::sse::StreamKey,
+            std::sync::Arc<tokio::sync::Mutex<()>>,
+        >::new());
+        let surreal_cancel = std::sync::Arc::new(DashMap::<
+            crate::sse::StreamKey,
+            tokio_util::sync::CancellationToken,
+        >::new());
+        surreal_guard.insert(
+            tab_a.stream_key().clone(),
+            std::sync::Arc::new(tokio::sync::Mutex::new(())),
+        );
+        surreal_guard.insert(
+            tab_b.stream_key().clone(),
+            std::sync::Arc::new(tokio::sync::Mutex::new(())),
+        );
+        surreal_cancel.insert(
+            tab_a.stream_key().clone(),
+            tokio_util::sync::CancellationToken::new(),
+        );
+        surreal_cancel.insert(
+            tab_b.stream_key().clone(),
+            tokio_util::sync::CancellationToken::new(),
+        );
+
+        let cleanup_a = ConnectionCleanupGuard::new(
+            trace_log.clone(),
+            registry.clone(),
+            session_id.clone(),
+            tab_a.stream_key().clone(),
+            surreal_guard.clone(),
+            surreal_cancel.clone(),
+        );
+        let cleanup_b = ConnectionCleanupGuard::new(
+            trace_log.clone(),
+            registry.clone(),
+            session_id.clone(),
+            tab_b.stream_key().clone(),
+            surreal_guard.clone(),
+            surreal_cancel.clone(),
+        );
+
+        trace_log.record_with_session(
+            &RequestId::new("req-1"),
+            Some(&session_id),
+            trace_entry("request.end"),
+        );
+        assert!(!trace_log.snapshot_session(&session_id).is_empty());
+
+        drop(guard_a);
+        drop(cleanup_a);
+        assert!(!trace_log.snapshot_session(&session_id).is_empty());
+        assert!(surreal_guard.get(tab_a.stream_key()).is_none());
+        assert!(surreal_cancel.get(tab_a.stream_key()).is_none());
+        assert!(surreal_guard.get(tab_b.stream_key()).is_some());
+
+        drop(guard_b);
+        drop(cleanup_b);
+        assert!(trace_log.snapshot_session(&session_id).is_empty());
+        assert!(surreal_guard.get(tab_b.stream_key()).is_none());
+        assert!(surreal_cancel.get(tab_b.stream_key()).is_none());
     }
 }

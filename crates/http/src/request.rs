@@ -71,7 +71,7 @@ pub fn set_user_id(user_id: impl Into<UserIdText>) {
     if let Ok(()) = REQUEST_CONTEXT.try_with(|context| {
         context.borrow_mut().user_id = Some(user_id.clone());
     }) {
-        Span::current().record("user_id", &user_id.to_string().as_str());
+        Span::current().record("user_id", user_id.to_string().as_str());
     }
 }
 
@@ -124,7 +124,7 @@ fn client_ip_from_headers(headers: &HeaderMap) -> Option<ClientIp> {
     })
 }
 
-fn header_value<'a>(headers: &'a HeaderMap, name: header::HeaderName) -> Option<&'a str> {
+fn header_value(headers: &HeaderMap, name: header::HeaderName) -> Option<&str> {
     headers.get(name).and_then(|value| value.to_str().ok())
 }
 

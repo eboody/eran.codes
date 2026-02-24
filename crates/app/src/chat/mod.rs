@@ -9,7 +9,7 @@ use nutype::nutype;
 use strum_macros::{Display, EnumString};
 
 use domain::chat;
-pub use error::{Error, InvalidIdText, RepoErrorText, Result};
+pub use error::{Error, InvalidIdText, InvalidInputText, RepoErrorText, Result};
 
 #[derive(Clone, Debug, Builder)]
 pub struct PostMessage {
@@ -238,6 +238,7 @@ impl Service {
         }
     }
 
+    #[tracing::instrument(skip(self))]
     pub async fn create_room(&self, command: CreateRoom) -> Result<chat::Room> {
         let room = chat::Room {
             id: self.ids.new_room_id(),
@@ -264,6 +265,7 @@ impl Service {
         Ok(room)
     }
 
+    #[tracing::instrument(skip(self))]
     pub async fn join_room(&self, command: JoinRoom) -> Result<()> {
         let Some(_) = self.repo.find_room(&command.room_id).await? else {
             return Err(Error::RoomNotFound);
@@ -284,6 +286,7 @@ impl Service {
         Ok(())
     }
 
+    #[tracing::instrument(skip(self))]
     pub async fn list_messages(&self, command: ListMessages) -> Result<Vec<chat::Message>> {
         let Some(_) = self.repo.find_room(&command.room_id).await? else {
             return Err(Error::RoomNotFound);
@@ -302,10 +305,12 @@ impl Service {
             .await
     }
 
+    #[tracing::instrument(skip(self))]
     pub async fn list_moderation_queue(&self, limit: usize) -> Result<Vec<ModerationItem>> {
         self.moderation.list_pending(limit).await
     }
 
+    #[tracing::instrument(skip(self))]
     pub async fn find_room_by_name(
         &self,
         name: chat::RoomName,
@@ -313,6 +318,7 @@ impl Service {
         self.repo.find_room_by_name(&name).await
     }
 
+    #[tracing::instrument(skip(self))]
     pub async fn post_message(&self, command: PostMessage) -> Result<chat::Message> {
         let Some(_) = self.repo.find_room(&command.room_id).await? else {
             return Err(Error::RoomNotFound);
@@ -376,6 +382,7 @@ impl Service {
         Ok(message)
     }
 
+    #[tracing::instrument(skip(self))]
     pub async fn moderate_message(&self, command: ModerateMessage) -> Result<()> {
         let Some(message) = self.repo.find_message(&command.message_id).await? else {
             return Err(Error::MessageNotFound);
@@ -417,22 +424,15 @@ impl Service {
                         AuditValue::new(format!(
                             "{:?}",
                             command.decision
-                        ))
-                        ,
+                        )),
                     ),
                     (
                         AuditKey::Reason,
                         command
                             .reason
                             .clone()
-                            .map(|reason| {
-                                AuditValue::new(reason.to_string())
-                                    
-                            })
-                            .unwrap_or_else(|| {
-                                AuditValue::new("")
-                                    
-                            }),
+                            .map(|reason| AuditValue::new(reason.to_string()))
+                            .unwrap_or_else(|| AuditValue::new("")),
                     ),
                 ],
             ))

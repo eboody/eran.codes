@@ -8,7 +8,7 @@ pub struct SystemClock;
 
 impl SystemClock {
     pub fn new() -> Self {
-        Self::default()
+        Self
     }
 }
 
@@ -23,7 +23,7 @@ pub struct UuidGenerator;
 
 impl UuidGenerator {
     pub fn new() -> Self {
-        Self::default()
+        Self
     }
 }
 

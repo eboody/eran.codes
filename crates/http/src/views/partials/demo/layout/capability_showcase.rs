@@ -55,7 +55,7 @@ impl Render for CapabilityShowcase {
                     )
                     .build(),
                 TabbedShowcaseTab::builder()
-                    .tab_icon(Text::from("=="))
+                    .tab_icon(Text::from("::"))
                     .tab_label(Text::from("Zero-Config Deployment"))
                     .title(Text::from("Zero-Config Deployment"))
                     .subtitle(Text::from("Bootstrap environments fast with repeatable defaults."))

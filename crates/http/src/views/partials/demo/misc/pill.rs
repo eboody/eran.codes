@@ -125,8 +125,9 @@ impl BadgeKind {
     }
 }
 
-#[derive(Clone, Copy, Debug)]
+#[derive(Clone, Copy, Debug, Default)]
 pub enum PillVariant {
+    #[default]
     Plain,
     Method(MethodKind),
     Status(StatusKind),
@@ -149,12 +150,6 @@ impl PillVariant {
             PillVariant::Fields => Some("log-fields"),
             PillVariant::Badge(kind) => Some(kind.class()),
         }
-    }
-}
-
-impl Default for PillVariant {
-    fn default() -> Self {
-        PillVariant::Plain
     }
 }
 

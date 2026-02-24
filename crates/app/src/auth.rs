@@ -43,6 +43,7 @@ pub struct AuthRecord {
     pub username: user::Username,
     pub email: user::Email,
     pub password_hash: PasswordHash,
+    pub session_hash: SessionHash,
 }
 
 #[async_trait]
@@ -145,7 +146,7 @@ impl Provider for ProviderImpl {
                 .id(record.id)
                 .username(record.username)
                 .email(record.email)
-                .session_hash(SessionHash::from_password_hash(&record.password_hash))
+                .session_hash(record.session_hash)
                 .build(),
         ))
     }
@@ -161,7 +162,7 @@ impl Provider for ProviderImpl {
                 .id(record.id)
                 .username(record.username)
                 .email(record.email)
-                .session_hash(SessionHash::from_password_hash(&record.password_hash))
+                .session_hash(record.session_hash)
                 .build(),
         ))
     }
@@ -191,12 +192,6 @@ pub struct PasswordHash(String);
 #[nutype(sanitize(trim), derive(Clone, Debug, PartialEq, Display))]
 pub struct SessionHash(String);
 
-impl SessionHash {
-    pub fn from_password_hash(value: &PasswordHash) -> Self {
-        SessionHash::new(value.to_string())
-    }
-}
-
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -215,6 +210,10 @@ mod tests {
 
     fn test_password_hash() -> PasswordHash {
         PasswordHash::new("hash")
+    }
+
+    fn test_session_hash() -> SessionHash {
+        SessionHash::new("session-hash")
     }
 
     struct TestRepo {
@@ -255,6 +254,7 @@ mod tests {
                     .username(test_username())
                     .email(test_email())
                     .password_hash(test_password_hash())
+                    .session_hash(test_session_hash())
                     .build(),
             ),
         });
@@ -283,6 +283,7 @@ mod tests {
                     .username(test_username())
                     .email(test_email())
                     .password_hash(test_password_hash())
+                    .session_hash(test_session_hash())
                     .build(),
             ),
         });
@@ -300,5 +301,40 @@ mod tests {
             .unwrap();
 
         assert!(user.is_none());
+    }
+
+    #[tokio::test]
+    async fn authenticate_uses_dedicated_session_hash() {
+        let session_hash = SessionHash::new("session-version");
+        let repo = Arc::new(TestRepo {
+            record: Some(
+                AuthRecord::builder()
+                    .id(test_user_id())
+                    .username(test_username())
+                    .email(test_email())
+                    .password_hash(test_password_hash())
+                    .session_hash(session_hash.clone())
+                    .build(),
+            ),
+        });
+        let hasher = Arc::new(TestHasher { ok: true });
+        let provider = ProviderImpl::new(repo, hasher);
+
+        let user = provider
+            .authenticate(
+                Credentials::builder()
+                    .email(test_email())
+                    .password(SecretString::new("pw".into()))
+                    .build(),
+            )
+            .await
+            .unwrap()
+            .expect("authenticated user");
+
+        assert_eq!(user.session_hash, session_hash);
+        assert_ne!(
+            user.session_hash.to_string(),
+            test_password_hash().to_string()
+        );
     }
 }

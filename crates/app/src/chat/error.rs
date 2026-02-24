@@ -5,6 +5,7 @@ pub enum Error {
     Domain(domain::chat::Error),
     Repo(RepoErrorText),
     InvalidId(InvalidIdText),
+    InvalidInput(InvalidInputText),
     RateLimited,
     RoomNotFound,
     MessageNotFound,
@@ -42,5 +43,14 @@ pub struct InvalidIdText(String);
 impl From<String> for InvalidIdText {
     fn from(value: String) -> Self {
         InvalidIdText::new(value)
+    }
+}
+
+#[nutype(sanitize(trim), derive(Clone, Debug, PartialEq, Display))]
+pub struct InvalidInputText(String);
+
+impl From<String> for InvalidInputText {
+    fn from(value: String) -> Self {
+        InvalidInputText::new(value)
     }
 }

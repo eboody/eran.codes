@@ -29,7 +29,7 @@ impl UserRepository for SqlxUserRepository {
         .bind(email.to_string())
         .fetch_optional(&self.pg)
         .await
-        .map_err(|error| Error::Repo(error.to_string().into()))?;
+        .map_err(Self::map_sqlx_error)?;
         tracing::info!(
             target: "demo.db",
             message = "db query complete",
@@ -50,11 +50,7 @@ impl UserRepository for SqlxUserRepository {
             message = "db query",
             db_statement = "INSERT INTO users (id, username, email) VALUES ($1, $2, $3)"
         );
-        let mut tx = self
-            .pg
-            .begin()
-            .await
-            .map_err(|error| Error::Repo(error.to_string().into()))?;
+        let mut tx = self.pg.begin().await.map_err(Self::map_sqlx_error)?;
 
         sqlx::query(
             r#"
@@ -67,7 +63,7 @@ impl UserRepository for SqlxUserRepository {
         .bind(user.email.to_string())
         .execute(&mut *tx)
         .await
-        .map_err(|error| Error::Repo(error.to_string().into()))?;
+        .map_err(Self::map_sqlx_error)?;
         tracing::info!(
             target: "demo.db",
             message = "db query complete",
@@ -90,16 +86,14 @@ impl UserRepository for SqlxUserRepository {
         .bind(password_hash.to_string())
         .execute(&mut *tx)
         .await
-        .map_err(|error| Error::Repo(error.to_string().into()))?;
+        .map_err(Self::map_sqlx_error)?;
         tracing::info!(
             target: "demo.db",
             message = "db query complete",
             db_duration_ms = start.elapsed().as_millis() as u64
         );
 
-        tx.commit()
-            .await
-            .map_err(|error| Error::Repo(error.to_string().into()))?;
+        tx.commit().await.map_err(Self::map_sqlx_error)?;
 
         Ok(())
     }
@@ -108,6 +102,18 @@ impl UserRepository for SqlxUserRepository {
 impl SqlxUserRepository {
     pub fn new(pg: sqlx::PgPool) -> Self {
         Self { pg }
+    }
+
+    fn map_sqlx_error(error: sqlx::Error) -> Error {
+        if let sqlx::Error::Database(db_error) = &error {
+            let is_unique_violation = db_error.code().as_deref() == Some("23505");
+            let is_email_constraint = db_error.constraint() == Some("users_email_key");
+            if is_unique_violation && is_email_constraint {
+                return Error::EmailTaken;
+            }
+        }
+
+        Error::Repo(error.to_string().into())
     }
 
     fn user_from_row(row: PgRow) -> Result<user::User> {

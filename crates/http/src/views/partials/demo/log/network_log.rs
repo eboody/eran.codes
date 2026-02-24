@@ -21,10 +21,10 @@ impl Render for NetworkLog<'_> {
             .iter()
             .filter(|entry| {
                 matches!(
-                    LogTargetKind::from_str(&entry.target.to_string()),
+                    LogTargetKind::parse(&entry.target.to_string()),
                     LogTargetKind::Known(LogTargetKnown::DemoRequest)
                 ) && matches!(
-                    LogMessageKind::from_str(&entry.message.to_string()),
+                    LogMessageKind::parse(&entry.message.to_string()),
                     LogMessageKind::Known(LogMessageKnown::RequestEnd)
                 )
             })
@@ -33,7 +33,7 @@ impl Render for NetworkLog<'_> {
             .entries
             .iter()
             .filter(|entry| matches!(
-                LogTargetKind::from_str(&entry.target.to_string()),
+                LogTargetKind::parse(&entry.target.to_string()),
                 LogTargetKind::Known(LogTargetKnown::DemoSse)
             ))
             .collect();
@@ -41,8 +41,8 @@ impl Render for NetworkLog<'_> {
             .entries
             .iter()
             .filter(|entry| {
-                let target_kind = LogTargetKind::from_str(&entry.target.to_string());
-                let message_kind = LogMessageKind::from_str(&entry.message.to_string());
+                let target_kind = LogTargetKind::parse(&entry.target.to_string());
+                let message_kind = LogMessageKind::parse(&entry.message.to_string());
                 matches!(
                     (target_kind, message_kind),
                     (

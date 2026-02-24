@@ -81,16 +81,7 @@ pub async fn moderate_message(
         .as_ref()
         .ok_or(crate::error::Error::Internal)?;
 
-    let decision =
-        match crate::views::partials::ModerationAction::parse(&form.decision.to_string()) {
-            Some(crate::views::partials::ModerationAction::Approve) => {
-                app::chat::ModerationDecision::Approve
-            }
-            Some(crate::views::partials::ModerationAction::Remove) => {
-                app::chat::ModerationDecision::Remove
-            }
-            None => return Err(crate::error::Error::Internal),
-        };
+    let decision = parse_moderation_decision(&form.decision.to_string())?;
 
     state
         .chat
@@ -117,13 +108,14 @@ pub async fn post_chat_message(
         .as_ref()
         .ok_or(crate::error::Error::Internal)?;
 
+    let body_text = signals.body.to_string();
     let message = state
         .chat
         .post_message(
             app::chat::PostMessage::builder()
                 .room_id(parse_room_id(&signals.room_id.to_string())?)
                 .user_id(chat_user_id_from_user_id(user.id.to_domain()?))
-                .body(parse_message_body(&signals.body.to_string())?)
+                .body(parse_message_body(&body_text)?)
                 .build(),
         )
         .await?;
@@ -157,8 +149,8 @@ pub async fn post_chat_message(
                     crate::types::LogFieldValue::new(user.id.to_string()),
                 ),
                 (
-                    crate::types::LogFieldName::from(LogFieldKey::Body),
-                    crate::types::LogFieldValue::new(signals.body.to_string()),
+                    crate::types::LogFieldName::from(LogFieldKey::PayloadBytes),
+                    crate::types::LogFieldValue::new(body_text.len().to_string()),
                 ),
             ])
             .build(),
@@ -178,7 +170,6 @@ pub async fn post_chat_message(
     broadcast_message(
         &state,
         &message_html,
-        Text::from(message.body.to_string()),
         ChatSender::You,
         crate::types::UserIdText::new(user.id.to_string()),
     );
@@ -209,23 +200,25 @@ pub async fn post_demo_chat_message(
         .ok_or(crate::error::Error::Internal)?;
 
     let demo_user = ensure_demo_user(&state).await?;
-    let _ = state
+    let room_id = parse_room_id(&signals.room_id.to_string())?;
+    state
         .chat
         .join_room(
             app::chat::JoinRoom::builder()
-                .room_id(parse_room_id(&signals.room_id.to_string())?)
+                .room_id(room_id)
                 .user_id(chat_user_id_from_user_id(demo_user.id))
                 .build(),
         )
-        .await;
+        .await?;
 
+    let body_text = signals.bot_body.to_string();
     let message = state
         .chat
         .post_message(
             app::chat::PostMessage::builder()
-                .room_id(parse_room_id(&signals.room_id.to_string())?)
+                .room_id(room_id)
                 .user_id(chat_user_id_from_user_id(demo_user.id))
-                .body(parse_message_body(&signals.bot_body.to_string())?)
+                .body(parse_message_body(&body_text)?)
                 .build(),
         )
         .await?;
@@ -259,8 +252,8 @@ pub async fn post_demo_chat_message(
                     crate::types::LogFieldValue::new(demo_user.id.as_uuid().to_string()),
                 ),
                 (
-                    crate::types::LogFieldName::from(LogFieldKey::Body),
-                    crate::types::LogFieldValue::new(signals.bot_body.to_string()),
+                    crate::types::LogFieldName::from(LogFieldKey::PayloadBytes),
+                    crate::types::LogFieldValue::new(body_text.len().to_string()),
                 ),
             ])
             .build(),
@@ -280,7 +273,6 @@ pub async fn post_demo_chat_message(
     broadcast_message(
         &state,
         &message_html,
-        Text::from(message.body.to_string()),
         ChatSender::Demo,
         crate::types::UserIdText::new(demo_user.id.as_uuid().to_string()),
     );
@@ -337,7 +329,6 @@ async fn ensure_demo_user(
 fn broadcast_message(
     state: &crate::State,
     message_html: &str,
-    body: Text,
     sender: ChatSender,
     user_id: crate::types::UserIdText,
 ) {
@@ -393,10 +384,6 @@ fn broadcast_message(
                     crate::types::LogFieldName::from(LogFieldKey::UserId),
                     crate::types::LogFieldValue::new(user_id.to_string()),
                 ),
-                (
-                    crate::types::LogFieldName::from(LogFieldKey::Body),
-                    crate::types::LogFieldValue::new(body.to_string()),
-                ),
             ])
             .build(),
     );
@@ -418,23 +405,30 @@ impl ChatSender {
 }
 
 fn parse_room_id(value: &str) -> Result<domain::chat::RoomId, crate::error::Error> {
-    let id = value
-        .parse::<uuid::Uuid>()
-        .map_err(|_| crate::error::Error::Internal)?;
+    let id = value.parse::<uuid::Uuid>().map_err(|error| {
+        crate::error::Error::Chat(app::chat::Error::InvalidId(
+            app::chat::InvalidIdText::new(error.to_string()),
+        ))
+    })?;
     Ok(domain::chat::RoomId::from_uuid(id))
 }
 
 fn parse_message_id(value: &str) -> Result<domain::chat::MessageId, crate::error::Error> {
-    let id = value
-        .parse::<uuid::Uuid>()
-        .map_err(|_| crate::error::Error::Internal)?;
+    let id = value.parse::<uuid::Uuid>().map_err(|error| {
+        crate::error::Error::Chat(app::chat::Error::InvalidId(
+            app::chat::InvalidIdText::new(error.to_string()),
+        ))
+    })?;
     Ok(domain::chat::MessageId::from_uuid(id))
 }
 
 fn parse_message_body(
     value: &str,
 ) -> Result<domain::chat::MessageBody, crate::error::Error> {
-    domain::chat::MessageBody::try_new(value).map_err(|_| crate::error::Error::Internal)
+    domain::chat::MessageBody::try_new(value)
+        .map_err(domain::chat::Error::from)
+        .map_err(app::chat::Error::from)
+        .map_err(crate::error::Error::from)
 }
 
 fn parse_reason(
@@ -442,12 +436,31 @@ fn parse_reason(
 ) -> Result<Option<app::chat::ModerationReason>, crate::error::Error> {
     value
         .map(|value| {
-            app::chat::ModerationReason::try_new(value.to_string())
-                .map_err(|_| crate::error::Error::Internal)
+            app::chat::ModerationReason::try_new(value.to_string()).map_err(|error| {
+                crate::error::Error::Chat(app::chat::Error::InvalidInput(
+                    app::chat::InvalidInputText::new(error.to_string()),
+                ))
+            })
         })
         .transpose()
 }
 
 fn chat_user_id_from_user_id(value: domain::user::Id) -> domain::chat::UserId {
     domain::chat::UserId::from_uuid(*value.as_uuid())
+}
+
+fn parse_moderation_decision(
+    value: &str,
+) -> Result<app::chat::ModerationDecision, crate::error::Error> {
+    match crate::views::partials::ModerationAction::parse(value) {
+        Some(crate::views::partials::ModerationAction::Approve) => {
+            Ok(app::chat::ModerationDecision::Approve)
+        }
+        Some(crate::views::partials::ModerationAction::Remove) => {
+            Ok(app::chat::ModerationDecision::Remove)
+        }
+        None => Err(crate::error::Error::Chat(app::chat::Error::InvalidInput(
+            app::chat::InvalidInputText::new("invalid moderation decision"),
+        ))),
+    }
 }

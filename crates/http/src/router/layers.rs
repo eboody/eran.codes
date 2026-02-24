@@ -83,19 +83,19 @@ where
                         request.extensions().get::<crate::request::Context>()
                     {
                         if let Some(request_id) = context.request_id.as_ref() {
-                            span.record("request_id", &request_id.to_string().as_str());
+                            span.record("request_id", request_id.to_string().as_str());
                         }
                         if let Some(session_id) = context.session_id.as_ref() {
-                            span.record("session_id", &session_id.to_string().as_str());
+                            span.record("session_id", session_id.to_string().as_str());
                         }
                         if let Some(user_id) = context.user_id.as_ref() {
-                            span.record("user_id", &user_id.to_string().as_str());
+                            span.record("user_id", user_id.to_string().as_str());
                         }
                         if let Some(client_ip) = context.client_ip.as_ref() {
-                            span.record("client_ip", &client_ip.to_string().as_str());
+                            span.record("client_ip", client_ip.to_string().as_str());
                         }
                         if let Some(user_agent) = context.user_agent.as_ref() {
-                            span.record("user_agent", &user_agent.to_string().as_str());
+                            span.record("user_agent", user_agent.to_string().as_str());
                         }
                         span.record("kind", context.kind.as_str());
                     }

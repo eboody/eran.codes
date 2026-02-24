@@ -99,6 +99,7 @@ impl Error {
                 "You are not a member of this room.",
             ),
             Error::Chat(app::chat::Error::InvalidId(_))
+            | Error::Chat(app::chat::Error::InvalidInput(_))
             | Error::Chat(app::chat::Error::Domain(_)) => (
                 axum::http::StatusCode::BAD_REQUEST,
                 "Invalid input",

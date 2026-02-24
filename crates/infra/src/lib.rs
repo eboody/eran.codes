@@ -6,6 +6,7 @@ pub use error::{Error, Result};
 mod repo;
 pub use repo::user;
 use sqlx::PgPool;
+use sqlx::postgres::PgPoolOptions;
 
 // our infra layer holds shared resources like DB pools, HTTP clients, etc.
 pub struct Infra {
@@ -16,7 +17,9 @@ pub struct Infra {
 impl Infra {
     #[tracing::instrument(skip(cfg))]
     pub async fn init(cfg: &config::InfraConfig) -> Result<Self> {
-        let pool = PgPool::connect(cfg.db.url.as_ref())
+        let pool = PgPoolOptions::new()
+            .max_connections(cfg.db.max_connections)
+            .connect(cfg.db.url.as_ref())
             .await
             .map_err(error::Error::Pgsql)?;
 

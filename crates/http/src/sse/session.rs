@@ -78,6 +78,12 @@ impl Session {
     }
 }
 
+impl Default for Session {
+    fn default() -> Self {
+        Self::new()
+    }
+}
+
 fn ensure_session(cookies: &Cookies, key: &Key) -> SessionId {
     if let Some(cookie) = cookies.signed(key).get(SESSION_COOKIE) {
         return SessionId::new(cookie.value());

@@ -77,3 +77,111 @@ pub fn validate_input(
     let email = user::Email::try_new(email).map_err(domain::user::Error::from)?;
     Ok((username, email))
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[derive(Clone, Copy)]
+    enum CreateOutcome {
+        Ok,
+        EmailTaken,
+    }
+
+    struct TestRepository {
+        existing_user: Option<user::User>,
+        create_outcome: CreateOutcome,
+    }
+
+    #[async_trait]
+    impl Repository for TestRepository {
+        async fn find_by_email(&self, _email: &user::Email) -> Result<Option<user::User>> {
+            Ok(self.existing_user.clone())
+        }
+
+        async fn create_with_credentials(
+            &self,
+            _user: &user::User,
+            _password_hash: &crate::auth::PasswordHash,
+        ) -> Result<()> {
+            match self.create_outcome {
+                CreateOutcome::Ok => Ok(()),
+                CreateOutcome::EmailTaken => Err(Error::EmailTaken),
+            }
+        }
+    }
+
+    struct TestHasher;
+
+    impl crate::auth::PasswordHasher for TestHasher {
+        fn hash(&self, _password: &str) -> crate::auth::Result<crate::auth::PasswordHash> {
+            Ok(crate::auth::PasswordHash::new("hash"))
+        }
+
+        fn verify(
+            &self,
+            _password: &str,
+            _password_hash: &crate::auth::PasswordHash,
+        ) -> crate::auth::Result<bool> {
+            Ok(true)
+        }
+    }
+
+    fn valid_email() -> user::Email {
+        user::Email::try_new("person@example.com").expect("valid email")
+    }
+
+    fn valid_username() -> user::Username {
+        user::Username::try_new("person").expect("valid username")
+    }
+
+    fn service(
+        existing_user: Option<user::User>,
+        create_outcome: CreateOutcome,
+    ) -> Service {
+        Service::new(
+            std::sync::Arc::new(TestRepository {
+                existing_user,
+                create_outcome,
+            }),
+            std::sync::Arc::new(TestHasher),
+        )
+    }
+
+    #[tokio::test]
+    async fn register_user_surfaces_email_taken_from_repository() {
+        let service = service(None, CreateOutcome::EmailTaken);
+        let result = service
+            .register_user(
+                RegisterUser::builder()
+                    .username(valid_username())
+                    .email(valid_email())
+                    .password(SecretString::new("password".to_string().into()))
+                    .build(),
+            )
+            .await;
+
+        assert!(matches!(result, Err(Error::EmailTaken)));
+    }
+
+    #[test]
+    fn validate_input_rejects_invalid_email() {
+        assert!(validate_input("person", "not-an-email").is_err());
+    }
+
+    #[tokio::test]
+    async fn register_user_succeeds_on_valid_unique_input() {
+        let service = service(None, CreateOutcome::Ok);
+        let result = service
+            .register_user(
+                RegisterUser::builder()
+                    .username(valid_username())
+                    .email(valid_email())
+                    .password(SecretString::new("password".to_string().into()))
+                    .build(),
+            )
+            .await;
+
+        assert!(result.is_ok());
+    }
+}

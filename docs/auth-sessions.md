@@ -17,7 +17,7 @@ This project uses `axum-login` for authentication and `tower-sessions` for sessi
 - Auth backend: `crates/http/src/auth.rs`
   - Implements `axum_login::AuthnBackend`.
   - Bridges to `app::auth::Service`.
-- Session middleware: `crates/http/src/lib.rs`
+- Session middleware: `crates/http/src/router/layers.rs`
   - Builds `SessionManagerLayer` (secure cookie, SameSite, expiry).
   - Wraps the router with `AuthManagerLayerBuilder`.
 - Auth use-case: `crates/app/src/auth.rs`
@@ -37,7 +37,7 @@ We use `tower-sessions-sqlx-store` with Postgres:
 
 ## Cookie behavior
 
-Session cookies are configured in `crates/http/src/lib.rs`:
+Session cookies are configured in `crates/http/src/router/layers.rs`:
 
 - Name: `eran.sid`
 - HttpOnly: `true`

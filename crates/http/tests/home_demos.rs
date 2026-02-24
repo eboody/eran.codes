@@ -271,8 +271,12 @@ impl HomeCopy {
         match self {
             HomeCopy::ThinkingSystems => "How I Think About Systems",
             HomeCopy::AuditSection => "Architecture Audit (What This Site Demonstrates)",
-            HomeCopy::ProfessionalismSection => "Professionalism In Practice (Detailed Breakdown)",
-            HomeCopy::FeatureGallery => "Feature gallery: realtime delivery, grounded in systems",
+            HomeCopy::ProfessionalismSection => {
+                "Professionalism In Practice (Detailed Breakdown)"
+            }
+            HomeCopy::FeatureGallery => {
+                "Feature gallery: realtime delivery, grounded in systems"
+            }
             HomeCopy::ChatRoom => "Live chat room",
             HomeCopy::LiveBackendLog => "Live backend log (SSE)",
             HomeCopy::SignIn => "Sign in",

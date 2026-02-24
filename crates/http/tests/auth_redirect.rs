@@ -292,6 +292,32 @@ fn test_app() -> axum::Router {
     app_http::router(state, session_store)
 }
 
+async fn login_cookie(app: axum::Router) -> String {
+    let body = "email=demo%40example.com&password=password&next=%2Fdemo%2Fchat";
+    let response = app
+        .oneshot(
+            Request::post("/login")
+                .header(
+                    axum::http::header::CONTENT_TYPE,
+                    "application/x-www-form-urlencoded",
+                )
+                .body(Body::from(body))
+                .unwrap(),
+        )
+        .await
+        .unwrap();
+
+    response
+        .headers()
+        .get_all(axum::http::header::SET_COOKIE)
+        .iter()
+        .filter_map(|value| value.to_str().ok())
+        .find(|value| CookieName::SessionId.matches_cookie(value))
+        .and_then(|set_cookie| set_cookie.split(';').next())
+        .map(str::to_string)
+        .expect("eran.sid cookie")
+}
+
 #[tokio::test]
 async fn unauthenticated_chat_redirects_to_login() {
     let app = test_app();
@@ -341,32 +367,7 @@ async fn login_redirects_to_next() {
 #[tokio::test]
 async fn login_sets_session_cookie_and_allows_chat() {
     let app = test_app();
-    let body = "email=demo%40example.com&password=password&next=%2Fdemo%2Fchat";
-    let response = app
-        .clone()
-        .oneshot(
-            Request::post("/login")
-                .header(
-                    axum::http::header::CONTENT_TYPE,
-                    "application/x-www-form-urlencoded",
-                )
-                .body(Body::from(body))
-                .unwrap(),
-        )
-        .await
-        .unwrap();
-
-    assert_eq!(response.status(), StatusCode::SEE_OTHER);
-    let set_cookie = response
-        .headers()
-        .get_all(axum::http::header::SET_COOKIE)
-        .iter()
-        .filter_map(|value| value.to_str().ok())
-        .find(|value| CookieName::SessionId.matches_cookie(value))
-        .map(|value| value.to_string())
-        .expect("eran.sid cookie");
-
-    let cookie_header = set_cookie.split(';').next().expect("cookie").to_string();
+    let cookie_header = login_cookie(app.clone()).await;
     let response = app
         .oneshot(
             Request::get("/demo/chat")
@@ -385,6 +386,48 @@ async fn login_sets_session_cookie_and_allows_chat() {
         .to_str()
         .expect("location value");
     assert_eq!(location, "/#chat-demo");
+}
+
+#[tokio::test]
+async fn invalid_chat_room_id_returns_bad_request() {
+    let app = test_app();
+    let cookie_header = login_cookie(app.clone()).await;
+    let response = app
+        .oneshot(
+            Request::post("/demo/chat/messages")
+                .header(axum::http::header::COOKIE, cookie_header)
+                .header(axum::http::header::CONTENT_TYPE, "application/json")
+                .body(Body::from(r#"{"roomId":"not-a-uuid","body":"hello"}"#))
+                .unwrap(),
+        )
+        .await
+        .unwrap();
+
+    assert_eq!(response.status(), StatusCode::BAD_REQUEST);
+}
+
+#[tokio::test]
+async fn invalid_moderation_decision_returns_bad_request() {
+    let app = test_app();
+    let cookie_header = login_cookie(app.clone()).await;
+    let response = app
+        .oneshot(
+            Request::post("/demo/chat/moderation")
+                .header(axum::http::header::COOKIE, cookie_header)
+                .header(
+                    axum::http::header::CONTENT_TYPE,
+                    "application/x-www-form-urlencoded",
+                )
+                .body(Body::from(format!(
+                    "message_id={}&decision=invalid",
+                    uuid::Uuid::new_v4()
+                )))
+                .unwrap(),
+        )
+        .await
+        .unwrap();
+
+    assert_eq!(response.status(), StatusCode::BAD_REQUEST);
 }
 
 #[derive(Clone, Copy, Debug)]

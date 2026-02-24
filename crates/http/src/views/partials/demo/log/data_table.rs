@@ -2,8 +2,9 @@ use bon::Builder;
 use maud::Render;
 use crate::types::Text;
 
-#[derive(Clone, Copy, Debug)]
+#[derive(Clone, Copy, Debug, Default)]
 pub enum TableVariant {
+    #[default]
     Default,
     ChatFlow,
 }
@@ -14,12 +15,6 @@ impl TableVariant {
             TableVariant::Default => "data-table",
             TableVariant::ChatFlow => "data-table data-table-chat",
         }
-    }
-}
-
-impl Default for TableVariant {
-    fn default() -> Self {
-        TableVariant::Default
     }
 }
 

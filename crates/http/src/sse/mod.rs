@@ -86,11 +86,7 @@ impl Registry {
 
     pub fn subscribe(&self, handle: &Handle) -> (broadcast::Receiver<Event>, SessionGuard) {
         let key = handle.stream_key().clone();
-        let receiver = self
-            .sessions
-            .entry(key.clone())
-            .or_insert_with(Session::new)
-            .subscribe();
+        let receiver = self.sessions.entry(key.clone()).or_default().subscribe();
         let guard = SessionGuard::new(self.clone(), key);
 
         (receiver, guard)
@@ -196,6 +192,12 @@ impl Registry {
 
     pub fn remove(&self, key: &StreamKey) {
         self.sessions.remove(key);
+    }
+
+    pub fn has_streams_for_session(&self, session_id: &SessionId) -> bool {
+        self.sessions
+            .iter()
+            .any(|entry| entry.key().session_id() == session_id)
     }
 
     pub fn release(&self, key: &StreamKey) {
