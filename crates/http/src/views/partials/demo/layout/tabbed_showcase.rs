@@ -180,8 +180,7 @@ impl Render for TabbedShowcase {
             return maud::html! {};
         }
 
-        let dynamic_rules = self.dynamic_rules();
-        let radio_name = format!("{}-tabs", self.id);
+        let tabs_script = tabs_script(&self.id);
 
         maud::html! {
             section id=(&self.id) class="tabbed-showcase-section" {
@@ -192,25 +191,21 @@ impl Render for TabbedShowcase {
                     }
                 }
                 div class="tabbed-showcase" {
-                    style { (PreEscaped(dynamic_rules)) }
-                    @for (index, _) in self.tabs.iter().enumerate() {
-                        @let tab_id = format!("{}-tab-{}", self.id, index);
-                        input
-                            type="radio"
-                            class="tabbed-showcase-toggle"
-                            id=(tab_id)
-                            name=(radio_name)
-                            checked[index == 0];
-                    }
                     div class="tabbed-showcase-shell" {
-                        nav class="tabbed-showcase-tabs" aria-label="Showcase tabs" {
+                        nav class="tabbed-showcase-tabs" aria-label="Showcase tabs" role="tablist" {
                             @for (index, tab) in self.tabs.iter().enumerate() {
                                 @let tab_id = format!("{}-tab-{}", self.id, index);
+                                @let panel_id = format!("{}-panel-{}", self.id, index);
                                 @let palette = ShowcaseColor::cycle(index).palette();
-                                label
-                                    class="tabbed-showcase-tab"
+                                button
+                                    type="button"
+                                    class=(if index == 0 { "tabbed-showcase-tab is-active" } else { "tabbed-showcase-tab" })
                                     data-tab-index=(index)
-                                    for=(tab_id)
+                                    role="tab"
+                                    id=(tab_id)
+                                    aria-controls=(panel_id)
+                                    aria-selected=(if index == 0 { "true" } else { "false" })
+                                    tabindex=(if index == 0 { "0" } else { "-1" })
                                     style={
                                         " --tab-accent: " (css_color(palette.accent)) ";"
                                         " --tab-accent-soft: " (css_color(palette.tab_soft)) ";"
@@ -226,10 +221,17 @@ impl Render for TabbedShowcase {
                         }
                         div class="tabbed-showcase-panels" {
                             @for (index, tab) in self.tabs.iter().enumerate() {
+                                @let tab_id = format!("{}-tab-{}", self.id, index);
+                                @let panel_id = format!("{}-panel-{}", self.id, index);
                                 @let palette = ShowcaseColor::cycle(index).palette();
                                 article
                                     class=(if tab.mock_panel.is_some() { "tabbed-showcase-panel" } else { "tabbed-showcase-panel tabbed-showcase-panel-full" })
                                     data-tab-index=(index)
+                                    id=(panel_id)
+                                    role="tabpanel"
+                                    aria-labelledby=(tab_id)
+                                    tabindex="0"
+                                    hidden[index != 0]
                                 {
                                     @if let Some(mock_panel) = &tab.mock_panel {
                                         div class="tabbed-showcase-mockup" {
@@ -295,34 +297,67 @@ impl Render for TabbedShowcase {
                         }
                     }
                 }
+                script { (PreEscaped(tabs_script)) }
             }
         }
     }
 }
 
-impl TabbedShowcase {
-    fn dynamic_rules(&self) -> String {
-        let mut css = String::new();
+fn tabs_script(showcase_id: &Text) -> String {
+    let showcase_id_json = serde_json::to_string(&showcase_id.to_string())
+        .unwrap_or_else(|_| "\"\"".to_owned());
+    format!(
+        r#"
+(() => {{
+  const root = document.getElementById({showcase_id_json});
+  if (!root) return;
 
-        for index in 0..self.tabs.len() {
-            let input_id = format!("{}-tab-{}", self.id, index);
-            css.push_str(&format!(
-                "#{input_id}:checked ~ .tabbed-showcase-shell .tabbed-showcase-tab[data-tab-index=\"{index}\"] {{ \
-                    border-color: var(--tab-accent); \
-                    background: var(--tab-accent-soft); \
-                    color: var(--tab-accent); \
-                    opacity: 1; \
-                }}\n"
-            ));
-            css.push_str(&format!(
-                "#{input_id}:checked ~ .tabbed-showcase-shell .tabbed-showcase-panel[data-tab-index=\"{index}\"] {{ \
-                    display: grid; \
-                }}\n"
-            ));
-        }
+  const tabs = Array.from(root.querySelectorAll('.tabbed-showcase-tab[role="tab"]'));
+  const panels = Array.from(root.querySelectorAll('.tabbed-showcase-panel[role="tabpanel"]'));
+  if (!tabs.length || !panels.length) return;
 
-        css
-    }
+  const lastIndex = tabs.length - 1;
+
+  const activate = (nextIndex, focusTab) => {{
+    tabs.forEach((tab, index) => {{
+      const isActive = index === nextIndex;
+      tab.classList.toggle('is-active', isActive);
+      tab.setAttribute('aria-selected', isActive ? 'true' : 'false');
+      tab.tabIndex = isActive ? 0 : -1;
+      if (focusTab && isActive) tab.focus();
+    }});
+
+    panels.forEach((panel, index) => {{
+      panel.hidden = index !== nextIndex;
+    }});
+  }};
+
+  tabs.forEach((tab, index) => {{
+    tab.addEventListener('click', () => activate(index, false));
+    tab.addEventListener('keydown', (event) => {{
+      let next = null;
+      if (event.key === 'ArrowRight' || event.key === 'ArrowDown') {{
+        next = index === lastIndex ? 0 : index + 1;
+      }} else if (event.key === 'ArrowLeft' || event.key === 'ArrowUp') {{
+        next = index === 0 ? lastIndex : index - 1;
+      }} else if (event.key === 'Home') {{
+        next = 0;
+      }} else if (event.key === 'End') {{
+        next = lastIndex;
+      }}
+
+      if (next !== null) {{
+        event.preventDefault();
+        activate(next, true);
+      }}
+    }});
+  }});
+
+  const selectedIndex = tabs.findIndex((tab) => tab.getAttribute('aria-selected') === 'true');
+  activate(selectedIndex >= 0 ? selectedIndex : 0, false);
+}})();
+    "#
+    )
 }
 
 fn hsl_css(color: Hsl) -> String {

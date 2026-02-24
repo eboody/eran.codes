@@ -855,12 +855,6 @@ button.secondary,
   margin-top: 1.25rem;
 }
 
-.tabbed-showcase-toggle {
-  position: absolute;
-  opacity: 0;
-  pointer-events: none;
-}
-
 .tabbed-showcase-shell {
   border: 1px solid var(--tab-shell-border);
   border-radius: 22px;
@@ -894,6 +888,19 @@ button.secondary,
   align-items: center;
   gap: 0.45rem;
   transition: border-color 0.2s ease, background 0.2s ease, color 0.2s ease;
+  opacity: 0.9;
+}
+
+.tabbed-showcase-tab.is-active {
+  border-color: var(--tab-accent);
+  background: var(--tab-accent-soft);
+  color: var(--tab-accent);
+  opacity: 1;
+}
+
+.tabbed-showcase-tab:focus-visible {
+  outline: 2px solid color-mix(in srgb, var(--tab-accent) 65%, white);
+  outline-offset: 2px;
 }
 
 .tabbed-showcase-tab-title {
@@ -915,9 +922,13 @@ button.secondary,
 }
 
 .tabbed-showcase-panel {
-  display: none;
+  display: grid;
   gap: 1.2rem;
   min-width: 0;
+}
+
+.tabbed-showcase-panel[hidden] {
+  display: none;
 }
 
 @media (min-width: 980px) {
