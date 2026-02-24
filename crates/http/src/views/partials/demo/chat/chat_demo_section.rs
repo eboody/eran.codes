@@ -10,6 +10,8 @@ pub struct ChatDemoSection {
     pub room_id: Text,
     pub room_name: Text,
     pub messages: Vec<crate::views::partials::ChatMessage>,
+    #[builder(default = true)]
+    pub interactive: bool,
 }
 
 impl ChatDemoSection {
@@ -18,6 +20,13 @@ impl ChatDemoSection {
 
 impl Render for ChatDemoSection {
     fn render(&self) -> maud::Markup {
+        let subtitle = if self.interactive {
+            Text::from("Send messages as yourself or the demo user and watch SSE fanout.")
+        } else {
+            Text::from(
+                "Read-only preview. Sign in to send messages and open the moderation queue.",
+            )
+        };
         maud::html! {
             section id=(Self::ANCHOR_ID)
                 class="chat-panel"
@@ -27,9 +36,15 @@ impl Render for ChatDemoSection {
                 )) {
                 (SectionHeader::builder()
                     .title(Text::from("Live chat room"))
-                    .subtitle(Text::from("Send messages as yourself or the demo user and watch SSE fanout."))
-                    .action(maud::html! {
-                        a class="button secondary" href=(Route::ChatModeration) { "Moderation queue" }
+                    .subtitle(subtitle)
+                    .action(if self.interactive {
+                        maud::html! {
+                            a class="button secondary" href=(Route::ChatModeration) { "Moderation queue" }
+                        }
+                    } else {
+                        maud::html! {
+                            a class="button secondary" href=(Route::Login) { "Sign in to interact" }
+                        }
                     })
                     .meta(maud::html! { p class="muted" { "Room: " (&self.room_name) } })
                     .build()
@@ -42,11 +57,13 @@ impl Render for ChatDemoSection {
                     (ChatPanel::builder()
                         .role(ChatPanelRole::You)
                         .messages(self.messages.clone())
+                        .interactive(self.interactive)
                         .build()
                         .render())
                     (ChatPanel::builder()
                         .role(ChatPanelRole::Demo)
                         .messages(self.messages.clone())
+                        .interactive(self.interactive)
                         .build()
                         .render())
                 }

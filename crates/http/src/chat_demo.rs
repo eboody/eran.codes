@@ -1,3 +1,8 @@
+use domain::chat;
+
+const DEMO_USER_EMAIL: &str = "demo.bot@example.com";
+const DEMO_USER_NAME: &str = "Demo Bot";
+
 pub struct ChatContext {
     pub room: domain::chat::Room,
     pub messages: Vec<crate::views::partials::ChatMessage>,
@@ -5,9 +10,13 @@ pub struct ChatContext {
 
 pub async fn load_chat_context(
     state: &crate::State,
-    user_id: domain::user::Id,
+    user_id: Option<domain::user::Id>,
 ) -> Result<ChatContext, crate::error::Error> {
-    let chat_user_id = chat::UserId::from_uuid(*user_id.as_uuid());
+    let viewer = match user_id {
+        Some(user_id) => user_id,
+        None => ensure_demo_user(state).await?.id,
+    };
+    let chat_user_id = chat::UserId::from_uuid(*viewer.as_uuid());
     let room = ensure_room(state, chat_user_id).await?;
     let messages = state
         .chat
@@ -24,6 +33,40 @@ pub async fn load_chat_context(
         room,
         messages: message_views,
     })
+}
+
+pub async fn ensure_demo_user(
+    state: &crate::State,
+) -> Result<domain::user::User, crate::error::Error> {
+    let demo_email = domain::user::Email::try_new(DEMO_USER_EMAIL)
+        .map_err(|_| crate::error::Error::Internal)?;
+    let demo_username = domain::user::Username::try_new(DEMO_USER_NAME)
+        .map_err(|_| crate::error::Error::Internal)?;
+    if let Some(user) = state.user.find_by_email(demo_email.clone()).await? {
+        return Ok(user);
+    }
+
+    let password = secrecy::SecretString::new(uuid::Uuid::new_v4().to_string().into());
+    match state
+        .user
+        .register_user(
+            app::user::RegisterUser::builder()
+                .username(demo_username)
+                .email(demo_email.clone())
+                .password(password)
+                .build(),
+        )
+        .await
+    {
+        Ok(_) | Err(app::user::Error::EmailTaken) => {}
+        Err(error) => return Err(error.into()),
+    }
+
+    state
+        .user
+        .find_by_email(demo_email)
+        .await?
+        .ok_or(crate::error::Error::Internal)
 }
 
 async fn ensure_room(
@@ -106,4 +149,3 @@ pub fn format_message_time(value: std::time::SystemTime) -> String {
     .unwrap_or_else(|_| Vec::new());
     time.format(&format).unwrap_or_else(|_| "--:--".to_string())
 }
-use domain::chat;

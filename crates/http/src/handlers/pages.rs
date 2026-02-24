@@ -12,27 +12,29 @@ pub async fn home(
     Extension(state): Extension<crate::State>,
     auth_session: crate::auth::Session,
 ) -> crate::Result<axum::response::Html<String>> {
+    let is_authenticated = auth_session.user.is_some();
     let user = auth_session.user.as_ref().map(|user| {
         crate::views::page::UserNav::builder()
             .username(Text::from(user.username.to_string()))
             .email(Text::from(user.email.to_string()))
             .build()
     });
-    let chat_demo = if let Some(user) = auth_session.user.as_ref() {
-        let context =
-            crate::chat_demo::load_chat_context(&state, user.id.to_domain()?).await?;
-        Some(
-            ChatDemoSection::builder()
-                .room_id(crate::types::Text::from(
-                    context.room.id.as_uuid().to_string(),
-                ))
-                .room_name(crate::types::Text::from(context.room.name.to_string()))
-                .messages(context.messages)
-                .build(),
-        )
-    } else {
-        None
-    };
+    let viewer_id = auth_session
+        .user
+        .as_ref()
+        .map(|user| user.id.to_domain())
+        .transpose()?;
+    let context = crate::chat_demo::load_chat_context(&state, viewer_id).await?;
+    let chat_demo = Some(
+        ChatDemoSection::builder()
+            .room_id(crate::types::Text::from(
+                context.room.id.as_uuid().to_string(),
+            ))
+            .room_name(crate::types::Text::from(context.room.name.to_string()))
+            .messages(context.messages)
+            .interactive(is_authenticated)
+            .build(),
+    );
 
     Ok(views::render(
         pages::Home::builder()

@@ -66,6 +66,8 @@ impl ChatPanelRole {
 pub struct ChatPanel {
     pub role: ChatPanelRole,
     pub messages: Vec<crate::views::partials::ChatMessage>,
+    #[builder(default = true)]
+    pub interactive: bool,
 }
 
 impl Render for ChatPanel {
@@ -83,23 +85,31 @@ impl Render for ChatPanel {
                     .messages(self.messages.clone())
                     .build()
                     .render())
-                form class="chat-compose"
-                    method="post"
-                    action=(action)
-                    data-on:submit=(submit_action)
-                {
-                    label {
-                        (self.role.input_label())
-                        input type="text"
-                            name="body"
-                            placeholder=(self.role.placeholder())
-                            data-bind=(input_signal)
-                            required;
+                @if self.interactive {
+                    form class="chat-compose"
+                        method="post"
+                        action=(action)
+                        data-on:submit=(submit_action)
+                    {
+                        label {
+                            (self.role.input_label())
+                            input type="text"
+                                name="body"
+                                placeholder=(self.role.placeholder())
+                                data-bind=(input_signal)
+                                required;
+                        }
+                        @if let Some(class) = self.role.button_class() {
+                            button type="submit" class=(class) { (self.role.button_label()) }
+                        } @else {
+                            button type="submit" { (self.role.button_label()) }
+                        }
                     }
-                    @if let Some(class) = self.role.button_class() {
-                        button type="submit" class=(class) { (self.role.button_label()) }
-                    } @else {
-                        button type="submit" { (self.role.button_label()) }
+                } @else {
+                    div class="chat-readonly muted" {
+                        "Read-only preview. "
+                        a href=(Route::Login) { "Sign in" }
+                        " to post messages."
                     }
                 }
             }

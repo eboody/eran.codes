@@ -4,7 +4,7 @@ use crate::paths::Route;
 use crate::types::Text;
 use crate::views::page::UserNav;
 use crate::views::partials::{
-    CapabilityShowcase, ChatDemoSection, DemoResultPlaceholder, DemoSection,
+    CapabilityShowcase, ChatDemoSection, DemoResultPlaceholder,
     DiagramPanel, DiagramRow, DiagramStatus, FeatureAccent, FeatureCard,
     FeatureGallery, HomeHero, ProfessionalismInPracticeTabs, SectionHeader,
 };
@@ -141,7 +141,7 @@ impl maud::Render for Home {
                     FeatureGallery::builder()
                         .title(
                             Text::from(
-                                "Feature gallery: realtime delivery, grounded in systems",
+                                "Feature Gallery: Real-Time Delivery, Grounded in Systems",
                             ),
                         )
                         .subtitle(
@@ -349,27 +349,6 @@ impl maud::Render for Home {
                                 Text::from(
                                     "No requests yet. Trigger a demo action to populate this table.",
                                 ),
-                            )
-                            .build()
-                            .render()
-                    })
-                }
-
-                section id="live-chat-demo" {
-                    ({
-                        DemoSection::builder()
-                            .title(Text::from("Demo D: Live Chat System (Capstone)"))
-                            .content(
-                                maud::html! {
-                                    p {
-                                    "Enterprise chat flow with persistence, moderation, and SSE fanout."
-                                    } ul { li {
-                                    "Messages are stored in Postgres and reloaded on entry." }
-                                    li {
-                                    "Rate limiting + moderation queue are enforced in the app layer."
-                                    } li { "SSE broadcasts updates to all connected visitors." }
-                                    }
-                                },
                             )
                             .build()
                             .render()

@@ -184,7 +184,7 @@ impl Render for TabbedShowcase {
         let radio_name = format!("{}-tabs", self.id);
 
         maud::html! {
-            section class="tabbed-showcase-section" {
+            section id=(&self.id) class="tabbed-showcase-section" {
                 header class="section-header" {
                     div {
                         h2 { (&self.title) }

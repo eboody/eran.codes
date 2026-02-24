@@ -15,8 +15,10 @@ impl Render for HomeHero {
         maud::html! {
             header class="hero" {
                 div {
-                    h1 { "eran.codes platform" }
-                    p { "A production-ready Axum stack with signed sessions, SQLx persistence, and Datastar-powered UI." }
+                    h1 { "Eran Codes: Portfolio + App Platform" }
+                    p {
+                        "I build production-grade Rust systems with typed boundaries, durable auth sessions, and observable real-time flows."
+                    }
                     div class="hero-tags" {
                         span class="pill" { "axum-login" }
                         span class="pill" { "tower-sessions" }
@@ -24,6 +26,13 @@ impl Render for HomeHero {
                         span class="pill" { "datastar + sse" }
                         span class="pill" { "argon2" }
                     }
+                    (CtaRow::builder()
+                        .items(vec![
+                            maud::html! { a class="button" href="#chat-demo" { "Open live demo" } },
+                            maud::html! { a class="button secondary" href="#professionalism-practice" { "See implementation details" } },
+                        ])
+                        .build()
+                        .render())
                 }
                 aside class="hero-card" {
                     h3 { "Session status" }

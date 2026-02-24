@@ -19,9 +19,13 @@ struct TestUserRepo;
 impl user::Repository for TestUserRepo {
     async fn find_by_email(
         &self,
-        _email: &domain_user::Email,
+        email: &domain_user::Email,
     ) -> user::Result<Option<domain_user::User>> {
-        Ok(None)
+        Ok(Some(domain_user::User {
+            id: domain_user::Id::from_uuid(uuid::Uuid::nil()),
+            username: domain_user::Username::try_new("demo_bot").unwrap(),
+            email: email.clone(),
+        }))
     }
 
     async fn create_with_credentials(
@@ -89,16 +93,24 @@ impl app::chat::Repository for ChatRepo {
 
     async fn find_room(
         &self,
-        _room_id: &domain_chat::RoomId,
+        room_id: &domain_chat::RoomId,
     ) -> app::chat::Result<Option<domain_chat::Room>> {
-        Ok(None)
+        Ok(Some(domain_chat::Room {
+            id: *room_id,
+            name: domain_chat::RoomName::Lobby,
+            created_by: domain_chat::UserId::from_uuid(uuid::Uuid::nil()),
+        }))
     }
 
     async fn find_room_by_name(
         &self,
-        _name: &domain_chat::RoomName,
+        name: &domain_chat::RoomName,
     ) -> app::chat::Result<Option<domain_chat::Room>> {
-        Ok(None)
+        Ok(Some(domain_chat::Room {
+            id: domain_chat::RoomId::new_v4(),
+            name: *name,
+            created_by: domain_chat::UserId::from_uuid(uuid::Uuid::nil()),
+        }))
     }
 
     async fn list_messages(
@@ -229,10 +241,10 @@ async fn home_page_includes_demo_sections() {
         .await
         .unwrap();
 
-    assert_eq!(response.status(), axum::http::StatusCode::OK);
-
+    let status = response.status();
     let body = to_bytes(response.into_body(), usize::MAX).await.unwrap();
     let body = String::from_utf8_lossy(&body);
+    assert_eq!(status, axum::http::StatusCode::OK, "home body:\n{body}");
 
     for copy in HomeCopy::all() {
         assert!(body.contains(copy.as_str()));
@@ -246,6 +258,8 @@ enum HomeCopy {
     ProfessionalismSection,
     FeatureGallery,
     ChatRoom,
+    ChatAnchor,
+    ReadOnlyPreview,
     LiveBackendLog,
     SignIn,
     RegisterPath,
@@ -260,6 +274,8 @@ impl HomeCopy {
             HomeCopy::ProfessionalismSection,
             HomeCopy::FeatureGallery,
             HomeCopy::ChatRoom,
+            HomeCopy::ChatAnchor,
+            HomeCopy::ReadOnlyPreview,
             HomeCopy::LiveBackendLog,
             HomeCopy::SignIn,
             HomeCopy::RegisterPath,
@@ -275,9 +291,11 @@ impl HomeCopy {
                 "Professionalism In Practice (Detailed Breakdown)"
             }
             HomeCopy::FeatureGallery => {
-                "Feature gallery: realtime delivery, grounded in systems"
+                "Feature Gallery: Real-Time Delivery, Grounded in Systems"
             }
             HomeCopy::ChatRoom => "Live chat room",
+            HomeCopy::ChatAnchor => "id=\"chat-demo\"",
+            HomeCopy::ReadOnlyPreview => "Read-only preview.",
             HomeCopy::LiveBackendLog => "Live backend log (SSE)",
             HomeCopy::SignIn => "Sign in",
             HomeCopy::RegisterPath => "/register",

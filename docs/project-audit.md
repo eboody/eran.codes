@@ -341,3 +341,77 @@ Missing coverage in high-risk paths:
 
 ## Conclusion
 The architecture remains fundamentally solid, but policy-critical behavior (rate limiting), auth/session hardening, and error semantics need targeted fixes before calling this production-grade. The path to “strong” is clear and finite: one critical bug fix, two high-priority hardening changes, then medium-level reliability and observability cleanup.
+
+## Addendum: Portfolio Content, Formatting, and Visual Audit
+Date: 2026-02-24  
+Scope: portfolio-facing UX in `crates/http/src/views` and `crates/http/static/app.css`
+
+### Portfolio UX Summary
+- Content clarity: `6/10`
+- Information architecture + formatting: `6/10`
+- Visual polish + distinctiveness: `5.5/10`
+- Portfolio conversion readiness: `4.5/10`
+- Technical credibility: `8/10`
+
+### High-Priority Findings
+1. The hero and top-level messaging emphasize platform implementation over portfolio conversion.
+   - Evidence:
+     - `crates/http/src/views/partials/demo/layout/home_hero.rs:18`
+     - `crates/http/src/views/partials/demo/layout/home_hero.rs:19`
+     - `crates/http/src/views/page.rs:27`
+2. Capability showcase copy reads as generic SaaS language and is not consistently grounded in this app’s actual demo surfaces.
+   - Evidence:
+     - `crates/http/src/views/partials/demo/layout/capability_showcase.rs:27`
+     - `crates/http/src/views/partials/demo/layout/capability_showcase.rs:59`
+     - `crates/http/src/views/partials/demo/layout/capability_showcase.rs:91`
+3. The strongest proof surface (chat capstone) is functionally gated for anonymous visitors, creating early friction for portfolio reviewers.
+   - Evidence:
+     - `crates/http/src/views/pages/home.rs:379`
+     - `crates/http/src/router/routes.rs:90`
+4. Showcase CTA targets point at `#live-chat-demo` instead of the actual live chat section anchor (`#chat-demo`), reducing flow clarity.
+   - Evidence:
+     - `crates/http/src/views/partials/demo/layout/capability_showcase.rs:53`
+     - `crates/http/src/views/partials/demo/chat/chat_demo_section.rs:16`
+     - `crates/http/src/views/pages/home.rs:358`
+5. Page structure is dense before payoff; scanning cost is high because multiple heavy sections appear before direct interaction.
+   - Evidence:
+     - `crates/http/src/views/pages/home.rs:24`
+     - `crates/http/src/views/pages/home.rs:72`
+     - `crates/http/src/views/pages/home.rs:138`
+     - `crates/http/src/views/pages/home.rs:141`
+
+### Medium-Priority Findings
+1. Editorial consistency drift (title casing and “realtime”/“real-time” variations).
+   - Evidence:
+     - `crates/http/src/views/partials/demo/layout/professionalism_in_practice_tabs.rs:15`
+     - `crates/http/src/views/pages/home.rs:144`
+2. Tab control implementation uses hidden radio inputs and labels; semantics are weaker than explicit tab roles and relationships.
+   - Evidence:
+     - `crates/http/src/views/partials/demo/layout/tabbed_showcase.rs:198`
+     - `crates/http/src/views/partials/demo/layout/tabbed_showcase.rs:206`
+3. Several text sizes are too small for comfortable reading in portfolio contexts.
+   - Evidence:
+     - `crates/http/static/app.css:39`
+     - `crates/http/static/app.css:609`
+     - `crates/http/static/app.css:716`
+4. Some log/table contrast choices rely on low-opacity light colors and can degrade in light mode readability.
+   - Evidence:
+     - `crates/http/static/app.css:635`
+     - `crates/http/static/app.css:657`
+     - `crates/http/static/app.css:700`
+5. Log panel heading hierarchy is not semantic (`<p><strong>...</strong></p>` instead of heading elements).
+   - Evidence:
+     - `crates/http/src/views/partials/demo/log/log_panel.rs:23`
+
+### Strengths Worth Preserving
+- Architecture communication is coherent and specific.
+- Professionalism section ties claims to concrete code paths/snippets.
+- Live backend/network/chat flow panels create strong “show, don’t tell” proof.
+
+### Prioritized UX Remediation
+1. Rewrite hero/top-nav messaging for portfolio conversion while keeping platform context.
+2. Replace generic capability copy with app-accurate capabilities tied to real routes/components.
+3. Provide a no-login proof path (read-only live chat/demo visibility).
+4. Reduce scan cost by trimming/reordering dense sections and aligning CTA anchors.
+5. Raise small text sizes and improve contrast tokens in log/table surfaces.
+6. Improve semantics and accessibility in tab/log heading structures.

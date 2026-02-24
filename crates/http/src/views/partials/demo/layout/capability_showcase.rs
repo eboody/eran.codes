@@ -1,6 +1,7 @@
 use bon::Builder;
 use maud::Render;
 
+use crate::paths::Route;
 use crate::types::Text;
 
 use super::{
@@ -18,199 +19,135 @@ impl Render for CapabilityShowcase {
             .title(Text::from("Capability Showcase"))
             .subtitle(
                 Text::from(
-                    "Each tab is a focused demo surface you can use to present design decisions, architecture, and delivery approach.",
+                    "Each tab maps to a concrete capability in this workspace: auth durability, boundary-safe flows, observability, and live chat delivery.",
                 ),
             )
             .tabs(vec![
                 TabbedShowcaseTab::builder()
-                    .tab_icon(Text::from("[]"))
-                    .tab_label(Text::from("Secure Remote Access"))
-                    .title(Text::from("Secure Remote Access"))
-                    .subtitle(Text::from("Enable least-privilege network access in a few clicks."))
+                    .tab_icon(Text::from("ID"))
+                    .tab_label(Text::from("Identity + Sessions"))
+                    .title(Text::from("Identity and Session Durability"))
+                    .subtitle(Text::from("Encrypted cookies and durable Postgres-backed sessions keep identity consistent across requests."))
                     .bullets(vec![
-                        Text::from("Provision users and groups from your identity provider"),
-                        Text::from("Segment your network by grouping teams and infra"),
-                        Text::from("Define granular policies to limit network access"),
-                        Text::from("Enforce MFA and device security posture checks"),
+                        Text::from("axum-login provider + tower-sessions for auth state"),
+                        Text::from("Session cookie is signed/encrypted and HTTP-only"),
+                        Text::from("Credential hashing is isolated behind app traits"),
+                        Text::from("Tracing attaches user/session context to requests"),
                     ])
                     .mock_panel(
                         TabbedShowcaseMockPanel::builder()
-                            .title(Text::from("Create New Access Policy"))
-                            .subtitle(Text::from("Use this policy to control access groups and resources."))
+                            .title(Text::from("Auth Session Snapshot"))
+                            .subtitle(Text::from("Example runtime facts from the active auth/session stack."))
                             .rows(vec![
-                                TabbedShowcaseRow::builder().label(Text::from("Protocol")).value(Text::from("TCP")).build(),
-                                TabbedShowcaseRow::builder().label(Text::from("Source")).value(Text::from("IT Department")).build(),
-                                TabbedShowcaseRow::builder().label(Text::from("Destination")).value(Text::from("AWS - Servers")).build(),
-                                TabbedShowcaseRow::builder().label(Text::from("Ports")).value(Text::from("443, 22")).build(),
-                            ])
-                            .build(),
-                    )
-                    .chips_label(Text::from("Integrates with"))
-                    .chips(vec![Text::from("Azure"), Text::from("Google"), Text::from("Okta")])
-                    .action(
-                        TabbedShowcaseAction::builder()
-                            .label(Text::from("Explore"))
-                            .href(Text::from("#live-chat-demo"))
-                            .build(),
-                    )
-                    .build(),
-                TabbedShowcaseTab::builder()
-                    .tab_icon(Text::from("::"))
-                    .tab_label(Text::from("Zero-Config Deployment"))
-                    .title(Text::from("Zero-Config Deployment"))
-                    .subtitle(Text::from("Bootstrap environments fast with repeatable defaults."))
-                    .bullets(vec![
-                        Text::from("Apply baseline templates for new environments"),
-                        Text::from("Keep rollout behavior consistent across regions"),
-                        Text::from("Ship updates with predictable rollback paths"),
-                        Text::from("Move from local demo to hosted deployment quickly"),
-                    ])
-                    .mock_panel(
-                        TabbedShowcaseMockPanel::builder()
-                            .title(Text::from("Create New Deployment Profile"))
-                            .subtitle(Text::from("Use standardized setup templates per environment."))
-                            .rows(vec![
-                                TabbedShowcaseRow::builder().label(Text::from("Template")).value(Text::from("Production Baseline")).build(),
-                                TabbedShowcaseRow::builder().label(Text::from("Environment")).value(Text::from("Edge Cluster A")).build(),
-                                TabbedShowcaseRow::builder().label(Text::from("Verification")).value(Text::from("Policy + Health Checks")).build(),
-                                TabbedShowcaseRow::builder().label(Text::from("Rollback")).value(Text::from("Automatic on failed checks")).build(),
+                                TabbedShowcaseRow::builder().label(Text::from("Cookie")).value(Text::from("session_id · http-only")).build(),
+                                TabbedShowcaseRow::builder().label(Text::from("Session store")).value(Text::from("postgres + SQLx")).build(),
+                                TabbedShowcaseRow::builder().label(Text::from("Auth hash")).value(Text::from("dedicated session hash")).build(),
+                                TabbedShowcaseRow::builder().label(Text::from("Lifecycle")).value(Text::from("expiry + cleanup task")).build(),
                             ])
                             .build(),
                     )
                     .chips_label(Text::from("Built with"))
-                    .chips(vec![Text::from("Docker"), Text::from("Coolify"), Text::from("Postgres")])
+                    .chips(vec![Text::from("axum-login"), Text::from("tower-sessions"), Text::from("postgres")])
                     .action(
                         TabbedShowcaseAction::builder()
-                            .label(Text::from("Explore"))
-                            .href(Text::from("#live-chat-demo"))
+                            .label(Text::from("Open auth flow"))
+                            .href(Text::from(Route::Register.as_str()))
                             .build(),
                     )
                     .build(),
                 TabbedShowcaseTab::builder()
-                    .tab_icon(Text::from("()"))
-                    .tab_label(Text::from("Seamless SSO with MFA"))
-                    .title(Text::from("Seamless SSO with MFA"))
-                    .subtitle(Text::from("Connect identity providers and enforce strong auth policies."))
+                    .tab_icon(Text::from("BD"))
+                    .tab_label(Text::from("Boundary-Safe Flows"))
+                    .title(Text::from("Boundary-Safe Request Flow"))
+                    .subtitle(Text::from("Transport, policy, domain invariants, and persistence stay separated by typed handoffs."))
                     .bullets(vec![
-                        Text::from("Use SSO for primary identity and role mapping"),
-                        Text::from("Require MFA on privileged operations"),
-                        Text::from("Capture auth traces for incident review"),
-                        Text::from("Keep session handling explicit and durable"),
+                        Text::from("HTTP DTOs parse untrusted input"),
+                        Text::from("App commands orchestrate use-case policy"),
+                        Text::from("Domain newtypes enforce invariants"),
+                        Text::from("Infra owns SQL rows and concrete mechanisms"),
                     ])
                     .mock_panel(
                         TabbedShowcaseMockPanel::builder()
-                            .title(Text::from("Create New Auth Policy"))
-                            .subtitle(Text::from("Use this policy to configure sign-in and security steps."))
+                            .title(Text::from("Request Handoff Map"))
+                            .subtitle(Text::from("A single chat request moving through each layer."))
                             .rows(vec![
-                                TabbedShowcaseRow::builder().label(Text::from("Identity Provider")).value(Text::from("Google Workspace")).build(),
-                                TabbedShowcaseRow::builder().label(Text::from("MFA")).value(Text::from("Required for admin actions")).build(),
-                                TabbedShowcaseRow::builder().label(Text::from("Session TTL")).value(Text::from("12h with re-auth")).build(),
-                                TabbedShowcaseRow::builder().label(Text::from("Audit")).value(Text::from("Enabled")).build(),
+                                TabbedShowcaseRow::builder().label(Text::from("HTTP")).value(Text::from("signals -> request DTO")).build(),
+                                TabbedShowcaseRow::builder().label(Text::from("App")).value(Text::from("PostMessage command")).build(),
+                                TabbedShowcaseRow::builder().label(Text::from("Domain")).value(Text::from("RoomId, MessageBody, UserId")).build(),
+                                TabbedShowcaseRow::builder().label(Text::from("Infra")).value(Text::from("repo + SQL + audit")).build(),
                             ])
                             .build(),
                     )
-                    .chips_label(Text::from("Connected to"))
-                    .chips(vec![Text::from("Google Workspace"), Text::from("GitHub"), Text::from("OIDC")])
+                    .chips_label(Text::from("Crates"))
+                    .chips(vec![Text::from("domain"), Text::from("app"), Text::from("infra"), Text::from("http")])
                     .action(
                         TabbedShowcaseAction::builder()
-                            .label(Text::from("Explore"))
-                            .href(Text::from("#live-chat-demo"))
+                            .label(Text::from("See code-level breakdown"))
+                            .href(Text::from("#professionalism-practice"))
                             .build(),
                     )
                     .build(),
                 TabbedShowcaseTab::builder()
-                    .tab_icon(Text::from("<>"))
-                    .tab_label(Text::from("Dynamic Posture Checks"))
-                    .title(Text::from("Dynamic Posture Checks"))
-                    .subtitle(Text::from("Gate access using device state and runtime verification."))
+                    .tab_icon(Text::from("OBS"))
+                    .tab_label(Text::from("Observability + SSE"))
+                    .title(Text::from("Observability and Real-Time Delivery"))
+                    .subtitle(Text::from("Request spans, live logs, and SSE patches make behavior inspectable while the app runs."))
                     .bullets(vec![
-                        Text::from("Evaluate context before allowing access"),
-                        Text::from("Block stale, risky, or unknown devices"),
-                        Text::from("Re-check posture as session state changes"),
-                        Text::from("Keep policy and enforcement boundaries clear"),
+                        Text::from("Live and diagnostic streams are intentionally separated"),
+                        Text::from("Network log shows status/method/path/latency"),
+                        Text::from("SSE events track selector/mode/payload bytes"),
+                        Text::from("Trace fields include request/session/user context"),
                     ])
                     .mock_panel(
                         TabbedShowcaseMockPanel::builder()
-                            .title(Text::from("Create New Posture Rule"))
-                            .subtitle(Text::from("Define required device checks and conditions."))
+                            .title(Text::from("Live Event Snapshot"))
+                            .subtitle(Text::from("What is emitted while a chat message is posted and broadcast."))
                             .rows(vec![
-                                TabbedShowcaseRow::builder().label(Text::from("Device Status")).value(Text::from("Healthy")).build(),
-                                TabbedShowcaseRow::builder().label(Text::from("Disk Encryption")).value(Text::from("Verified")).build(),
-                                TabbedShowcaseRow::builder().label(Text::from("OS Patch Level")).value(Text::from("Current")).build(),
-                                TabbedShowcaseRow::builder().label(Text::from("Policy Decision")).value(Text::from("Allow")).build(),
+                                TabbedShowcaseRow::builder().label(Text::from("request end")).value(Text::from("status + latency + route")).build(),
+                                TabbedShowcaseRow::builder().label(Text::from("chat incoming")).value(Text::from("sender + payload_bytes")).build(),
+                                TabbedShowcaseRow::builder().label(Text::from("chat broadcast")).value(Text::from("selector=.chat-messages")).build(),
+                                TabbedShowcaseRow::builder().label(Text::from("network panel")).value(Text::from("SSE + HTTP tables")).build(),
                             ])
                             .build(),
                     )
-                    .chips_label(Text::from("Evaluates"))
-                    .chips(vec![Text::from("MDM"), Text::from("Endpoint"), Text::from("Policy Engine")])
+                    .chips_label(Text::from("Signals"))
+                    .chips(vec![Text::from("tracing"), Text::from("sse"), Text::from("datastar"), Text::from("log panels")])
                     .action(
                         TabbedShowcaseAction::builder()
-                            .label(Text::from("Explore"))
-                            .href(Text::from("#live-chat-demo"))
+                            .label(Text::from("Open network log"))
+                            .href(Text::from("#network-log-target"))
                             .build(),
                     )
                     .build(),
                 TabbedShowcaseTab::builder()
-                    .tab_icon(Text::from("{}"))
-                    .tab_label(Text::from("Centralized Network Management"))
-                    .title(Text::from("Centralized Network Management"))
-                    .subtitle(Text::from("Model teams, services, and routes from one control plane."))
+                    .tab_icon(Text::from("CHAT"))
+                    .tab_label(Text::from("Live Chat Capstone"))
+                    .title(Text::from("Live Chat Capstone"))
+                    .subtitle(Text::from("A complete request -> validate -> persist -> broadcast path with moderation and rate limiting."))
                     .bullets(vec![
-                        Text::from("Represent routes and ownership in one place"),
-                        Text::from("Separate policy orchestration from transport"),
-                        Text::from("Track resource relationships with typed models"),
-                        Text::from("Reduce config drift between environments"),
+                        Text::from("Messages persist to Postgres and reload on entry"),
+                        Text::from("Rate limits and moderation are enforced in app services"),
+                        Text::from("SSE pushes append updates to all connected tabs"),
+                        Text::from("Moderation queue surfaces pending decisions"),
                     ])
                     .mock_panel(
                         TabbedShowcaseMockPanel::builder()
-                            .title(Text::from("Create Network Control Model"))
-                            .subtitle(Text::from("Capture ownership and route intent for each segment."))
+                            .title(Text::from("Chat Flow Runtime"))
+                            .subtitle(Text::from("Core controls in the chat path."))
                             .rows(vec![
-                                TabbedShowcaseRow::builder().label(Text::from("Teams")).value(Text::from("Platform, Product, Security")).build(),
-                                TabbedShowcaseRow::builder().label(Text::from("Networks")).value(Text::from("Shared + Isolated Segments")).build(),
-                                TabbedShowcaseRow::builder().label(Text::from("Gateway")).value(Text::from("Regional Pair")).build(),
-                                TabbedShowcaseRow::builder().label(Text::from("Policy Source")).value(Text::from("GitOps")).build(),
+                                TabbedShowcaseRow::builder().label(Text::from("Request")).value(Text::from("POST /demo/chat/messages")).build(),
+                                TabbedShowcaseRow::builder().label(Text::from("Validation")).value(Text::from("typed ids + message body")).build(),
+                                TabbedShowcaseRow::builder().label(Text::from("Persistence")).value(Text::from("chat_messages + audit")).build(),
+                                TabbedShowcaseRow::builder().label(Text::from("Fanout")).value(Text::from("append .chat-messages")).build(),
                             ])
                             .build(),
                     )
-                    .chips_label(Text::from("Coordinates"))
-                    .chips(vec![Text::from("VPC"), Text::from("Service Mesh"), Text::from("DNS")])
+                    .chips_label(Text::from("Includes"))
+                    .chips(vec![Text::from("persistence"), Text::from("rate limit"), Text::from("moderation"), Text::from("sse fanout")])
                     .action(
                         TabbedShowcaseAction::builder()
-                            .label(Text::from("Explore"))
-                            .href(Text::from("#live-chat-demo"))
-                            .build(),
-                    )
-                    .build(),
-                TabbedShowcaseTab::builder()
-                    .tab_icon(Text::from("||"))
-                    .tab_label(Text::from("Detailed Activity Logging"))
-                    .title(Text::from("Detailed Activity Logging"))
-                    .subtitle(Text::from("Track who did what, where, and when across every action."))
-                    .bullets(vec![
-                        Text::from("Capture request + DB + SSE events end-to-end"),
-                        Text::from("Stream key events into live operational views"),
-                        Text::from("Keep diagnostic detail available for deep debugging"),
-                        Text::from("Use structured fields for faster incident triage"),
-                    ])
-                    .mock_panel(
-                        TabbedShowcaseMockPanel::builder()
-                            .title(Text::from("Create Observability Profile"))
-                            .subtitle(Text::from("Define signal classes and retention expectations."))
-                            .rows(vec![
-                                TabbedShowcaseRow::builder().label(Text::from("Request Trace")).value(Text::from("Enabled")).build(),
-                                TabbedShowcaseRow::builder().label(Text::from("DB Logging")).value(Text::from("Statement + Duration")).build(),
-                                TabbedShowcaseRow::builder().label(Text::from("SSE Events")).value(Text::from("Live Fanout")).build(),
-                                TabbedShowcaseRow::builder().label(Text::from("Retention")).value(Text::from("Operational Window + Audit")).build(),
-                            ])
-                            .build(),
-                    )
-                    .chips_label(Text::from("Pipelines"))
-                    .chips(vec![Text::from("Tracing"), Text::from("SSE"), Text::from("Audit Log")])
-                    .action(
-                        TabbedShowcaseAction::builder()
-                            .label(Text::from("Explore"))
-                            .href(Text::from("#live-chat-demo"))
+                            .label(Text::from("Jump to live chat"))
+                            .href(Text::from("#chat-demo"))
                             .build(),
                     )
                     .build(),

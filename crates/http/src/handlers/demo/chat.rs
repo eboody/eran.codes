@@ -8,9 +8,6 @@ use crate::trace_log::{LogMessageKnown, LogTargetKnown};
 use crate::types::{LogFieldKey, Text};
 use crate::{paths::Route, request, views};
 
-const DEMO_USER_EMAIL: &str = "demo.bot@example.com";
-const DEMO_USER_NAME: &str = "Demo Bot";
-
 #[derive(Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct ChatSignals {
@@ -199,7 +196,7 @@ pub async fn post_demo_chat_message(
         .as_ref()
         .ok_or(crate::error::Error::Internal)?;
 
-    let demo_user = ensure_demo_user(&state).await?;
+    let demo_user = crate::chat_demo::ensure_demo_user(&state).await?;
     let room_id = parse_room_id(&signals.room_id.to_string())?;
     state
         .chat
@@ -290,40 +287,6 @@ pub async fn post_demo_chat_message(
     };
 
     Ok(response)
-}
-
-async fn ensure_demo_user(
-    state: &crate::State,
-) -> Result<domain::user::User, crate::error::Error> {
-    let demo_email = domain::user::Email::try_new(DEMO_USER_EMAIL)
-        .map_err(|_| crate::error::Error::Internal)?;
-    let demo_username = domain::user::Username::try_new(DEMO_USER_NAME)
-        .map_err(|_| crate::error::Error::Internal)?;
-    if let Some(user) = state.user.find_by_email(demo_email.clone()).await? {
-        return Ok(user);
-    }
-
-    let password = secrecy::SecretString::new(uuid::Uuid::new_v4().to_string().into());
-    match state
-        .user
-        .register_user(
-            app::user::RegisterUser::builder()
-                .username(demo_username)
-                .email(demo_email.clone())
-                .password(password)
-                .build(),
-        )
-        .await
-    {
-        Ok(_) | Err(app::user::Error::EmailTaken) => {}
-        Err(error) => return Err(error.into()),
-    }
-
-    state
-        .user
-        .find_by_email(demo_email)
-        .await?
-        .ok_or(crate::error::Error::Internal)
 }
 
 fn broadcast_message(
