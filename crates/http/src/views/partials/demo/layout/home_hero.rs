@@ -2,10 +2,7 @@ use bon::Builder;
 use maud::Render;
 
 use crate::paths::Route;
-use crate::views::page::{
-    UserNav, PORTFOLIO_CONTACT_URL, PORTFOLIO_GITHUB_URL, PORTFOLIO_LINKEDIN_URL,
-    PORTFOLIO_RESUME_URL,
-};
+use crate::views::page::UserNav;
 use crate::views::partials::CtaRow;
 
 #[derive(Clone, Debug, Builder)]
@@ -36,12 +33,6 @@ impl Render for HomeHero {
                         ])
                         .build()
                         .render())
-                    div class="hero-conversion-links" {
-                        a href=(PORTFOLIO_RESUME_URL) { "Resume" }
-                        a href=(PORTFOLIO_GITHUB_URL) target="_blank" rel="noopener noreferrer" { "GitHub" }
-                        a href=(PORTFOLIO_LINKEDIN_URL) target="_blank" rel="noopener noreferrer" { "LinkedIn" }
-                        a href=(PORTFOLIO_CONTACT_URL) { "Contact" }
-                    }
                 }
                 aside class="hero-card" {
                     h3 { "Session status" }

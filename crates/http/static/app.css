@@ -1,26 +1,46 @@
 :root {
-  --portfolio-bg: hsl(216 42% 98%);
-  --portfolio-bg-alt: hsl(215 40% 96%);
-  --portfolio-accent-a: hsl(214 88% 60% / 0.24);
-  --portfolio-accent-b: hsl(13 92% 63% / 0.2);
-  --portfolio-shadow: 0 18px 42px hsl(223 34% 18% / 0.12);
+  --portfolio-bg: hsl(216 40% 98%);
+  --portfolio-bg-alt: hsl(218 34% 96%);
+  --portfolio-accent-a: hsl(210 64% 54% / 0.14);
+  --portfolio-accent-b: hsl(20 76% 55% / 0.12);
+  --portfolio-shadow: 0 10px 24px hsl(223 34% 18% / 0.12);
+  --tab-shell-bg: hsl(220 24% 97%);
+  --tab-shell-border: hsl(220 16% 84%);
+  --tab-shell-glow-a: hsl(220 44% 80% / 0.18);
+  --tab-shell-glow-b: hsl(350 58% 80% / 0.14);
+  --tab-surface-bg: hsl(220 24% 95%);
+  --tab-surface-border: hsl(220 16% 84%);
+  --tab-row-bg: hsl(220 24% 93%);
+  --tab-row-border: hsl(220 16% 84%);
+  --tab-tab-bg: hsl(220 24% 94%);
+  --tab-tab-text: hsl(220 16% 40%);
 }
 
 @media (prefers-color-scheme: dark) {
   :root {
-    --portfolio-bg: hsl(223 39% 9%);
-    --portfolio-bg-alt: hsl(223 35% 12%);
-    --portfolio-accent-a: hsl(199 92% 58% / 0.2);
-    --portfolio-accent-b: hsl(28 98% 56% / 0.2);
-    --portfolio-shadow: 0 18px 46px hsl(222 78% 2% / 0.45);
+    --portfolio-bg: hsl(223 32% 10%);
+    --portfolio-bg-alt: hsl(224 28% 12%);
+    --portfolio-accent-a: hsl(200 84% 56% / 0.12);
+    --portfolio-accent-b: hsl(28 90% 58% / 0.1);
+    --portfolio-shadow: 0 12px 28px hsl(222 78% 2% / 0.4);
+    --tab-shell-bg: hsl(222 47% 11% / 0.75);
+    --tab-shell-border: hsl(215 28% 50% / 0.38);
+    --tab-shell-glow-a: hsl(25 95% 54% / 0.14);
+    --tab-shell-glow-b: hsl(18 83% 55% / 0.12);
+    --tab-surface-bg: hsl(222 47% 11% / 0.72);
+    --tab-surface-border: hsl(215 28% 50% / 0.3);
+    --tab-row-bg: hsl(222 47% 11% / 0.66);
+    --tab-row-border: hsl(215 28% 50% / 0.3);
+    --tab-tab-bg: hsl(222 47% 11% / 0.68);
+    --tab-tab-text: var(--pico-muted-color);
   }
 }
 
 .portfolio-shell {
   font-family: "Space Grotesk", "Avenir Next", "Segoe UI", sans-serif;
   background:
-    radial-gradient(circle at 2% 0%, var(--portfolio-accent-a), transparent 38%),
-    radial-gradient(circle at 100% 12%, var(--portfolio-accent-b), transparent 40%),
+    radial-gradient(circle at 2% 0%, var(--portfolio-accent-a), transparent 40%),
+    radial-gradient(circle at 100% 12%, var(--portfolio-accent-b), transparent 42%),
     linear-gradient(180deg, var(--portfolio-bg), var(--portfolio-bg-alt));
   min-height: 100vh;
 }
@@ -39,18 +59,18 @@
 }
 
 .site-nav {
-  border-radius: 999px;
-  border: 1px solid color-mix(in srgb, var(--pico-muted-color) 24%, transparent);
-  background: color-mix(in srgb, var(--pico-card-background-color) 88%, transparent);
-  backdrop-filter: blur(12px);
-  box-shadow: var(--portfolio-shadow);
+  border-radius: 16px;
+  border: 1px solid color-mix(in srgb, var(--pico-muted-color) 20%, transparent);
+  background: color-mix(in srgb, var(--pico-card-background-color) 94%, transparent);
+  backdrop-filter: blur(10px);
+  box-shadow: 0 6px 16px color-mix(in srgb, black 16%, transparent);
   padding: 0.35rem 0.7rem;
 }
 
 .site-brand-links a {
-  font-size: 0.86rem;
+  font-size: 0.82rem;
   font-weight: 700;
-  letter-spacing: 0.05em;
+  letter-spacing: 0.03em;
   text-transform: uppercase;
 }
 
@@ -67,16 +87,16 @@
   align-items: center;
   margin-top: 1.5rem;
   margin-bottom: 2rem;
-  padding: 1.35rem;
-  border-radius: 24px;
-  border: 1px solid color-mix(in srgb, var(--pico-muted-color) 24%, transparent);
+  padding: 1.2rem;
+  border-radius: 18px;
+  border: 1px solid color-mix(in srgb, var(--pico-muted-color) 18%, transparent);
   background:
     linear-gradient(
       135deg,
-      color-mix(in srgb, var(--portfolio-accent-a) 34%, transparent),
-      transparent 56%
+      color-mix(in srgb, var(--portfolio-accent-a) 20%, transparent),
+      transparent 62%
     ),
-    color-mix(in srgb, var(--pico-card-background-color) 92%, transparent);
+    color-mix(in srgb, var(--pico-card-background-color) 95%, transparent);
   box-shadow: var(--portfolio-shadow);
 }
 
@@ -91,42 +111,23 @@
 }
 
 .hero h1 {
-  margin-bottom: 0.55rem;
-  font-size: clamp(1.7rem, 1.25rem + 2.2vw, 2.7rem);
+  margin-bottom: 0.4rem;
+  font-size: clamp(1.65rem, 1.22rem + 2vw, 2.45rem);
 }
 
 .hero-tags {
   display: flex;
   flex-wrap: wrap;
-  gap: 0.5rem;
-  margin-top: 1rem;
-}
-
-.hero-conversion-links {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 0.7rem;
-  margin-top: 0.8rem;
-}
-
-.hero-conversion-links a {
-  font-size: 0.86rem;
-  text-decoration: none;
-  color: var(--pico-muted-color);
-  border-bottom: 1px solid color-mix(in srgb, var(--pico-muted-color) 35%, transparent);
-}
-
-.hero-conversion-links a:hover {
-  color: var(--pico-color);
-  border-bottom-color: var(--pico-primary);
+  gap: 0.45rem;
+  margin-top: 0.85rem;
 }
 
 .hero-card {
-  background: color-mix(in srgb, var(--pico-card-background-color) 90%, transparent);
-  padding: 1.5rem;
-  border-radius: 20px;
-  border: 1px solid var(--pico-muted-border-color);
-  box-shadow: inset 0 1px 0 color-mix(in srgb, white 36%, transparent);
+  background: color-mix(in srgb, var(--pico-card-background-color) 94%, transparent);
+  padding: 1.2rem;
+  border-radius: 14px;
+  border: 1px solid color-mix(in srgb, var(--pico-muted-color) 18%, transparent);
+  box-shadow: inset 0 1px 0 color-mix(in srgb, white 20%, transparent);
 }
 
 .pill {
@@ -144,43 +145,7 @@
 }
 
 .muted {
-  color: var(--pico-muted-color);
-}
-
-:root {
-  --portfolio-card-bg: hsl(220 23% 97%);
-  --portfolio-card-border: hsl(220 16% 84%);
-  --feature-card-bg-a: hsl(220 24% 97%);
-  --feature-card-bg-b: hsl(220 21% 94%);
-  --tab-shell-bg: hsl(220 24% 97%);
-  --tab-shell-border: hsl(220 16% 84%);
-  --tab-shell-glow-a: hsl(220 44% 80% / 0.28);
-  --tab-shell-glow-b: hsl(350 58% 80% / 0.22);
-  --tab-surface-bg: hsl(220 24% 95%);
-  --tab-surface-border: hsl(220 16% 84%);
-  --tab-row-bg: hsl(220 24% 93%);
-  --tab-row-border: hsl(220 16% 84%);
-  --tab-tab-bg: hsl(220 24% 94%);
-  --tab-tab-text: hsl(220 16% 40%);
-}
-
-@media (prefers-color-scheme: dark) {
-  :root {
-    --portfolio-card-bg: hsl(222 47% 11% / 0.5);
-    --portfolio-card-border: hsl(215 28% 50% / 0.38);
-    --feature-card-bg-a: hsl(222 47% 11% / 0.8);
-    --feature-card-bg-b: hsl(222 47% 11% / 0.3);
-    --tab-shell-bg: hsl(222 47% 11% / 0.75);
-    --tab-shell-border: hsl(215 28% 50% / 0.38);
-    --tab-shell-glow-a: hsl(25 95% 54% / 0.18);
-    --tab-shell-glow-b: hsl(18 83% 55% / 0.16);
-    --tab-surface-bg: hsl(222 47% 11% / 0.72);
-    --tab-surface-border: hsl(215 28% 50% / 0.30);
-    --tab-row-bg: hsl(222 47% 11% / 0.66);
-    --tab-row-border: hsl(215 28% 50% / 0.30);
-    --tab-tab-bg: hsl(222 47% 11% / 0.68);
-    --tab-tab-text: var(--pico-muted-color);
-  }
+  color: color-mix(in srgb, var(--pico-muted-color) 94%, var(--pico-color) 6%);
 }
 
 ::selection {
@@ -288,7 +253,7 @@
 
 button,
 .button {
-  border-radius: 999px;
+  border-radius: 10px;
   font-weight: 600;
 }
 
@@ -296,42 +261,35 @@ a.button {
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  padding: 0.55rem 1.1rem;
-  background: linear-gradient(
-    135deg,
-    color-mix(in srgb, var(--pico-primary) 94%, white 6%),
-    color-mix(in srgb, var(--pico-primary) 78%, black 22%)
-  );
+  padding: 0.5rem 1rem;
+  background: color-mix(in srgb, var(--pico-primary) 90%, black 10%);
   color: var(--pico-primary-inverse);
   text-decoration: none;
-  border: none;
-  box-shadow: 0 10px 20px color-mix(in srgb, var(--pico-primary) 26%, transparent);
+  border: 1px solid color-mix(in srgb, var(--pico-primary) 50%, transparent);
+  box-shadow: 0 3px 10px color-mix(in srgb, black 18%, transparent);
 }
 
 a.button.secondary {
   background: transparent;
   color: var(--pico-color);
-  border: 1px solid var(--pico-muted-border-color);
+  border: 1px solid color-mix(in srgb, var(--pico-muted-color) 24%, transparent);
 }
 
 button.secondary,
 .button.secondary {
   background: transparent;
-  border: 1px solid var(--pico-muted-border-color);
+  border: 1px solid color-mix(in srgb, var(--pico-muted-color) 24%, transparent);
 }
 
 @media (hover: hover) {
   a.button:hover,
   button:hover {
-    transform: translateY(-1px);
+    filter: brightness(1.03);
   }
 
-  .feature-card:hover,
   .selected-work-card:hover,
-  .metric-card:hover,
-  .diagram-panel:hover {
-    transform: translateY(-2px);
-    box-shadow: var(--portfolio-shadow);
+  .metric-card:hover {
+    box-shadow: 0 10px 22px color-mix(in srgb, black 10%, transparent);
   }
 }
 
@@ -556,162 +514,6 @@ button.secondary,
 
 .code-token-macro {
   color: var(--code-macro-color, hsl(272 89% 74%));
-}
-
-.feature-header {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  gap: 1rem;
-}
-
-.feature-layout {
-  display: grid;
-  gap: 2rem;
-  margin-top: 1.5rem;
-}
-
-@media (min-width: 960px) {
-  .feature-layout {
-    grid-template-columns: 1.1fr 0.9fr;
-    align-items: start;
-  }
-}
-
-.feature-grid {
-  display: grid;
-  gap: 1rem;
-}
-
-.feature-card {
-  border: 1px solid var(--portfolio-card-border);
-  border-radius: 18px;
-  padding: 1.25rem;
-  background: linear-gradient(
-    135deg,
-    var(--feature-card-bg-a),
-    var(--feature-card-bg-b)
-  );
-  position: relative;
-  overflow: hidden;
-}
-
-.feature-card::after {
-  content: "";
-  position: absolute;
-  inset: 0;
-  opacity: 0.12;
-  background: radial-gradient(circle at top right, var(--accent-color), transparent 60%);
-  pointer-events: none;
-}
-
-.feature-card h3 {
-  margin-bottom: 0.4rem;
-}
-
-.feature-badge {
-  display: inline-flex;
-  align-items: center;
-  padding: 0.15rem 0.55rem;
-  border-radius: 999px;
-  font-size: 0.72rem;
-  font-weight: 600;
-  letter-spacing: 0.04em;
-  text-transform: uppercase;
-  background: rgba(148, 163, 184, 0.2);
-  color: var(--accent-color);
-  margin-bottom: 0.6rem;
-}
-
-.feature-bullets {
-  margin: 0.8rem 0 0;
-  padding-left: 1.1rem;
-  color: var(--pico-muted-color);
-  font-size: 0.88rem;
-}
-
-.accent-indigo {
-  --accent-color: rgb(99, 102, 241);
-}
-
-.accent-emerald {
-  --accent-color: rgb(16, 185, 129);
-}
-
-.accent-amber {
-  --accent-color: rgb(245, 158, 11);
-}
-
-.accent-rose {
-  --accent-color: rgb(244, 63, 94);
-}
-
-.diagram-grid {
-  display: grid;
-  gap: 1rem;
-}
-
-.diagram-panel {
-  border: 1px solid var(--portfolio-card-border);
-  border-radius: 18px;
-  padding: 1.25rem;
-  background: var(--portfolio-card-bg);
-}
-
-.diagram-panel header {
-  margin-bottom: 0.8rem;
-}
-
-.diagram-rows {
-  display: grid;
-  gap: 0.6rem;
-}
-
-.diagram-row {
-  display: grid;
-  grid-template-columns: 14px 1fr auto;
-  align-items: center;
-  gap: 0.6rem;
-  padding: 0.45rem 0.6rem;
-  border-radius: 12px;
-  background: var(--tab-row-bg);
-  border: 1px solid var(--tab-row-border);
-}
-
-.diagram-label {
-  font-weight: 600;
-}
-
-.diagram-value {
-  font-size: 0.82rem;
-  color: var(--pico-muted-color);
-  white-space: nowrap;
-}
-
-.status-dot {
-  width: 8px;
-  height: 8px;
-  border-radius: 999px;
-  background: rgba(148, 163, 184, 0.6);
-}
-
-.status-active {
-  background: rgb(34, 197, 94);
-  box-shadow: 0 0 10px rgba(34, 197, 94, 0.45);
-}
-
-.status-passive {
-  background: rgb(148, 163, 184);
-}
-
-.status-warning {
-  background: rgb(245, 158, 11);
-  box-shadow: 0 0 10px rgba(245, 158, 11, 0.45);
-}
-
-.status-info {
-  background: rgb(56, 189, 248);
-  box-shadow: 0 0 10px rgba(56, 189, 248, 0.45);
 }
 
 .chat-window .role {
