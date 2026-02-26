@@ -24,3 +24,9 @@ Use this list when building or explaining demos in this repo. The goal is concep
 - Persistence: messages/rooms/memberships stored in Postgres.
 - Controls: rate limiting, moderation queue, audit trail.
 - SSE fanout: message broadcast via Datastar append.
+
+## Request Burst Handling
+- Embedded burst demo on `/` with a range slider and one-click execution.
+- Client sends a high-volume burst to a lightweight probe endpoint.
+- Live log + network panels show request throughput and failures as they happen.
+- Demonstrates that observability and request handling still hold under stress.

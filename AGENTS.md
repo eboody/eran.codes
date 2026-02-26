@@ -48,6 +48,7 @@
 - When multiple implementation paths exist, choose the most sensible default and proceed without asking unless a decision blocks progress.
 - Reference `docs/portfolio-demos-plan.md` and `docs/portfolio-demos.md` when deciding which demo UX to implement next.
 - Treat `docs/project-audit.md` as the canonical quality audit and `docs/refactor-plan.md` as the canonical prioritized follow-up plan; avoid creating overlapping ad-hoc audit markdown files.
+- Treat `docs/writing-style.md` as the canonical writing/modeling style baseline (typed invariants first, typestate before generic builders, no stringly logic).
 - When designing a feature, present both a simpler baseline (with a TODO placeholder) and an enterprise-level option so the user can choose.
 - Never use string literal comparisons or stringly-typed checks; define enums/newtypes (prefer `strum`/`nutype`) and match on those instead.
 - Avoid `String` fields in structs; use enums or newtypes instead (enforced by `scripts/ci/no-string-fields.sh`).

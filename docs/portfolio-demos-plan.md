@@ -26,6 +26,13 @@ Use this file to guide portfolio demos and implementation priorities. The goal i
 - Failures: 400/401/429 map to partials; moderation returns pending; DB errors via centralized error.
 - Builders: use Bon typestate builders for chat router/service configuration so required steps read explicitly.
 
+## Demo E: Request Burst Handling
+- Path: embedded on `/` under `#request-burst-demo`.
+- Interaction: slider picks burst size (large step), then one button sends the burst.
+- Backend endpoint: lightweight probe route intended for high-volume request fanout.
+- Shows: throughput + error counts in the section itself while live/network logs update.
+- Quality cues: request tracing still includes route/request/session context under burst traffic.
+
 ## Supporting Assets
 - Domain newtypes: `RoomId`, `RoomName`, `MessageId`, `MessageBody`, `MessageStatus`, `UserId`.
 - App surface: commands (`PostMessage`, `ListMessages`, `CreateRoom`, `JoinRoom`, `ModerateMessage`) and traits (`ChatRepository`, `ModerationQueue`, `RateLimiter`, `AuditLog`, `Clock`, `IdGenerator`).

@@ -8,6 +8,7 @@ This is my portfolio codebase. The point is not demo count, it is engineering qu
 - SSE + Datastar delivery for live UI updates.
 - Reusable Maud components instead of one-off template markup.
 - Trace/log architecture split into live user-facing signals vs diagnostic-only events.
+- High-volume request burst demo showing throughput and log behavior under load.
 
 ## Quickstart
 Required env vars:
@@ -64,6 +65,7 @@ Prioritized refactor plan from that audit:
 Top-level:
 - `AGENTS.md`
 - `bon.md`
+- `docs/writing-style.md`
 - `docs/auth-sessions.md`
 - `docs/tracing.md`
 - `docs/datastar-tao.md`
