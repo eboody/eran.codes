@@ -374,6 +374,7 @@ button.secondary,
 @media (prefers-reduced-motion: no-preference) {
   .hero,
   .proof-first,
+  .request-burst-demo,
   .selected-work,
   .operations-surface,
   .tabbed-showcase-section,
@@ -390,6 +391,10 @@ button.secondary,
 
   .proof-first {
     animation-delay: 90ms;
+  }
+
+  .request-burst-demo {
+    animation-delay: 100ms;
   }
 
   .selected-work {
@@ -445,6 +450,7 @@ button.secondary,
 }
 
 .proof-first,
+.request-burst-demo,
 .chat-panel,
 .operations-surface,
 .selected-work,
@@ -456,6 +462,53 @@ button.secondary,
   padding: 1.35rem 1.35rem 1.45rem;
   background: var(--portfolio-surface);
   box-shadow: 0 6px 16px color-mix(in srgb, black 8%, transparent);
+}
+
+.request-burst-controls {
+  display: grid;
+  gap: 0.8rem;
+}
+
+.request-burst-slider-row {
+  display: grid;
+  gap: 0.45rem;
+  font-size: 0.9rem;
+  font-weight: 600;
+}
+
+.request-burst-slider-row input[type="range"] {
+  width: 100%;
+  margin: 0;
+  accent-color: var(--pico-primary);
+}
+
+.request-burst-selected {
+  margin: 0;
+  font-size: 0.94rem;
+  color: var(--pico-muted-color);
+}
+
+.request-burst-actions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.6rem 0.9rem;
+}
+
+.request-burst-actions p {
+  margin: 0;
+  font-size: 0.84rem;
+}
+
+.request-burst-result {
+  margin: 0;
+  border: 1px solid color-mix(in srgb, var(--pico-muted-color) 24%, transparent);
+  border-radius: 12px;
+  padding: 0.7rem 0.8rem;
+  background: color-mix(in srgb, var(--pico-card-background-color) 92%, transparent);
+  font-family: "JetBrains Mono", "SF Mono", ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+  font-size: 0.8rem;
+  line-height: 1.42;
 }
 
 .impact-metrics {
@@ -882,6 +935,7 @@ button.secondary,
   }
 
   .proof-first,
+  .request-burst-demo,
   .chat-panel,
   .operations-surface,
   .selected-work,
@@ -890,6 +944,14 @@ button.secondary,
     margin-top: 1.8rem;
     padding: 1rem 0.95rem 1.1rem;
     border-radius: 16px;
+  }
+
+  .request-burst-actions {
+    align-items: stretch;
+  }
+
+  .request-burst-actions button {
+    width: 100%;
   }
 
   .metric-card {

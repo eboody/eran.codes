@@ -65,6 +65,10 @@ fn base_routes() -> Router {
             get(crate::handlers::db_check_partial),
         )
         .route(
+            Route::PartialRequestBurstProbe.as_str(),
+            get(crate::handlers::request_burst_probe),
+        )
+        .route(
             Route::PartialSurrealGuarded.as_str(),
             get(crate::handlers::surreal_message_guarded),
         )

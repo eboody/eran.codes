@@ -6,7 +6,8 @@ pub use demo::{
     AuthStatus, BoundaryCheck, CapabilityShowcase, ChatConnection, ChatDemoSection,
     ChatFlow, ChatMessage, ChatMessages, ChatPanel, ChatPanelRole, ChatWindow,
     CtaRow, DbCheck, DemoResultPlaceholder, HomeHero,
-    KeyValueList, LiveLog, ModerationAction, NetworkLog, Ping, ProfessionalismInPracticeTabs,
+    KeyValueList, LiveLog, ModerationAction, NetworkLog, Ping, RequestBurstDemo,
+    ProfessionalismInPracticeTabs,
     RequestMeta, SectionHeader, SessionStatus, StatusCard, TraceLog,
 };
 pub use error::Error;

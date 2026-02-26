@@ -8,7 +8,7 @@ pub use chat::{ChatConnection, ChatDemoSection, ChatMessage, ChatMessages, ChatP
 pub use log::{ChatFlow, LiveLog, NetworkLog, TraceLog};
 pub use support::{AuthStatus, BoundaryCheck, DbCheck, KeyValueList, RequestMeta, SessionStatus, StatusCard};
 pub use layout::{
-    CapabilityShowcase, CtaRow, DemoResultPlaceholder, HomeHero,
+    CapabilityShowcase, CtaRow, DemoResultPlaceholder, HomeHero, RequestBurstDemo,
     ProfessionalismInPracticeTabs, SectionHeader,
 };
 pub use misc::{ModerationAction, Ping};

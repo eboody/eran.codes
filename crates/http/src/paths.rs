@@ -38,6 +38,8 @@ pub enum Route {
     PartialBoundaryCheck,
     #[strum(serialize = "/partials/db-check")]
     PartialDbCheck,
+    #[strum(serialize = "/partials/request-burst-probe")]
+    PartialRequestBurstProbe,
     #[strum(serialize = "/partials/ping")]
     PartialPing,
     #[strum(serialize = "/partials/surreal-message-guarded")]
@@ -66,6 +68,7 @@ impl Route {
             Route::PartialRequestMeta => "/partials/request-meta",
             Route::PartialBoundaryCheck => "/partials/boundary-check",
             Route::PartialDbCheck => "/partials/db-check",
+            Route::PartialRequestBurstProbe => "/partials/request-burst-probe",
             Route::PartialPing => "/partials/ping",
             Route::PartialSurrealGuarded => "/partials/surreal-message-guarded",
             Route::PartialSurrealCancel => "/partials/surreal-message-cancel",

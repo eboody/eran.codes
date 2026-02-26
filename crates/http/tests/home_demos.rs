@@ -258,6 +258,8 @@ enum HomeCopy {
     SelectedWork,
     ProfessionalismSection,
     CapabilityShowcase,
+    RequestBurst,
+    RequestBurstEndpoint,
     ChatRoom,
     ChatAnchor,
     ReadOnlyPreview,
@@ -281,6 +283,8 @@ impl HomeCopy {
             HomeCopy::SelectedWork,
             HomeCopy::ProfessionalismSection,
             HomeCopy::CapabilityShowcase,
+            HomeCopy::RequestBurst,
+            HomeCopy::RequestBurstEndpoint,
             HomeCopy::ChatRoom,
             HomeCopy::ChatAnchor,
             HomeCopy::ReadOnlyPreview,
@@ -306,6 +310,8 @@ impl HomeCopy {
                 "Professionalism In Practice (Detailed Breakdown)"
             }
             HomeCopy::CapabilityShowcase => "Capability Showcase",
+            HomeCopy::RequestBurst => "High-Volume Request Burst",
+            HomeCopy::RequestBurstEndpoint => "/partials/request-burst-probe",
             HomeCopy::ChatRoom => "Live chat room",
             HomeCopy::ChatAnchor => "id=\"chat-demo\"",
             HomeCopy::ReadOnlyPreview => "Read-only preview.",
@@ -323,4 +329,21 @@ impl HomeCopy {
             HomeCopy::LoginPath => "/login",
         }
     }
+}
+
+#[tokio::test]
+async fn request_burst_probe_returns_no_content() {
+    let app = test_app();
+    let response = app
+        .oneshot(
+            Request::get("/partials/request-burst-probe")
+                .body(Body::empty())
+                .unwrap(),
+        )
+        .await
+        .unwrap();
+
+    assert_eq!(response.status(), axum::http::StatusCode::NO_CONTENT);
+    let body = to_bytes(response.into_body(), usize::MAX).await.unwrap();
+    assert!(body.is_empty());
 }

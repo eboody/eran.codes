@@ -192,3 +192,7 @@ pub async fn ping_partial(Extension(_state): Extension<crate::State>) -> impl In
     let elements = views::partials::Ping.render();
     (StatusCode::OK, axum::response::Html(elements.into_string()))
 }
+
+pub async fn request_burst_probe() -> impl IntoResponse {
+    StatusCode::NO_CONTENT
+}

@@ -5,7 +5,7 @@ use crate::types::Text;
 use crate::views::page::UserNav;
 use crate::views::partials::{
     CapabilityShowcase, ChatDemoSection, DemoResultPlaceholder, HomeHero,
-    ProfessionalismInPracticeTabs, SectionHeader,
+    ProfessionalismInPracticeTabs, RequestBurstDemo, SectionHeader,
 };
 
 #[derive(Builder)]
@@ -51,6 +51,11 @@ impl maud::Render for Home {
                         }
                     }
                 }
+
+                (RequestBurstDemo::builder()
+                    .endpoint(Text::from(Route::PartialRequestBurstProbe.as_str()))
+                    .build()
+                    .render())
 
                 @if let Some(chat_demo) = &self.chat_demo { (chat_demo.render()) } @else {
                     section id=(ChatDemoSection::ANCHOR_ID) class="chat-panel" {
