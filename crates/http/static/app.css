@@ -1,13 +1,15 @@
 :root {
   --portfolio-bg: hsl(216 40% 98%);
   --portfolio-bg-alt: hsl(218 34% 96%);
-  --portfolio-accent-a: hsl(210 64% 54% / 0.14);
-  --portfolio-accent-b: hsl(20 76% 55% / 0.12);
-  --portfolio-shadow: 0 10px 24px hsl(223 34% 18% / 0.12);
+  --portfolio-accent-a: hsl(210 56% 50% / 0.1);
+  --portfolio-accent-b: hsl(18 62% 52% / 0.08);
+  --portfolio-shadow: 0 8px 20px hsl(223 34% 18% / 0.1);
+  --portfolio-surface: hsl(0 0% 100% / 0.72);
+  --portfolio-surface-border: hsl(220 16% 82% / 0.64);
   --tab-shell-bg: hsl(220 24% 97%);
   --tab-shell-border: hsl(220 16% 84%);
-  --tab-shell-glow-a: hsl(220 44% 80% / 0.18);
-  --tab-shell-glow-b: hsl(350 58% 80% / 0.14);
+  --tab-shell-glow-a: hsl(220 44% 80% / 0.12);
+  --tab-shell-glow-b: hsl(350 58% 80% / 0.1);
   --tab-surface-bg: hsl(220 24% 95%);
   --tab-surface-border: hsl(220 16% 84%);
   --tab-row-bg: hsl(220 24% 93%);
@@ -20,13 +22,15 @@
   :root {
     --portfolio-bg: hsl(223 32% 10%);
     --portfolio-bg-alt: hsl(224 28% 12%);
-    --portfolio-accent-a: hsl(200 84% 56% / 0.12);
-    --portfolio-accent-b: hsl(28 90% 58% / 0.1);
-    --portfolio-shadow: 0 12px 28px hsl(222 78% 2% / 0.4);
+    --portfolio-accent-a: hsl(200 72% 52% / 0.08);
+    --portfolio-accent-b: hsl(28 72% 56% / 0.08);
+    --portfolio-shadow: 0 8px 24px hsl(222 78% 2% / 0.32);
+    --portfolio-surface: hsl(223 34% 14% / 0.82);
+    --portfolio-surface-border: hsl(215 24% 42% / 0.48);
     --tab-shell-bg: hsl(222 47% 11% / 0.75);
     --tab-shell-border: hsl(215 28% 50% / 0.38);
-    --tab-shell-glow-a: hsl(25 95% 54% / 0.14);
-    --tab-shell-glow-b: hsl(18 83% 55% / 0.12);
+    --tab-shell-glow-a: hsl(25 95% 54% / 0.1);
+    --tab-shell-glow-b: hsl(18 83% 55% / 0.08);
     --tab-surface-bg: hsl(222 47% 11% / 0.72);
     --tab-surface-border: hsl(215 28% 50% / 0.3);
     --tab-row-bg: hsl(222 47% 11% / 0.66);
@@ -38,11 +42,23 @@
 
 .portfolio-shell {
   font-family: "Space Grotesk", "Avenir Next", "Segoe UI", sans-serif;
+  font-size: 17px;
+  line-height: 1.58;
+  color: color-mix(in srgb, var(--pico-color) 96%, white 4%);
   background:
-    radial-gradient(circle at 2% 0%, var(--portfolio-accent-a), transparent 40%),
-    radial-gradient(circle at 100% 12%, var(--portfolio-accent-b), transparent 42%),
+    radial-gradient(circle at 2% 0%, var(--portfolio-accent-a), transparent 45%),
+    radial-gradient(circle at 100% 12%, var(--portfolio-accent-b), transparent 46%),
     linear-gradient(180deg, var(--portfolio-bg), var(--portfolio-bg-alt));
   min-height: 100vh;
+}
+
+.portfolio-shell .container {
+  max-width: min(1120px, 94vw);
+}
+
+main.container {
+  padding-top: 0.6rem;
+  padding-bottom: 3.5rem;
 }
 
 .portfolio-shell h1,
@@ -59,75 +75,127 @@
 }
 
 .site-nav {
-  border-radius: 16px;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.55rem 1rem;
+  border-radius: 14px;
   border: 1px solid color-mix(in srgb, var(--pico-muted-color) 20%, transparent);
-  background: color-mix(in srgb, var(--pico-card-background-color) 94%, transparent);
+  background: color-mix(in srgb, var(--pico-card-background-color) 96%, transparent);
   backdrop-filter: blur(10px);
-  box-shadow: 0 6px 16px color-mix(in srgb, black 16%, transparent);
-  padding: 0.35rem 0.7rem;
+  box-shadow: 0 4px 14px color-mix(in srgb, black 14%, transparent);
+  padding: 0.5rem 0.85rem;
+}
+
+.site-nav ul {
+  list-style: none;
+  margin: 0;
+  padding: 0;
 }
 
 .site-brand-links a {
-  font-size: 0.82rem;
+  font-size: 0.86rem;
   font-weight: 700;
   letter-spacing: 0.03em;
   text-transform: uppercase;
+}
+
+.portfolio-nav-links {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.22rem;
+  flex: 1;
+  justify-self: center;
+  justify-content: center;
 }
 
 .site-auth-links {
   display: flex;
   flex-wrap: wrap;
   align-items: center;
-  gap: 0.2rem;
+  gap: 0.24rem;
+  margin-left: auto;
+  justify-self: end;
+}
+
+.site-auth-links span {
+  font-size: 0.84rem;
+  color: var(--pico-muted-color);
+}
+
+.site-auth-links form {
+  margin: 0;
+}
+
+.site-auth-links button,
+.site-auth-links .button,
+.portfolio-nav-links a,
+.site-brand-links a {
+  margin-bottom: 0;
+}
+
+.site-auth-links button {
+  padding: 0.34rem 0.72rem;
+  font-size: 0.8rem;
 }
 
 .hero {
   display: grid;
-  gap: 2rem;
+  gap: 2.3rem;
   align-items: center;
-  margin-top: 1.5rem;
-  margin-bottom: 2rem;
-  padding: 1.2rem;
-  border-radius: 18px;
-  border: 1px solid color-mix(in srgb, var(--pico-muted-color) 18%, transparent);
+  margin-top: 1.65rem;
+  margin-bottom: 2.35rem;
+  padding: 1.7rem;
+  border-radius: 20px;
+  border: 1px solid var(--portfolio-surface-border);
   background:
     linear-gradient(
       135deg,
-      color-mix(in srgb, var(--portfolio-accent-a) 20%, transparent),
-      transparent 62%
+      color-mix(in srgb, var(--portfolio-accent-a) 26%, transparent),
+      transparent 56%
     ),
-    color-mix(in srgb, var(--pico-card-background-color) 95%, transparent);
+    var(--portfolio-surface);
   box-shadow: var(--portfolio-shadow);
 }
 
 @media (min-width: 900px) {
   .hero {
-    grid-template-columns: 1.3fr 0.7fr;
+    grid-template-columns: 1.35fr 0.65fr;
   }
 }
 
 .hero p {
-  max-width: 45ch;
+  margin-top: 0.35rem;
+  max-width: 52ch;
+  font-size: 1.03rem;
+  color: color-mix(in srgb, var(--pico-color) 90%, var(--pico-muted-color) 10%);
 }
 
 .hero h1 {
-  margin-bottom: 0.4rem;
-  font-size: clamp(1.65rem, 1.22rem + 2vw, 2.45rem);
+  margin-bottom: 0.25rem;
+  font-size: clamp(2.1rem, 1.52rem + 2.6vw, 3.25rem);
+  line-height: 1.06;
 }
 
 .hero-tags {
   display: flex;
   flex-wrap: wrap;
-  gap: 0.45rem;
-  margin-top: 0.85rem;
+  gap: 0.4rem;
+  margin-top: 0.75rem;
 }
 
 .hero-card {
-  background: color-mix(in srgb, var(--pico-card-background-color) 94%, transparent);
-  padding: 1.2rem;
-  border-radius: 14px;
-  border: 1px solid color-mix(in srgb, var(--pico-muted-color) 18%, transparent);
+  background: color-mix(in srgb, var(--pico-card-background-color) 90%, transparent);
+  padding: 1.25rem;
+  border-radius: 16px;
+  border: 1px solid color-mix(in srgb, var(--pico-muted-color) 24%, transparent);
   box-shadow: inset 0 1px 0 color-mix(in srgb, white 20%, transparent);
+}
+
+.hero-card h3 {
+  margin-bottom: 0.6rem;
 }
 
 .pill {
@@ -161,7 +229,8 @@
 .cta-row {
   display: flex;
   flex-wrap: wrap;
-  gap: 0.6rem;
+  gap: 0.65rem;
+  margin-top: 1rem;
 }
 
 .flow-card {
@@ -224,26 +293,31 @@
 
 .section-header {
   display: flex;
+  flex-wrap: wrap;
   align-items: center;
   justify-content: space-between;
-  gap: 1rem;
-  margin-bottom: 1rem;
+  gap: 0.9rem 1.2rem;
+  margin-bottom: 1.1rem;
+}
+
+.section-header h2 {
+  margin-bottom: 0.28rem;
+  font-size: clamp(1.5rem, 1.2rem + 1.1vw, 2rem);
+  line-height: 1.18;
+}
+
+.section-header .muted {
+  margin-bottom: 0;
+  max-width: 70ch;
 }
 
 .section-meta {
   margin-top: -0.5rem;
-  margin-bottom: 0.5rem;
-}
-
-.portfolio-nav-links {
-  display: flex;
-  flex-wrap: wrap;
-  align-items: center;
-  gap: 0.2rem;
+  margin-bottom: 0.65rem;
 }
 
 .portfolio-nav-links a {
-  font-size: 0.82rem;
+  font-size: 0.84rem;
   color: var(--pico-muted-color);
 }
 
@@ -253,7 +327,7 @@
 
 button,
 .button {
-  border-radius: 10px;
+  border-radius: 9px;
   font-weight: 600;
 }
 
@@ -261,23 +335,27 @@ a.button {
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  padding: 0.5rem 1rem;
-  background: color-mix(in srgb, var(--pico-primary) 90%, black 10%);
+  padding: 0.52rem 1.05rem;
+  background: linear-gradient(
+    180deg,
+    color-mix(in srgb, var(--pico-primary) 86%, white 14%),
+    color-mix(in srgb, var(--pico-primary) 88%, black 12%)
+  );
   color: var(--pico-primary-inverse);
   text-decoration: none;
-  border: 1px solid color-mix(in srgb, var(--pico-primary) 50%, transparent);
-  box-shadow: 0 3px 10px color-mix(in srgb, black 18%, transparent);
+  border: 1px solid color-mix(in srgb, var(--pico-primary) 56%, transparent);
+  box-shadow: 0 4px 12px color-mix(in srgb, black 20%, transparent);
 }
 
 a.button.secondary {
-  background: transparent;
+  background: color-mix(in srgb, var(--pico-card-background-color) 80%, transparent);
   color: var(--pico-color);
   border: 1px solid color-mix(in srgb, var(--pico-muted-color) 24%, transparent);
 }
 
 button.secondary,
 .button.secondary {
-  background: transparent;
+  background: color-mix(in srgb, var(--pico-card-background-color) 80%, transparent);
   border: 1px solid color-mix(in srgb, var(--pico-muted-color) 24%, transparent);
 }
 
@@ -289,7 +367,7 @@ button.secondary,
 
   .selected-work-card:hover,
   .metric-card:hover {
-    box-shadow: 0 10px 22px color-mix(in srgb, black 10%, transparent);
+    box-shadow: 0 9px 20px color-mix(in srgb, black 10%, transparent);
   }
 }
 
@@ -336,7 +414,7 @@ button.secondary,
 
 .chat-columns {
   display: grid;
-  gap: 1.5rem;
+  gap: 1.25rem;
   grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
 }
 
@@ -347,10 +425,10 @@ button.secondary,
 }
 
 .chat-window {
-  border: 1px solid var(--pico-muted-border-color);
-  border-radius: 16px;
-  padding: 1rem;
-  background: var(--pico-card-background-color);
+  border: 1px solid color-mix(in srgb, var(--pico-muted-color) 24%, transparent);
+  border-radius: 14px;
+  padding: 1.05rem;
+  background: color-mix(in srgb, var(--pico-card-background-color) 94%, transparent);
   min-height: 220px;
   height: 320px;
   max-height: 320px;
@@ -363,21 +441,27 @@ button.secondary,
 .chat-window header {
   display: flex;
   align-items: center;
-  margin-bottom: 0.5rem;
+  margin-bottom: 0.35rem;
 }
 
 .proof-first,
+.chat-panel,
 .operations-surface,
 .selected-work,
 .tabbed-showcase-section,
 #professionalism-practice {
-  margin-top: 2.5rem;
+  margin-top: 2.8rem;
+  border: 1px solid var(--portfolio-surface-border);
+  border-radius: 18px;
+  padding: 1.35rem 1.35rem 1.45rem;
+  background: var(--portfolio-surface);
+  box-shadow: 0 6px 16px color-mix(in srgb, black 8%, transparent);
 }
 
 .impact-metrics {
   display: grid;
-  gap: 0.9rem;
-  margin-top: 1rem;
+  gap: 0.85rem;
+  margin-top: 1.15rem;
 }
 
 @media (min-width: 900px) {
@@ -389,20 +473,21 @@ button.secondary,
 .metric-card {
   border: 1px solid color-mix(in srgb, var(--pico-muted-color) 24%, transparent);
   border-radius: 14px;
-  padding: 0.85rem 0.95rem;
+  padding: 0.95rem 1rem;
   background: color-mix(in srgb, var(--pico-card-background-color) 92%, transparent);
 }
 
 .metric-value {
   margin: 0;
-  font-size: 1.05rem;
+  font-size: 1.16rem;
   font-weight: 700;
   letter-spacing: -0.015em;
 }
 
 .metric-label {
-  margin: 0.2rem 0 0;
-  font-size: 0.82rem;
+  margin: 0.26rem 0 0;
+  font-size: 0.84rem;
+  line-height: 1.45;
   color: var(--pico-muted-color);
 }
 
@@ -430,9 +515,9 @@ button.secondary,
 
 .selected-work-card {
   border: 1px solid color-mix(in srgb, var(--pico-muted-color) 24%, transparent);
-  border-radius: 16px;
-  padding: 1rem;
-  background: color-mix(in srgb, var(--pico-card-background-color) 90%, transparent);
+  border-radius: 14px;
+  padding: 1.05rem;
+  background: color-mix(in srgb, var(--pico-card-background-color) 94%, transparent);
 }
 
 .selected-work-card h3 {
@@ -449,9 +534,10 @@ button.secondary,
 }
 
 .selected-work-card ul {
-  margin: 0.75rem 0 0.9rem;
+  margin: 0.72rem 0 0.9rem;
   padding-left: 1rem;
-  font-size: 0.84rem;
+  font-size: 0.86rem;
+  line-height: 1.48;
   color: var(--pico-muted-color);
 }
 
@@ -517,7 +603,7 @@ button.secondary,
 }
 
 .chat-window .role {
-  font-size: 0.75rem;
+  font-size: 0.76rem;
   font-weight: 700;
   letter-spacing: 0.08em;
   text-transform: uppercase;
@@ -527,7 +613,22 @@ button.secondary,
 .chat-message .meta {
   display: flex;
   align-items: center;
-  gap: 0.5rem;
+  gap: 0.4rem 0.55rem;
+}
+
+.chat-message strong {
+  font-size: 0.9rem;
+}
+
+.chat-message p {
+  margin: 0.18rem 0 0;
+  font-size: 0.92rem;
+  line-height: 1.42;
+}
+
+.chat-message .status {
+  font-size: 0.78rem;
+  color: var(--pico-muted-color);
 }
 
 .chat-message .timestamp {
@@ -541,7 +642,7 @@ button.secondary,
   padding: 0;
   display: flex;
   flex-direction: column;
-  gap: 0.75rem;
+  gap: 0.72rem;
   overflow-y: auto;
   flex: 1;
   min-height: 0;
@@ -623,7 +724,7 @@ button.secondary,
 .data-table {
   width: 100%;
   border-collapse: collapse;
-  font-size: 0.78rem;
+  font-size: 0.8rem;
 }
 
 .data-table th,
@@ -736,13 +837,23 @@ button.secondary,
   }
 
   .site-nav {
-    border-radius: 18px;
-    padding: 0.5rem 0.65rem;
+    border-radius: 16px;
+    padding: 0.55rem 0.7rem;
+    gap: 0.45rem 0.75rem;
   }
 
-  .site-nav ul {
-    width: 100%;
+  .site-auth-links {
+    margin-left: auto;
+  }
+
+  .portfolio-nav-links {
+    order: 3;
+    flex: 0 0 100%;
     justify-content: flex-start;
+    overflow-x: auto;
+    flex-wrap: nowrap;
+    padding-bottom: 0.15rem;
+    scrollbar-width: thin;
   }
 
   .site-brand-links a {
@@ -755,18 +866,30 @@ button.secondary,
   }
 
   .hero {
-    padding: 1rem;
-    border-radius: 20px;
+    padding: 1.15rem;
+    border-radius: 18px;
     margin-top: 1rem;
-    margin-bottom: 1.3rem;
+    margin-bottom: 1.45rem;
+    gap: 1.1rem;
+  }
+
+  .hero h1 {
+    font-size: clamp(1.75rem, 1.35rem + 3.8vw, 2.4rem);
+  }
+
+  .hero p {
+    font-size: 0.97rem;
   }
 
   .proof-first,
+  .chat-panel,
   .operations-surface,
   .selected-work,
   .tabbed-showcase-section,
   #professionalism-practice {
     margin-top: 1.8rem;
+    padding: 1rem 0.95rem 1.1rem;
+    border-radius: 16px;
   }
 
   .metric-card {
@@ -774,7 +897,7 @@ button.secondary,
   }
 
   .metric-value {
-    font-size: 0.98rem;
+    font-size: 1rem;
   }
 
   .chat-columns {
@@ -914,56 +1037,54 @@ button.secondary,
   border-color: #f59e0b;
 }
 
-.tabbed-showcase-section {
-  margin-top: 2.5rem;
-}
-
 .tabbed-showcase {
   position: relative;
-  margin-top: 1.25rem;
+  margin-top: 1.15rem;
 }
 
 .tabbed-showcase-shell {
-  border: 1px solid var(--tab-shell-border);
-  border-radius: 22px;
-  padding: 1rem;
+  border: 1px solid color-mix(in srgb, var(--tab-shell-border) 82%, transparent);
+  border-radius: 16px;
+  padding: 0.95rem;
   background:
-    radial-gradient(circle at 0% 0%, var(--tab-shell-glow-a), transparent 30%),
-    radial-gradient(circle at 100% 100%, var(--tab-shell-glow-b), transparent 34%),
-    var(--tab-shell-bg);
+    radial-gradient(circle at 0% 0%, var(--tab-shell-glow-a), transparent 55%),
+    linear-gradient(
+      180deg,
+      color-mix(in srgb, var(--tab-shell-bg) 96%, transparent),
+      color-mix(in srgb, var(--tab-shell-bg) 90%, transparent)
+    );
 }
 
 .tabbed-showcase-tabs {
   display: flex;
   align-items: stretch;
-  gap: 0.6rem;
+  gap: 0.45rem;
   overflow-x: auto;
-  padding-bottom: 0.6rem;
-  border-bottom: 1px solid rgba(148, 163, 184, 0.25);
+  padding-bottom: 0.72rem;
+  border-bottom: 1px solid color-mix(in srgb, var(--pico-muted-color) 30%, transparent);
 }
 
 .tabbed-showcase-tab {
   cursor: pointer;
-  border-radius: 12px;
+  border-radius: 10px;
   border: 1px solid transparent;
   background: var(--tab-tab-bg);
-  color: var(--tab-accent, var(--tab-tab-text));
-  padding: 0.6rem 0.8rem;
-  min-width: 180px;
-  font-size: 0.82rem;
+  color: var(--tab-tab-text);
+  padding: 0.56rem 0.76rem;
+  min-width: 170px;
+  font-size: 0.81rem;
   font-weight: 600;
   display: inline-flex;
   align-items: center;
   gap: 0.45rem;
   transition: border-color 0.2s ease, background 0.2s ease, color 0.2s ease;
-  opacity: 0.9;
+  opacity: 1;
 }
 
 .tabbed-showcase-tab.is-active {
-  border-color: var(--tab-accent);
-  background: var(--tab-accent-soft);
-  color: var(--tab-accent);
-  opacity: 1;
+  border-color: color-mix(in srgb, var(--tab-accent) 52%, transparent);
+  background: color-mix(in srgb, var(--tab-accent-soft) 44%, var(--tab-tab-bg) 56%);
+  color: color-mix(in srgb, var(--tab-accent) 44%, var(--pico-color) 56%);
 }
 
 .tabbed-showcase-tab:focus-visible {
@@ -1016,7 +1137,7 @@ button.secondary,
 
 .tabbed-showcase-mockup {
   border: 1px solid var(--tab-surface-border);
-  border-radius: 16px;
+  border-radius: 14px;
   padding: 1rem;
   background: var(--tab-surface-bg);
 }
@@ -1035,9 +1156,9 @@ button.secondary,
 
 .tabbed-showcase-row {
   border: 1px solid var(--tab-row-border);
-  border-radius: 10px;
+  border-radius: 9px;
   background: var(--tab-row-bg);
-  padding: 0.5rem 0.7rem;
+  padding: 0.5rem 0.65rem;
   display: flex;
   justify-content: space-between;
   gap: 0.6rem;
@@ -1055,15 +1176,16 @@ button.secondary,
 }
 
 .tabbed-showcase-copy {
-  border: 1px solid color-mix(in srgb, var(--tab-accent, #f59e0b) 35%, transparent);
-  border-radius: 16px;
-  padding: 1.1rem;
-  background: linear-gradient(
-    145deg,
-    var(--tab-grad-start, rgba(249, 115, 22, 0.95)),
-    var(--tab-grad-end, rgba(251, 146, 60, 0.94))
-  );
-  color: var(--tab-copy-text, #1f2937);
+  border: 1px solid color-mix(in srgb, var(--tab-accent) 30%, transparent);
+  border-radius: 14px;
+  padding: 1.05rem;
+  background:
+    linear-gradient(
+      180deg,
+      color-mix(in srgb, var(--tab-accent-soft) 36%, var(--pico-card-background-color) 64%),
+      color-mix(in srgb, var(--pico-card-background-color) 96%, black 4%)
+    );
+  color: var(--pico-color);
   overflow: hidden;
 }
 
@@ -1073,7 +1195,7 @@ button.secondary,
 }
 
 .tabbed-showcase-copy .muted {
-  color: var(--tab-copy-muted, rgba(31, 41, 55, 0.88));
+  color: color-mix(in srgb, var(--pico-muted-color) 92%, var(--pico-color) 8%);
 }
 
 .tabbed-showcase-bullets {
@@ -1081,7 +1203,7 @@ button.secondary,
   padding-left: 1.1rem;
   display: grid;
   gap: 0.35rem;
-  color: var(--tab-copy-text, #1f2937);
+  color: var(--pico-color);
 }
 
 .tabbed-showcase-bullets li {
@@ -1089,12 +1211,12 @@ button.secondary,
 }
 
 .tabbed-showcase-bullets li::marker {
-  color: color-mix(in srgb, var(--tab-copy-text, #1f2937) 72%, transparent);
+  color: color-mix(in srgb, var(--tab-accent) 58%, transparent);
 }
 
 .tabbed-showcase-copy .button {
-  background: #0f172a;
-  color: #f8fafc;
+  background: color-mix(in srgb, var(--pico-primary) 86%, black 14%);
+  color: var(--pico-primary-inverse);
 }
 
 .tabbed-showcase-integrations {
@@ -1104,15 +1226,15 @@ button.secondary,
   align-items: center;
   gap: 0.4rem;
   font-size: 0.76rem;
-  color: rgba(31, 41, 55, 0.9);
+  color: var(--pico-muted-color);
 }
 
 .tabbed-showcase-chip {
-  border: 1px solid var(--tab-chip-border, rgba(15, 23, 42, 0.25));
+  border: 1px solid color-mix(in srgb, var(--tab-accent) 26%, var(--pico-muted-color) 74%);
   border-radius: 999px;
   padding: 0.2rem 0.5rem;
   font-weight: 600;
-  background: var(--tab-chip-bg, rgba(255, 255, 255, 0.65));
+  background: color-mix(in srgb, var(--pico-card-background-color) 90%, var(--tab-accent-soft) 10%);
 }
 
 .tabbed-showcase-copy .professionalism-path code {

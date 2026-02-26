@@ -26,34 +26,34 @@ pub(crate) struct TabbedShowcaseMockPanel {
 
 #[derive(Clone, Copy, Debug)]
 enum ShowcaseColor {
-    Amber,
-    Violet,
+    Indigo,
+    Blue,
+    Teal,
     Emerald,
-    Cyan,
-    Rose,
-    Sky,
+    Slate,
+    Amber,
 }
 
 impl ShowcaseColor {
     fn cycle(index: usize) -> Self {
         match index % 6 {
-            0 => Self::Amber,
-            1 => Self::Violet,
-            2 => Self::Emerald,
-            3 => Self::Cyan,
-            4 => Self::Rose,
-            _ => Self::Sky,
+            0 => Self::Indigo,
+            1 => Self::Blue,
+            2 => Self::Teal,
+            3 => Self::Emerald,
+            4 => Self::Slate,
+            _ => Self::Amber,
         }
     }
 
     fn base_hsl(self) -> Hsl {
         match self {
-            Self::Amber => Hsl::new(RgbHue::from_degrees(43.0), 0.92, 0.51),
-            Self::Violet => Hsl::new(RgbHue::from_degrees(262.0), 0.87, 0.66),
-            Self::Emerald => Hsl::new(RgbHue::from_degrees(160.0), 0.84, 0.40),
-            Self::Cyan => Hsl::new(RgbHue::from_degrees(188.0), 0.95, 0.43),
-            Self::Rose => Hsl::new(RgbHue::from_degrees(347.0), 0.89, 0.60),
-            Self::Sky => Hsl::new(RgbHue::from_degrees(199.0), 0.88, 0.49),
+            Self::Indigo => Hsl::new(RgbHue::from_degrees(228.0), 0.62, 0.56),
+            Self::Blue => Hsl::new(RgbHue::from_degrees(205.0), 0.60, 0.50),
+            Self::Teal => Hsl::new(RgbHue::from_degrees(184.0), 0.50, 0.44),
+            Self::Emerald => Hsl::new(RgbHue::from_degrees(158.0), 0.46, 0.40),
+            Self::Slate => Hsl::new(RgbHue::from_degrees(214.0), 0.28, 0.56),
+            Self::Amber => Hsl::new(RgbHue::from_degrees(32.0), 0.56, 0.52),
         }
     }
 
@@ -61,18 +61,18 @@ impl ShowcaseColor {
         let base = self.base_hsl();
         let tab_soft_hsl = Hsl::new(
             base.hue,
-            (base.saturation * 0.44).clamp(0.0, 1.0),
-            0.16,
+            (base.saturation * 0.42).clamp(0.0, 1.0),
+            0.2,
         );
         let grad_start_hsl = Hsl::new(
             base.hue,
-            (base.saturation * 0.86).clamp(0.0, 1.0),
-            (base.lightness + 0.24).clamp(0.0, 1.0),
+            (base.saturation * 0.58).clamp(0.0, 1.0),
+            (base.lightness + 0.06).clamp(0.0, 1.0),
         );
         let grad_end_hsl = Hsl::new(
-            base.hue + RgbHue::from_degrees(18.0),
-            (base.saturation * 0.76).clamp(0.0, 1.0),
-            (base.lightness + 0.08).clamp(0.0, 1.0),
+            base.hue + RgbHue::from_degrees(10.0),
+            (base.saturation * 0.44).clamp(0.0, 1.0),
+            (base.lightness - 0.05).clamp(0.0, 1.0),
         );
         let avg_bg_hsl = Hsl::new(
             base.hue + RgbHue::from_degrees(9.0),
@@ -209,7 +209,6 @@ impl Render for TabbedShowcase {
                                     style={
                                         " --tab-accent: " (css_color(palette.accent)) ";"
                                         " --tab-accent-soft: " (css_color(palette.tab_soft)) ";"
-                                        " color: " (css_color(palette.accent)) ";"
                                     }
                                 {
                                     @if let Some(icon) = &tab.tab_icon {

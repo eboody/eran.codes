@@ -15,9 +15,9 @@ impl Render for HomeHero {
         maud::html! {
             header class="hero" {
                 div {
-                    h1 { "Eran Codes: Portfolio + App Platform" }
+                    h1 { "Production Rust Systems, Demonstrated Live" }
                     p {
-                        "I build production-grade Rust systems with typed boundaries, durable auth sessions, and observable real-time flows."
+                        "I build secure, observable backend systems with typed boundaries. This portfolio runs on the same real auth, Postgres, and SSE stack I ship in production-style projects."
                     }
                     div class="hero-tags" {
                         span class="pill" { "axum-login" }
@@ -29,7 +29,7 @@ impl Render for HomeHero {
                     (CtaRow::builder()
                         .items(vec![
                             maud::html! { a class="button" href="#chat-demo" { "Open live demo" } },
-                            maud::html! { a class="button secondary" href="#professionalism-practice" { "See implementation details" } },
+                            maud::html! { a class="button secondary" href="#professionalism-practice" { "Review architecture" } },
                         ])
                         .build()
                         .render())
