@@ -99,9 +99,9 @@ impl Render for ProfessionalismInPracticeTabs {
                     .maybe_mock_panel(None)
                     .chips_label(Text::from("Technique"))
                     .chips(vec![Text::from("maud::Render"), Text::from("builder"), Text::from("typed props")])
-                    .code_path(Text::from("crates/http/src/views/partials/demo/log/log_row.rs"))
+                    .code_path(Text::from("crates/http/src/views/partials/demo/log/row.rs"))
                     .code(Text::from(
-                        "#[derive(Clone, Debug, Builder)]\npub struct LogRow {\n    pub timestamp: Text,\n    pub level: maud::Markup,\n    pub status: Option<maud::Markup>,\n    pub method: Option<maud::Markup>,\n    pub path: Option<maud::Markup>,\n    pub message: Text,\n    pub extras: Vec<maud::Markup>,\n}",
+                        "#[derive(Clone, Debug, Builder)]\npub struct Row {\n    pub timestamp: Text,\n    pub message: Text,\n    #[builder(default)]\n    pub pills: Vec<Pill>,\n}",
                     ))
                     .build(),
                 TabbedShowcaseTab::builder()

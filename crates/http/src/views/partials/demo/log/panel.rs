@@ -1,29 +1,29 @@
 use bon::Builder;
 use maud::Render;
 
-use crate::views::partials::components::EmptyState;
 use crate::types::Text;
+use crate::views::partials::components::EmptyState;
 
 #[derive(Clone, Debug, Builder)]
-pub struct LogPanel {
+pub struct Panel {
     pub title: Text,
     pub body: maud::Markup,
     pub empty_message: Option<Text>,
 }
 
-impl Render for LogPanel {
+impl Render for Panel {
     fn render(&self) -> maud::Markup {
         let body = if let Some(message) = &self.empty_message {
-            maud::html! { (EmptyState::builder().message(message.clone()).build().render()) }
+            maud::html! { (EmptyState::builder().message(message.clone()).build()) }
         } else {
             self.body.clone()
         };
         maud::html! {
-            article class="demo-result network-log-panel" {
-                header class="network-log-heading" {
+            article data-demo-result data-log-panel {
+                header data-log-heading {
                     h3 { (&self.title) }
                 }
-                div class="network-log-scroll" {
+                div data-log-scroll {
                     (body)
                 }
             }

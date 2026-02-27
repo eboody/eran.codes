@@ -89,16 +89,13 @@ Why this matters:
 Professional frontends reduce duplication by using composable, typed view primitives.
 
 ```rust
-// crates/http/src/views/partials/demo/log/log_row.rs
+// crates/http/src/views/partials/demo/log/row.rs
 #[derive(Clone, Debug, Builder)]
-pub struct LogRow {
+pub struct Row {
     pub timestamp: Text,
-    pub level: maud::Markup,
-    pub status: Option<maud::Markup>,
-    pub method: Option<maud::Markup>,
-    pub path: Option<maud::Markup>,
     pub message: Text,
-    pub extras: Vec<maud::Markup>,
+    #[builder(default)]
+    pub pills: Vec<Pill>,
 }
 ```
 

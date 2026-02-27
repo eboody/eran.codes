@@ -401,7 +401,7 @@ Scope: portfolio-facing UX in `crates/http/src/views` and `crates/http/static/ap
      - `crates/http/static/app.css:700`
 5. Log panel heading hierarchy is not semantic (`<p><strong>...</strong></p>` instead of heading elements).
    - Evidence:
-     - `crates/http/src/views/partials/demo/log/log_panel.rs:23`
+     - `crates/http/src/views/partials/demo/log/panel.rs:23`
 
 ### Strengths Worth Preserving
 - Architecture communication is coherent and specific.

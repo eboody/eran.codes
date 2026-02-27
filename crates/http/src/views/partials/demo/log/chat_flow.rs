@@ -5,10 +5,9 @@ use crate::trace_log::TraceEntry;
 use std::str::FromStr;
 
 use crate::types::{LogFieldKey, LogFieldName, Text};
+use crate::views::partials::components::{BadgeKind, Pill};
+use crate::views::partials::demo::log;
 use strum_macros::{Display, EnumString};
-use crate::views::partials::components::{
-    BadgeKind, DataTable, EmptyState, FieldValue, LogPanel, Pill, TableVariant,
-};
 
 #[derive(Clone, Debug, Builder)]
 pub struct ChatFlow<'a> {
@@ -18,8 +17,10 @@ pub struct ChatFlow<'a> {
 impl Render for ChatFlow<'_> {
     fn render(&self) -> maud::Markup {
         let body = if self.entries.is_empty() {
-            EmptyState::builder()
-                .message(Text::from("No chat messages yet. Send a message to see request/response flow."))
+            log::EmptyState::builder()
+                .message(Text::from(
+                    "No chat messages yet. Send a message to see request/response flow.",
+                ))
                 .build()
                 .render()
         } else {
@@ -39,7 +40,7 @@ impl Render for ChatFlow<'_> {
                     ]
                 })
                 .collect::<Vec<_>>();
-            DataTable::builder()
+            log::DataTable::builder()
                 .headers(vec![
                     Text::from("Time"),
                     Text::from("Direction"),
@@ -49,12 +50,12 @@ impl Render for ChatFlow<'_> {
                     Text::from("Body"),
                 ])
                 .rows(rows)
-                .variant(TableVariant::ChatFlow)
+                .variant(log::TableVariant::ChatFlow)
                 .build()
                 .render()
         };
 
-        LogPanel::builder()
+        log::Panel::builder()
             .title(Text::from("Chat message flow"))
             .body(body)
             .build()
@@ -159,7 +160,8 @@ enum FlowDirection {
 
 impl FlowDirection {
     fn from_entry(entry: &TraceEntry) -> Self {
-        let direction = field_value_text(entry, &LogFieldName::from(LogFieldKey::Direction));
+        let direction =
+            field_value_text(entry, &LogFieldName::from(LogFieldKey::Direction));
         let Some(direction) = direction else {
             return Self::Unknown;
         };
@@ -178,13 +180,13 @@ impl From<FlowDirectionKnown> for FlowDirection {
     }
 }
 
-fn field_value(entry: &TraceEntry, name: &LogFieldName) -> FieldValue {
+fn field_value(entry: &TraceEntry, name: &LogFieldName) -> log::FieldValue {
     entry
         .fields
         .iter()
         .find(|(field, _)| field == name)
-        .map(|(_, value)| FieldValue::from_log_value(Some(value)))
-        .unwrap_or(FieldValue::Missing)
+        .map(|(_, value)| log::FieldValue::from_log_value(Some(value)))
+        .unwrap_or(log::FieldValue::Missing)
 }
 
 fn field_value_text(entry: &TraceEntry, name: &LogFieldName) -> Option<Text> {

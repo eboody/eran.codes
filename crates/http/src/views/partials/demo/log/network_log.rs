@@ -2,12 +2,10 @@ use bon::Builder;
 use maud::Render;
 
 use crate::trace_log::TraceEntry;
-use crate::types::{LogFieldKey, Text};
-use crate::views::partials::components::{
-    DataTable, EmptyState, FieldValue, LogPanel, Pill, TableVariant,
-};
-use crate::views::partials::ChatFlow;
 use crate::trace_log::{LogMessageKind, LogMessageKnown, LogTargetKind, LogTargetKnown};
+use crate::types::{LogFieldKey, LogFieldName, Text};
+use crate::views::partials::components::Pill;
+use crate::views::partials::demo::log;
 
 #[derive(Builder)]
 pub struct NetworkLog<'a> {
@@ -32,10 +30,12 @@ impl Render for NetworkLog<'_> {
         let sse_rows: Vec<&TraceEntry> = self
             .entries
             .iter()
-            .filter(|entry| matches!(
-                LogTargetKind::parse(&entry.target.to_string()),
-                LogTargetKind::Known(LogTargetKnown::DemoSse)
-            ))
+            .filter(|entry| {
+                matches!(
+                    LogTargetKind::parse(&entry.target.to_string()),
+                    LogTargetKind::Known(LogTargetKnown::DemoSse)
+                )
+            })
             .collect();
         let chat_rows: Vec<&TraceEntry> = self
             .entries
@@ -48,18 +48,19 @@ impl Render for NetworkLog<'_> {
                     (
                         LogTargetKind::Known(LogTargetKnown::DemoChat),
                         LogMessageKind::Known(LogMessageKnown::ChatMessageIncoming)
+                    ) | (
+                        LogTargetKind::Known(LogTargetKnown::DemoSse),
+                        LogMessageKind::Known(LogMessageKnown::ChatMessageBroadcast)
                     )
-                        | (
-                            LogTargetKind::Known(LogTargetKnown::DemoSse),
-                            LogMessageKind::Known(LogMessageKnown::ChatMessageBroadcast)
-                        )
                 )
             })
             .collect();
 
         let request_body = if request_rows.is_empty() {
-            EmptyState::builder()
-                .message(Text::from("No requests yet. Trigger a demo action to populate this table."))
+            log::EmptyState::builder()
+                .message(Text::from(
+                    "No requests yet. Trigger a demo action to populate this table.",
+                ))
                 .build()
                 .render()
         } else {
@@ -78,7 +79,7 @@ impl Render for NetworkLog<'_> {
                     ]
                 })
                 .collect::<Vec<_>>();
-            DataTable::builder()
+            log::DataTable::builder()
                 .headers(vec![
                     Text::from("Time"),
                     Text::from("Status"),
@@ -88,14 +89,16 @@ impl Render for NetworkLog<'_> {
                     Text::from("Latency"),
                 ])
                 .rows(rows)
-                .variant(TableVariant::Default)
+                .variant(log::TableVariant::Default)
                 .build()
                 .render()
         };
 
         let sse_body = if sse_rows.is_empty() {
-            EmptyState::builder()
-                .message(Text::from("No SSE pushes yet. Send a chat message to broadcast an update."))
+            log::EmptyState::builder()
+                .message(Text::from(
+                    "No SSE pushes yet. Send a chat message to broadcast an update.",
+                ))
                 .build()
                 .render()
         } else {
@@ -107,13 +110,13 @@ impl Render for NetworkLog<'_> {
                     vec![
                         maud::html! { (&entry.timestamp) },
                         maud::html! { (&entry.message) },
-                        maud::html! { (field_value_text(entry, &crate::types::LogFieldName::from(LogFieldKey::Selector)).unwrap_or_else(|| Text::from("-"))) },
-                        maud::html! { (field_value_text(entry, &crate::types::LogFieldName::from(LogFieldKey::Mode)).unwrap_or_else(|| Text::from("-"))) },
-                        maud::html! { (field_value_text(entry, &crate::types::LogFieldName::from(LogFieldKey::PayloadBytes)).unwrap_or_else(|| Text::from("-"))) },
+                        maud::html! { (field_value_text(entry, &LogFieldName::from(LogFieldKey::Selector)).unwrap_or_else(|| Text::from("-"))) },
+                        maud::html! { (field_value_text(entry, &LogFieldName::from(LogFieldKey::Mode)).unwrap_or_else(|| Text::from("-"))) },
+                        maud::html! { (field_value_text(entry, &LogFieldName::from(LogFieldKey::PayloadBytes)).unwrap_or_else(|| Text::from("-"))) },
                     ]
                 })
                 .collect::<Vec<_>>();
-            DataTable::builder()
+            log::DataTable::builder()
                 .headers(vec![
                     Text::from("Time"),
                     Text::from("Event"),
@@ -122,33 +125,31 @@ impl Render for NetworkLog<'_> {
                     Text::from("Payload (bytes)"),
                 ])
                 .rows(rows)
-                .variant(TableVariant::Default)
+                .variant(log::TableVariant::Default)
                 .build()
                 .render()
         };
 
         maud::html! {
-            section id="network-log-target" class="network-log-panels" {
-                (LogPanel::builder()
+            section id="network-log-target" data-log-panels {
+                (log::Styles.render())
+                (log::Panel::builder()
                     .title(Text::from("HTTP requests"))
                     .body(request_body)
-                    .build()
-                    .render())
-                (LogPanel::builder()
+                    .build())
+                (log::Panel::builder()
                     .title(Text::from("SSE pushes"))
                     .body(sse_body)
-                    .build()
-                    .render())
-                (ChatFlow::builder()
+                    .build())
+                (log::ChatFlow::builder()
                     .entries(&chat_rows)
-                    .build()
-                    .render())
+                    .build())
                 script {
                     (maud::PreEscaped(r#"
 (() => {
   const root = document.getElementById('network-log-target');
   if (!root) return;
-  const panels = root.querySelectorAll('.network-log-scroll');
+  const panels = root.querySelectorAll('[data-log-scroll]');
   panels.forEach((panel) => {
     const scroll = () => { panel.scrollTop = panel.scrollHeight; };
     requestAnimationFrame(scroll);
@@ -163,49 +164,49 @@ impl Render for NetworkLog<'_> {
     }
 }
 
-fn field_value(entry: &TraceEntry, name: &crate::types::LogFieldName) -> FieldValue {
+fn field_value(entry: &TraceEntry, name: &LogFieldName) -> log::FieldValue {
     entry
         .fields
         .iter()
         .find(|(field, _)| field == name)
-        .map(|(_, value)| FieldValue::from_log_value(Some(value)))
-        .unwrap_or(FieldValue::Missing)
+        .map(|(_, value)| log::FieldValue::from_log_value(Some(value)))
+        .unwrap_or(log::FieldValue::Missing)
 }
 
-fn field_value_text(entry: &TraceEntry, name: &crate::types::LogFieldName) -> Option<Text> {
+fn field_value_text(entry: &TraceEntry, name: &LogFieldName) -> Option<Text> {
     field_value(entry, name).into_option()
 }
 
 fn method_pill(entry: &TraceEntry) -> Pill {
-    match field_value(entry, &crate::types::LogFieldName::from(LogFieldKey::Method)).into_option() {
+    match field_value(entry, &LogFieldName::from(LogFieldKey::Method)).into_option() {
         Some(method) => Pill::method(method),
         None => Pill::fields("-"),
     }
 }
 
 fn path_pill(entry: &TraceEntry) -> Pill {
-    match field_value(entry, &crate::types::LogFieldName::from(LogFieldKey::Path)).into_option() {
+    match field_value(entry, &LogFieldName::from(LogFieldKey::Path)).into_option() {
         Some(path) => Pill::path(path),
         None => Pill::fields("-"),
     }
 }
 
 fn status_pill(entry: &TraceEntry) -> Pill {
-    match field_value(entry, &crate::types::LogFieldName::from(LogFieldKey::Status)).into_option() {
+    match field_value(entry, &LogFieldName::from(LogFieldKey::Status)).into_option() {
         Some(status) => Pill::status(status),
         None => Pill::fields("-"),
     }
 }
 
 fn latency_pill(entry: &TraceEntry) -> Option<Pill> {
-    field_value(entry, &crate::types::LogFieldName::from(LogFieldKey::LatencyMs))
+    field_value(entry, &LogFieldName::from(LogFieldKey::LatencyMs))
         .into_option()
         .map(|value: Text| Pill::fields(format!("latency_ms={}", value)))
 }
 
 fn source_pill(entry: &TraceEntry) -> Pill {
     let sender: Option<Text> =
-        field_value(entry, &crate::types::LogFieldName::from(LogFieldKey::Sender)).into_option();
+        field_value(entry, &LogFieldName::from(LogFieldKey::Sender)).into_option();
     match sender {
         Some(sender) => Pill::fields(format!("source={}", sender)),
         None => Pill::fields("source=unknown"),

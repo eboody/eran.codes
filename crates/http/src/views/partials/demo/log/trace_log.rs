@@ -5,9 +5,8 @@ use maud::Render;
 
 use crate::trace_log::TraceEntry;
 use crate::types::{LogFieldKey, LogFieldName, Text};
-use crate::views::partials::components::{
-    EmptyState, FieldValue, LogPanel, LogRow, Pill,
-};
+use crate::views::partials::components::Pill;
+use crate::views::partials::demo::log;
 
 #[derive(Builder)]
 pub struct TraceLog<'a> {
@@ -17,32 +16,31 @@ pub struct TraceLog<'a> {
 impl Render for TraceLog<'_> {
     fn render(&self) -> maud::Markup {
         let body = if self.entries.is_empty() {
-            EmptyState::builder()
+            log::EmptyState::builder()
                 .message(Text::from("No trace entries recorded yet."))
                 .build()
                 .render()
         } else {
             let grouped = group_by_request(self.entries.iter());
             maud::html! {
-                div class="log-groups" {
+                div data-log-groups {
                     @for group in grouped {
-                        div class="log-group" {
-                            div class="log-group-header" {
+                        div data-log-group {
+                            div data-log-group-header {
                                 @if let Some(request_id) = &group.request_id {
                                     (Pill::fields(format!("request_id={}", short_request_id(request_id))).render())
                                 } @else {
                                     (Pill::fields("request_id=unknown").render())
                                 }
-                                span class="muted" { (format!("{} events", group.entries.len())) }
+                                span data-muted { (format!("{} events", group.entries.len())) }
                             }
-                            ul class="live-log-entries" {
+                            ul data-live-log-entries {
                                 @for entry in group.entries {
-                                    (LogRow::builder()
+                                    (log::Row::builder()
                                         .timestamp(Text::from(entry.timestamp.clone()))
                                         .message(Text::from(entry.message.clone()))
                                         .pills(build_pills(entry))
-                                        .build()
-                                        .render())
+                                        .build())
                                 }
                             }
                         }
@@ -52,11 +50,11 @@ impl Render for TraceLog<'_> {
         };
 
         maud::html! {
-            (LogPanel::builder()
+            (log::Styles.render())
+            (log::Panel::builder()
                 .title(Text::from("Trace log"))
                 .body(body)
-                .build()
-                .render())
+                .build())
         }
     }
 }
@@ -75,8 +73,7 @@ where
     let mut map: std::collections::HashMap<Option<Text>, Vec<&'a TraceEntry>> =
         std::collections::HashMap::new();
     for entry in entries {
-        let request_id =
-            field_value(entry, &LogFieldName::from(LogFieldKey::RequestId));
+        let request_id = field_value(entry, &LogFieldName::from(LogFieldKey::RequestId));
         if !map.contains_key(&request_id) {
             order.push(request_id.clone());
         }
@@ -95,7 +92,11 @@ where
 
 fn short_request_id(value: &Text) -> String {
     let value = value.to_string();
-    value.split('-').next().unwrap_or(value.as_str()).to_string()
+    value
+        .split('-')
+        .next()
+        .unwrap_or(value.as_str())
+        .to_string()
 }
 
 fn build_pills(entry: &TraceEntry) -> Vec<Pill> {
@@ -156,6 +157,6 @@ fn field_value(entry: &TraceEntry, name: &LogFieldName) -> Option<Text> {
         .fields
         .iter()
         .find(|(field, _)| field == name)
-        .map(|(_, value)| FieldValue::from_log_value(Some(value)))
+        .map(|(_, value)| log::FieldValue::from_log_value(Some(value)))
         .and_then(|value| value.into_option())
 }

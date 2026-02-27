@@ -1,13 +1,13 @@
+pub mod components;
 mod demo;
 mod error;
-pub mod components;
 
+// ci: descriptive-module-import crate::views::partials::chat
+pub use demo::chat;
 pub use demo::{
-    AuthStatus, BoundaryCheck, CapabilityShowcase, ChatConnection, ChatDemoSection,
-    ChatFlow, ChatMessage, ChatMessages, ChatPanel, ChatPanelRole, ChatWindow,
-    CtaRow, DbCheck, DemoResultPlaceholder, HomeHero,
-    KeyValueList, LiveLog, ModerationAction, NetworkLog, Ping, RequestBurstDemo,
-    ProfessionalismInPracticeTabs,
-    RequestMeta, SectionHeader, SessionStatus, StatusCard, TraceLog,
+    AuthStatus, BoundaryCheck, CapabilityShowcase, CtaRow, DbCheck, DemoResultPlaceholder,
+    HomeHero, KeyValueList, LiveLog, ModerationAction, NetworkLog, Ping,
+    ProfessionalismInPracticeTabs, RequestBurstDemo, RequestMeta, SectionHeader,
+    SessionStatus, StatusCard, TraceLog,
 };
 pub use error::Error;
