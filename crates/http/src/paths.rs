@@ -14,8 +14,6 @@ pub enum Route {
     Logout,
     #[strum(serialize = "/protected")]
     Protected,
-    #[strum(serialize = "/demo/chat")]
-    Chat,
     #[strum(serialize = "/demo/chat/messages")]
     ChatMessages,
     #[strum(serialize = "/demo/chat/messages/demo")]
@@ -56,7 +54,6 @@ impl Route {
             Route::Register => "/register",
             Route::Logout => "/logout",
             Route::Protected => "/protected",
-            Route::Chat => "/demo/chat",
             Route::ChatMessages => "/demo/chat/messages",
             Route::ChatMessagesDemo => "/demo/chat/messages/demo",
             Route::ChatModeration => "/demo/chat/moderation",

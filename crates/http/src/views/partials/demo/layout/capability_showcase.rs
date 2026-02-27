@@ -5,8 +5,8 @@ use crate::paths::Route;
 use crate::types::Text;
 
 use super::{
-    TabbedShowcase, TabbedShowcaseAction, TabbedShowcaseMockPanel,
-    TabbedShowcaseRow, TabbedShowcaseTab,
+    TabbedShowcase, TabbedShowcaseAction, TabbedShowcaseMockPanel, TabbedShowcaseRow,
+    TabbedShowcaseTab,
 };
 
 #[derive(Clone, Debug, Builder)]
@@ -105,7 +105,7 @@ impl Render for CapabilityShowcase {
                             .rows(vec![
                                 TabbedShowcaseRow::builder().label(Text::from("request end")).value(Text::from("status + latency + route")).build(),
                                 TabbedShowcaseRow::builder().label(Text::from("chat incoming")).value(Text::from("sender + payload_bytes")).build(),
-                                TabbedShowcaseRow::builder().label(Text::from("chat broadcast")).value(Text::from("selector=.chat-messages")).build(),
+                                TabbedShowcaseRow::builder().label(Text::from("chat broadcast")).value(Text::from("selector=[data-chat-messages]")).build(),
                                 TabbedShowcaseRow::builder().label(Text::from("network panel")).value(Text::from("SSE + HTTP tables")).build(),
                             ])
                             .build(),
@@ -138,7 +138,7 @@ impl Render for CapabilityShowcase {
                                 TabbedShowcaseRow::builder().label(Text::from("Request")).value(Text::from("POST /demo/chat/messages")).build(),
                                 TabbedShowcaseRow::builder().label(Text::from("Validation")).value(Text::from("typed ids + message body")).build(),
                                 TabbedShowcaseRow::builder().label(Text::from("Persistence")).value(Text::from("chat_messages + audit")).build(),
-                                TabbedShowcaseRow::builder().label(Text::from("Fanout")).value(Text::from("append .chat-messages")).build(),
+                                TabbedShowcaseRow::builder().label(Text::from("Fanout")).value(Text::from("append [data-chat-messages]")).build(),
                             ])
                             .build(),
                     )

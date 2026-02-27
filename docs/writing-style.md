@@ -125,22 +125,102 @@ Preferred use at call sites:
 - `(Component::Variant(...))`, or
 - `(Component { variant: ComponentVariant::Primary, ... })`
 
+### Builder + render terminal-call rule
+
+Do not chain `.build().render()` at call sites.
+
+- Inside `maud::html!` splices, end builder chains with `.build()` and splice the value directly; Maud renders `Render` values.
+- Outside `html!` (when a `maud::Markup` value is required immediately), call `.render()` on an already-built value.
+- Keep one terminal call at the call site: either `.build()` in splices or `.render()` on a value, not both.
+
 ### Inline style/script policy
 
 Where inline CSS/JS is appropriate:
 
-- use `css!` and `js!` macros,
+- prefer `inline_css!` and `inline_js!` so style/script code lives outside template bodies and is inserted with `(css())` / `(js())`,
+- reserve direct `css!` / `js!` usage in templates for very small one-off blocks,
 - scope styles with `css-scope-inline`,
 - use `surreal.js` helpers where they reduce DOM boilerplate and improve clarity.
+
+### Component-local styling first
+
+For Maud partials/components:
+
+- Prefer component-scoped style helpers (`inline_css!` + `(css())`) with `me` selectors over global `crates/http/static/app.css` rules.
+- Add global `app.css` rules only when styles are intentionally shared across unrelated components/pages.
+- Use targeted hooks (`id`, semantic class, or stable `data-*`) for nested styling and keep selectors short.
+- Avoid deep selector chains; if a selector grows beyond a couple of combinators, split styling into a smaller subcomponent.
+- Use bare `me`/quick structural selectors only for simple local styling, not as a substitute for clear hooks.
+- Avoid per-rule magic numbers; define reusable design tokens (space, radius, type, color, motion) at the component root and override tokens responsively.
 
 ## Readability Standard
 
 Code should read like a domain explanation.
 
 - Prefer descriptive names over abbreviations.
+- Prefer module-scoped naming over compound type names when module context already conveys the role.
 - Prefer explicit types over inferred ambiguity when intent is unclear.
 - Prefer short, composable functions over long mixed-responsibility functions.
 - Keep constructor/wiring call sites self-explanatory.
+
+## Naming Standard
+
+### Prefer hierarchical modules over compounds
+
+When a concept is naturally compound, model it as module hierarchy instead of compound module/type names.
+
+- Prefer `chat::panel::Role` over `ChatPanelRole` or `chat_panel::Role`.
+- Prefer `chat::window::State` over `ChatWindowState` or `chat_window::State`.
+- Submodules do not need separate files; inline modules are acceptable when that keeps locality and readability.
+- Keep type names concise once module context carries meaning (`Role`, `State`, `Mode`, `Window`).
+
+This keeps call sites readable without repeating information in every type name.
+
+### Module exposure for namespacing
+
+Expose modules when the module path is part of the intended API vocabulary.
+
+- Prefer `chat::panel::Role::You` (or `chat::Role::You` when re-exported intentionally) over `ChatPanelRole::You`.
+- At call sites, import the most descriptive module namespace and qualify from there.
+- Prefer `use crate::views::partials::chat;` then `chat::Window`.
+- Avoid leaf imports like `use crate::views::partials::chat_message::Message;` when the parent module can expose a cleaner surface.
+- In parent modules, use explicit `pub use` to curate a readable API.
+
+### Import path shaping
+
+Use `use` statements to import descriptive namespaces, not deeply nested leaves, when those leaves are part of a cohesive module API.
+
+- Prefer `use crate::views::partials::chat;` then `chat::Window`, `chat::Role`, `chat::panel::Panel`.
+- Avoid importing every leaf directly from parallel modules when they conceptually belong to one surface.
+- Avoid unnecessary fully-qualified paths in expressions/call sites (`crate::...::Type::...`) when a `use` can import the top-most descriptive module.
+- Keep deep leaf imports for narrow internal helpers, tests, or one-off local usage where module qualification harms readability.
+- For modules explicitly marked as descriptive namespaces, enforce this with `// ci: descriptive-module-import <module_path>` in the exposing module; CI will reject leaf imports from that module path.
+- Within a marked descriptive module tree, consume the parent surface instead of sibling leaf modules (prefer `use super::{Message, Messages};` over `use super::message::{Message, Messages};`).
+
+### Avoid tautological enum/type pairs
+
+Type and variant names should read naturally together.
+
+- Avoid `Interactivity::Interactive`, `Visibility::Visible`, `State::Stated`.
+- Prefer one of:
+  - rename variants: `Interactivity::Enabled` / `Interactivity::Disabled`
+  - rename type: `Mode::Interactive` / `Mode::ReadOnly`
+  - rename both for domain clarity: `InputState::Editable` / `InputState::Locked`
+
+### Message-family decomposition heuristic
+
+For descriptive modules, `MessageStatus`-style names are acceptable only when they are the sole `Message*` export in that module surface.
+
+- If a module exposes multiple `Message*` names, break them into a `message` submodule (`message::Status`, `message::List`, etc.).
+- Keep the canonical entity at the parent surface (`chat::Message`), and move companion `Message*` concepts under `chat::message::*` (`chat::message::Status`, `chat::message::Time`, etc.).
+
+### Compound-name exceptions
+
+Compound names are acceptable when they improve clarity and cannot be expressed cleanly with module context.
+
+- Public flattened APIs where module context is intentionally hidden.
+- External protocol alignment (`OAuthTokenResponse`, etc.).
+- Real disambiguation cases where concise names would collide or confuse.
 
 ## Documentation Voice Standard
 
@@ -211,6 +291,96 @@ let x = Thing::builder()
     .build();
 ```
 
+### Module-scoped naming
+
+Bad:
+
+```rust
+pub enum ChatPanelRole { You, Demo }
+```
+
+Good:
+
+```rust
+pub mod chat {
+    pub mod panel {
+        pub enum Role { You, Demo }
+    }
+
+    pub use panel::Role;
+}
+
+use crate::views::partials::chat;
+
+let role = chat::Role::You;
+```
+
+### Import path shaping
+
+Bad:
+
+```rust
+let panel = crate::views::partials::chat::Panel::builder().build();
+
+use crate::views::partials::chat_message::Message;
+use crate::views::partials::chat_window::Window;
+use crate::views::partials::chat_panel::Role;
+```
+
+Good:
+
+```rust
+use crate::views::partials::chat;
+
+let role = chat::Role::You;
+let window = chat::Window::builder().build();
+let panel = chat::Panel::builder().build();
+```
+
+### Parent module API curation
+
+Bad:
+
+```rust
+pub mod chat_message;
+pub mod chat_panel;
+pub mod chat_window;
+```
+
+Good:
+
+```rust
+pub mod chat {
+    pub mod message;
+    pub mod panel;
+    pub mod window;
+
+    pub use message::Message;
+    pub use panel::Role;
+    pub use window::Window;
+}
+```
+
+### Enum readability
+
+Bad:
+
+```rust
+pub enum Interactivity {
+    Interactive,
+    NonInteractive,
+}
+```
+
+Good:
+
+```rust
+pub enum Mode {
+    Interactive,
+    ReadOnly,
+}
+```
+
 ### Maud variants
 
 Bad:
@@ -263,6 +433,10 @@ Use this checklist for new features and substantial refactors:
 - Any stringly checks left in domain/app logic?
 - Typestate/statum considered before bon/constructors?
 - Builder choice justified by readability and correctness?
+- Module-scoped naming preferred over compound names where practical?
+- Compound concepts represented with hierarchical modules where useful (e.g., `chat::panel`)?
+- Call sites import descriptive modules first, then qualify (`use ...::chat; chat::Role`)?
+- Enum variants read cleanly with their type names (no tautology like `Interactivity::Interactive`)?
 - Errors explicit, typed, and properly converted with derive strategy?
 - Boundaries respected (domain/app/http/infra)?
 - Public Maud components typed and `Render`-based?

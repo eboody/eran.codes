@@ -13,5 +13,9 @@ jobs:
         run: scripts/ci/stringy-check.sh
       - name: no String fields
         run: scripts/ci/no-string-fields.sh
+      - name: typed hasher errors
+        run: scripts/ci/typed-hasher-errors.sh
       - name: partials render
         run: scripts/ci/partials-render.sh
+      - name: descriptive module imports
+        run: scripts/ci/descriptive-module-imports.sh

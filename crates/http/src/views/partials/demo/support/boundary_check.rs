@@ -24,9 +24,8 @@ impl Render for BoundaryCheck {
                         (Text::from("email"), self.email.clone()),
                         (Text::from("result"), self.result.clone()),
                     ])
-                    .build()
-                    .render())
-                (TraceLog::builder().entries(&self.trace).build().render())
+                    .build())
+                (TraceLog::builder().entries(&self.trace).build())
             }
         }
     }

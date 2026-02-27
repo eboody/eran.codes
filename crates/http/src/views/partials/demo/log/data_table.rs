@@ -1,6 +1,6 @@
+use crate::types::Text;
 use bon::Builder;
 use maud::Render;
-use crate::types::Text;
 
 #[derive(Clone, Copy, Debug, Default)]
 pub enum TableVariant {
@@ -10,11 +10,8 @@ pub enum TableVariant {
 }
 
 impl TableVariant {
-    fn class(self) -> &'static str {
-        match self {
-            TableVariant::Default => "data-table",
-            TableVariant::ChatFlow => "data-table data-table-chat",
-        }
+    fn is_chat_flow(self) -> bool {
+        matches!(self, TableVariant::ChatFlow)
     }
 }
 
@@ -29,7 +26,7 @@ pub struct DataTable {
 impl Render for DataTable {
     fn render(&self) -> maud::Markup {
         maud::html! {
-            table class=(self.variant.class()) {
+            table data-log-table data-chat-flow[self.variant.is_chat_flow()] {
                 thead {
                     tr {
                         @for header in &self.headers {

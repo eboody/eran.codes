@@ -91,15 +91,10 @@ fn pages_routes() -> Router {
         .route(Route::Protected.as_str(), get(crate::handlers::protected))
         .route_layer(from_fn(crate::auth::require_auth_middleware));
 
-    let chat = Router::new()
-        .route(Route::Chat.as_str(), get(crate::handlers::chat_page))
+    let chat_protected = Router::new()
         .route(
             Route::ChatMessages.as_str(),
             post(crate::handlers::post_chat_message),
-        )
-        .route(
-            Route::ChatMessagesDemo.as_str(),
-            post(crate::handlers::post_demo_chat_message),
         )
         .route(
             Route::ChatModeration.as_str(),
@@ -121,8 +116,12 @@ fn pages_routes() -> Router {
             Route::Logout.as_str(),
             axum::routing::post(crate::handlers::logout),
         )
+        .route(
+            Route::ChatMessagesDemo.as_str(),
+            post(crate::handlers::post_demo_chat_message),
+        )
         .merge(protected)
-        .merge(chat)
+        .merge(chat_protected)
 }
 
 fn maybe_live_reload(pages: Router) -> Router {

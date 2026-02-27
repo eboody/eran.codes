@@ -55,7 +55,7 @@ impl Service {
         let password_hash = self
             .hasher
             .hash(command.password.expose_secret())
-            .map_err(|error| Error::Repo(error.to_string().into()))?;
+            .map_err(Error::Hashing)?;
 
         self.users
             .create_with_credentials(&new_user, &password_hash)
@@ -88,6 +88,12 @@ mod tests {
         EmailTaken,
     }
 
+    #[derive(Clone, Copy)]
+    enum HashOutcome {
+        Ok,
+        Fail,
+    }
+
     struct TestRepository {
         existing_user: Option<user::User>,
         create_outcome: CreateOutcome,
@@ -111,11 +117,18 @@ mod tests {
         }
     }
 
-    struct TestHasher;
+    struct TestHasher {
+        hash_outcome: HashOutcome,
+    }
 
     impl crate::auth::PasswordHasher for TestHasher {
         fn hash(&self, _password: &str) -> crate::auth::Result<crate::auth::PasswordHash> {
-            Ok(crate::auth::PasswordHash::new("hash"))
+            match self.hash_outcome {
+                HashOutcome::Ok => Ok(crate::auth::PasswordHash::new("hash")),
+                HashOutcome::Fail => Err(crate::auth::Error::Hash(
+                    crate::auth::HashErrorText::new("hash failed"),
+                )),
+            }
         }
 
         fn verify(
@@ -138,19 +151,20 @@ mod tests {
     fn service(
         existing_user: Option<user::User>,
         create_outcome: CreateOutcome,
+        hash_outcome: HashOutcome,
     ) -> Service {
         Service::new(
             std::sync::Arc::new(TestRepository {
                 existing_user,
                 create_outcome,
             }),
-            std::sync::Arc::new(TestHasher),
+            std::sync::Arc::new(TestHasher { hash_outcome }),
         )
     }
 
     #[tokio::test]
     async fn register_user_surfaces_email_taken_from_repository() {
-        let service = service(None, CreateOutcome::EmailTaken);
+        let service = service(None, CreateOutcome::EmailTaken, HashOutcome::Ok);
         let result = service
             .register_user(
                 RegisterUser::builder()
@@ -171,7 +185,7 @@ mod tests {
 
     #[tokio::test]
     async fn register_user_succeeds_on_valid_unique_input() {
-        let service = service(None, CreateOutcome::Ok);
+        let service = service(None, CreateOutcome::Ok, HashOutcome::Ok);
         let result = service
             .register_user(
                 RegisterUser::builder()
@@ -183,5 +197,24 @@ mod tests {
             .await;
 
         assert!(result.is_ok());
+    }
+
+    #[tokio::test]
+    async fn register_user_surfaces_hashing_error() {
+        let service = service(None, CreateOutcome::Ok, HashOutcome::Fail);
+        let result = service
+            .register_user(
+                RegisterUser::builder()
+                    .username(valid_username())
+                    .email(valid_email())
+                    .password(SecretString::new("password".to_string().into()))
+                    .build(),
+            )
+            .await;
+
+        assert!(matches!(
+            result,
+            Err(Error::Hashing(crate::auth::Error::Hash(_)))
+        ));
     }
 }

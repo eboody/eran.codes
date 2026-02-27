@@ -41,9 +41,8 @@ impl Render for DbCheck {
                         (Text::from("email"), self.email.clone()),
                         (Text::from("result"), Text::from(status)),
                     ])
-                    .build()
-                    .render())
-                (TraceLog::builder().entries(&self.trace).build().render())
+                    .build())
+                (TraceLog::builder().entries(&self.trace).build())
             }
         }
     }

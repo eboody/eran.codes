@@ -5,3 +5,7 @@ edition = "2024"
 
 [dependencies]
 base64 = "0.22"
+clap = { version = "4.5.45", features = ["derive"] }
+playwright = "0.0.20"
+tokio = { version = "1", features = ["macros", "rt-multi-thread", "time"] }
+url = "2.5.7"

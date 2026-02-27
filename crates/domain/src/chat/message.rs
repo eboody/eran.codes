@@ -6,7 +6,7 @@ use super::room::{RoomId, UserId};
 #[nutype(
     sanitize(trim),
     validate(not_empty, len_char_max = 1000),
-    derive(Debug, Clone, PartialEq, Display)
+    derive(Debug, Clone, PartialEq, Eq, Display)
 )]
 pub struct MessageBody(String);
 
@@ -51,6 +51,6 @@ pub struct Message {
 #[nutype(
     sanitize(trim),
     validate(not_empty, len_char_max = 128),
-    derive(Debug, Clone, PartialEq, Display)
+    derive(Debug, Clone, PartialEq, Eq, Display)
 )]
 pub struct ClientId(String);

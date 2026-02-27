@@ -15,7 +15,7 @@ pub enum RoomName {
 #[nutype(
     sanitize(trim),
     validate(not_empty, len_char_max = 64),
-    derive(Debug, Clone, PartialEq, Display)
+    derive(Debug, Clone, PartialEq, Eq, Display)
 )]
 pub struct RoomNameText(String);
 
@@ -92,4 +92,28 @@ pub struct Room {
     pub id: RoomId,
     pub name: RoomName,
     pub created_by: UserId,
+}
+
+#[cfg(test)]
+mod tests {
+    use super::{RoomName, RoomNameError};
+
+    #[test]
+    fn room_name_accepts_known_values() {
+        assert_eq!(RoomName::try_new("Lobby"), Ok(RoomName::Lobby));
+        assert_eq!(RoomName::try_new("Demo"), Ok(RoomName::Demo));
+        assert_eq!(RoomName::try_new("Support"), Ok(RoomName::Support));
+    }
+
+    #[test]
+    fn room_name_rejects_unknown_values() {
+        assert!(matches!(
+            RoomName::try_new("lobby"),
+            Err(RoomNameError::Unknown(_))
+        ));
+        assert!(matches!(
+            RoomName::try_new("random-room"),
+            Err(RoomNameError::Unknown(_))
+        ));
+    }
 }

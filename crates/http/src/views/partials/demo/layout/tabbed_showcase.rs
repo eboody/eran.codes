@@ -1,5 +1,6 @@
 use bon::Builder;
 use maud::{PreEscaped, Render};
+use maud_extensions::css;
 use palette::{FromColor, Hsl, RgbHue, Srgb};
 
 use crate::types::Text;
@@ -59,11 +60,8 @@ impl ShowcaseColor {
 
     fn palette(self) -> TabPalette {
         let base = self.base_hsl();
-        let tab_soft_hsl = Hsl::new(
-            base.hue,
-            (base.saturation * 0.42).clamp(0.0, 1.0),
-            0.2,
-        );
+        let tab_soft_hsl =
+            Hsl::new(base.hue, (base.saturation * 0.42).clamp(0.0, 1.0), 0.2);
         let grad_start_hsl = Hsl::new(
             base.hue,
             (base.saturation * 0.58).clamp(0.0, 1.0),
@@ -76,10 +74,8 @@ impl ShowcaseColor {
         );
         let avg_bg_hsl = Hsl::new(
             base.hue + RgbHue::from_degrees(9.0),
-            ((grad_start_hsl.saturation + grad_end_hsl.saturation) / 2.0)
-                .clamp(0.0, 1.0),
-            ((grad_start_hsl.lightness + grad_end_hsl.lightness) / 2.0)
-                .clamp(0.0, 1.0),
+            ((grad_start_hsl.saturation + grad_end_hsl.saturation) / 2.0).clamp(0.0, 1.0),
+            ((grad_start_hsl.lightness + grad_end_hsl.lightness) / 2.0).clamp(0.0, 1.0),
         );
         let avg_bg = Srgb::from_color(avg_bg_hsl);
         let black = Srgb::new(0.043, 0.071, 0.125);
@@ -183,23 +179,22 @@ impl Render for TabbedShowcase {
         let tabs_script = tabs_script(&self.id);
 
         maud::html! {
-            section id=(&self.id) class="tabbed-showcase-section" {
-                header class="section-header" {
+            section id=(&self.id) {
+                header data-section-header {
                     div {
                         h2 { (&self.title) }
-                        p class="muted" { (&self.subtitle) }
+                        p data-muted { (&self.subtitle) }
                     }
                 }
-                div class="tabbed-showcase" {
-                    div class="tabbed-showcase-shell" {
-                        nav class="tabbed-showcase-tabs" aria-label="Showcase tabs" role="tablist" {
+                div data-showcase-root {
+                    div data-showcase-shell {
+                        nav data-showcase-tabs aria-label="Showcase tabs" role="tablist" {
                             @for (index, tab) in self.tabs.iter().enumerate() {
                                 @let tab_id = format!("{}-tab-{}", self.id, index);
                                 @let panel_id = format!("{}-panel-{}", self.id, index);
                                 @let palette = ShowcaseColor::cycle(index).palette();
                                 button
                                     type="button"
-                                    class=(if index == 0 { "tabbed-showcase-tab is-active" } else { "tabbed-showcase-tab" })
                                     data-tab-index=(index)
                                     role="tab"
                                     id=(tab_id)
@@ -212,19 +207,20 @@ impl Render for TabbedShowcase {
                                     }
                                 {
                                     @if let Some(icon) = &tab.tab_icon {
-                                        span class="tabbed-showcase-tab-icon" aria-hidden="true" { (icon) }
+                                        span aria-hidden="true" { (icon) }
                                     }
-                                    span class="tabbed-showcase-tab-title" { (&tab.tab_label) }
+                                    span { (&tab.tab_label) }
                                 }
                             }
                         }
-                        div class="tabbed-showcase-panels" {
+                        div data-showcase-panels {
                             @for (index, tab) in self.tabs.iter().enumerate() {
                                 @let tab_id = format!("{}-tab-{}", self.id, index);
                                 @let panel_id = format!("{}-panel-{}", self.id, index);
                                 @let palette = ShowcaseColor::cycle(index).palette();
                                 article
-                                    class=(if tab.mock_panel.is_some() { "tabbed-showcase-panel" } else { "tabbed-showcase-panel tabbed-showcase-panel-full" })
+                                    data-showcase-panel
+                                    data-panel-full[tab.mock_panel.is_none()]
                                     data-tab-index=(index)
                                     id=(panel_id)
                                     role="tabpanel"
@@ -233,23 +229,23 @@ impl Render for TabbedShowcase {
                                     hidden[index != 0]
                                 {
                                     @if let Some(mock_panel) = &tab.mock_panel {
-                                        div class="tabbed-showcase-mockup" {
+                                        div data-showcase-mockup {
                                             header {
                                                 h3 { (&mock_panel.title) }
-                                                p class="muted" { (&mock_panel.subtitle) }
+                                                p data-muted { (&mock_panel.subtitle) }
                                             }
-                                            ul class="tabbed-showcase-rows" {
+                                            ul data-showcase-rows {
                                                 @for row in &mock_panel.rows {
-                                                    li class="tabbed-showcase-row" {
-                                                        span class="tabbed-showcase-row-label" { (&row.label) }
-                                                        span class="tabbed-showcase-row-value" { (&row.value) }
+                                                    li {
+                                                        span data-showcase-row-label { (&row.label) }
+                                                        span data-showcase-row-value { (&row.value) }
                                                     }
                                                 }
                                             }
                                         }
                                     }
                                     div
-                                        class="tabbed-showcase-copy"
+                                        data-showcase-copy
                                         style={
                                             " --tab-accent: " (css_color(palette.accent)) ";"
                                             " --tab-grad-start: " (css_color(palette.grad_start)) ";"
@@ -261,8 +257,8 @@ impl Render for TabbedShowcase {
                                         }
                                     {
                                         h3 { (&tab.title) }
-                                        p class="muted" { (&tab.subtitle) }
-                                        ul class="tabbed-showcase-bullets" {
+                                        p data-muted { (&tab.subtitle) }
+                                        ul data-showcase-bullets {
                                             @for bullet in &tab.bullets {
                                                 li { (bullet) }
                                             }
@@ -270,14 +266,14 @@ impl Render for TabbedShowcase {
                                         @if let Some(action) = &tab.action {
                                             a class="button" href=(&action.href) { (&action.label) }
                                         }
-                                        p class="tabbed-showcase-integrations" {
+                                        p data-showcase-integrations {
                                             span { (&tab.chips_label) }
                                             @for chip in &tab.chips {
-                                                span class="tabbed-showcase-chip" { (chip) }
+                                                span data-showcase-chip { (chip) }
                                             }
                                         }
                                         @if let Some(path) = &tab.code_path {
-                                            p class="professionalism-path" {
+                                            p data-code-path {
                                                 "Example: "
                                                 code { (path) }
                                             }
@@ -286,9 +282,7 @@ impl Render for TabbedShowcase {
                                             (CodeBlock::builder()
                                                 .code(code.clone())
                                                 .language(CodeLanguage::Rust)
-                                                .with_class(Text::from("professionalism-code"))
-                                                .build()
-                                                .render())
+                                                .build())
                                         }
                                     }
                                 }
@@ -297,6 +291,227 @@ impl Render for TabbedShowcase {
                     }
                 }
                 script { (PreEscaped(tabs_script)) }
+                ({
+                    css! {
+                        me {
+                          margin-top: 2.8rem;
+                          border: 1px solid var(--portfolio-surface-border);
+                          border-radius: 18px;
+                          padding: 1.35rem 1.35rem 1.45rem;
+                          background: var(--portfolio-surface);
+                          box-shadow: 0 6px 16px color-mix(in srgb, black 8%, transparent);
+                        }
+                        me [data-section-header] {
+                          display: flex;
+                          flex-wrap: wrap;
+                          align-items: center;
+                          justify-content: space-between;
+                          gap: 0.9rem 1.2rem;
+                          margin-bottom: 1.1rem;
+                        }
+                        me [data-section-header] h2 {
+                          margin-bottom: 0.28rem;
+                          font-size: clamp(1.5rem, 1.2rem + 1.1vw, 2rem);
+                          line-height: 1.18;
+                        }
+                        me [data-section-header] [data-muted] {
+                          margin-bottom: 0;
+                          max-width: 70ch;
+                          color: color-mix(in srgb, var(--pico-muted-color) 94%, var(--pico-color) 6%);
+                        }
+                        me [data-showcase-root] {
+                          position: relative;
+                          margin-top: 1.15rem;
+                        }
+                        me [data-showcase-shell] {
+                          border: 1px solid color-mix(in srgb, var(--tab-shell-border) 82%, transparent);
+                          border-radius: 16px;
+                          padding: 0.95rem;
+                          background:
+                            radial-gradient(circle at 0% 0%, var(--tab-shell-glow-a), transparent 55%),
+                            linear-gradient(
+                              180deg,
+                              color-mix(in srgb, var(--tab-shell-bg) 96%, transparent),
+                              color-mix(in srgb, var(--tab-shell-bg) 90%, transparent)
+                            );
+                        }
+                        me [data-showcase-tabs] {
+                          display: flex;
+                          align-items: stretch;
+                          gap: 0.45rem;
+                          overflow-x: auto;
+                          padding-bottom: 0.72rem;
+                          border-bottom: 1px solid color-mix(in srgb, var(--pico-muted-color) 30%, transparent);
+                        }
+                        me [data-showcase-tabs] > button[role="tab"] {
+                          cursor: pointer;
+                          border-radius: 10px;
+                          border: 1px solid transparent;
+                          background: var(--tab-tab-bg);
+                          color: var(--tab-tab-text);
+                          padding: 0.56rem 0.76rem;
+                          min-width: 170px;
+                          font-size: 0.81rem;
+                          font-weight: 600;
+                          display: inline-flex;
+                          align-items: center;
+                          gap: 0.45rem;
+                          transition: border-color 0.2s ease, background 0.2s ease, color 0.2s ease;
+                          opacity: 1;
+                        }
+                        me [data-showcase-tabs] > button[role="tab"][aria-selected="true"] {
+                          border-color: color-mix(in srgb, var(--tab-accent) 52%, transparent);
+                          background: color-mix(in srgb, var(--tab-accent-soft) 44%, var(--tab-tab-bg) 56%);
+                          color: color-mix(in srgb, var(--tab-accent) 44%, var(--pico-color) 56%);
+                        }
+                        me [data-showcase-tabs] > button[role="tab"]:focus-visible {
+                          outline: 2px solid color-mix(in srgb, var(--tab-accent) 65%, white);
+                          outline-offset: 2px;
+                        }
+                        me [data-showcase-tabs] > button[role="tab"] > span[aria-hidden="true"] {
+                          display: inline-flex;
+                          align-items: center;
+                          justify-content: center;
+                          min-width: 1.2rem;
+                          font-size: 0.9rem;
+                          line-height: 1;
+                          color: inherit;
+                        }
+                        me [data-showcase-panels] {
+                          margin-top: 1rem;
+                        }
+                        me [data-showcase-panel] {
+                          display: grid;
+                          gap: 1.2rem;
+                          min-width: 0;
+                        }
+                        me [data-showcase-panel][hidden] {
+                          display: none;
+                        }
+                        @media (min-width: 980px) {
+                          me [data-showcase-panel] {
+                            grid-template-columns: 1.1fr 0.9fr;
+                            align-items: stretch;
+                          }
+                          me [data-showcase-panel][data-panel-full] {
+                            grid-template-columns: 1fr;
+                          }
+                        }
+                        me [data-showcase-panel] > * {
+                          min-width: 0;
+                        }
+                        me [data-showcase-mockup] {
+                          border: 1px solid var(--tab-surface-border);
+                          border-radius: var(--ui-radius-md);
+                          padding: 1rem;
+                          background: var(--tab-surface-bg);
+                        }
+                        me [data-showcase-mockup] h3 {
+                          margin-bottom: 0.3rem;
+                        }
+                        me [data-showcase-rows] {
+                          list-style: none;
+                          margin: 1rem 0 0;
+                          padding: 0;
+                          display: grid;
+                          gap: 0.55rem;
+                        }
+                        me [data-showcase-rows] > li {
+                          border: 1px solid var(--tab-row-border);
+                          border-radius: 9px;
+                          background: var(--tab-row-bg);
+                          padding: 0.5rem 0.65rem;
+                          display: flex;
+                          justify-content: space-between;
+                          gap: 0.6rem;
+                        }
+                        me [data-showcase-row-label] {
+                          color: var(--pico-muted-color);
+                          font-size: 0.78rem;
+                        }
+                        me [data-showcase-row-value] {
+                          font-size: 0.8rem;
+                          font-weight: 600;
+                          text-align: right;
+                        }
+                        me [data-showcase-copy] {
+                          border: 1px solid color-mix(in srgb, var(--tab-accent) 30%, transparent);
+                          border-radius: var(--ui-radius-md);
+                          padding: 1.05rem;
+                          background:
+                            linear-gradient(
+                              180deg,
+                              color-mix(in srgb, var(--tab-accent-soft) 36%, var(--pico-card-background-color) 64%),
+                              color-mix(in srgb, var(--pico-card-background-color) 96%, black 4%)
+                            );
+                          color: var(--pico-color);
+                          overflow: hidden;
+                        }
+                        me [data-showcase-copy] h3 {
+                          color: inherit;
+                          margin-bottom: 0.35rem;
+                        }
+                        me [data-showcase-copy] [data-muted] {
+                          color: color-mix(in srgb, var(--pico-muted-color) 92%, var(--pico-color) 8%);
+                        }
+                        me [data-showcase-bullets] {
+                          margin: 1rem 0 1.1rem;
+                          padding-left: 1.1rem;
+                          display: grid;
+                          gap: 0.35rem;
+                          color: var(--pico-color);
+                        }
+                        me [data-showcase-bullets] li {
+                          color: inherit;
+                        }
+                        me [data-showcase-bullets] li::marker {
+                          color: color-mix(in srgb, var(--tab-accent) 58%, transparent);
+                        }
+                        me [data-showcase-copy] .button {
+                          background: color-mix(in srgb, var(--pico-primary) 86%, black 14%);
+                          color: var(--pico-primary-inverse);
+                        }
+                        me [data-showcase-integrations] {
+                          margin: 0.95rem 0 0;
+                          display: flex;
+                          flex-wrap: wrap;
+                          align-items: center;
+                          gap: 0.4rem;
+                          font-size: 0.76rem;
+                          color: var(--pico-muted-color);
+                        }
+                        me [data-showcase-chip] {
+                          border: 1px solid color-mix(in srgb, var(--tab-accent) 26%, var(--pico-muted-color) 74%);
+                          border-radius: 999px;
+                          padding: 0.2rem 0.5rem;
+                          font-weight: 600;
+                          background: color-mix(in srgb, var(--pico-card-background-color) 90%, var(--tab-accent-soft) 10%);
+                        }
+                        me [data-code-path] {
+                          margin: 0.45rem 0 0.65rem;
+                          color: var(--pico-muted-color);
+                          font-size: 0.85rem;
+                        }
+                        me [data-code-path] code {
+                          word-break: break-all;
+                        }
+                        me [data-showcase-copy] ::selection {
+                          background: hsl(223 47% 11% / 0.72);
+                          color: hsl(210 40% 98%);
+                        }
+                        me [data-showcase-copy] ::-moz-selection {
+                          background: hsl(223 47% 11% / 0.72);
+                          color: hsl(210 40% 98%);
+                        }
+                        @media (max-width: 768px) {
+                          me {
+                            margin-top: 1.8rem;
+                            padding: 1rem 0.95rem 1.1rem;
+                            border-radius: 16px;
+                          }
+                        }
+                    }
+                })
             }
         }
     }
@@ -311,8 +526,8 @@ fn tabs_script(showcase_id: &Text) -> String {
   const root = document.getElementById({showcase_id_json});
   if (!root) return;
 
-  const tabs = Array.from(root.querySelectorAll('.tabbed-showcase-tab[role="tab"]'));
-  const panels = Array.from(root.querySelectorAll('.tabbed-showcase-panel[role="tabpanel"]'));
+  const tabs = Array.from(root.querySelectorAll('[role="tab"]'));
+  const panels = Array.from(root.querySelectorAll('[data-showcase-panel][role="tabpanel"]'));
   if (!tabs.length || !panels.length) return;
 
   const lastIndex = tabs.length - 1;
@@ -320,7 +535,6 @@ fn tabs_script(showcase_id: &Text) -> String {
   const activate = (nextIndex, focusTab) => {{
     tabs.forEach((tab, index) => {{
       const isActive = index === nextIndex;
-      tab.classList.toggle('is-active', isActive);
       tab.setAttribute('aria-selected', isActive ? 'true' : 'false');
       tab.tabIndex = isActive ? 0 : -1;
       if (focusTab && isActive) tab.focus();

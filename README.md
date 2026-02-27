@@ -19,6 +19,7 @@ Required env vars:
 
 Optional env vars:
 - `SESSION_CLEANUP_INTERVAL_SECS` (defaults to `3600`)
+- `INFRA_DB_MAX_CONNECTIONS` (defaults to `10`)
 
 Run locally:
 1. `docker-compose up -d`
@@ -35,7 +36,13 @@ Run locally:
 CI guardrails:
 - `scripts/ci/stringy-check.sh`
 - `scripts/ci/no-string-fields.sh`
+- `scripts/ci/typed-hasher-errors.sh`
 - `scripts/ci/partials-render.sh`
+- `scripts/ci/visual-snapshot.sh` (requires app running at `VISUAL_URL`, defaults to `http://127.0.0.1:3000/`)
+
+Visual baseline workflow:
+- Update baseline: `VISUAL_UPDATE_BASELINE=1 scripts/ci/visual-snapshot.sh`
+- Verify current UI: `scripts/ci/visual-snapshot.sh`
 
 ## Docker
 - Build: `docker build -t eran_codes .`

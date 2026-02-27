@@ -3,7 +3,7 @@
 ## Project Structure & Module Organization
 - `src/` holds the main binary (`src/main.rs`) plus a small helper binary in `src/bin/with_db.rs`.
 - `crates/` contains workspace crates by layer: `domain`, `app`, `infra`, `http`, `utils`.
-- `maud-extensions` provides `css!`, `js!`, and font macros for Maud templates.
+- `maud-extensions` provides `css!`, `js!`, `inline_css!`, `inline_js!`, and font macros for Maud templates.
 - `crates/http/src/views/` holds Maud views (pages, partials, layout) and uses `maud::Render`.
 - `crates/http/static/` serves CSS and frontend helper scripts (css-scope-inline, surreal, datastar).
 - `crates/infra/migrations/` contains SQL migrations (`001_users.up.sql`, `002_users.down.sql`).
@@ -40,7 +40,7 @@
 
 ## Updating This File
 - Keep `AGENTS.md` updated when we introduce new architectural decisions, cross-cutting mechanisms, or boundary changes (e.g., SSE/session handling).
-- Prefer module-scoped naming and re-exports for readability (e.g., `sse::Event`, `sse::Registry`, `views::pages::Home`, `views::partials::Ping`, `views::page::Layout`), avoiding deep paths in call sites.
+- Prefer module-scoped naming and intentional module exposure/re-exports for readability (e.g., `sse::Event`, `sse::Registry`, `chat::panel::Role::You`, `views::page::Layout`).
 - For page-level shared UI, prefer `views::page::*` (e.g., `views::page::Layout`, `views::page::Error`) over a `layout` module.
 - Avoid redundant suffixes on view types; prefer concise names like `views::partials::Ping`.
 - Prompt to update `README.md` and make a commit when changes warrant documentation or a logical checkpoint.
@@ -49,17 +49,46 @@
 - Reference `docs/portfolio-demos-plan.md` and `docs/portfolio-demos.md` when deciding which demo UX to implement next.
 - Treat `docs/project-audit.md` as the canonical quality audit and `docs/refactor-plan.md` as the canonical prioritized follow-up plan; avoid creating overlapping ad-hoc audit markdown files.
 - Treat `docs/writing-style.md` as the canonical writing/modeling style baseline (typed invariants first, typestate before generic builders, no stringly logic).
+- For Maud UI work, keep styling local to the component via scoped `inline_css!` + `(css())` (`me` selectors) and avoid adding non-shared rules to `crates/http/static/app.css`.
+- Prefer short, targeted styling hooks (`id`, semantic class, stable `data-*`) and avoid deep selector chains; split into smaller components when selectors get long.
+- Avoid magic numbers in component styling; define reusable design tokens and override tokens per breakpoint for responsive behavior.
+- For visual UI changes, run `scripts/ci/visual-snapshot.sh` against a running app before finalizing.
+- Baseline refresh for intentional visual changes: `VISUAL_UPDATE_BASELINE=1 scripts/ci/visual-snapshot.sh`.
+- Reusable visual QA skill lives at `skills/visual-snapshot-check/SKILL.md`; use it for screenshot capture/check workflow.
+- Avoid `.build().render()` chains at call sites; in `maud::html!` splices use `.build()` only and splice the value directly.
 - When designing a feature, present both a simpler baseline (with a TODO placeholder) and an enterprise-level option so the user can choose.
 - Never use string literal comparisons or stringly-typed checks; define enums/newtypes (prefer `strum`/`nutype`) and match on those instead.
 - Avoid `String` fields in structs; use enums or newtypes instead (enforced by `scripts/ci/no-string-fields.sh`).
+- In app services, keep hasher failures typed (do not collapse into repo/string errors; enforced by `scripts/ci/typed-hasher-errors.sh`).
 - Public view partials must implement `maud::Render` (enforced by `scripts/ci/partials-render.sh`).
-- When a submodule name matches its primary type, keep the submodule private and re-export the type (e.g., `mod ping; pub use ping::Ping` → `views::partials::Ping`).
+- For modules marked as descriptive namespaces (`// ci: descriptive-module-import <module_path>`), import the module itself and qualify usages; leaf imports are rejected by `scripts/ci/descriptive-module-imports.sh`.
+- In marked descriptive module trees, import through the parent surface (`super::{Type}`) rather than sibling leaf modules (`super::leaf::Type`); this is also enforced by `scripts/ci/descriptive-module-imports.sh`.
+- In marked descriptive modules, do not keep multiple `Prefix*` types at parent scope; when a family has more than one type (for example `ModerationItem`, `ModerationReason`), move that family under a module namespace (`module::moderation::*`). Keep at most canonical `Prefix` at parent scope when it exists (enforced by `scripts/ci/descriptive-module-imports.sh`).
+- For marked descriptive modules, enforce `<thing>_*` file decomposition only when 2+ sibling files share the same prefix (for example, `chat_a.rs` + `chat_b.rs` -> `chat/a.rs`, `chat/b.rs`), not when there is only one such file (enforced by `scripts/ci/descriptive-module-imports.sh`).
+- For naturally compound concepts, prefer hierarchical modules over compound module/type names (e.g., `chat::panel::Role`, `chat::window::Window`).
+- Avoid redundant module-name prefixes in types (e.g., use `chat::panel::Role`, not `ChatPanelRole`).
+- Expose modules when namespacing is part of API readability; use explicit parent-module `pub use` to curate clean call sites (e.g., `use crate::views::partials::chat; chat::Role::You`).
+- Prefer importing descriptive module namespaces (`use crate::views::partials::chat;`) and qualifying from there over parallel leaf imports (`chat_message::Message`, `chat_window::Window`) when those leaves are part of one cohesive API.
+- Avoid unnecessary fully-qualified paths in expressions (`crate::...::Type::...`) when importing the top-most descriptive module improves readability.
+- Avoid tautological type/variant pairs (`Interactivity::Interactive`); choose names that read clearly (`Mode::Interactive`, `Interactivity::Enabled`).
 - Prefer explicit re-exports over `pub use module::*` unless the module is intentionally a flat API surface.
 - Use `moddef::moddef!` for module declarations when it reduces repetition and aligns with the above naming conventions.
+- When a user points out a missed convention, perform a short gap analysis in the same pass:
+  - identify why current skills/lints allowed the miss,
+  - add/adjust a guardrail (lint and/or skill rule) to prevent recurrence,
+  - report both the cause and the preventative change in the response.
+- Treat user examples as illustrative patterns, not exhaustive literal cases. Generalize rules across equivalent prefixes/shapes by default.
+- Escalate only genuinely ambiguous/non-obvious boundaries:
+  - alert the user that the boundary is ambiguous,
+  - propose concrete rule/lint additions,
+  - ask one focused clarification question.
+- Do not ask for clarification on obvious extrapolations; implement those directly.
 - For Datastar-related work, follow `docs/datastar-tao.md` and keep Datastar-specific guidance there.
 - For frontend reactivity and signals, reference `docs/datastar-signals.md`.
 - For Datastar expressions and script execution, reference `docs/datastar-expressions.md`.
 - For backend requests and SSE guidance, reference `docs/datastar-backend-requests.md`.
+- Prefer skills for reusable domain/tool specialization; use spawned agents for runtime parallelization or scoped implementation tasks, not as the primary way to encode persistent guidance.
+- For non-trivial requests, run `router` first to classify relevant specialists and ownership, then delegate selected specialists in parallel when possible.
 
 ````md
 # Agent: Architecture Boundary Enforcer
@@ -123,7 +152,7 @@ Call flow is separate from dependency direction.
 - HTTP parses and validates cheap things (basic format, length) if helpful, but does not perform expensive work.
 - HTTP maps DTOs to app commands, and app errors to responses.
 - HTTP renders Maud views using `maud::Render` components; pages and partials live under `crates/http/src/views/`.
-- Inline styles/scripts use `css!` and `js!` macros (from `maud_extensions`) and are scoped by `css-scope-inline` and `surreal` in `crates/http/static/`.
+- Inline styles/scripts use `inline_css!` / `inline_js!` helpers by default (falling back to `css!` / `js!` for tiny one-offs), and are scoped by `css-scope-inline` and `surreal` in `crates/http/static/`.
 
 ### Infra rules
 - Infra implements app-defined traits using concrete crates.
@@ -304,5 +333,6 @@ When asked to design or review a feature, produce:
 - Exercise judgement on when changes warrant a commit; choose an appropriate message and commit without asking for confirmation.
 
 ## Configuration & Security Notes
-- Required env vars: `HOST`, `PORT`, `DATABASE_URL`.
+- Required env vars: `HOST`, `PORT`, `DATABASE_URL`, `SESSION_SECRET`.
+- Optional env vars: `SESSION_CLEANUP_INTERVAL_SECS`, `INFRA_DB_MAX_CONNECTIONS`.
 - Do not commit secrets; use local env files or shell exports.

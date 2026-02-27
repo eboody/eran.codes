@@ -15,6 +15,13 @@ This directory mirrors Pico documentation routes from `/home/eran/code/picocss.c
 - [Route map](route-map.md)
 - [Version picker theme variants](version-picker-themes.md)
 
+## Workspace conventions
+- Prefer component-local scoped styling via `inline_css!` + `(css())` with `me` selectors in Maud components.
+- Keep `crates/http/static/app.css` for shared Pico variables and broadly reused primitives.
+- Avoid extra classes when a structural selector can express the same rule.
+- Avoid magic numbers in component CSS; define reusable tokens and override tokens responsively.
+- In Maud call sites, avoid `.build().render()` chains; use `.build()` directly in `html!` splices.
+
 ## Pages
 - [Quick start](quick-start.md) — `/docs`
 - [Accordions](accordion.md) — `/docs/accordion`

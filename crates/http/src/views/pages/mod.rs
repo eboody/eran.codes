@@ -1,4 +1,4 @@
-moddef::moddef!(mod { chat_moderation, home, login, protected, register });
+moddef::moddef!(mod { chat, chat_moderation, home, login, protected, register });
 
 pub use chat_moderation::ChatModeration;
 pub use home::Home;

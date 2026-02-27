@@ -6,7 +6,7 @@ impl maud::Render for Ping {
     fn render(&self) -> maud::Markup {
         let current_time = jiff::Timestamp::now();
         maud::html! {
-            article id="ping-target" class="pinged" {
+            article id="ping-target" {
                 p {
                     (current_time)
                     ": Ping received "

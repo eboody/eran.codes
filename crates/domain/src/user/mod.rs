@@ -8,14 +8,14 @@ pub use user::User;
 #[nutype(
     sanitize(trim, lowercase),
     validate(not_empty, len_char_max = 20),
-    derive(Debug, Clone, PartialEq, Display)
+    derive(Debug, Clone, PartialEq, Eq, Display)
 )]
 pub struct Username(String);
 
 #[nutype(
     sanitize(trim, lowercase),
     validate(not_empty, len_char_max = 254, predicate = is_valid_email),
-    derive(Debug, Clone, PartialEq, Display)
+    derive(Debug, Clone, PartialEq, Eq, Display)
 )]
 pub struct Email(String);
 

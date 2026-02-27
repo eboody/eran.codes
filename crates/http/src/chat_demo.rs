@@ -1,11 +1,13 @@
-use domain::chat;
+use domain::chat as domain_chat;
+
+use crate::views::partials::chat;
 
 const DEMO_USER_EMAIL: &str = "demo.bot@example.com";
 const DEMO_USER_NAME: &str = "Demo Bot";
 
 pub struct ChatContext {
     pub room: domain::chat::Room,
-    pub messages: Vec<crate::views::partials::ChatMessage>,
+    pub messages: Vec<chat::Message>,
 }
 
 pub async fn load_chat_context(
@@ -16,7 +18,7 @@ pub async fn load_chat_context(
         Some(user_id) => user_id,
         None => ensure_demo_user(state).await?.id,
     };
-    let chat_user_id = chat::UserId::from_uuid(*viewer.as_uuid());
+    let chat_user_id = domain_chat::UserId::from_uuid(*viewer.as_uuid());
     let room = ensure_room(state, chat_user_id).await?;
     let messages = state
         .chat
@@ -71,9 +73,9 @@ pub async fn ensure_demo_user(
 
 async fn ensure_room(
     state: &crate::State,
-    user_id: chat::UserId,
+    user_id: domain_chat::UserId,
 ) -> Result<domain::chat::Room, crate::error::Error> {
-    let room_name = chat::RoomName::Lobby;
+    let room_name = domain_chat::RoomName::Lobby;
     if let Some(room) = state.chat.find_room_by_name(room_name).await? {
         state
             .chat
@@ -102,7 +104,7 @@ async fn ensure_room(
 async fn to_message_views(
     state: &crate::State,
     messages: &[domain::chat::Message],
-) -> Vec<crate::views::partials::ChatMessage> {
+) -> Vec<chat::Message> {
     let mut names = std::collections::HashMap::new();
     for message in messages {
         let user_id = domain::user::Id::from_uuid(*message.user_id.as_uuid());
@@ -128,17 +130,25 @@ async fn to_message_views(
                     domain::user::Username::try_new("user").expect("username")
                 })
             });
-            crate::views::partials::ChatMessage::builder()
+            chat::Message::builder()
                 .message_id(crate::types::Text::from(message.id.as_uuid().to_string()))
                 .author(crate::types::Text::from(author.to_string()))
                 .timestamp(crate::types::Text::from(format_message_time(
                     message.created_at,
                 )))
                 .body(crate::types::Text::from(message.body.to_string()))
-                .status(crate::types::Text::from(format!("{:?}", message.status)))
+                .status(to_chat_message_status(message.status))
                 .build()
         })
         .collect()
+}
+
+fn to_chat_message_status(value: domain::chat::MessageStatus) -> chat::message::Status {
+    match value {
+        domain::chat::MessageStatus::Visible => chat::message::Status::Visible,
+        domain::chat::MessageStatus::Pending => chat::message::Status::Pending,
+        domain::chat::MessageStatus::Removed => chat::message::Status::Removed,
+    }
 }
 
 pub fn format_message_time(value: std::time::SystemTime) -> String {

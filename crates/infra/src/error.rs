@@ -53,6 +53,9 @@ impl std::error::Error for Error {
     fn source(&self) -> Option<&(dyn std::error::Error + 'static)> {
         match self {
             Error::Io(e) => Some(e),
+            Error::Pgsql(e) => Some(e),
+            Error::HttpClient(e) => Some(e),
+            Error::Migrate(e) => Some(e),
             _ => None,
         }
     }

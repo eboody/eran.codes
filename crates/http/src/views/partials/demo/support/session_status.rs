@@ -27,9 +27,8 @@ impl Render for SessionStatus {
                             self.expiry.clone().unwrap_or_else(|| Text::from("none")),
                         ),
                     ])
-                    .build()
-                    .render())
-                (TraceLog::builder().entries(&self.trace).build().render())
+                    .build())
+                (TraceLog::builder().entries(&self.trace).build())
             }
         }
     }

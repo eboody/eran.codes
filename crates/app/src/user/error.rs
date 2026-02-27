@@ -5,6 +5,7 @@ pub type Result<T> = core::result::Result<T, Error>;
 #[derive(Debug, From)]
 pub enum Error {
     Domain(domain::user::Error),
+    Hashing(crate::auth::Error),
     Repo(RepoErrorText),
     EmailTaken,
 }

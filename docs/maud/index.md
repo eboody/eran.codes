@@ -43,3 +43,12 @@ The Maud runtime library, including integration with the [Rocket] and [Actix] we
 ## Simple deployment
 
 There is no need to track separate template files, since all relevant code is linked into the final executable.
+
+## Workspace conventions
+
+- In this repo, component styles should live with the Maud partial/component via `inline_css!` helpers inserted with `(css())`.
+- Prefer short, targeted hooks (`id`, semantic class, stable `data-*`) for nested styling.
+- Use `me` directly for quick/simple local rules; if selectors start getting long, split into smaller components.
+- Prefer reusable design tokens over scattered magic numbers; adjust tokens in responsive media blocks instead of rewriting many rules.
+- Add `app.css` rules only for intentionally shared, cross-component styles.
+- Do not write `.build().render()` in call sites; in `html!` splices, end with `.build()` and splice the value directly.

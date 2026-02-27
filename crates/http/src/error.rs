@@ -77,6 +77,12 @@ impl Error {
                 "Email already in use",
                 "Email already in use.",
             ),
+            Error::User(app::user::Error::Hashing(_))
+            | Error::User(app::user::Error::Repo(_)) => (
+                axum::http::StatusCode::INTERNAL_SERVER_ERROR,
+                "Internal server error",
+                "Internal server error.",
+            ),
             Error::Auth(_) => (
                 axum::http::StatusCode::UNAUTHORIZED,
                 "Unauthorized",
@@ -112,12 +118,6 @@ impl Error {
             ),
 
             Error::Internal => (
-                axum::http::StatusCode::INTERNAL_SERVER_ERROR,
-                "Internal server error",
-                "Internal server error.",
-            ),
-
-            _ => (
                 axum::http::StatusCode::INTERNAL_SERVER_ERROR,
                 "Internal server error",
                 "Internal server error.",

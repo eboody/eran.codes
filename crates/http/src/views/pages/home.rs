@@ -1,26 +1,190 @@
 use bon::Builder;
+use maud::Render;
+use maud_extensions::css;
 
 use crate::paths::Route;
 use crate::types::Text;
-use crate::views::page::UserNav;
+use crate::views::page::{SseMode, UserNav};
 use crate::views::partials::{
-    CapabilityShowcase, ChatDemoSection, DemoResultPlaceholder, HomeHero,
-    ProfessionalismInPracticeTabs, RequestBurstDemo, SectionHeader,
+    CapabilityShowcase, DemoResultPlaceholder, HomeHero,
+    ProfessionalismInPracticeTabs, RequestBurstDemo, SectionHeader, chat,
 };
 
 #[derive(Builder)]
 pub struct Home {
     pub user: Option<UserNav>,
-    pub chat_demo: Option<ChatDemoSection>,
+    pub chat_demo: Option<chat::DemoSection>,
+}
+
+#[derive(Clone, Copy, Debug, Default)]
+struct HomeStyles;
+
+impl Render for HomeStyles {
+    fn render(&self) -> maud::Markup {
+        maud::html! {
+            ({
+                css! {
+                    me [data-proof-first],
+                    me #chat-demo,
+                    me [data-operations-surface],
+                    me [data-selected-work] {
+                      margin-top: 2.8rem;
+                      border: 1px solid var(--portfolio-surface-border);
+                      border-radius: 18px;
+                      padding: 1.35rem 1.35rem 1.45rem;
+                      background: var(--portfolio-surface);
+                      box-shadow: 0 6px 16px color-mix(in srgb, black 8%, transparent);
+                    }
+                    me [data-impact-metrics] {
+                      display: grid;
+                      gap: 0.85rem;
+                      margin-top: 1.15rem;
+                    }
+                    @media (min-width: 900px) {
+                      me [data-impact-metrics] {
+                        grid-template-columns: repeat(4, minmax(0, 1fr));
+                      }
+                    }
+                    me [data-impact-metrics] > article {
+                      border: 1px solid var(--ui-border-soft);
+                      border-radius: var(--ui-radius-md);
+                      padding: 0.95rem 1rem;
+                      background: var(--ui-surface-soft-alt);
+                    }
+                    me [data-impact-metrics] > article > p:first-child {
+                      margin: 0;
+                      font-size: 1.16rem;
+                      font-weight: 700;
+                      letter-spacing: -0.015rem;
+                    }
+                    me [data-impact-metrics] > article > p:last-child {
+                      margin: 0.26rem 0 0;
+                      font-size: 0.84rem;
+                      line-height: 1.45;
+                      color: var(--pico-muted-color);
+                    }
+                    me [data-operations-grid] {
+                      display: grid;
+                      gap: 1rem;
+                    }
+                    @media (min-width: 980px) {
+                      me [data-operations-grid] {
+                        grid-template-columns: 1fr 1fr;
+                      }
+                    }
+                    me [data-selected-work-grid] {
+                      display: grid;
+                      gap: 1rem;
+                    }
+                    @media (min-width: 980px) {
+                      me [data-selected-work-grid] {
+                        grid-template-columns: repeat(3, minmax(0, 1fr));
+                      }
+                    }
+                    me [data-selected-work-grid] > article {
+                      border: 1px solid var(--ui-border-soft);
+                      border-radius: var(--ui-radius-md);
+                      padding: 1.05rem;
+                      background: var(--ui-surface-soft);
+                    }
+                    me [data-selected-work-grid] > article h3 {
+                      margin-bottom: 0.35rem;
+                    }
+                    me [data-selected-work-grid] > article > p:first-child {
+                      margin: 0 0 0.25rem;
+                      font-size: 0.72rem;
+                      font-weight: 700;
+                      letter-spacing: 0.07rem;
+                      text-transform: uppercase;
+                      color: var(--pico-muted-color);
+                    }
+                    me [data-selected-work-grid] > article ul {
+                      margin: 0.72rem 0 0.9rem;
+                      padding-left: 1rem;
+                      font-size: 0.86rem;
+                      line-height: 1.48;
+                      color: var(--pico-muted-color);
+                    }
+                    me [data-selected-work-grid] > article [data-muted] {
+                      color: color-mix(in srgb, var(--pico-muted-color) 94%, var(--pico-color) 6%);
+                    }
+                    @media (hover: hover) {
+                      me [data-selected-work-grid] > article:hover,
+                      me [data-impact-metrics] > article:hover {
+                        box-shadow: 0 9px 20px color-mix(in srgb, black 10%, transparent);
+                      }
+                    }
+                    @media (prefers-reduced-motion: no-preference) {
+                      me [data-proof-first],
+                      me #request-burst-demo,
+                      me #chat-demo,
+                      me [data-operations-surface],
+                      me [data-selected-work],
+                      me #portfolio-showcase,
+                      me #professionalism-practice,
+                      me #live-log-target,
+                      me #network-log-target {
+                        animation: home-enter 480ms ease both;
+                      }
+                      me #portfolio-showcase {
+                        animation-delay: 70ms;
+                      }
+                      me [data-proof-first] {
+                        animation-delay: 90ms;
+                      }
+                      me #request-burst-demo {
+                        animation-delay: 100ms;
+                      }
+                      me [data-selected-work] {
+                        animation-delay: 120ms;
+                      }
+                      me [data-operations-surface] {
+                        animation-delay: 160ms;
+                      }
+                    }
+                    @keyframes home-enter {
+                      from {
+                        opacity: 0;
+                        transform: translateY(8px);
+                      }
+                      to {
+                        opacity: 1;
+                        transform: translateY(0);
+                      }
+                    }
+                    @media (max-width: 768px) {
+                      me [data-proof-first],
+                      me #request-burst-demo,
+                      me #chat-demo,
+                      me [data-operations-surface],
+                      me [data-selected-work],
+                      me #portfolio-showcase,
+                      me #professionalism-practice {
+                        margin-top: 1.8rem;
+                        padding: 1rem 0.95rem 1.1rem;
+                        border-radius: 16px;
+                      }
+                      me [data-impact-metrics] > article {
+                        padding: 0.8rem 0.85rem;
+                      }
+                      me [data-impact-metrics] > article > p:first-child {
+                        font-size: 1rem;
+                      }
+                    }
+                }
+            })
+        }
+    }
 }
 
 impl maud::Render for Home {
     fn render(&self) -> maud::Markup {
         let content = maud::html! {
             main class="container" {
-                (HomeHero::builder().maybe_user(self.user.clone()).build().render())
+                (HomeStyles.render())
+                (HomeHero::builder().maybe_user(self.user.clone()).build())
 
-                section class="proof-first" {
+                section data-proof-first {
                     ({
                         SectionHeader::builder()
                             .title(Text::from("Live Proof, Not Slideware"))
@@ -30,35 +194,33 @@ impl maud::Render for Home {
                                 ),
                             )
                             .build()
-                            .render()
                     })
-                    div class="impact-metrics" {
-                        article class="metric-card" {
-                            p class="metric-value" { "4 Layers" }
-                            p class="metric-label" { "domain -> app -> infra -> http" }
+                    div data-impact-metrics {
+                        article {
+                            p { "4 Layers" }
+                            p { "domain -> app -> infra -> http" }
                         }
-                        article class="metric-card" {
-                            p class="metric-value" { "1 SSE Stream" }
-                            p class="metric-label" { "Per visitor session, fanout across tabs" }
+                        article {
+                            p { "1 SSE Stream" }
+                            p { "Per visitor session, fanout across tabs" }
                         }
-                        article class="metric-card" {
-                            p class="metric-value" { "Typed Contracts" }
-                            p class="metric-label" { "DTO -> command -> domain -> SQL row" }
+                        article {
+                            p { "Typed Contracts" }
+                            p { "DTO -> command -> domain -> SQL row" }
                         }
-                        article class="metric-card" {
-                            p class="metric-value" { "Guardrails On" }
-                            p class="metric-label" { "CI checks + centralized error mapping" }
+                        article {
+                            p { "Guardrails On" }
+                            p { "CI checks + centralized error mapping" }
                         }
                     }
                 }
 
                 (RequestBurstDemo::builder()
                     .endpoint(Text::from(Route::PartialRequestBurstProbe.as_str()))
-                    .build()
-                    .render())
+                    .build())
 
                 @if let Some(chat_demo) = &self.chat_demo { (chat_demo.render()) } @else {
-                    section id=(ChatDemoSection::ANCHOR_ID) class="chat-panel" {
+                    section id=(chat::DemoSection::ANCHOR_ID) {
                         ({
                             SectionHeader::builder()
                                 .title(Text::from("Live chat room"))
@@ -74,12 +236,11 @@ impl maud::Render for Home {
                                     },
                                 )
                                 .build()
-                                .render()
                         })
                     }
                 }
 
-                section class="operations-surface" {
+                section data-operations-surface {
                     ({
                         SectionHeader::builder()
                             .title(Text::from("Operational View"))
@@ -89,9 +250,8 @@ impl maud::Render for Home {
                                 ),
                             )
                             .build()
-                            .render()
                     })
-                    div class="operations-grid" {
+                    div data-operations-grid {
                         ({
                             DemoResultPlaceholder::builder()
                                 .target_id(Text::from("live-log-target"))
@@ -101,7 +261,6 @@ impl maud::Render for Home {
                                     ),
                                 )
                                 .build()
-                                .render()
                         })
                         ({
                             DemoResultPlaceholder::builder()
@@ -112,12 +271,11 @@ impl maud::Render for Home {
                                     ),
                                 )
                                 .build()
-                                .render()
                         })
                     }
                 }
 
-                section class="selected-work" {
+                section data-selected-work {
                     ({
                         SectionHeader::builder()
                             .title(Text::from("Selected Work"))
@@ -127,25 +285,24 @@ impl maud::Render for Home {
                                 ),
                             )
                             .build()
-                            .render()
                     })
-                    div class="selected-work-grid" {
-                        article class="selected-work-card" {
-                            p class="selected-work-kicker" { "Capstone" }
+                    div data-selected-work-grid {
+                        article {
+                            p { "Capstone" }
                             h3 { "Live chat platform" }
-                            p class="muted" {
+                            p data-muted {
                                 "End-to-end message path with persistence, moderation, rate limiting, and SSE fanout."
                             }
                             ul {
-                                li { "Routes: /demo/chat/messages, /chat/moderation" }
+                                li { "Routes: /demo/chat/messages, /demo/chat/moderation" }
                                 li { "Outcome: real-time multi-client updates from a persisted source of truth" }
                             }
                             a class="button secondary" href="#chat-demo" { "Open live demo" }
                         }
-                        article class="selected-work-card" {
-                            p class="selected-work-kicker" { "Security" }
+                        article {
+                            p { "Security" }
                             h3 { "Auth + session durability" }
-                            p class="muted" {
+                            p data-muted {
                                 "axum-login and tower-sessions on top of Postgres-backed storage with encrypted cookies."
                             }
                             ul {
@@ -154,10 +311,10 @@ impl maud::Render for Home {
                             }
                             a class="button secondary" href=(Route::Register) { "Walk auth flow" }
                         }
-                        article class="selected-work-card" {
-                            p class="selected-work-kicker" { "Observability" }
+                        article {
+                            p { "Observability" }
                             h3 { "Live + diagnostic traces" }
-                            p class="muted" {
+                            p data-muted {
                                 "Typed log targets/messages separate operational signal from deep diagnostics."
                             }
                             ul {
@@ -169,16 +326,16 @@ impl maud::Render for Home {
                     }
                 }
 
-                (CapabilityShowcase::builder().build().render())
+                (CapabilityShowcase::builder().build())
 
-                (ProfessionalismInPracticeTabs::builder().build().render())
+                (ProfessionalismInPracticeTabs::builder().build())
             }
         };
 
         crate::views::page::Layout::builder()
             .title("Home")
             .content(content)
-            .enable_sse(true)
+            .sse_mode(SseMode::Enabled)
             .maybe_with_user(self.user.clone())
             .build()
             .render()

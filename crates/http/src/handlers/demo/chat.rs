@@ -6,6 +6,7 @@ use serde::Deserialize;
 
 use crate::trace_log::{LogMessageKnown, LogTargetKnown};
 use crate::types::{LogFieldKey, Text};
+use crate::views::partials::chat;
 use crate::{paths::Route, request, views};
 
 #[derive(Deserialize)]
@@ -20,22 +21,6 @@ pub struct ChatSignals {
 pub struct DemoChatSignals {
     pub room_id: Text,
     pub bot_body: Text,
-}
-
-pub async fn chat_page(
-    Extension(_state): Extension<crate::State>,
-    auth_session: crate::auth::Session,
-) -> crate::Result<axum::response::Response> {
-    let _ = auth_session
-        .user
-        .as_ref()
-        .ok_or(crate::error::Error::Internal)?;
-    let target = format!(
-        "{}#{}",
-        Route::Home.as_str(),
-        crate::views::partials::ChatDemoSection::ANCHOR_ID
-    );
-    Ok(axum::response::Redirect::to(target.as_str()).into_response())
 }
 
 #[derive(Deserialize)]
@@ -117,85 +102,18 @@ pub async fn post_chat_message(
         )
         .await?;
 
-    state.trace_log.record_sse_event(
-        request::current_context()
-            .and_then(|value| value.session_id)
-            .as_ref(),
-        crate::trace_log::TraceEntry::builder()
-            .timestamp(crate::trace_log::now_timestamp_short())
-            .level(crate::types::LogLevelText::new("INFO"))
-            .target(crate::types::LogTargetText::from(LogTargetKnown::DemoChat))
-            .message(crate::types::LogMessageText::from(
-                LogMessageKnown::ChatMessageIncoming,
-            ))
-            .fields(vec![
-                (
-                    crate::types::LogFieldName::from(LogFieldKey::Direction),
-                    crate::types::LogFieldValue::new("incoming"),
-                ),
-                (
-                    crate::types::LogFieldName::from(LogFieldKey::Sender),
-                    crate::types::LogFieldValue::new("you"),
-                ),
-                (
-                    crate::types::LogFieldName::from(LogFieldKey::Receiver),
-                    crate::types::LogFieldValue::new("server"),
-                ),
-                (
-                    crate::types::LogFieldName::from(LogFieldKey::UserId),
-                    crate::types::LogFieldValue::new(user.id.to_string()),
-                ),
-                (
-                    crate::types::LogFieldName::from(LogFieldKey::PayloadBytes),
-                    crate::types::LogFieldValue::new(body_text.len().to_string()),
-                ),
-            ])
-            .build(),
-    );
+    let user_id = crate::types::UserIdText::new(user.id.to_string());
+    record_incoming_chat_event(&state, ChatSender::You, &user_id, body_text.len());
+    let message_html = render_chat_message_html(&message, &user.username.to_string());
+    broadcast_message(&state, &message_html, ChatSender::You, user_id);
 
-    let message_html = views::partials::ChatMessage::builder()
-        .message_id(crate::types::Text::from(message.id.as_uuid().to_string()))
-        .author(crate::types::Text::from(user.username.to_string()))
-        .timestamp(crate::types::Text::from(
-            crate::chat_demo::format_message_time(message.created_at),
-        ))
-        .body(crate::types::Text::from(message.body.to_string()))
-        .status(crate::types::Text::from(format!("{:?}", message.status)))
-        .build()
-        .render()
-        .into_string();
-    broadcast_message(
-        &state,
-        &message_html,
-        ChatSender::You,
-        crate::types::UserIdText::new(user.id.to_string()),
-    );
-
-    let response = match crate::request::current_kind() {
-        crate::request::Kind::Datastar => StatusCode::ACCEPTED.into_response(),
-        crate::request::Kind::Page => {
-            let target = format!(
-                "{}#{}",
-                Route::Home.as_str(),
-                crate::views::partials::ChatDemoSection::ANCHOR_ID
-            );
-            axum::response::Redirect::to(target.as_str()).into_response()
-        }
-    };
-
-    Ok(response)
+    Ok(chat_post_response())
 }
 
 pub async fn post_demo_chat_message(
     Extension(state): Extension<crate::State>,
-    auth_session: crate::auth::Session,
     ReadSignals(signals): ReadSignals<DemoChatSignals>,
 ) -> Result<axum::response::Response, crate::error::Error> {
-    let _ = auth_session
-        .user
-        .as_ref()
-        .ok_or(crate::error::Error::Internal)?;
-
     let demo_user = crate::chat_demo::ensure_demo_user(&state).await?;
     let room_id = parse_room_id(&signals.room_id.to_string())?;
     state
@@ -220,6 +138,38 @@ pub async fn post_demo_chat_message(
         )
         .await?;
 
+    let demo_user_id = crate::types::UserIdText::new(demo_user.id.as_uuid().to_string());
+    record_incoming_chat_event(&state, ChatSender::Demo, &demo_user_id, body_text.len());
+    let message_html = render_chat_message_html(&message, &demo_user.username.to_string());
+    broadcast_message(&state, &message_html, ChatSender::Demo, demo_user_id);
+
+    Ok(chat_post_response())
+}
+
+fn render_chat_message_html(message: &domain::chat::Message, author: &str) -> String {
+    chat::Message::builder()
+        .message_id(crate::types::Text::from(message.id.as_uuid().to_string()))
+        .author(crate::types::Text::from(author.to_owned()))
+        .timestamp(crate::types::Text::from(
+            crate::chat_demo::format_message_time(message.created_at),
+        ))
+        .body(crate::types::Text::from(message.body.to_string()))
+        .status(match message.status {
+            domain::chat::MessageStatus::Visible => chat::message::Status::Visible,
+            domain::chat::MessageStatus::Pending => chat::message::Status::Pending,
+            domain::chat::MessageStatus::Removed => chat::message::Status::Removed,
+        })
+        .build()
+        .render()
+        .into_string()
+}
+
+fn record_incoming_chat_event(
+    state: &crate::State,
+    sender: ChatSender,
+    user_id: &crate::types::UserIdText,
+    payload_bytes: usize,
+) {
     state.trace_log.record_sse_event(
         request::current_context()
             .and_then(|value| value.session_id)
@@ -238,7 +188,7 @@ pub async fn post_demo_chat_message(
                 ),
                 (
                     crate::types::LogFieldName::from(LogFieldKey::Sender),
-                    crate::types::LogFieldValue::new("demo"),
+                    crate::types::LogFieldValue::new(sender.as_str()),
                 ),
                 (
                     crate::types::LogFieldName::from(LogFieldKey::Receiver),
@@ -246,47 +196,26 @@ pub async fn post_demo_chat_message(
                 ),
                 (
                     crate::types::LogFieldName::from(LogFieldKey::UserId),
-                    crate::types::LogFieldValue::new(demo_user.id.as_uuid().to_string()),
+                    crate::types::LogFieldValue::new(user_id.to_string()),
                 ),
                 (
                     crate::types::LogFieldName::from(LogFieldKey::PayloadBytes),
-                    crate::types::LogFieldValue::new(body_text.len().to_string()),
+                    crate::types::LogFieldValue::new(payload_bytes.to_string()),
                 ),
             ])
             .build(),
     );
+}
 
-    let message_html = views::partials::ChatMessage::builder()
-        .message_id(crate::types::Text::from(message.id.as_uuid().to_string()))
-        .author(crate::types::Text::from(demo_user.username.to_string()))
-        .timestamp(crate::types::Text::from(
-            crate::chat_demo::format_message_time(message.created_at),
-        ))
-        .body(crate::types::Text::from(message.body.to_string()))
-        .status(crate::types::Text::from(format!("{:?}", message.status)))
-        .build()
-        .render()
-        .into_string();
-    broadcast_message(
-        &state,
-        &message_html,
-        ChatSender::Demo,
-        crate::types::UserIdText::new(demo_user.id.as_uuid().to_string()),
-    );
-
-    let response = match crate::request::current_kind() {
+fn chat_post_response() -> axum::response::Response {
+    match crate::request::current_kind() {
         crate::request::Kind::Datastar => StatusCode::ACCEPTED.into_response(),
         crate::request::Kind::Page => {
-            let target = format!(
-                "{}#{}",
-                Route::Home.as_str(),
-                crate::views::partials::ChatDemoSection::ANCHOR_ID
-            );
+            let target =
+                format!("{}#{}", Route::Home.as_str(), chat::DemoSection::ANCHOR_ID);
             axum::response::Redirect::to(target.as_str()).into_response()
         }
-    };
-
-    Ok(response)
+    }
 }
 
 fn broadcast_message(
@@ -296,13 +225,13 @@ fn broadcast_message(
     user_id: crate::types::UserIdText,
 ) {
     let event = PatchElements::new(message_html)
-        .selector(".chat-messages")
+        .selector("[data-chat-messages]")
         .mode(ElementPatchMode::Append)
         .into_datastar_event();
     tracing::info!(
         target: LogTargetKnown::DemoSse.as_str(),
         message = LogMessageKnown::ChatMessageBroadcast.as_str(),
-        selector = ".chat-messages",
+        selector = "[data-chat-messages]",
         mode = "append",
         payload_bytes = message_html.len() as u64
     );
@@ -321,7 +250,7 @@ fn broadcast_message(
             .fields(vec![
                 (
                     crate::types::LogFieldName::from(LogFieldKey::Selector),
-                    crate::types::LogFieldValue::new(".chat-messages"),
+                    crate::types::LogFieldValue::new("[data-chat-messages]"),
                 ),
                 (
                     crate::types::LogFieldName::from(LogFieldKey::Mode),

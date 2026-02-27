@@ -68,9 +68,8 @@ impl Render for AuthStatus {
                 (StatusCard::builder()
                     .title(Text::from(status))
                     .items(items)
-                    .build()
-                    .render())
-                (TraceLog::builder().entries(&self.trace).build().render())
+                    .build())
+                (TraceLog::builder().entries(&self.trace).build())
             }
         }
     }

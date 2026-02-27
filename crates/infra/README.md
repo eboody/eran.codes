@@ -18,3 +18,7 @@ cargo run --bin with_db -- sqlx migrate run --source crates/infra/migrations
 ## Boundaries
 - Depends on `domain` and `app` traits.
 - Must not accept plaintext passwords for persistence.
+
+## Configuration
+- `DATABASE_URL` is required.
+- `INFRA_DB_MAX_CONNECTIONS` is optional (defaults to `10`).

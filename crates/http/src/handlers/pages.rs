@@ -1,7 +1,7 @@
 use axum::extract::Extension;
 
 use crate::types::Text;
-use crate::views::partials::ChatDemoSection;
+use crate::views::partials::chat;
 use crate::views::{self, pages};
 
 pub async fn health(Extension(_state): Extension<crate::State>) -> &'static str {
@@ -26,13 +26,13 @@ pub async fn home(
         .transpose()?;
     let context = crate::chat_demo::load_chat_context(&state, viewer_id).await?;
     let chat_demo = Some(
-        ChatDemoSection::builder()
+        chat::DemoSection::builder()
             .room_id(crate::types::Text::from(
                 context.room.id.as_uuid().to_string(),
             ))
             .room_name(crate::types::Text::from(context.room.name.to_string()))
             .messages(context.messages)
-            .interactive(is_authenticated)
+            .interactivity(chat::Mode::from(is_authenticated))
             .build(),
     );
 

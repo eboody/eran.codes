@@ -1,0 +1,4 @@
+interface:
+  display_name: "Visual Snapshot Check"
+  short_description: "Playwright full-page screenshot baseline checker"
+  default_prompt: "Use $visual-snapshot-check to capture and verify a full-page UI screenshot after visual changes."

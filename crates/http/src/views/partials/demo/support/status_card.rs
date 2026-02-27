@@ -1,5 +1,6 @@
 use bon::Builder;
 use maud::Render;
+use maud_extensions::css;
 
 use crate::views::partials::KeyValueList;
 use crate::types::Text;
@@ -13,10 +14,24 @@ pub struct StatusCard {
 impl Render for StatusCard {
     fn render(&self) -> maud::Markup {
         maud::html! {
-            div class="demo-result status-card" {
+            div data-demo-result data-status-card {
                 p { strong { (&self.title) } }
-                (KeyValueList::builder().items(self.items.clone()).build().render())
+                (KeyValueList::builder().items(self.items.clone()).build())
             }
+            ({
+                css! {
+                    me [data-demo-result] {
+                      margin-top: 0.8rem;
+                      padding: 0.8rem 1rem;
+                      border-radius: var(--ui-radius-sm);
+                      border: 1px solid var(--pico-muted-border-color);
+                      background: var(--pico-card-background-color);
+                    }
+                    me [data-status-card] > p {
+                      margin: 0;
+                    }
+                }
+            })
         }
     }
 }

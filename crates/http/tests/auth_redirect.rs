@@ -293,7 +293,7 @@ fn test_app() -> axum::Router {
 }
 
 async fn login_cookie(app: axum::Router) -> String {
-    let body = "email=demo%40example.com&password=password&next=%2Fdemo%2Fchat";
+    let body = "email=demo%40example.com&password=password&next=%2F%23chat-demo";
     let response = app
         .oneshot(
             Request::post("/login")
@@ -319,10 +319,14 @@ async fn login_cookie(app: axum::Router) -> String {
 }
 
 #[tokio::test]
-async fn unauthenticated_chat_redirects_to_login() {
+async fn unauthenticated_chat_moderation_redirects_to_login() {
     let app = test_app();
     let response = app
-        .oneshot(Request::get("/demo/chat").body(Body::empty()).unwrap())
+        .oneshot(
+            Request::get("/demo/chat/moderation")
+                .body(Body::empty())
+                .unwrap(),
+        )
         .await
         .unwrap();
 
@@ -333,13 +337,13 @@ async fn unauthenticated_chat_redirects_to_login() {
         .unwrap()
         .to_str()
         .unwrap();
-    assert_eq!(location, "/login?next=%2Fdemo%2Fchat");
+    assert_eq!(location, "/login?next=%2Fdemo%2Fchat%2Fmoderation");
 }
 
 #[tokio::test]
 async fn login_redirects_to_next() {
     let app = test_app();
-    let body = "email=demo%40example.com&password=password&next=%2Fdemo%2Fchat";
+    let body = "email=demo%40example.com&password=password&next=%2F%23chat-demo";
     let response = app
         .clone()
         .oneshot(
@@ -361,16 +365,16 @@ async fn login_redirects_to_next() {
         .unwrap()
         .to_str()
         .unwrap();
-    assert_eq!(location, "/demo/chat");
+    assert_eq!(location, "/#chat-demo");
 }
 
 #[tokio::test]
-async fn login_sets_session_cookie_and_allows_chat() {
+async fn login_sets_session_cookie_and_allows_chat_moderation() {
     let app = test_app();
     let cookie_header = login_cookie(app.clone()).await;
     let response = app
         .oneshot(
-            Request::get("/demo/chat")
+            Request::get("/demo/chat/moderation")
                 .header(axum::http::header::COOKIE, cookie_header)
                 .body(Body::empty())
                 .unwrap(),
@@ -378,14 +382,7 @@ async fn login_sets_session_cookie_and_allows_chat() {
         .await
         .unwrap();
 
-    assert_eq!(response.status(), StatusCode::SEE_OTHER);
-    let location = response
-        .headers()
-        .get(axum::http::header::LOCATION)
-        .expect("location header")
-        .to_str()
-        .expect("location value");
-    assert_eq!(location, "/#chat-demo");
+    assert_eq!(response.status(), StatusCode::OK);
 }
 
 #[tokio::test]
