@@ -90,6 +90,7 @@
 - For backend requests and SSE guidance, reference `docs/datastar-backend-requests.md`.
 - Prefer skills for reusable domain/tool specialization; use spawned agents for runtime parallelization or scoped implementation tasks, not as the primary way to encode persistent guidance.
 - For non-trivial requests, run `router` first to classify relevant specialists and ownership, then delegate selected specialists in parallel when possible.
+- For any visual/UI-related task (layout, styling, theming, animation, spacing, interaction states, responsive behavior), `router` must always include both `ux-expert` and `ui-expert` in `selected_agents`, and run them before implementation.
 
 ````md
 # Agent: Architecture Boundary Enforcer

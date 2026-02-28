@@ -14,14 +14,16 @@ Use this skill whenever UI styling, component markup, or visual behavior changes
 ## Workflow
 
 1. Ensure the app is running and reachable at `VISUAL_URL` (default `http://127.0.0.1:3000/`).
-2. Capture/update baseline when intended visual changes are approved:
+2. If the visual change is intentional, baseline refresh is required (do not skip):
    - `VISUAL_UPDATE_BASELINE=1 scripts/ci/visual-snapshot.sh`
 3. Run the visual check:
    - `scripts/ci/visual-snapshot.sh`
 4. If check fails, inspect:
    - current screenshot: `artifacts/visual/current/home.png`
    - baseline screenshot: `artifacts/visual/baseline/home.png`
-5. If the change is intentional, refresh baseline and rerun.
+5. Finalize only after explicitly reporting baseline status:
+   - `updated` when visuals intentionally changed and baseline was refreshed
+   - `unchanged` when no visual change was intended
 
 ## Notes
 

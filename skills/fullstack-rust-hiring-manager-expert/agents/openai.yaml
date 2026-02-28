@@ -1,0 +1,4 @@
+interface:
+  display_name: "Fullstack Rust Hiring Manager Expert"
+  short_description: "Fullstack Rust hiring assessment and interview design"
+  default_prompt: "Use $fullstack-rust-hiring-manager-expert to generate scorecards, interview plans, and hiring recommendations for fullstack Rust candidates."

@@ -1,0 +1,4 @@
+interface:
+  display_name: "UX Expert"
+  short_description: "UX flows, usability, and accessibility reviewer"
+  default_prompt: "Use $ux-expert to evaluate user flows, IA, usability, and accessibility, then provide prioritized fixes with acceptance criteria."
