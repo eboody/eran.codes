@@ -40,6 +40,22 @@ If a value has a finite meaningful set, use an enum.
 Boundary exception:
 - Raw strings are acceptable only at transport/storage boundaries (HTTP DTOs, DB rows, external APIs), and must be converted immediately.
 
+### Parse, don't validate (Rust)
+
+Treat boundary conversion as parsing into richer types, not as ad-hoc boolean validation.
+
+- Accept raw `String`/wire values only at boundaries.
+- Convert boundary values immediately with `FromStr`, `TryFrom`, or smart constructors/newtypes.
+- Return typed parse/construction errors instead of carrying raw values with "is valid" flags.
+- After successful parsing, pass only typed values through app/domain flows.
+- Prefer static enforcement (types/newtypes/enums/typestate) over repeated dynamic checks whenever feasible.
+
+Rust-oriented default:
+
+- `FromStr` for scalar/string parsing (for example, `Email`, `RoomName`).
+- `TryFrom<Dto>` / `TryFrom<Row>` for boundary-to-domain conversion.
+- Keep `is_valid` helpers private to parsers/constructors; do not make them the primary domain API.
+
 ### Nutype-first scalar modeling
 
 Use `nutype` newtypes for meaningful scalar concepts:
@@ -431,6 +447,7 @@ Use this checklist for new features and substantial refactors:
 
 - Invariants encoded with enums/newtypes?
 - Any stringly checks left in domain/app logic?
+- Boundary inputs parsed once into typed values (instead of re-validating raw strings downstream)?
 - Typestate/statum considered before bon/constructors?
 - Builder choice justified by readability and correctness?
 - Module-scoped naming preferred over compound names where practical?
@@ -446,3 +463,11 @@ Use this checklist for new features and substantial refactors:
 
 Tool-specific files such as `docs/<tool>/patterns-style.md` should extend this standard.
 They may add stricter rules for a tool, but should not weaken this baseline.
+
+## References for "Parse, don't validate"
+
+- Alexis King, "Parse, don't validate": https://lexi-lambda.github.io/blog/2019/11/05/parse-don-t-validate/
+- Rust `std::str::FromStr`: https://doc.rust-lang.org/std/str/trait.FromStr.html
+- Rust `std::convert::TryFrom`: https://doc.rust-lang.org/std/convert/trait.TryFrom.html
+- Rust Book, Newtype Pattern: https://doc.rust-lang.org/book/ch20-03-advanced-types.html
+- Rust API Guidelines (`C-VALIDATE`): https://rust-lang.github.io/api-guidelines/dependability.html
