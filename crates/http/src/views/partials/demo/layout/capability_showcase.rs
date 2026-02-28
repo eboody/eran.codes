@@ -6,7 +6,7 @@ use crate::types::Text;
 
 use super::{
     TabbedShowcase, TabbedShowcaseAction, TabbedShowcaseMockPanel, TabbedShowcaseRow,
-    TabbedShowcaseTab, TabbedShowcaseTheme, TabbedShowcaseTone,
+    TabbedShowcaseIcon, TabbedShowcaseTab, TabbedShowcaseTheme, TabbedShowcaseTone,
 };
 
 #[derive(Clone, Debug, Builder)]
@@ -26,7 +26,7 @@ impl Render for CapabilityShowcase {
             .tabs(vec![
                 TabbedShowcaseTab::builder()
                     .tone(TabbedShowcaseTone::Amber)
-                    .tab_icon(Text::from("ID"))
+                    .tab_icon(TabbedShowcaseIcon::ShieldCheck)
                     .tab_label(Text::from("Identity + Sessions"))
                     .title(Text::from("Identity and Session Durability"))
                     .subtitle(Text::from("Encrypted cookies and durable Postgres-backed sessions keep identity consistent across requests."))
@@ -59,7 +59,7 @@ impl Render for CapabilityShowcase {
                     .build(),
                 TabbedShowcaseTab::builder()
                     .tone(TabbedShowcaseTone::Sky)
-                    .tab_icon(Text::from("BD"))
+                    .tab_icon(TabbedShowcaseIcon::ArrowsRightLeft)
                     .tab_label(Text::from("Boundary-Safe Flows"))
                     .title(Text::from("Boundary-Safe Request Flow"))
                     .subtitle(Text::from("Transport, policy, domain invariants, and persistence stay separated by typed handoffs."))
@@ -92,7 +92,7 @@ impl Render for CapabilityShowcase {
                     .build(),
                 TabbedShowcaseTab::builder()
                     .tone(TabbedShowcaseTone::Teal)
-                    .tab_icon(Text::from("OBS"))
+                    .tab_icon(TabbedShowcaseIcon::Signal)
                     .tab_label(Text::from("Observability + SSE"))
                     .title(Text::from("Observability and Real-Time Delivery"))
                     .subtitle(Text::from("Request spans, live logs, and SSE patches make behavior inspectable while the app runs."))
@@ -125,7 +125,7 @@ impl Render for CapabilityShowcase {
                     .build(),
                 TabbedShowcaseTab::builder()
                     .tone(TabbedShowcaseTone::Violet)
-                    .tab_icon(Text::from("CHAT"))
+                    .tab_icon(TabbedShowcaseIcon::ChatBubbleLeftRight)
                     .tab_label(Text::from("Live Chat Capstone"))
                     .title(Text::from("Live Chat Capstone"))
                     .subtitle(Text::from("A complete request -> validate -> persist -> broadcast path with moderation and rate limiting."))

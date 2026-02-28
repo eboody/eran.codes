@@ -114,7 +114,7 @@ impl Render for Panel {
                 (css())
                 ({
                     chat::Window::builder()
-                        .maybe_title(Some(Text::from(self.role.title())))
+                        .title(Text::from(self.role.title()))
                         .side(self.role.side())
                         .messages(self.messages.clone())
                         .build()

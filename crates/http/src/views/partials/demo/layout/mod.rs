@@ -9,6 +9,6 @@ pub use request_burst_demo::RequestBurstDemo;
 pub use section_header::SectionHeader;
 pub use tabbed_showcase::TabbedShowcase;
 pub(crate) use tabbed_showcase::{
-    TabbedShowcaseAction, TabbedShowcaseMockPanel, TabbedShowcaseRow, TabbedShowcaseTab,
-    TabbedShowcaseTheme, TabbedShowcaseTone,
+    TabbedShowcaseAction, TabbedShowcaseIcon, TabbedShowcaseMockPanel, TabbedShowcaseRow,
+    TabbedShowcaseTab, TabbedShowcaseTheme, TabbedShowcaseTone,
 };

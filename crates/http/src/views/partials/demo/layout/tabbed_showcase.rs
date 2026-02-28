@@ -1,4 +1,5 @@
 use bon::Builder;
+use heroicons::{Icon, icon_name, icon_variant};
 use maud::{PreEscaped, Render};
 use maud_extensions::css;
 
@@ -74,10 +75,55 @@ impl TabbedShowcaseTheme {
     }
 }
 
+#[derive(Clone, Copy, Debug)]
+pub(crate) enum TabbedShowcaseIcon {
+    ShieldCheck,
+    ArrowsRightLeft,
+    Signal,
+    ChatBubbleLeftRight,
+}
+
+impl TabbedShowcaseIcon {
+    fn render(self) -> maud::Markup {
+        let svg = match self {
+            Self::ShieldCheck => Icon {
+                name: icon_name::ShieldCheck,
+                variant: icon_variant::Outline,
+                id: "",
+                class: "",
+            }
+            .to_string(),
+            Self::ArrowsRightLeft => Icon {
+                name: icon_name::ArrowsRightLeft,
+                variant: icon_variant::Outline,
+                id: "",
+                class: "",
+            }
+            .to_string(),
+            Self::Signal => Icon {
+                name: icon_name::Signal,
+                variant: icon_variant::Outline,
+                id: "",
+                class: "",
+            }
+            .to_string(),
+            Self::ChatBubbleLeftRight => Icon {
+                name: icon_name::ChatBubbleLeftRight,
+                variant: icon_variant::Outline,
+                id: "",
+                class: "",
+            }
+            .to_string(),
+        };
+
+        maud::html! { (PreEscaped(svg)) }
+    }
+}
+
 #[derive(Clone, Debug, Builder)]
 pub(crate) struct TabbedShowcaseTab {
     pub tone: Option<TabbedShowcaseTone>,
-    pub tab_icon: Option<Text>,
+    pub tab_icon: Option<TabbedShowcaseIcon>,
     pub tab_label: Text,
     pub title: Text,
     pub subtitle: Text,
@@ -170,9 +216,8 @@ impl Render for TabbedShowcase {
                           --showcase-shell-blur: var(--size-px-2);
                           --showcase-tab-transition-duration: 240ms;
                           --showcase-tab-indicator-transition-duration: 320ms;
-                          --showcase-tab-icon-min-width: var(--size-4);
-                          --showcase-tab-icon-font-size: var(--font-size-1);
-                          --showcase-tab-icon-line-height: var(--font-lineheight-00);
+                          --showcase-tab-icon-size: var(--size-4);
+                          --showcase-tab-icon-min-width: calc(var(--showcase-tab-icon-size) + var(--size-1));
                           --showcase-shell-bg: hsl(220 36% 7%);
                           --showcase-shell-bg-alt: hsl(222 40% 8%);
                           --showcase-shell-border: hsl(220 16% 25% / 0.78);
@@ -380,9 +425,14 @@ impl Render for TabbedShowcase {
                           align-items: center;
                           justify-content: center;
                           min-width: var(--showcase-tab-icon-min-width);
-                          font-size: var(--showcase-tab-icon-font-size);
-                          line-height: var(--showcase-tab-icon-line-height);
                           color: inherit;
+                        }
+                        me > [data-showcase-root] > [data-showcase-shell] > [data-showcase-tabs] > button[role="tab"] > span[aria-hidden="true"] > svg {
+                          width: var(--showcase-tab-icon-size);
+                          height: var(--showcase-tab-icon-size);
+                          display: block;
+                          stroke: currentColor;
+                          fill: none;
                         }
                         me > [data-showcase-root] > [data-showcase-shell] > [data-showcase-tabs] > [data-showcase-tab-indicator] {
                           position: absolute;
@@ -605,8 +655,8 @@ fn render_showcase_tabs(
                     aria-selected=(if index == 0 { "true" } else { "false" })
                     tabindex=(if index == 0 { "0" } else { "-1" })
                 {
-                    @if let Some(icon) = &tab.tab_icon {
-                        span aria-hidden="true" { (icon) }
+                    @if let Some(icon) = tab.tab_icon {
+                        span aria-hidden="true" { (icon.render()) }
                     }
                     span { (&tab.tab_label) }
                 }

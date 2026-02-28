@@ -78,7 +78,7 @@ pub async fn login(
 
     Ok(views::render(
         pages::Login::builder()
-            .maybe_message(Some("Invalid email or password."))
+            .message("Invalid email or password.")
             .maybe_next(next.as_deref())
             .build(),
     )
@@ -119,14 +119,14 @@ pub async fn register(
         }
         Err(app::user::Error::EmailTaken) => Ok(views::render(
             pages::Register::builder()
-                .maybe_message(Some("Email already in use."))
+                .message("Email already in use.")
                 .maybe_next(next.as_deref())
                 .build(),
         )
         .into_response()),
         Err(app::user::Error::Domain(_)) => Ok(views::render(
             pages::Register::builder()
-                .maybe_message(Some("Invalid input."))
+                .message("Invalid input.")
                 .maybe_next(next.as_deref())
                 .build(),
         )
@@ -153,12 +153,12 @@ pub async fn protected(
         pages::Protected::builder()
             .username(Text::from(user.username.to_string()))
             .email(Text::from(user.email.to_string()))
-            .maybe_user(Some(
+            .user(
                 crate::views::page::UserNav::builder()
                     .username(Text::from(user.username.to_string()))
                     .email(Text::from(user.email.to_string()))
                     .build(),
-            ))
+            )
             .build(),
     )
     .into_response())

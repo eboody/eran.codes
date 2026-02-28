@@ -16,6 +16,7 @@ time = "0.3.47"
 
 axum = "0.8.8"
 maud = { version = "0.27.0", features = ["axum"] }
+heroicons = "0.2.0"
 tower-http = { version = "0.6.8", features = ["fs", "request-id", "trace"] }
 maud-extensions = "0.1.4"
 secrecy = "0.10.3"

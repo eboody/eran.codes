@@ -48,7 +48,7 @@ pub async fn moderation_page(
     Ok(views::render(
         views::pages::ChatModeration::builder()
             .entries(entries)
-            .maybe_with_user(Some(user_nav))
+            .with_user(user_nav)
             .build(),
     ))
 }
