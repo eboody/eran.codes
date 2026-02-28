@@ -154,7 +154,19 @@ impl Render for TabbedShowcase {
                           --showcase-tab-padding-x: var(--size-1);
                           --showcase-tab-hover-offset: calc(var(--border-size-1) * -1);
                           --showcase-focus-outline-size: var(--border-size-2);
-                          --showcase-focus-outline-offset: var(--border-size-1);
+                          --showcase-focus-outline-offset: 0;
+                          --showcase-focus-border-color: color-mix(
+                            in srgb,
+                            var(--tone-accent) 82%,
+                            white 18%
+                          );
+                          --showcase-focus-background: color-mix(
+                            in srgb,
+                            var(--tone-tab-soft) 82%,
+                            transparent 18%
+                          );
+                          --showcase-focus-inset-ring: inset 0 0 0
+                            var(--showcase-focus-outline-size) var(--tone-accent);
                           --showcase-shell-blur: var(--size-px-2);
                           --showcase-tab-transition-duration: 240ms;
                           --showcase-tab-indicator-transition-duration: 320ms;
@@ -353,8 +365,15 @@ impl Render for TabbedShowcase {
                           color: var(--tone-accent);
                         }
                         me > [data-showcase-root] > [data-showcase-shell] > [data-showcase-tabs] > button[role="tab"]:focus-visible {
-                          outline: var(--showcase-focus-outline-size) solid var(--tone-accent);
+                          outline: none;
                           outline-offset: var(--showcase-focus-outline-offset);
+                          border-color: var(--showcase-focus-border-color);
+                          background: var(--showcase-focus-background);
+                          box-shadow: var(--showcase-focus-inset-ring);
+                        }
+                        me > [data-showcase-root] > [data-showcase-shell] > [data-showcase-tabs] > button[role="tab"]:focus {
+                          outline: none;
+                          box-shadow: none;
                         }
                         me > [data-showcase-root] > [data-showcase-shell] > [data-showcase-tabs] > button[role="tab"] > span[aria-hidden="true"] {
                           display: inline-flex;
