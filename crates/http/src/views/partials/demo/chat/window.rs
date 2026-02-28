@@ -40,7 +40,7 @@ inline_css! {
       text-transform: uppercase;
       color: var(--chat-shell-title);
     }
-    me > header > [data-chat-room-state] {
+    me > header > [data-chat-room-state="live"] {
       display: inline-flex;
       align-items: center;
       gap: var(--chat-space-dot-gap);
@@ -50,13 +50,20 @@ inline_css! {
       text-transform: uppercase;
       color: var(--chat-shell-live);
     }
-    me > header > [data-chat-room-state]::before {
+    me > header > [data-chat-room-state="live"]::before {
       content: "";
       width: var(--chat-live-dot-size);
       height: var(--chat-live-dot-size);
       border-radius: 999px;
       background: var(--chat-shell-live-dot);
       box-shadow: 0 0 0 var(--chat-live-dot-ring-size) var(--chat-shell-live-ring);
+    }
+    me > header > [data-chat-room-state="offline"] {
+      font-size: var(--chat-font-micro);
+      font-weight: 700;
+      letter-spacing: 0.05rem;
+      text-transform: uppercase;
+      color: color-mix(in srgb, var(--pico-muted-color) 90%, var(--chat-shell-title) 10%);
     }
 }
 
@@ -68,7 +75,12 @@ impl Render for Window {
                 @if let Some(title) = &self.title {
                     header {
                         span data-chat-role { (title) }
-                        span data-chat-room-state { "Live" }
+                        span data-chat-room-state="live" data-show="$sseConnected" style="display:none;" {
+                            "Live"
+                        }
+                        span data-chat-room-state="offline" data-show="!$sseConnected" {
+                            "Offline"
+                        }
                     }
                 }
                 (chat::message::Messages::builder()

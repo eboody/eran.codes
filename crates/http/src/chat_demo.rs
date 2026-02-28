@@ -118,7 +118,6 @@ async fn to_message_views(
 
     messages
         .iter()
-        .rev()
         .map(|message| {
             let user_id = domain::user::Id::from_uuid(*message.user_id.as_uuid());
             let author = names.get(&user_id).cloned().unwrap_or_else(|| {

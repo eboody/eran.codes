@@ -138,7 +138,7 @@ impl Render for CapabilityShowcase {
                                 TabbedShowcaseRow::builder().label(Text::from("Request")).value(Text::from("POST /demo/chat/messages")).build(),
                                 TabbedShowcaseRow::builder().label(Text::from("Validation")).value(Text::from("typed ids + message body")).build(),
                                 TabbedShowcaseRow::builder().label(Text::from("Persistence")).value(Text::from("chat_messages + audit")).build(),
-                                TabbedShowcaseRow::builder().label(Text::from("Fanout")).value(Text::from("append [data-chat-messages]")).build(),
+                                TabbedShowcaseRow::builder().label(Text::from("Fanout")).value(Text::from("prepend [data-chat-messages]")).build(),
                             ])
                             .build(),
                     )

@@ -86,10 +86,70 @@ pub enum Mode {
 
 impl From<bool> for Mode {
     fn from(value: bool) -> Self {
-        if value {
-            Self::Interactive
-        } else {
-            Self::DemoOnly
+        if value { Self::Interactive } else { Self::DemoOnly }
+    }
+}
+
+#[derive(Clone, Debug, Builder)]
+pub struct Panel {
+    pub role: Role,
+    pub messages: Vec<chat::Message>,
+    #[builder(default)]
+    pub interactivity: Mode,
+}
+
+impl Render for Panel {
+    fn render(&self) -> maud::Markup {
+        let action = self.role.action();
+        let input_signal = self.role.input_signal();
+        let input_id = self.role.input_id();
+        let can_compose = matches!(self.interactivity, Mode::Interactive)
+            || matches!(
+                (self.interactivity, self.role),
+                (Mode::DemoOnly, Role::Demo)
+            );
+        let submit_action = format!("@post('{}'); ${} = ''", action, input_signal);
+        maud::html! {
+            div data-chat-panel data-chat-panel-role=(self.role.key()) {
+                (css())
+                ({
+                    chat::Window::builder()
+                        .maybe_title(Some(Text::from(self.role.title())))
+                        .side(self.role.side())
+                        .messages(self.messages.clone())
+                        .build()
+                })
+                @if can_compose {
+                    form
+                        method="post"
+                        action=(action)
+                        data-chat-compose
+                        data-on:submit=(submit_action)
+                    {
+                        label for=(input_id) {
+                            span data-chat-compose-label { (self.role.input_label()) }
+                        }
+                        div data-chat-compose-row {
+                            input
+                                id=(input_id)
+                                type="text"
+                                name="body"
+                                placeholder=(self.role.placeholder())
+                                data-bind=(input_signal)
+                                required;
+                            button type="submit" data-chat-send=(self.role.key()) {
+                                (self.role.button_label())
+                            }
+                        }
+                    }
+                } @else {
+                    div data-muted data-chat-readonly {
+                        "Read-only as you. "
+                        a href=(Route::Login) { "Sign in" }
+                        " to post with your account."
+                    }
+                }
+            }
         }
     }
 }
@@ -153,62 +213,5 @@ inline_css! {
         width: 100%;
         min-width: 0;
       }
-    }
-}
-
-#[derive(Clone, Debug, Builder)]
-pub struct Panel {
-    pub role: Role,
-    pub messages: Vec<chat::Message>,
-    #[builder(default)]
-    pub interactivity: Mode,
-}
-
-impl Render for Panel {
-    fn render(&self) -> maud::Markup {
-        let action = self.role.action();
-        let input_signal = self.role.input_signal();
-        let input_id = self.role.input_id();
-        let can_compose = matches!(self.interactivity, Mode::Interactive)
-            || matches!((self.interactivity, self.role), (Mode::DemoOnly, Role::Demo));
-        let submit_action = format!(
-            "event.preventDefault(); @post('{}'); ${} = ''",
-            action, input_signal
-        );
-        maud::html! {
-            div data-chat-panel data-chat-panel-role=(self.role.key()) {
-                (css())
-                ({
-                    chat::Window::builder()
-                        .maybe_title(Some(Text::from(self.role.title())))
-                        .side(self.role.side())
-                        .messages(self.messages.clone())
-                        .build()
-                })
-                @if can_compose {
-                    form method="post" action=(action) data-chat-compose data-on:submit=(submit_action) {
-                        label for=(input_id) {
-                            span data-chat-compose-label { (self.role.input_label()) }
-                        }
-                        div data-chat-compose-row {
-                            input
-                                id=(input_id)
-                                type="text"
-                                name="body"
-                                placeholder=(self.role.placeholder())
-                                data-bind=(input_signal)
-                                required;
-                            button type="submit" data-chat-send=(self.role.key()) { (self.role.button_label()) }
-                        }
-                    }
-                } @else {
-                    div data-muted data-chat-readonly {
-                        "Read-only as you. "
-                        a href=(Route::Login) { "Sign in" }
-                        " to post with your account."
-                    }
-                }
-            }
-        }
     }
 }

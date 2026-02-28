@@ -13,7 +13,9 @@ impl Render for Connection {
         let connected = &self.connected_signal;
         maud::html! {
             div data-pill-row {
-                span class="pill" data-chat-connection-state="connected" data-show=(connected) { "SSE connected" }
+                span class="pill" data-chat-connection-state="connected" data-show=(connected) style="display:none;" {
+                    "SSE connected"
+                }
                 span class="pill" data-chat-connection-state="disconnected" data-show=(format!("!{}", connected)) { "SSE disconnected" }
             }
             ({

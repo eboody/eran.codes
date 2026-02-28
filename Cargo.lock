@@ -4480,6 +4480,7 @@ dependencies = [
  "clap",
  "playwright",
  "tokio",
+ "tokio-stream",
  "url",
 ]
 

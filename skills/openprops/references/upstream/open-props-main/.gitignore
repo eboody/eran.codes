@@ -1,0 +1,10 @@
+.DS_Store
+dist/
+.cache/
+node_modules/
+*.min.css
+src/shadow.*.css
+*.json
+*.ts
+*.d.ts
+!open-props.resolver.json

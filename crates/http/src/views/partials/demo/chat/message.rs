@@ -61,6 +61,10 @@ pub struct Messages {
 }
 
 inline_css! {
+    me {
+      min-height: 0;
+      display: flex;
+    }
     me > [data-chat-messages] {
       list-style: none;
       margin: 0;
@@ -69,6 +73,7 @@ inline_css! {
       flex-direction: column;
       gap: var(--chat-message-gap);
       overflow-y: auto;
+      flex: 1;
       min-height: 0;
     }
     me > [data-chat-messages] > [data-chat-message] {

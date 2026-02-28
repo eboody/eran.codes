@@ -419,13 +419,7 @@ impl Render for Layout<'_> {
                     link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600&display=swap";
                     link rel="stylesheet" href="/static/pico.min.css";
                     link rel="stylesheet" href="/static/app.css";
-                    script type="module" {
-                        (maud::PreEscaped(r#"
-document.addEventListener("DOMContentLoaded", async () => {
-  await import("https://cdn.jsdelivr.net/gh/starfederation/datastar@1.0.0-RC.7/bundles/datastar.js");
-});
-                        "#))
-                    }
+                    script type="module" src="/static/datastar.js" {}
                     script src="/static/css-scope-inline.js" {}
                 }
                 @match self.sse_mode {

@@ -226,13 +226,13 @@ fn broadcast_message(
 ) {
     let event = PatchElements::new(message_html)
         .selector("[data-chat-messages]")
-        .mode(ElementPatchMode::Append)
+        .mode(ElementPatchMode::Prepend)
         .into_datastar_event();
     tracing::info!(
         target: LogTargetKnown::DemoSse.as_str(),
         message = LogMessageKnown::ChatMessageBroadcast.as_str(),
         selector = "[data-chat-messages]",
-        mode = "append",
+        mode = "prepend",
         payload_bytes = message_html.len() as u64
     );
     let _ = state.sse.broadcast(crate::sse::Event::from_event(event));
@@ -254,7 +254,7 @@ fn broadcast_message(
                 ),
                 (
                     crate::types::LogFieldName::from(LogFieldKey::Mode),
-                    crate::types::LogFieldValue::new("append"),
+                    crate::types::LogFieldValue::new("prepend"),
                 ),
                 (
                     crate::types::LogFieldName::from(LogFieldKey::PayloadBytes),

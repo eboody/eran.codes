@@ -25,12 +25,12 @@ inline_js! {
         const list = windowElement.querySelector("[data-chat-messages]");
         if (!list) return;
 
-        const scrollToBottom = () => {
-          list.scrollTop = list.scrollHeight;
+        const scrollToLatest = () => {
+          list.scrollTop = 0;
         };
 
-        requestAnimationFrame(scrollToBottom);
-        const observer = new MutationObserver(scrollToBottom);
+        requestAnimationFrame(scrollToLatest);
+        const observer = new MutationObserver(scrollToLatest);
         observer.observe(list, { childList: true });
       });
     })();
