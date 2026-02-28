@@ -30,26 +30,37 @@ impl Render for SectionHeader {
             }
             ({
                 css! {
+                    me {
+                      --section-header-gap-row: var(--size-2);
+                      --section-header-gap-column: var(--size-3);
+                      --section-header-margin-bottom: var(--size-4);
+                      --section-title-margin-bottom: var(--size-1);
+                      --section-title-size: var(--font-size-fluid-2);
+                      --section-title-line-height: var(--font-lineheight-1);
+                      --section-subtitle-max-width: var(--size-content-3);
+                      --section-meta-margin-top: calc(var(--size-2) * -1);
+                      --section-meta-margin-bottom: var(--size-2);
+                    }
                     me [data-section-header] {
                       display: flex;
                       flex-wrap: wrap;
                       align-items: center;
                       justify-content: space-between;
-                      gap: 0.9rem 1.2rem;
-                      margin-bottom: 1.1rem;
+                      gap: var(--section-header-gap-row) var(--section-header-gap-column);
+                      margin-bottom: var(--section-header-margin-bottom);
                     }
                     me [data-section-header] h2 {
-                      margin-bottom: 0.28rem;
-                      font-size: clamp(1.5rem, 1.2rem + 1.1vw, 2rem);
-                      line-height: 1.18;
+                      margin-bottom: var(--section-title-margin-bottom);
+                      font-size: var(--section-title-size);
+                      line-height: var(--section-title-line-height);
                     }
                     me [data-section-header] [data-muted] {
                       margin-bottom: 0;
-                      max-width: 70ch;
+                      max-width: var(--section-subtitle-max-width);
                     }
                     me [data-section-meta] {
-                      margin-top: -0.5rem;
-                      margin-bottom: 0.65rem;
+                      margin-top: var(--section-meta-margin-top);
+                      margin-bottom: var(--section-meta-margin-bottom);
                     }
                 }
             })
