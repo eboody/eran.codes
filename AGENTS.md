@@ -51,6 +51,7 @@
 - Treat `docs/writing-style.md` as the canonical writing/modeling style baseline (typed invariants first, typestate before generic builders, no stringly logic).
 - For Maud UI work, keep styling local to the component via scoped `inline_css!` + `(css())` (`me` selectors) and avoid adding non-shared rules to `crates/http/static/app.css`.
 - Prefer short, targeted styling hooks (`id`, semantic class, stable `data-*`) and avoid deep selector chains; split into smaller components when selectors get long.
+- With `css-scope-inline`, avoid `me [selector]` descendant patterns because they can be rewritten as `me[selector]`; use explicit child chains from `me` (for example `me > [data-root] > ...`) or split the component.
 - Avoid magic numbers in component styling; define reusable design tokens and override tokens per breakpoint for responsive behavior.
 - For visual UI changes, run `scripts/ci/visual-snapshot.sh` against a running app before finalizing.
 - Baseline refresh for intentional visual changes: `VISUAL_UPDATE_BASELINE=1 scripts/ci/visual-snapshot.sh`.

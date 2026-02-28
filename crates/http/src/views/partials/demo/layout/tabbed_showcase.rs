@@ -218,8 +218,8 @@ impl Render for TabbedShowcase {
                             linear-gradient(180deg, var(--showcase-shell-bg), var(--showcase-shell-bg-alt) 74%);
                           box-shadow: var(--showcase-shell-shadow);
                         }
-                        me[data-tabbed-showcase] [data-showcase-tabs] > [data-showcase-tone],
-                        me[data-tabbed-showcase] [data-showcase-panels] > [data-showcase-tone] {
+                        me > [data-showcase-root] > [data-showcase-shell] > [data-showcase-tabs] > [data-showcase-tone],
+                        me > [data-showcase-root] > [data-showcase-shell] > [data-showcase-panels] > [data-showcase-tone] {
                           --tone-base: var(--indigo-5);
                           --tone-base-strong: var(--indigo-6);
                           --tone-base-end: var(--indigo-8);
@@ -233,8 +233,8 @@ impl Render for TabbedShowcase {
                           --tone-chip-bg: hsl(220 22% 14% / 0.92);
                           --tone-chip-border: hsl(220 10% 32% / 0.74);
                         }
-                        me[data-tabbed-showcase] [data-showcase-tabs] > [data-showcase-tone="indigo"],
-                        me[data-tabbed-showcase] [data-showcase-panels] > [data-showcase-tone="indigo"] {
+                        me > [data-showcase-root] > [data-showcase-shell] > [data-showcase-tabs] > [data-showcase-tone="indigo"],
+                        me > [data-showcase-root] > [data-showcase-shell] > [data-showcase-panels] > [data-showcase-tone="indigo"] {
                           --tone-base: var(--indigo-5);
                           --tone-base-strong: var(--indigo-6);
                           --tone-base-end: var(--indigo-8);
@@ -244,8 +244,8 @@ impl Render for TabbedShowcase {
                           --tone-surface-end: hsl(229 48% 10%);
                           --tone-border: hsl(229 58% 32% / 0.56);
                         }
-                        me[data-tabbed-showcase] [data-showcase-tabs] > [data-showcase-tone="sky"],
-                        me[data-tabbed-showcase] [data-showcase-panels] > [data-showcase-tone="sky"] {
+                        me > [data-showcase-root] > [data-showcase-shell] > [data-showcase-tabs] > [data-showcase-tone="sky"],
+                        me > [data-showcase-root] > [data-showcase-shell] > [data-showcase-panels] > [data-showcase-tone="sky"] {
                           --tone-base: var(--blue-5);
                           --tone-base-strong: var(--blue-6);
                           --tone-base-end: var(--blue-8);
@@ -255,8 +255,8 @@ impl Render for TabbedShowcase {
                           --tone-surface-end: hsl(212 52% 10%);
                           --tone-border: hsl(208 64% 32% / 0.56);
                         }
-                        me[data-tabbed-showcase] [data-showcase-tabs] > [data-showcase-tone="teal"],
-                        me[data-tabbed-showcase] [data-showcase-panels] > [data-showcase-tone="teal"] {
+                        me > [data-showcase-root] > [data-showcase-shell] > [data-showcase-tabs] > [data-showcase-tone="teal"],
+                        me > [data-showcase-root] > [data-showcase-shell] > [data-showcase-panels] > [data-showcase-tone="teal"] {
                           --tone-base: var(--teal-5);
                           --tone-base-strong: var(--teal-6);
                           --tone-base-end: var(--cyan-8);
@@ -266,8 +266,8 @@ impl Render for TabbedShowcase {
                           --tone-surface-end: hsl(190 52% 9%);
                           --tone-border: hsl(184 55% 31% / 0.56);
                         }
-                        me[data-tabbed-showcase] [data-showcase-tabs] > [data-showcase-tone="mint"],
-                        me[data-tabbed-showcase] [data-showcase-panels] > [data-showcase-tone="mint"] {
+                        me > [data-showcase-root] > [data-showcase-shell] > [data-showcase-tabs] > [data-showcase-tone="mint"],
+                        me > [data-showcase-root] > [data-showcase-shell] > [data-showcase-panels] > [data-showcase-tone="mint"] {
                           --tone-base: var(--green-5);
                           --tone-base-strong: var(--green-6);
                           --tone-base-end: var(--lime-8);
@@ -277,8 +277,8 @@ impl Render for TabbedShowcase {
                           --tone-surface-end: hsl(158 48% 9%);
                           --tone-border: hsl(153 48% 30% / 0.56);
                         }
-                        me[data-tabbed-showcase] [data-showcase-tabs] > [data-showcase-tone="violet"],
-                        me[data-tabbed-showcase] [data-showcase-panels] > [data-showcase-tone="violet"] {
+                        me > [data-showcase-root] > [data-showcase-shell] > [data-showcase-tabs] > [data-showcase-tone="violet"],
+                        me > [data-showcase-root] > [data-showcase-shell] > [data-showcase-panels] > [data-showcase-tone="violet"] {
                           --tone-base: var(--violet-5);
                           --tone-base-strong: var(--violet-6);
                           --tone-base-end: var(--purple-8);
@@ -288,8 +288,8 @@ impl Render for TabbedShowcase {
                           --tone-surface-end: hsl(278 50% 10%);
                           --tone-border: hsl(274 50% 32% / 0.56);
                         }
-                        me[data-tabbed-showcase] [data-showcase-tabs] > [data-showcase-tone="amber"],
-                        me[data-tabbed-showcase] [data-showcase-panels] > [data-showcase-tone="amber"] {
+                        me > [data-showcase-root] > [data-showcase-shell] > [data-showcase-tabs] > [data-showcase-tone="amber"],
+                        me > [data-showcase-root] > [data-showcase-shell] > [data-showcase-panels] > [data-showcase-tone="amber"] {
                           --tone-base: hsl(25 91% 58%);
                           --tone-base-strong: hsl(25 91% 58%);
                           --tone-base-end: hsl(14 89% 57%);
@@ -299,17 +299,17 @@ impl Render for TabbedShowcase {
                           --tone-surface-end: hsl(18 66% 10%);
                           --tone-border: hsl(24 72% 35% / 0.6);
                         }
-                        me[data-tabbed-showcase] > [data-showcase-root] {
+                        me > [data-showcase-root] {
                           margin-top: var(--showcase-space-2);
                         }
-                        me[data-tabbed-showcase] [data-showcase-shell] {
+                        me > [data-showcase-root] > [data-showcase-shell] {
                           border: var(--showcase-border-size) solid var(--showcase-shell-border);
                           border-radius: var(--showcase-radius-surface);
                           padding: var(--showcase-space-2);
                           background: var(--showcase-shell-bg);
                           backdrop-filter: blur(var(--showcase-shell-blur));
                         }
-                        me[data-tabbed-showcase] [data-showcase-tabs] {
+                        me > [data-showcase-root] > [data-showcase-shell] > [data-showcase-tabs] {
                           position: relative;
                           display: flex;
                           align-items: stretch;
@@ -321,7 +321,7 @@ impl Render for TabbedShowcase {
                           --showcase-active-tone: hsl(25 91% 58%);
                           --showcase-active-tone-shadow: 0 2px 8px hsl(25 91% 58% / 0.3);
                         }
-                        me[data-tabbed-showcase] [data-showcase-tabs] > button[role="tab"] {
+                        me > [data-showcase-root] > [data-showcase-shell] > [data-showcase-tabs] > button[role="tab"] {
                           cursor: pointer;
                           border-radius: var(--radius-2);
                           border: var(--showcase-border-size) solid var(--showcase-tab-border);
@@ -341,22 +341,22 @@ impl Render for TabbedShowcase {
                             color var(--showcase-tab-transition-duration) var(--ease-3),
                             transform var(--showcase-tab-transition-duration) var(--ease-3);
                         }
-                        me[data-tabbed-showcase] [data-showcase-tabs] > button[role="tab"]:hover {
+                        me > [data-showcase-root] > [data-showcase-shell] > [data-showcase-tabs] > button[role="tab"]:hover {
                           border-color: transparent;
                           background: var(--tone-tab-soft);
                           color: var(--showcase-tab-text-active);
                           transform: translateY(var(--showcase-tab-hover-offset));
                         }
-                        me[data-tabbed-showcase] [data-showcase-tabs] > button[role="tab"][aria-selected="true"] {
+                        me > [data-showcase-root] > [data-showcase-shell] > [data-showcase-tabs] > button[role="tab"][aria-selected="true"] {
                           border-color: transparent;
                           background: transparent;
                           color: var(--tone-accent);
                         }
-                        me[data-tabbed-showcase] [data-showcase-tabs] > button[role="tab"]:focus-visible {
+                        me > [data-showcase-root] > [data-showcase-shell] > [data-showcase-tabs] > button[role="tab"]:focus-visible {
                           outline: var(--showcase-focus-outline-size) solid var(--tone-accent);
                           outline-offset: var(--showcase-focus-outline-offset);
                         }
-                        me[data-tabbed-showcase] [data-showcase-tabs] > button[role="tab"] > span[aria-hidden="true"] {
+                        me > [data-showcase-root] > [data-showcase-shell] > [data-showcase-tabs] > button[role="tab"] > span[aria-hidden="true"] {
                           display: inline-flex;
                           align-items: center;
                           justify-content: center;
@@ -365,7 +365,7 @@ impl Render for TabbedShowcase {
                           line-height: var(--showcase-tab-icon-line-height);
                           color: inherit;
                         }
-                        me[data-tabbed-showcase] [data-showcase-tabs] > [data-showcase-tab-indicator] {
+                        me > [data-showcase-root] > [data-showcase-shell] > [data-showcase-tabs] > [data-showcase-tab-indicator] {
                           position: absolute;
                           left: 0;
                           bottom: 0;
@@ -382,71 +382,71 @@ impl Render for TabbedShowcase {
                             box-shadow var(--showcase-tab-transition-duration) var(--ease-out-3);
                           pointer-events: none;
                         }
-                        me[data-tabbed-showcase] [data-showcase-tabs][data-active-tone="indigo"] > [data-showcase-tab-indicator] {
+                        me > [data-showcase-root] > [data-showcase-shell] > [data-showcase-tabs][data-active-tone="indigo"] > [data-showcase-tab-indicator] {
                           --showcase-active-tone: var(--indigo-6);
                           --showcase-active-tone-shadow: 0 2px 8px hsl(229 68% 58% / 0.3);
                         }
-                        me[data-tabbed-showcase] [data-showcase-tabs][data-active-tone="sky"] > [data-showcase-tab-indicator] {
+                        me > [data-showcase-root] > [data-showcase-shell] > [data-showcase-tabs][data-active-tone="sky"] > [data-showcase-tab-indicator] {
                           --showcase-active-tone: var(--blue-6);
                           --showcase-active-tone-shadow: 0 2px 8px hsl(206 80% 58% / 0.3);
                         }
-                        me[data-tabbed-showcase] [data-showcase-tabs][data-active-tone="teal"] > [data-showcase-tab-indicator] {
+                        me > [data-showcase-root] > [data-showcase-shell] > [data-showcase-tabs][data-active-tone="teal"] > [data-showcase-tab-indicator] {
                           --showcase-active-tone: var(--teal-6);
                           --showcase-active-tone-shadow: 0 2px 8px hsl(183 61% 52% / 0.3);
                         }
-                        me[data-tabbed-showcase] [data-showcase-tabs][data-active-tone="mint"] > [data-showcase-tab-indicator] {
+                        me > [data-showcase-root] > [data-showcase-shell] > [data-showcase-tabs][data-active-tone="mint"] > [data-showcase-tab-indicator] {
                           --showcase-active-tone: var(--green-6);
                           --showcase-active-tone-shadow: 0 2px 8px hsl(151 48% 48% / 0.3);
                         }
-                        me[data-tabbed-showcase] [data-showcase-tabs][data-active-tone="violet"] > [data-showcase-tab-indicator] {
+                        me > [data-showcase-root] > [data-showcase-shell] > [data-showcase-tabs][data-active-tone="violet"] > [data-showcase-tab-indicator] {
                           --showcase-active-tone: var(--violet-6);
                           --showcase-active-tone-shadow: 0 2px 8px hsl(274 64% 61% / 0.3);
                         }
-                        me[data-tabbed-showcase] [data-showcase-tabs][data-active-tone="amber"] > [data-showcase-tab-indicator] {
+                        me > [data-showcase-root] > [data-showcase-shell] > [data-showcase-tabs][data-active-tone="amber"] > [data-showcase-tab-indicator] {
                           --showcase-active-tone: var(--orange-6);
                           --showcase-active-tone-shadow: 0 2px 8px hsl(25 91% 58% / 0.3);
                         }
-                        me[data-tabbed-showcase] [data-showcase-panels] {
+                        me > [data-showcase-root] > [data-showcase-shell] > [data-showcase-panels] {
                           margin-top: var(--showcase-space-3);
                         }
-                        me[data-tabbed-showcase] [data-showcase-panel] {
+                        me > [data-showcase-root] > [data-showcase-shell] > [data-showcase-panels] > [data-showcase-panel] {
                           display: grid;
                           gap: var(--showcase-space-3);
                           min-width: 0;
                         }
-                        me[data-tabbed-showcase] [data-showcase-panel][hidden] {
+                        me > [data-showcase-root] > [data-showcase-shell] > [data-showcase-panels] > [data-showcase-panel][hidden] {
                           display: none;
                         }
                         @media (min-width: 64rem) {
-                          me[data-tabbed-showcase] [data-showcase-panel] {
+                          me > [data-showcase-root] > [data-showcase-shell] > [data-showcase-panels] > [data-showcase-panel] {
                             grid-template-columns: 1.1fr 0.9fr;
                             align-items: stretch;
                           }
-                          me[data-tabbed-showcase] [data-showcase-panel][data-panel-full] {
+                          me > [data-showcase-root] > [data-showcase-shell] > [data-showcase-panels] > [data-showcase-panel][data-panel-full] {
                             grid-template-columns: 1fr;
                           }
                         }
-                        me[data-tabbed-showcase] [data-showcase-panel] > * {
+                        me > [data-showcase-root] > [data-showcase-shell] > [data-showcase-panels] > [data-showcase-panel] > * {
                           min-width: 0;
                         }
-                        me[data-tabbed-showcase] [data-showcase-panel] > [data-showcase-mockup] {
+                        me > [data-showcase-root] > [data-showcase-shell] > [data-showcase-panels] > [data-showcase-panel] > [data-showcase-mockup] {
                           border: var(--showcase-border-size) solid var(--showcase-panel-border);
                           border-radius: var(--showcase-radius-surface);
                           padding: var(--showcase-space-3);
                           background: var(--showcase-panel-bg);
                           box-shadow: var(--shadow-1);
                         }
-                        me[data-tabbed-showcase] [data-showcase-panel] > [data-showcase-mockup] > header > h3 {
+                        me > [data-showcase-root] > [data-showcase-shell] > [data-showcase-panels] > [data-showcase-panel] > [data-showcase-mockup] > header > h3 {
                           margin-bottom: var(--showcase-mockup-title-margin-bottom);
                         }
-                        me[data-tabbed-showcase] [data-showcase-panel] > [data-showcase-mockup] > [data-showcase-rows] {
+                        me > [data-showcase-root] > [data-showcase-shell] > [data-showcase-panels] > [data-showcase-panel] > [data-showcase-mockup] > [data-showcase-rows] {
                           list-style: none;
                           margin: var(--showcase-space-4) 0 0;
                           padding: 0;
                           display: grid;
                           gap: var(--showcase-row-gap);
                         }
-                        me[data-tabbed-showcase] [data-showcase-panel] > [data-showcase-mockup] > [data-showcase-rows] > li {
+                        me > [data-showcase-root] > [data-showcase-shell] > [data-showcase-panels] > [data-showcase-panel] > [data-showcase-mockup] > [data-showcase-rows] > li {
                           border: var(--showcase-border-size) solid var(--showcase-row-border);
                           border-radius: var(--radius-2);
                           background: var(--showcase-row-bg);
@@ -455,16 +455,16 @@ impl Render for TabbedShowcase {
                           justify-content: space-between;
                           gap: var(--showcase-space-3);
                         }
-                        me[data-tabbed-showcase] [data-showcase-panel] > [data-showcase-mockup] > [data-showcase-rows] > li > [data-showcase-row-label] {
+                        me > [data-showcase-root] > [data-showcase-shell] > [data-showcase-panels] > [data-showcase-panel] > [data-showcase-mockup] > [data-showcase-rows] > li > [data-showcase-row-label] {
                           color: var(--showcase-copy-muted-default);
                           font-size: var(--showcase-row-label-size);
                         }
-                        me[data-tabbed-showcase] [data-showcase-panel] > [data-showcase-mockup] > [data-showcase-rows] > li > [data-showcase-row-value] {
+                        me > [data-showcase-root] > [data-showcase-shell] > [data-showcase-panels] > [data-showcase-panel] > [data-showcase-mockup] > [data-showcase-rows] > li > [data-showcase-row-value] {
                           font-size: var(--showcase-row-value-size);
                           font-weight: var(--showcase-row-value-font-weight);
                           text-align: right;
                         }
-                        me[data-tabbed-showcase] [data-showcase-panel] > [data-showcase-copy] {
+                        me > [data-showcase-root] > [data-showcase-shell] > [data-showcase-panels] > [data-showcase-panel] > [data-showcase-copy] {
                           border: var(--showcase-border-size) solid var(--tone-border);
                           border-top: var(--showcase-border-size-strong) solid var(--tone-accent);
                           border-radius: var(--showcase-radius-surface);
@@ -475,29 +475,29 @@ impl Render for TabbedShowcase {
                           box-shadow: var(--shadow-2);
                           overflow: hidden;
                         }
-                        me[data-tabbed-showcase] [data-showcase-panel] > [data-showcase-copy] > h3 {
+                        me > [data-showcase-root] > [data-showcase-shell] > [data-showcase-panels] > [data-showcase-panel] > [data-showcase-copy] > h3 {
                           color: inherit;
                           margin-bottom: var(--showcase-space-1);
                           font-size: var(--showcase-copy-title-size);
                         }
-                        me[data-tabbed-showcase] [data-showcase-panel] > [data-showcase-copy] > [data-muted] {
+                        me > [data-showcase-root] > [data-showcase-shell] > [data-showcase-panels] > [data-showcase-panel] > [data-showcase-copy] > [data-muted] {
                           color: var(--tone-copy-muted, var(--showcase-copy-muted-default));
                           line-height: var(--showcase-copy-line-height);
                         }
-                        me[data-tabbed-showcase] [data-showcase-panel] > [data-showcase-copy] > [data-showcase-bullets] {
+                        me > [data-showcase-root] > [data-showcase-shell] > [data-showcase-panels] > [data-showcase-panel] > [data-showcase-copy] > [data-showcase-bullets] {
                           margin: var(--showcase-bullets-margin-top) 0 var(--showcase-bullets-margin-bottom);
                           padding-left: var(--showcase-copy-bullets-padding-left);
                           display: grid;
                           gap: var(--showcase-copy-bullets-gap);
                           color: inherit;
                         }
-                        me[data-tabbed-showcase] [data-showcase-panel] > [data-showcase-copy] > [data-showcase-bullets] > li {
+                        me > [data-showcase-root] > [data-showcase-shell] > [data-showcase-panels] > [data-showcase-panel] > [data-showcase-copy] > [data-showcase-bullets] > li {
                           color: inherit;
                         }
-                        me[data-tabbed-showcase] [data-showcase-panel] > [data-showcase-copy] > [data-showcase-bullets] > li::marker {
+                        me > [data-showcase-root] > [data-showcase-shell] > [data-showcase-panels] > [data-showcase-panel] > [data-showcase-copy] > [data-showcase-bullets] > li::marker {
                           color: var(--tone-accent);
                         }
-                        me[data-tabbed-showcase] [data-showcase-panel] > [data-showcase-copy] > .button {
+                        me > [data-showcase-root] > [data-showcase-shell] > [data-showcase-panels] > [data-showcase-panel] > [data-showcase-copy] > .button {
                           margin-top: var(--showcase-space-1);
                           border-radius: var(--radius-round);
                           background: var(--tone-accent);
@@ -505,7 +505,7 @@ impl Render for TabbedShowcase {
                           border: var(--showcase-border-size) solid var(--showcase-button-border-color);
                           box-shadow: var(--showcase-button-shadow);
                         }
-                        me[data-tabbed-showcase] [data-showcase-panel] > [data-showcase-copy] > [data-showcase-integrations] {
+                        me > [data-showcase-root] > [data-showcase-shell] > [data-showcase-panels] > [data-showcase-panel] > [data-showcase-copy] > [data-showcase-integrations] {
                           margin: var(--showcase-space-4) 0 0;
                           display: flex;
                           flex-wrap: wrap;
@@ -514,7 +514,7 @@ impl Render for TabbedShowcase {
                           font-size: var(--showcase-chip-font-size);
                           color: var(--tone-copy-muted, var(--showcase-copy-muted-default));
                         }
-                        me[data-tabbed-showcase] [data-showcase-panel] > [data-showcase-copy] > [data-showcase-integrations] > [data-showcase-chip] {
+                        me > [data-showcase-root] > [data-showcase-shell] > [data-showcase-panels] > [data-showcase-panel] > [data-showcase-copy] > [data-showcase-integrations] > [data-showcase-chip] {
                           border: var(--showcase-border-size) solid var(--tone-chip-border);
                           border-radius: var(--radius-round);
                           padding: var(--showcase-chip-padding-block) var(--showcase-chip-padding-inline);
@@ -522,19 +522,19 @@ impl Render for TabbedShowcase {
                           background: var(--tone-chip-bg, hsl(0 0% 100% / 0.14));
                           color: inherit;
                         }
-                        me[data-tabbed-showcase] [data-showcase-panel] > [data-showcase-copy] > [data-code-path] {
+                        me > [data-showcase-root] > [data-showcase-shell] > [data-showcase-panels] > [data-showcase-panel] > [data-showcase-copy] > [data-code-path] {
                           margin: var(--showcase-space-2) 0 var(--showcase-space-3);
                           color: var(--tone-copy-muted, var(--showcase-copy-muted-default));
                           font-size: var(--font-size-0);
                         }
-                        me[data-tabbed-showcase] [data-showcase-panel] > [data-showcase-copy] > [data-code-path] > code {
+                        me > [data-showcase-root] > [data-showcase-shell] > [data-showcase-panels] > [data-showcase-panel] > [data-showcase-copy] > [data-code-path] > code {
                           word-break: break-all;
                         }
-                        me[data-tabbed-showcase] [data-showcase-panel] > [data-showcase-copy]::selection {
+                        me > [data-showcase-root] > [data-showcase-shell] > [data-showcase-panels] > [data-showcase-panel] > [data-showcase-copy]::selection {
                           background: var(--tone-accent);
                           color: var(--showcase-selection-text);
                         }
-                        me[data-tabbed-showcase] [data-showcase-panel] > [data-showcase-copy]::-moz-selection {
+                        me > [data-showcase-root] > [data-showcase-shell] > [data-showcase-panels] > [data-showcase-panel] > [data-showcase-copy]::-moz-selection {
                           background: var(--tone-accent);
                           color: var(--showcase-selection-text);
                         }
@@ -543,10 +543,10 @@ impl Render for TabbedShowcase {
                             margin-top: var(--showcase-mobile-margin-top);
                             padding: var(--showcase-space-3);
                           }
-                          me[data-tabbed-showcase] [data-showcase-shell] {
+                          me > [data-showcase-root] > [data-showcase-shell] {
                             padding: var(--showcase-mobile-shell-padding);
                           }
-                          me[data-tabbed-showcase] [data-showcase-tabs] > button[role="tab"] {
+                          me > [data-showcase-root] > [data-showcase-shell] > [data-showcase-tabs] > button[role="tab"] {
                             min-width: max-content;
                             font-size: var(--showcase-mobile-tab-font-size);
                           }
