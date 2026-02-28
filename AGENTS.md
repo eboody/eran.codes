@@ -37,6 +37,7 @@
 - Use builder methods that are self-documenting (e.g., `with_session_store`, `enable_trace_layers`, `with_state`) so the high-level modules stay readable without diving into implementation.
 - Keep builders close to the module they configure (e.g., router builders in `crates/http/src/router.rs` or a sibling module).
 - See `bon.md` for what to look up before implementing a new builder.
+- When surfacing bon guidance, call out the documented patterns in `docs/bon/guide/patterns/` (conditional-building, optional-generic-members, shared-configuration, fallible-builders, into-conversions-in-depth) so reviewers see how typestate branching, generic setter inference, shared configuration snippets, fallible finishing, and `Into` conversion footguns are handled.
 
 ## Updating This File
 - Keep `AGENTS.md` updated when we introduce new architectural decisions, cross-cutting mechanisms, or boundary changes (e.g., SSE/session handling).
@@ -49,19 +50,22 @@
 - Reference `docs/portfolio-demos-plan.md` and `docs/portfolio-demos.md` when deciding which demo UX to implement next.
 - Treat `docs/project-audit.md` as the canonical quality audit and `docs/refactor-plan.md` as the canonical prioritized follow-up plan; avoid creating overlapping ad-hoc audit markdown files.
 - Treat `docs/writing-style.md` as the canonical writing/modeling style baseline (typed invariants first, typestate before generic builders, no stringly logic).
-- For Maud UI work, keep styling local to the component via scoped `inline_css!` + `(css())` (`me` selectors) and avoid adding non-shared rules to `crates/http/static/app.css`.
+- For Maud UI work, use bottom-of-file `inline_css!` / `inline_js!` blocks and splice with `(css())` / `(js())` in templates; reserve render-local `css!` / `js!` for tiny one-offs with an explicit rationale, and avoid adding non-shared rules to `crates/http/static/app.css`.
 - Prefer short, targeted styling hooks (`id`, semantic class, stable `data-*`) and avoid deep selector chains; split into smaller components when selectors get long.
 - With `css-scope-inline`, avoid `me [selector]` descendant patterns because they can be rewritten as `me[selector]`; use explicit child chains from `me` (for example `me > [data-root] > ...`) or split the component.
 - Avoid magic numbers in component styling; define reusable design tokens and override tokens per breakpoint for responsive behavior.
 - For visual UI changes, run `scripts/ci/visual-snapshot.sh` against a running app before finalizing.
 - Baseline refresh for intentional visual changes: `VISUAL_UPDATE_BASELINE=1 scripts/ci/visual-snapshot.sh`.
 - Reusable visual QA skill lives at `skills/visual-snapshot-check/SKILL.md`; use it for screenshot capture/check workflow.
+- Hard gate for visual commits: when files under `crates/http/src/views/` or `crates/http/static/` change, require `artifacts/visual/audits/latest/ux-signoff.md`, `artifacts/visual/audits/latest/ui-signoff.md`, and `artifacts/visual/audits/latest/signoff.env` with explicit `pass` + `agent_status: available`; enforced by `scripts/ci/visual-expert-signoff.sh`.
 - Avoid `.build().render()` chains at call sites; in `maud::html!` splices use `.build()` only and splice the value directly.
 - When designing a feature, present both a simpler baseline (with a TODO placeholder) and an enterprise-level option so the user can choose.
 - Never use string literal comparisons or stringly-typed checks; define enums/newtypes (prefer `strum`/`nutype`) and match on those instead.
 - Avoid `String` fields in structs; use enums or newtypes instead (enforced by `scripts/ci/no-string-fields.sh`).
 - In app services, keep hasher failures typed (do not collapse into repo/string errors; enforced by `scripts/ci/typed-hasher-errors.sh`).
 - Public view partials must implement `maud::Render` (enforced by `scripts/ci/partials-render.sh`).
+- Showcase inline-style/script conventions are enforced by `scripts/ci/tabbed-showcase-conventions.sh`.
+- Visual UX/UI signoff gate is enforced by `scripts/ci/visual-expert-signoff.sh`.
 - For modules marked as descriptive namespaces (`// ci: descriptive-module-import <module_path>`), import the module itself and qualify usages; leaf imports are rejected by `scripts/ci/descriptive-module-imports.sh`.
 - In marked descriptive module trees, import through the parent surface (`super::{Type}`) rather than sibling leaf modules (`super::leaf::Type`); this is also enforced by `scripts/ci/descriptive-module-imports.sh`.
 - In marked descriptive modules, do not keep multiple `Prefix*` types at parent scope; when a family has more than one type (for example `ModerationItem`, `ModerationReason`), move that family under a module namespace (`module::moderation::*`). Keep at most canonical `Prefix` at parent scope when it exists (enforced by `scripts/ci/descriptive-module-imports.sh`).
@@ -87,10 +91,14 @@
 - For Datastar-related work, follow `docs/datastar-tao.md` and keep Datastar-specific guidance there.
 - For frontend reactivity and signals, reference `docs/datastar-signals.md`.
 - For Datastar expressions and script execution, reference `docs/datastar-expressions.md`.
+- For frontend interactivity scripts, prefer Surreal helpers (`me()`, `any()`, chainable `.on()` / `.attribute()` / `.styles()`) per `docs/surreal/05-usage.md`; if plain DOM APIs are kept, justify briefly using `docs/surreal/08-no-surreal-needed.md`.
+- For interactive UI state, evaluate Datastar signals first; if Datastar is intentionally not used because state is purely local/presentational, state that decision explicitly in the response.
 - For backend requests and SSE guidance, reference `docs/datastar-backend-requests.md`.
 - Prefer skills for reusable domain/tool specialization; use spawned agents for runtime parallelization or scoped implementation tasks, not as the primary way to encode persistent guidance.
 - For non-trivial requests, run `router` first to classify relevant specialists and ownership, then delegate selected specialists in parallel when possible.
+- During router classification, explicitly evaluate whether the prompt can use `bon`, `statum`, and/or `nestum`; include each applicable specialist even when the user request is broad or implicit.
 - For any visual/UI-related task (layout, styling, theming, animation, spacing, interaction states, responsive behavior), `router` must always include both `ux-expert` and `ui-expert` in `selected_agents`, and run them before implementation.
+- For visual/UI implementation work that changes markup, CSS, or client-side behavior, `router` must additionally evaluate `maud-extensions` and `surreal`; include them when their scopes apply.
 
 ````md
 # Agent: Architecture Boundary Enforcer

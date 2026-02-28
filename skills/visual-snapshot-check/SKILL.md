@@ -24,9 +24,16 @@ Use this skill whenever UI styling, component markup, or visual behavior changes
 5. Finalize only after explicitly reporting baseline status:
    - `updated` when visuals intentionally changed and baseline was refreshed
    - `unchanged` when no visual change was intended
+6. Record UX/UI signoff artifacts for visual commits:
+   - `artifacts/visual/audits/latest/ux-signoff.md`
+   - `artifacts/visual/audits/latest/ui-signoff.md`
+   - `artifacts/visual/audits/latest/signoff.env`
+7. Run the visual signoff gate:
+   - `scripts/ci/visual-expert-signoff.sh`
 
 ## Notes
 
 - Screenshot capture is implemented by the Rust Playwright binary:
   - `cargo run -p utils --bin visual_snapshot -- ...`
 - The checker exits non-zero on mismatch so it is safe for CI/local guardrails.
+- The signoff gate must fail if either UX/UI artifact is missing, not `pass`, or marks agent unavailable.

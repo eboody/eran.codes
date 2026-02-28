@@ -19,3 +19,5 @@ jobs:
         run: scripts/ci/partials-render.sh
       - name: descriptive module imports
         run: scripts/ci/descriptive-module-imports.sh
+      - name: visual expert signoff
+        run: scripts/ci/visual-expert-signoff.sh

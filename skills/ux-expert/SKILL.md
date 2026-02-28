@@ -50,3 +50,5 @@ Always return:
 - Keep language concrete and user-task oriented.
 - Do not optimize visuals at the cost of task completion.
 - When work is visual/UI-related, coordinate with `$ui-expert` in the same pass.
+- Verify interaction implementation choices align with repo conventions: Maud `inline_css!` / `inline_js!`, Surreal helpers for DOM behavior, and a clear Datastar-signals decision for UI state.
+- Flag missing rationale whenever plain DOM scripting is used where Surreal or Datastar patterns would improve consistency.
