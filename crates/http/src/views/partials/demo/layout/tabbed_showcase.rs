@@ -115,110 +115,19 @@ impl Render for TabbedShowcase {
             .as_attr();
 
         maud::html! {
-            section id=(&self.id) data-showcase-theme=(self.theme.as_attr()) {
+            section
+                id=(&self.id)
+                data-tabbed-showcase
+                data-showcase-theme=(self.theme.as_attr())
+            {
                 (SectionHeader::builder()
                     .title(self.title.clone())
                     .subtitle(self.subtitle.clone())
                     .build())
                 div data-showcase-root {
                     div data-showcase-shell {
-                        nav
-                            data-showcase-tabs
-                            data-active-tone=(initial_tone)
-                            aria-label="Showcase tabs"
-                            role="tablist"
-                        {
-                            @for (index, tab) in self.tabs.iter().enumerate() {
-                                @let tab_id = format!("{}-tab-{}", self.id, index);
-                                @let panel_id = format!("{}-panel-{}", self.id, index);
-                                @let tone = tab
-                                    .tone
-                                    .unwrap_or_else(|| TabbedShowcaseTone::cycle(index));
-                                button
-                                    type="button"
-                                    data-tab-index=(index)
-                                    data-showcase-tone=(tone.as_attr())
-                                    role="tab"
-                                    id=(tab_id)
-                                    aria-controls=(panel_id)
-                                    aria-selected=(if index == 0 { "true" } else { "false" })
-                                    tabindex=(if index == 0 { "0" } else { "-1" })
-                                {
-                                    @if let Some(icon) = &tab.tab_icon {
-                                        span aria-hidden="true" { (icon) }
-                                    }
-                                    span { (&tab.tab_label) }
-                                }
-                            }
-                            span data-showcase-tab-indicator aria-hidden="true" {}
-                        }
-                        div data-showcase-panels {
-                            @for (index, tab) in self.tabs.iter().enumerate() {
-                                @let tab_id = format!("{}-tab-{}", self.id, index);
-                                @let panel_id = format!("{}-panel-{}", self.id, index);
-                                @let tone = tab
-                                    .tone
-                                    .unwrap_or_else(|| TabbedShowcaseTone::cycle(index));
-                                article
-                                    data-showcase-panel
-                                    data-showcase-tone=(tone.as_attr())
-                                    data-panel-full[tab.mock_panel.is_none()]
-                                    data-tab-index=(index)
-                                    id=(panel_id)
-                                    role="tabpanel"
-                                    aria-labelledby=(tab_id)
-                                    tabindex="0"
-                                    hidden[index != 0]
-                                {
-                                    @if let Some(mock_panel) = &tab.mock_panel {
-                                        div data-showcase-mockup {
-                                            header {
-                                                h3 { (&mock_panel.title) }
-                                                p data-muted { (&mock_panel.subtitle) }
-                                            }
-                                            ul data-showcase-rows {
-                                                @for row in &mock_panel.rows {
-                                                    li {
-                                                        span data-showcase-row-label { (&row.label) }
-                                                        span data-showcase-row-value { (&row.value) }
-                                                    }
-                                                }
-                                            }
-                                        }
-                                    }
-                                    div data-showcase-copy {
-                                        h3 { (&tab.title) }
-                                        p data-muted { (&tab.subtitle) }
-                                        ul data-showcase-bullets {
-                                            @for bullet in &tab.bullets {
-                                                li { (bullet) }
-                                            }
-                                        }
-                                        @if let Some(action) = &tab.action {
-                                            a class="button" href=(&action.href) { (&action.label) }
-                                        }
-                                        p data-showcase-integrations {
-                                            span { (&tab.chips_label) }
-                                            @for chip in &tab.chips {
-                                                span data-showcase-chip { (chip) }
-                                            }
-                                        }
-                                        @if let Some(path) = &tab.code_path {
-                                            p data-code-path {
-                                                "Example: "
-                                                code { (path) }
-                                            }
-                                        }
-                                        @if let Some(code) = &tab.code {
-                                            (CodeBlock::builder()
-                                                .code(code.clone())
-                                                .language(CodeLanguage::Rust)
-                                                .build())
-                                        }
-                                    }
-                                }
-                            }
-                        }
+                        (render_showcase_tabs(&self.id, &self.tabs, initial_tone))
+                        (render_showcase_panels(&self.id, &self.tabs))
                     }
                 }
                 script { (PreEscaped(tabs_script)) }
@@ -243,14 +152,15 @@ impl Render for TabbedShowcase {
                           --showcase-tab-letter-spacing: var(--font-letterspacing-2);
                           --showcase-tab-padding-y: var(--size-2);
                           --showcase-tab-padding-x: var(--size-1);
-                          --showcase-tab-hover-offset: -1px;
+                          --showcase-tab-hover-offset: calc(var(--border-size-1) * -1);
                           --showcase-focus-outline-size: var(--border-size-2);
                           --showcase-focus-outline-offset: var(--border-size-1);
-                          --showcase-shell-blur: 6px;
+                          --showcase-shell-blur: var(--size-px-2);
                           --showcase-tab-transition-duration: 240ms;
                           --showcase-tab-indicator-transition-duration: 320ms;
                           --showcase-tab-icon-min-width: var(--size-4);
                           --showcase-tab-icon-font-size: var(--font-size-1);
+                          --showcase-tab-icon-line-height: var(--font-lineheight-00);
                           --showcase-shell-bg: hsl(220 36% 7%);
                           --showcase-shell-bg-alt: hsl(222 40% 8%);
                           --showcase-shell-border: hsl(220 16% 25% / 0.78);
@@ -286,11 +196,15 @@ impl Render for TabbedShowcase {
                           --showcase-bullets-margin-top: var(--size-4);
                           --showcase-bullets-margin-bottom: var(--size-4);
                           --showcase-indicator-height: var(--border-size-2);
-                          --showcase-indicator-width: 0px;
-                          --showcase-indicator-x: 0px;
+                          --showcase-indicator-width: 0;
+                          --showcase-indicator-x: 0;
                           --showcase-mobile-margin-top: var(--size-5);
                           --showcase-mobile-shell-padding: var(--size-3);
                           --showcase-mobile-tab-font-size: var(--font-size-00);
+                          --showcase-row-value-font-weight: var(--font-weight-6);
+                          --showcase-chip-font-weight: var(--font-weight-6);
+                          --showcase-button-border-color: hsl(0 0% 100% / 0.36);
+                          --showcase-selection-text: var(--gray-0);
                           --showcase-button-shadow: 0 8px 22px hsl(220 40% 2% / 0.32);
                           margin-top: var(--showcase-section-margin-top);
                         }
@@ -304,8 +218,8 @@ impl Render for TabbedShowcase {
                             linear-gradient(180deg, var(--showcase-shell-bg), var(--showcase-shell-bg-alt) 74%);
                           box-shadow: var(--showcase-shell-shadow);
                         }
-                        me > [data-showcase-root] > [data-showcase-shell] > [data-showcase-tabs] > [data-showcase-tone],
-                        me > [data-showcase-root] > [data-showcase-shell] > [data-showcase-panels] > [data-showcase-tone] {
+                        me[data-tabbed-showcase] [data-showcase-tabs] > [data-showcase-tone],
+                        me[data-tabbed-showcase] [data-showcase-panels] > [data-showcase-tone] {
                           --tone-base: var(--indigo-5);
                           --tone-base-strong: var(--indigo-6);
                           --tone-base-end: var(--indigo-8);
@@ -319,8 +233,8 @@ impl Render for TabbedShowcase {
                           --tone-chip-bg: hsl(220 22% 14% / 0.92);
                           --tone-chip-border: hsl(220 10% 32% / 0.74);
                         }
-                        me > [data-showcase-root] > [data-showcase-shell] > [data-showcase-tabs] > [data-showcase-tone="indigo"],
-                        me > [data-showcase-root] > [data-showcase-shell] > [data-showcase-panels] > [data-showcase-tone="indigo"] {
+                        me[data-tabbed-showcase] [data-showcase-tabs] > [data-showcase-tone="indigo"],
+                        me[data-tabbed-showcase] [data-showcase-panels] > [data-showcase-tone="indigo"] {
                           --tone-base: var(--indigo-5);
                           --tone-base-strong: var(--indigo-6);
                           --tone-base-end: var(--indigo-8);
@@ -330,8 +244,8 @@ impl Render for TabbedShowcase {
                           --tone-surface-end: hsl(229 48% 10%);
                           --tone-border: hsl(229 58% 32% / 0.56);
                         }
-                        me > [data-showcase-root] > [data-showcase-shell] > [data-showcase-tabs] > [data-showcase-tone="sky"],
-                        me > [data-showcase-root] > [data-showcase-shell] > [data-showcase-panels] > [data-showcase-tone="sky"] {
+                        me[data-tabbed-showcase] [data-showcase-tabs] > [data-showcase-tone="sky"],
+                        me[data-tabbed-showcase] [data-showcase-panels] > [data-showcase-tone="sky"] {
                           --tone-base: var(--blue-5);
                           --tone-base-strong: var(--blue-6);
                           --tone-base-end: var(--blue-8);
@@ -341,8 +255,8 @@ impl Render for TabbedShowcase {
                           --tone-surface-end: hsl(212 52% 10%);
                           --tone-border: hsl(208 64% 32% / 0.56);
                         }
-                        me > [data-showcase-root] > [data-showcase-shell] > [data-showcase-tabs] > [data-showcase-tone="teal"],
-                        me > [data-showcase-root] > [data-showcase-shell] > [data-showcase-panels] > [data-showcase-tone="teal"] {
+                        me[data-tabbed-showcase] [data-showcase-tabs] > [data-showcase-tone="teal"],
+                        me[data-tabbed-showcase] [data-showcase-panels] > [data-showcase-tone="teal"] {
                           --tone-base: var(--teal-5);
                           --tone-base-strong: var(--teal-6);
                           --tone-base-end: var(--cyan-8);
@@ -352,8 +266,8 @@ impl Render for TabbedShowcase {
                           --tone-surface-end: hsl(190 52% 9%);
                           --tone-border: hsl(184 55% 31% / 0.56);
                         }
-                        me > [data-showcase-root] > [data-showcase-shell] > [data-showcase-tabs] > [data-showcase-tone="mint"],
-                        me > [data-showcase-root] > [data-showcase-shell] > [data-showcase-panels] > [data-showcase-tone="mint"] {
+                        me[data-tabbed-showcase] [data-showcase-tabs] > [data-showcase-tone="mint"],
+                        me[data-tabbed-showcase] [data-showcase-panels] > [data-showcase-tone="mint"] {
                           --tone-base: var(--green-5);
                           --tone-base-strong: var(--green-6);
                           --tone-base-end: var(--lime-8);
@@ -363,8 +277,8 @@ impl Render for TabbedShowcase {
                           --tone-surface-end: hsl(158 48% 9%);
                           --tone-border: hsl(153 48% 30% / 0.56);
                         }
-                        me > [data-showcase-root] > [data-showcase-shell] > [data-showcase-tabs] > [data-showcase-tone="violet"],
-                        me > [data-showcase-root] > [data-showcase-shell] > [data-showcase-panels] > [data-showcase-tone="violet"] {
+                        me[data-tabbed-showcase] [data-showcase-tabs] > [data-showcase-tone="violet"],
+                        me[data-tabbed-showcase] [data-showcase-panels] > [data-showcase-tone="violet"] {
                           --tone-base: var(--violet-5);
                           --tone-base-strong: var(--violet-6);
                           --tone-base-end: var(--purple-8);
@@ -374,8 +288,8 @@ impl Render for TabbedShowcase {
                           --tone-surface-end: hsl(278 50% 10%);
                           --tone-border: hsl(274 50% 32% / 0.56);
                         }
-                        me > [data-showcase-root] > [data-showcase-shell] > [data-showcase-tabs] > [data-showcase-tone="amber"],
-                        me > [data-showcase-root] > [data-showcase-shell] > [data-showcase-panels] > [data-showcase-tone="amber"] {
+                        me[data-tabbed-showcase] [data-showcase-tabs] > [data-showcase-tone="amber"],
+                        me[data-tabbed-showcase] [data-showcase-panels] > [data-showcase-tone="amber"] {
                           --tone-base: hsl(25 91% 58%);
                           --tone-base-strong: hsl(25 91% 58%);
                           --tone-base-end: hsl(14 89% 57%);
@@ -385,17 +299,17 @@ impl Render for TabbedShowcase {
                           --tone-surface-end: hsl(18 66% 10%);
                           --tone-border: hsl(24 72% 35% / 0.6);
                         }
-                        me > [data-showcase-root] {
+                        me[data-tabbed-showcase] > [data-showcase-root] {
                           margin-top: var(--showcase-space-2);
                         }
-                        me > [data-showcase-root] > [data-showcase-shell] {
+                        me[data-tabbed-showcase] [data-showcase-shell] {
                           border: var(--showcase-border-size) solid var(--showcase-shell-border);
                           border-radius: var(--showcase-radius-surface);
                           padding: var(--showcase-space-2);
                           background: var(--showcase-shell-bg);
                           backdrop-filter: blur(var(--showcase-shell-blur));
                         }
-                        me > [data-showcase-root] > [data-showcase-shell] > [data-showcase-tabs] {
+                        me[data-tabbed-showcase] [data-showcase-tabs] {
                           position: relative;
                           display: flex;
                           align-items: stretch;
@@ -407,7 +321,7 @@ impl Render for TabbedShowcase {
                           --showcase-active-tone: hsl(25 91% 58%);
                           --showcase-active-tone-shadow: 0 2px 8px hsl(25 91% 58% / 0.3);
                         }
-                        me > [data-showcase-root] > [data-showcase-shell] > [data-showcase-tabs] > button[role="tab"] {
+                        me[data-tabbed-showcase] [data-showcase-tabs] > button[role="tab"] {
                           cursor: pointer;
                           border-radius: var(--radius-2);
                           border: var(--showcase-border-size) solid var(--showcase-tab-border);
@@ -427,31 +341,31 @@ impl Render for TabbedShowcase {
                             color var(--showcase-tab-transition-duration) var(--ease-3),
                             transform var(--showcase-tab-transition-duration) var(--ease-3);
                         }
-                        me > [data-showcase-root] > [data-showcase-shell] > [data-showcase-tabs] > button[role="tab"]:hover {
+                        me[data-tabbed-showcase] [data-showcase-tabs] > button[role="tab"]:hover {
                           border-color: transparent;
                           background: var(--tone-tab-soft);
                           color: var(--showcase-tab-text-active);
                           transform: translateY(var(--showcase-tab-hover-offset));
                         }
-                        me > [data-showcase-root] > [data-showcase-shell] > [data-showcase-tabs] > button[role="tab"][aria-selected="true"] {
+                        me[data-tabbed-showcase] [data-showcase-tabs] > button[role="tab"][aria-selected="true"] {
                           border-color: transparent;
                           background: transparent;
                           color: var(--tone-accent);
                         }
-                        me > [data-showcase-root] > [data-showcase-shell] > [data-showcase-tabs] > button[role="tab"]:focus-visible {
+                        me[data-tabbed-showcase] [data-showcase-tabs] > button[role="tab"]:focus-visible {
                           outline: var(--showcase-focus-outline-size) solid var(--tone-accent);
                           outline-offset: var(--showcase-focus-outline-offset);
                         }
-                        me > [data-showcase-root] > [data-showcase-shell] > [data-showcase-tabs] > button[role="tab"] > span[aria-hidden="true"] {
+                        me[data-tabbed-showcase] [data-showcase-tabs] > button[role="tab"] > span[aria-hidden="true"] {
                           display: inline-flex;
                           align-items: center;
                           justify-content: center;
                           min-width: var(--showcase-tab-icon-min-width);
                           font-size: var(--showcase-tab-icon-font-size);
-                          line-height: 1;
+                          line-height: var(--showcase-tab-icon-line-height);
                           color: inherit;
                         }
-                        me > [data-showcase-root] > [data-showcase-shell] > [data-showcase-tabs] > [data-showcase-tab-indicator] {
+                        me[data-tabbed-showcase] [data-showcase-tabs] > [data-showcase-tab-indicator] {
                           position: absolute;
                           left: 0;
                           bottom: 0;
@@ -468,71 +382,71 @@ impl Render for TabbedShowcase {
                             box-shadow var(--showcase-tab-transition-duration) var(--ease-out-3);
                           pointer-events: none;
                         }
-                        me > [data-showcase-root] > [data-showcase-shell] > [data-showcase-tabs][data-active-tone="indigo"] > [data-showcase-tab-indicator] {
+                        me[data-tabbed-showcase] [data-showcase-tabs][data-active-tone="indigo"] > [data-showcase-tab-indicator] {
                           --showcase-active-tone: var(--indigo-6);
                           --showcase-active-tone-shadow: 0 2px 8px hsl(229 68% 58% / 0.3);
                         }
-                        me > [data-showcase-root] > [data-showcase-shell] > [data-showcase-tabs][data-active-tone="sky"] > [data-showcase-tab-indicator] {
+                        me[data-tabbed-showcase] [data-showcase-tabs][data-active-tone="sky"] > [data-showcase-tab-indicator] {
                           --showcase-active-tone: var(--blue-6);
                           --showcase-active-tone-shadow: 0 2px 8px hsl(206 80% 58% / 0.3);
                         }
-                        me > [data-showcase-root] > [data-showcase-shell] > [data-showcase-tabs][data-active-tone="teal"] > [data-showcase-tab-indicator] {
+                        me[data-tabbed-showcase] [data-showcase-tabs][data-active-tone="teal"] > [data-showcase-tab-indicator] {
                           --showcase-active-tone: var(--teal-6);
                           --showcase-active-tone-shadow: 0 2px 8px hsl(183 61% 52% / 0.3);
                         }
-                        me > [data-showcase-root] > [data-showcase-shell] > [data-showcase-tabs][data-active-tone="mint"] > [data-showcase-tab-indicator] {
+                        me[data-tabbed-showcase] [data-showcase-tabs][data-active-tone="mint"] > [data-showcase-tab-indicator] {
                           --showcase-active-tone: var(--green-6);
                           --showcase-active-tone-shadow: 0 2px 8px hsl(151 48% 48% / 0.3);
                         }
-                        me > [data-showcase-root] > [data-showcase-shell] > [data-showcase-tabs][data-active-tone="violet"] > [data-showcase-tab-indicator] {
+                        me[data-tabbed-showcase] [data-showcase-tabs][data-active-tone="violet"] > [data-showcase-tab-indicator] {
                           --showcase-active-tone: var(--violet-6);
                           --showcase-active-tone-shadow: 0 2px 8px hsl(274 64% 61% / 0.3);
                         }
-                        me > [data-showcase-root] > [data-showcase-shell] > [data-showcase-tabs][data-active-tone="amber"] > [data-showcase-tab-indicator] {
+                        me[data-tabbed-showcase] [data-showcase-tabs][data-active-tone="amber"] > [data-showcase-tab-indicator] {
                           --showcase-active-tone: var(--orange-6);
                           --showcase-active-tone-shadow: 0 2px 8px hsl(25 91% 58% / 0.3);
                         }
-                        me > [data-showcase-root] > [data-showcase-shell] > [data-showcase-panels] {
+                        me[data-tabbed-showcase] [data-showcase-panels] {
                           margin-top: var(--showcase-space-3);
                         }
-                        me > [data-showcase-root] > [data-showcase-shell] > [data-showcase-panels] > [data-showcase-panel] {
+                        me[data-tabbed-showcase] [data-showcase-panel] {
                           display: grid;
                           gap: var(--showcase-space-3);
                           min-width: 0;
                         }
-                        me > [data-showcase-root] > [data-showcase-shell] > [data-showcase-panels] > [data-showcase-panel][hidden] {
+                        me[data-tabbed-showcase] [data-showcase-panel][hidden] {
                           display: none;
                         }
-                        @media (min-width: 980px) {
-                          me > [data-showcase-root] > [data-showcase-shell] > [data-showcase-panels] > [data-showcase-panel] {
+                        @media (min-width: 64rem) {
+                          me[data-tabbed-showcase] [data-showcase-panel] {
                             grid-template-columns: 1.1fr 0.9fr;
                             align-items: stretch;
                           }
-                          me > [data-showcase-root] > [data-showcase-shell] > [data-showcase-panels] > [data-showcase-panel][data-panel-full] {
+                          me[data-tabbed-showcase] [data-showcase-panel][data-panel-full] {
                             grid-template-columns: 1fr;
                           }
                         }
-                        me > [data-showcase-root] > [data-showcase-shell] > [data-showcase-panels] > [data-showcase-panel] > * {
+                        me[data-tabbed-showcase] [data-showcase-panel] > * {
                           min-width: 0;
                         }
-                        me > [data-showcase-root] > [data-showcase-shell] > [data-showcase-panels] > [data-showcase-panel] > [data-showcase-mockup] {
+                        me[data-tabbed-showcase] [data-showcase-panel] > [data-showcase-mockup] {
                           border: var(--showcase-border-size) solid var(--showcase-panel-border);
                           border-radius: var(--showcase-radius-surface);
                           padding: var(--showcase-space-3);
                           background: var(--showcase-panel-bg);
                           box-shadow: var(--shadow-1);
                         }
-                        me > [data-showcase-root] > [data-showcase-shell] > [data-showcase-panels] > [data-showcase-panel] > [data-showcase-mockup] > header > h3 {
+                        me[data-tabbed-showcase] [data-showcase-panel] > [data-showcase-mockup] > header > h3 {
                           margin-bottom: var(--showcase-mockup-title-margin-bottom);
                         }
-                        me > [data-showcase-root] > [data-showcase-shell] > [data-showcase-panels] > [data-showcase-panel] > [data-showcase-mockup] > [data-showcase-rows] {
+                        me[data-tabbed-showcase] [data-showcase-panel] > [data-showcase-mockup] > [data-showcase-rows] {
                           list-style: none;
                           margin: var(--showcase-space-4) 0 0;
                           padding: 0;
                           display: grid;
                           gap: var(--showcase-row-gap);
                         }
-                        me > [data-showcase-root] > [data-showcase-shell] > [data-showcase-panels] > [data-showcase-panel] > [data-showcase-mockup] > [data-showcase-rows] > li {
+                        me[data-tabbed-showcase] [data-showcase-panel] > [data-showcase-mockup] > [data-showcase-rows] > li {
                           border: var(--showcase-border-size) solid var(--showcase-row-border);
                           border-radius: var(--radius-2);
                           background: var(--showcase-row-bg);
@@ -541,16 +455,16 @@ impl Render for TabbedShowcase {
                           justify-content: space-between;
                           gap: var(--showcase-space-3);
                         }
-                        me > [data-showcase-root] > [data-showcase-shell] > [data-showcase-panels] > [data-showcase-panel] > [data-showcase-mockup] > [data-showcase-rows] > li > [data-showcase-row-label] {
+                        me[data-tabbed-showcase] [data-showcase-panel] > [data-showcase-mockup] > [data-showcase-rows] > li > [data-showcase-row-label] {
                           color: var(--showcase-copy-muted-default);
                           font-size: var(--showcase-row-label-size);
                         }
-                        me > [data-showcase-root] > [data-showcase-shell] > [data-showcase-panels] > [data-showcase-panel] > [data-showcase-mockup] > [data-showcase-rows] > li > [data-showcase-row-value] {
+                        me[data-tabbed-showcase] [data-showcase-panel] > [data-showcase-mockup] > [data-showcase-rows] > li > [data-showcase-row-value] {
                           font-size: var(--showcase-row-value-size);
-                          font-weight: 600;
+                          font-weight: var(--showcase-row-value-font-weight);
                           text-align: right;
                         }
-                        me > [data-showcase-root] > [data-showcase-shell] > [data-showcase-panels] > [data-showcase-panel] > [data-showcase-copy] {
+                        me[data-tabbed-showcase] [data-showcase-panel] > [data-showcase-copy] {
                           border: var(--showcase-border-size) solid var(--tone-border);
                           border-top: var(--showcase-border-size-strong) solid var(--tone-accent);
                           border-radius: var(--showcase-radius-surface);
@@ -561,37 +475,37 @@ impl Render for TabbedShowcase {
                           box-shadow: var(--shadow-2);
                           overflow: hidden;
                         }
-                        me > [data-showcase-root] > [data-showcase-shell] > [data-showcase-panels] > [data-showcase-panel] > [data-showcase-copy] > h3 {
+                        me[data-tabbed-showcase] [data-showcase-panel] > [data-showcase-copy] > h3 {
                           color: inherit;
                           margin-bottom: var(--showcase-space-1);
                           font-size: var(--showcase-copy-title-size);
                         }
-                        me > [data-showcase-root] > [data-showcase-shell] > [data-showcase-panels] > [data-showcase-panel] > [data-showcase-copy] > [data-muted] {
+                        me[data-tabbed-showcase] [data-showcase-panel] > [data-showcase-copy] > [data-muted] {
                           color: var(--tone-copy-muted, var(--showcase-copy-muted-default));
                           line-height: var(--showcase-copy-line-height);
                         }
-                        me > [data-showcase-root] > [data-showcase-shell] > [data-showcase-panels] > [data-showcase-panel] > [data-showcase-copy] > [data-showcase-bullets] {
+                        me[data-tabbed-showcase] [data-showcase-panel] > [data-showcase-copy] > [data-showcase-bullets] {
                           margin: var(--showcase-bullets-margin-top) 0 var(--showcase-bullets-margin-bottom);
                           padding-left: var(--showcase-copy-bullets-padding-left);
                           display: grid;
                           gap: var(--showcase-copy-bullets-gap);
                           color: inherit;
                         }
-                        me > [data-showcase-root] > [data-showcase-shell] > [data-showcase-panels] > [data-showcase-panel] > [data-showcase-copy] > [data-showcase-bullets] > li {
+                        me[data-tabbed-showcase] [data-showcase-panel] > [data-showcase-copy] > [data-showcase-bullets] > li {
                           color: inherit;
                         }
-                        me > [data-showcase-root] > [data-showcase-shell] > [data-showcase-panels] > [data-showcase-panel] > [data-showcase-copy] > [data-showcase-bullets] > li::marker {
+                        me[data-tabbed-showcase] [data-showcase-panel] > [data-showcase-copy] > [data-showcase-bullets] > li::marker {
                           color: var(--tone-accent);
                         }
-                        me > [data-showcase-root] > [data-showcase-shell] > [data-showcase-panels] > [data-showcase-panel] > [data-showcase-copy] > .button {
+                        me[data-tabbed-showcase] [data-showcase-panel] > [data-showcase-copy] > .button {
                           margin-top: var(--showcase-space-1);
                           border-radius: var(--radius-round);
                           background: var(--tone-accent);
                           color: var(--tone-copy-text, var(--showcase-copy-text-default));
-                          border: var(--showcase-border-size) solid hsl(0 0% 100% / 0.36);
+                          border: var(--showcase-border-size) solid var(--showcase-button-border-color);
                           box-shadow: var(--showcase-button-shadow);
                         }
-                        me > [data-showcase-root] > [data-showcase-shell] > [data-showcase-panels] > [data-showcase-panel] > [data-showcase-copy] > [data-showcase-integrations] {
+                        me[data-tabbed-showcase] [data-showcase-panel] > [data-showcase-copy] > [data-showcase-integrations] {
                           margin: var(--showcase-space-4) 0 0;
                           display: flex;
                           flex-wrap: wrap;
@@ -600,45 +514,179 @@ impl Render for TabbedShowcase {
                           font-size: var(--showcase-chip-font-size);
                           color: var(--tone-copy-muted, var(--showcase-copy-muted-default));
                         }
-                        me > [data-showcase-root] > [data-showcase-shell] > [data-showcase-panels] > [data-showcase-panel] > [data-showcase-copy] > [data-showcase-integrations] > [data-showcase-chip] {
+                        me[data-tabbed-showcase] [data-showcase-panel] > [data-showcase-copy] > [data-showcase-integrations] > [data-showcase-chip] {
                           border: var(--showcase-border-size) solid var(--tone-chip-border);
                           border-radius: var(--radius-round);
                           padding: var(--showcase-chip-padding-block) var(--showcase-chip-padding-inline);
-                          font-weight: 600;
+                          font-weight: var(--showcase-chip-font-weight);
                           background: var(--tone-chip-bg, hsl(0 0% 100% / 0.14));
                           color: inherit;
                         }
-                        me > [data-showcase-root] > [data-showcase-shell] > [data-showcase-panels] > [data-showcase-panel] > [data-showcase-copy] > [data-code-path] {
+                        me[data-tabbed-showcase] [data-showcase-panel] > [data-showcase-copy] > [data-code-path] {
                           margin: var(--showcase-space-2) 0 var(--showcase-space-3);
                           color: var(--tone-copy-muted, var(--showcase-copy-muted-default));
                           font-size: var(--font-size-0);
                         }
-                        me > [data-showcase-root] > [data-showcase-shell] > [data-showcase-panels] > [data-showcase-panel] > [data-showcase-copy] > [data-code-path] > code {
+                        me[data-tabbed-showcase] [data-showcase-panel] > [data-showcase-copy] > [data-code-path] > code {
                           word-break: break-all;
                         }
-                        me > [data-showcase-root] > [data-showcase-shell] > [data-showcase-panels] > [data-showcase-panel] > [data-showcase-copy]::selection {
+                        me[data-tabbed-showcase] [data-showcase-panel] > [data-showcase-copy]::selection {
                           background: var(--tone-accent);
-                          color: hsl(210 40% 98%);
+                          color: var(--showcase-selection-text);
                         }
-                        me > [data-showcase-root] > [data-showcase-shell] > [data-showcase-panels] > [data-showcase-panel] > [data-showcase-copy]::-moz-selection {
+                        me[data-tabbed-showcase] [data-showcase-panel] > [data-showcase-copy]::-moz-selection {
                           background: var(--tone-accent);
-                          color: hsl(210 40% 98%);
+                          color: var(--showcase-selection-text);
                         }
-                        @media (max-width: 768px) {
+                        @media (max-width: 48rem) {
                           me[data-showcase-theme="netbird"] {
                             margin-top: var(--showcase-mobile-margin-top);
                             padding: var(--showcase-space-3);
                           }
-                          me > [data-showcase-root] > [data-showcase-shell] {
+                          me[data-tabbed-showcase] [data-showcase-shell] {
                             padding: var(--showcase-mobile-shell-padding);
                           }
-                          me > [data-showcase-root] > [data-showcase-shell] > [data-showcase-tabs] > button[role="tab"] {
+                          me[data-tabbed-showcase] [data-showcase-tabs] > button[role="tab"] {
                             min-width: max-content;
                             font-size: var(--showcase-mobile-tab-font-size);
                           }
                         }
                     }
                 })
+            }
+        }
+    }
+}
+
+fn render_showcase_tabs(
+    showcase_id: &Text,
+    tabs: &[TabbedShowcaseTab],
+    initial_tone: &str,
+) -> maud::Markup {
+    maud::html! {
+        nav
+            data-showcase-tabs
+            data-active-tone=(initial_tone)
+            aria-label="Showcase tabs"
+            role="tablist"
+        {
+            @for (index, tab) in tabs.iter().enumerate() {
+                @let tab_id = format!("{}-tab-{}", showcase_id, index);
+                @let panel_id = format!("{}-panel-{}", showcase_id, index);
+                @let tone = tab
+                    .tone
+                    .unwrap_or_else(|| TabbedShowcaseTone::cycle(index));
+                button
+                    type="button"
+                    data-tab-index=(index)
+                    data-showcase-tone=(tone.as_attr())
+                    role="tab"
+                    id=(tab_id)
+                    aria-controls=(panel_id)
+                    aria-selected=(if index == 0 { "true" } else { "false" })
+                    tabindex=(if index == 0 { "0" } else { "-1" })
+                {
+                    @if let Some(icon) = &tab.tab_icon {
+                        span aria-hidden="true" { (icon) }
+                    }
+                    span { (&tab.tab_label) }
+                }
+            }
+            span data-showcase-tab-indicator aria-hidden="true" {}
+        }
+    }
+}
+
+fn render_showcase_panels(showcase_id: &Text, tabs: &[TabbedShowcaseTab]) -> maud::Markup {
+    maud::html! {
+        div data-showcase-panels {
+            @for (index, tab) in tabs.iter().enumerate() {
+                (render_showcase_panel(showcase_id, tab, index))
+            }
+        }
+    }
+}
+
+fn render_showcase_panel(
+    showcase_id: &Text,
+    tab: &TabbedShowcaseTab,
+    index: usize,
+) -> maud::Markup {
+    let tab_id = format!("{}-tab-{}", showcase_id, index);
+    let panel_id = format!("{}-panel-{}", showcase_id, index);
+    let tone = tab
+        .tone
+        .unwrap_or_else(|| TabbedShowcaseTone::cycle(index));
+
+    maud::html! {
+        article
+            data-showcase-panel
+            data-showcase-tone=(tone.as_attr())
+            data-panel-full[tab.mock_panel.is_none()]
+            data-tab-index=(index)
+            id=(panel_id)
+            role="tabpanel"
+            aria-labelledby=(tab_id)
+            tabindex="0"
+            hidden[index != 0]
+        {
+            @if let Some(mock_panel) = &tab.mock_panel {
+                (render_showcase_mockup(mock_panel))
+            }
+            (render_showcase_copy(tab))
+        }
+    }
+}
+
+fn render_showcase_mockup(mock_panel: &TabbedShowcaseMockPanel) -> maud::Markup {
+    maud::html! {
+        div data-showcase-mockup {
+            header {
+                h3 { (&mock_panel.title) }
+                p data-muted { (&mock_panel.subtitle) }
+            }
+            ul data-showcase-rows {
+                @for row in &mock_panel.rows {
+                    li {
+                        span data-showcase-row-label { (&row.label) }
+                        span data-showcase-row-value { (&row.value) }
+                    }
+                }
+            }
+        }
+    }
+}
+
+fn render_showcase_copy(tab: &TabbedShowcaseTab) -> maud::Markup {
+    maud::html! {
+        div data-showcase-copy {
+            h3 { (&tab.title) }
+            p data-muted { (&tab.subtitle) }
+            ul data-showcase-bullets {
+                @for bullet in &tab.bullets {
+                    li { (bullet) }
+                }
+            }
+            @if let Some(action) = &tab.action {
+                a class="button" href=(&action.href) { (&action.label) }
+            }
+            p data-showcase-integrations {
+                span { (&tab.chips_label) }
+                @for chip in &tab.chips {
+                    span data-showcase-chip { (chip) }
+                }
+            }
+            @if let Some(path) = &tab.code_path {
+                p data-code-path {
+                    "Example: "
+                    code { (path) }
+                }
+            }
+            @if let Some(code) = &tab.code {
+                (CodeBlock::builder()
+                    .code(code.clone())
+                    .language(CodeLanguage::Rust)
+                    .build())
             }
         }
     }
