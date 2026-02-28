@@ -10,4 +10,5 @@ pub use section_header::SectionHeader;
 pub use tabbed_showcase::TabbedShowcase;
 pub(crate) use tabbed_showcase::{
     TabbedShowcaseAction, TabbedShowcaseMockPanel, TabbedShowcaseRow, TabbedShowcaseTab,
+    TabbedShowcaseTheme, TabbedShowcaseTone,
 };

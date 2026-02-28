@@ -1,7 +1,6 @@
 use bon::Builder;
 use maud::{PreEscaped, Render};
 use maud_extensions::css;
-use palette::{FromColor, Hsl, RgbHue, Srgb};
 
 use crate::types::Text;
 use crate::views::partials::components::{CodeBlock, CodeLanguage};
@@ -26,129 +25,56 @@ pub(crate) struct TabbedShowcaseMockPanel {
 }
 
 #[derive(Clone, Copy, Debug)]
-enum ShowcaseColor {
+pub(crate) enum TabbedShowcaseTone {
     Indigo,
-    Blue,
+    Sky,
     Teal,
-    Emerald,
-    Slate,
+    Mint,
+    Violet,
     Amber,
 }
 
-impl ShowcaseColor {
+impl TabbedShowcaseTone {
     fn cycle(index: usize) -> Self {
         match index % 6 {
             0 => Self::Indigo,
-            1 => Self::Blue,
+            1 => Self::Sky,
             2 => Self::Teal,
-            3 => Self::Emerald,
-            4 => Self::Slate,
+            3 => Self::Mint,
+            4 => Self::Violet,
             _ => Self::Amber,
         }
     }
 
-    fn base_hsl(self) -> Hsl {
+    fn as_attr(self) -> &'static str {
         match self {
-            Self::Indigo => Hsl::new(RgbHue::from_degrees(228.0), 0.62, 0.56),
-            Self::Blue => Hsl::new(RgbHue::from_degrees(205.0), 0.60, 0.50),
-            Self::Teal => Hsl::new(RgbHue::from_degrees(184.0), 0.50, 0.44),
-            Self::Emerald => Hsl::new(RgbHue::from_degrees(158.0), 0.46, 0.40),
-            Self::Slate => Hsl::new(RgbHue::from_degrees(214.0), 0.28, 0.56),
-            Self::Amber => Hsl::new(RgbHue::from_degrees(32.0), 0.56, 0.52),
-        }
-    }
-
-    fn palette(self) -> TabPalette {
-        let base = self.base_hsl();
-        let tab_soft_hsl =
-            Hsl::new(base.hue, (base.saturation * 0.42).clamp(0.0, 1.0), 0.2);
-        let grad_start_hsl = Hsl::new(
-            base.hue,
-            (base.saturation * 0.58).clamp(0.0, 1.0),
-            (base.lightness + 0.06).clamp(0.0, 1.0),
-        );
-        let grad_end_hsl = Hsl::new(
-            base.hue + RgbHue::from_degrees(10.0),
-            (base.saturation * 0.44).clamp(0.0, 1.0),
-            (base.lightness - 0.05).clamp(0.0, 1.0),
-        );
-        let avg_bg_hsl = Hsl::new(
-            base.hue + RgbHue::from_degrees(9.0),
-            ((grad_start_hsl.saturation + grad_end_hsl.saturation) / 2.0).clamp(0.0, 1.0),
-            ((grad_start_hsl.lightness + grad_end_hsl.lightness) / 2.0).clamp(0.0, 1.0),
-        );
-        let avg_bg = Srgb::from_color(avg_bg_hsl);
-        let black = Srgb::new(0.043, 0.071, 0.125);
-        let white = Srgb::new(0.973, 0.98, 0.988);
-        let use_dark_text = contrast_ratio(avg_bg, black) >= contrast_ratio(avg_bg, white);
-
-        let copy_text = if use_dark_text {
-            CssColor::hsl(Hsl::new(RgbHue::from_degrees(222.0), 0.47, 0.11))
-        } else {
-            CssColor::hsl(Hsl::new(RgbHue::from_degrees(210.0), 0.40, 0.98))
-        };
-        let copy_muted = if use_dark_text {
-            CssColor::hsla(Hsl::new(RgbHue::from_degrees(222.0), 0.47, 0.11), 0.82)
-        } else {
-            CssColor::hsla(Hsl::new(RgbHue::from_degrees(210.0), 0.40, 0.98), 0.86)
-        };
-        let chip_bg = if use_dark_text {
-            CssColor::hsla(Hsl::new(RgbHue::from_degrees(0.0), 0.0, 1.0), 0.68)
-        } else {
-            CssColor::hsla(Hsl::new(RgbHue::from_degrees(223.0), 0.47, 0.11), 0.28)
-        };
-        let chip_border = if use_dark_text {
-            CssColor::hsla(Hsl::new(RgbHue::from_degrees(223.0), 0.47, 0.11), 0.24)
-        } else {
-            CssColor::hsla(Hsl::new(RgbHue::from_degrees(210.0), 0.40, 0.98), 0.34)
-        };
-
-        TabPalette {
-            accent: CssColor::hsl(base),
-            tab_soft: CssColor::hsl(tab_soft_hsl),
-            grad_start: CssColor::hsl(grad_start_hsl),
-            grad_end: CssColor::hsl(grad_end_hsl),
-            copy_text,
-            copy_muted,
-            chip_bg,
-            chip_border,
+            Self::Indigo => "indigo",
+            Self::Sky => "sky",
+            Self::Teal => "teal",
+            Self::Mint => "mint",
+            Self::Violet => "violet",
+            Self::Amber => "amber",
         }
     }
 }
 
-#[derive(Clone, Copy, Debug)]
-struct CssColor {
-    hsl: Hsl,
-    alpha: Option<f32>,
+#[derive(Clone, Copy, Debug, Default)]
+pub(crate) enum TabbedShowcaseTheme {
+    #[default]
+    Netbird,
 }
 
-impl CssColor {
-    fn hsl(hsl: Hsl) -> Self {
-        Self { hsl, alpha: None }
-    }
-
-    fn hsla(hsl: Hsl, alpha: f32) -> Self {
-        Self {
-            hsl,
-            alpha: Some(alpha.clamp(0.0, 1.0)),
+impl TabbedShowcaseTheme {
+    fn as_attr(self) -> &'static str {
+        match self {
+            Self::Netbird => "netbird",
         }
     }
-}
-
-#[derive(Clone, Debug)]
-struct TabPalette {
-    accent: CssColor,
-    tab_soft: CssColor,
-    grad_start: CssColor,
-    grad_end: CssColor,
-    copy_text: CssColor,
-    copy_muted: CssColor,
-    chip_bg: CssColor,
-    chip_border: CssColor,
 }
 
 #[derive(Clone, Debug, Builder)]
 pub(crate) struct TabbedShowcaseTab {
+    pub tone: Option<TabbedShowcaseTone>,
     pub tab_icon: Option<Text>,
     pub tab_label: Text,
     pub title: Text,
@@ -168,6 +94,8 @@ pub struct TabbedShowcase {
     pub title: Text,
     pub subtitle: Text,
     pub tabs: Vec<TabbedShowcaseTab>,
+    #[builder(default)]
+    pub theme: TabbedShowcaseTheme,
 }
 
 impl Render for TabbedShowcase {
@@ -177,9 +105,15 @@ impl Render for TabbedShowcase {
         }
 
         let tabs_script = tabs_script(&self.id);
+        let initial_tone = self
+            .tabs
+            .first()
+            .and_then(|tab| tab.tone)
+            .unwrap_or_else(|| TabbedShowcaseTone::cycle(0))
+            .as_attr();
 
         maud::html! {
-            section id=(&self.id) {
+            section id=(&self.id) data-showcase-theme=(self.theme.as_attr()) {
                 header data-section-header {
                     div {
                         h2 { (&self.title) }
@@ -188,23 +122,27 @@ impl Render for TabbedShowcase {
                 }
                 div data-showcase-root {
                     div data-showcase-shell {
-                        nav data-showcase-tabs aria-label="Showcase tabs" role="tablist" {
+                        nav
+                            data-showcase-tabs
+                            data-active-tone=(initial_tone)
+                            aria-label="Showcase tabs"
+                            role="tablist"
+                        {
                             @for (index, tab) in self.tabs.iter().enumerate() {
                                 @let tab_id = format!("{}-tab-{}", self.id, index);
                                 @let panel_id = format!("{}-panel-{}", self.id, index);
-                                @let palette = ShowcaseColor::cycle(index).palette();
+                                @let tone = tab
+                                    .tone
+                                    .unwrap_or_else(|| TabbedShowcaseTone::cycle(index));
                                 button
                                     type="button"
                                     data-tab-index=(index)
+                                    data-showcase-tone=(tone.as_attr())
                                     role="tab"
                                     id=(tab_id)
                                     aria-controls=(panel_id)
                                     aria-selected=(if index == 0 { "true" } else { "false" })
                                     tabindex=(if index == 0 { "0" } else { "-1" })
-                                    style={
-                                        " --tab-accent: " (css_color(palette.accent)) ";"
-                                        " --tab-accent-soft: " (css_color(palette.tab_soft)) ";"
-                                    }
                                 {
                                     @if let Some(icon) = &tab.tab_icon {
                                         span aria-hidden="true" { (icon) }
@@ -212,14 +150,18 @@ impl Render for TabbedShowcase {
                                     span { (&tab.tab_label) }
                                 }
                             }
+                            span data-showcase-tab-indicator aria-hidden="true" {}
                         }
                         div data-showcase-panels {
                             @for (index, tab) in self.tabs.iter().enumerate() {
                                 @let tab_id = format!("{}-tab-{}", self.id, index);
                                 @let panel_id = format!("{}-panel-{}", self.id, index);
-                                @let palette = ShowcaseColor::cycle(index).palette();
+                                @let tone = tab
+                                    .tone
+                                    .unwrap_or_else(|| TabbedShowcaseTone::cycle(index));
                                 article
                                     data-showcase-panel
+                                    data-showcase-tone=(tone.as_attr())
                                     data-panel-full[tab.mock_panel.is_none()]
                                     data-tab-index=(index)
                                     id=(panel_id)
@@ -244,18 +186,7 @@ impl Render for TabbedShowcase {
                                             }
                                         }
                                     }
-                                    div
-                                        data-showcase-copy
-                                        style={
-                                            " --tab-accent: " (css_color(palette.accent)) ";"
-                                            " --tab-grad-start: " (css_color(palette.grad_start)) ";"
-                                            " --tab-grad-end: " (css_color(palette.grad_end)) ";"
-                                            " --tab-copy-text: " (css_color(palette.copy_text)) ";"
-                                            " --tab-copy-muted: " (css_color(palette.copy_muted)) ";"
-                                            " --tab-chip-bg: " (css_color(palette.chip_bg)) ";"
-                                            " --tab-chip-border: " (css_color(palette.chip_border)) ";"
-                                        }
-                                    {
+                                    div data-showcase-copy {
                                         h3 { (&tab.title) }
                                         p data-muted { (&tab.subtitle) }
                                         ul data-showcase-bullets {
@@ -294,220 +225,406 @@ impl Render for TabbedShowcase {
                 ({
                     css! {
                         me {
-                          margin-top: 2.8rem;
-                          border: 1px solid var(--portfolio-surface-border);
-                          border-radius: 18px;
-                          padding: 1.35rem 1.35rem 1.45rem;
-                          background: var(--portfolio-surface);
-                          box-shadow: 0 6px 16px color-mix(in srgb, black 8%, transparent);
+                          --showcase-space-1: var(--size-2);
+                          --showcase-space-2: var(--size-3);
+                          --showcase-space-3: var(--size-4);
+                          --showcase-space-4: var(--size-5);
+                          --showcase-space-5: var(--size-6);
+                          --showcase-radius-shell: var(--radius-5);
+                          --showcase-radius-surface: var(--radius-4);
+                          --showcase-tab-font-size: 0.8rem;
+                          --showcase-tab-padding-y: 0.58rem;
+                          --showcase-tab-padding-x: 0.38rem;
+                          --showcase-shell-bg: hsl(220 36% 7%);
+                          --showcase-shell-bg-alt: hsl(222 40% 8%);
+                          --showcase-shell-border: hsl(220 16% 25% / 0.78);
+                          --showcase-shell-highlight-a: hsl(25 91% 58% / 0.08);
+                          --showcase-shell-highlight-b: hsl(205 85% 62% / 0.06);
+                          --showcase-shell-shadow: 0 22px 42px hsl(220 65% 3% / 0.68);
+                          --showcase-panel-bg: hsl(220 16% 10% / 0.96);
+                          --showcase-panel-border: hsl(220 12% 28% / 0.48);
+                          --showcase-row-bg: hsl(220 16% 14% / 0.96);
+                          --showcase-row-border: hsl(220 12% 29% / 0.42);
+                          --showcase-tab-bg: transparent;
+                          --showcase-tab-text: hsl(218 16% 66%);
+                          --showcase-tab-text-active: hsl(0 0% 97%);
+                          --showcase-tab-border: transparent;
+                          --showcase-tab-divider: hsl(220 14% 24% / 0.85);
+                          --showcase-copy-text-default: hsl(0 0% 100%);
+                          --showcase-copy-muted-default: hsl(215 14% 70% / 0.92);
+                          --showcase-copy-title-size: 1.05rem;
+                          --showcase-indicator-height: 2px;
+                          --showcase-indicator-width: 0px;
+                          --showcase-indicator-x: 0px;
+                          margin-top: 2.35rem;
                         }
-                        me [data-section-header] {
+                        me[data-showcase-theme="netbird"] {
+                          border: 1px solid var(--showcase-shell-border);
+                          border-radius: var(--showcase-radius-shell);
+                          padding: var(--showcase-space-4);
+                          background:
+                            radial-gradient(circle at 0% 0%, var(--showcase-shell-highlight-a), transparent 48%),
+                            radial-gradient(circle at 100% 0%, var(--showcase-shell-highlight-b), transparent 55%),
+                            linear-gradient(180deg, var(--showcase-shell-bg), var(--showcase-shell-bg-alt) 74%);
+                          box-shadow: var(--showcase-shell-shadow);
+                        }
+                        me > [data-showcase-root] > [data-showcase-shell] > [data-showcase-tabs] > [data-showcase-tone],
+                        me > [data-showcase-root] > [data-showcase-shell] > [data-showcase-panels] > [data-showcase-tone] {
+                          --tone-base: var(--indigo-5);
+                          --tone-base-strong: var(--indigo-6);
+                          --tone-base-end: var(--indigo-8);
+                          --tone-accent: var(--indigo-5);
+                          --tone-tab-soft: hsl(229 69% 25% / 0.28);
+                          --tone-surface-start: hsl(229 40% 14%);
+                          --tone-surface-end: hsl(229 48% 10%);
+                          --tone-border: hsl(229 58% 32% / 0.56);
+                          --tone-copy-text: hsl(0 0% 100%);
+                          --tone-copy-muted: hsl(214 18% 76% / 0.88);
+                          --tone-chip-bg: hsl(220 22% 14% / 0.92);
+                          --tone-chip-border: hsl(220 10% 32% / 0.74);
+                        }
+                        me > [data-showcase-root] > [data-showcase-shell] > [data-showcase-tabs] > [data-showcase-tone="indigo"],
+                        me > [data-showcase-root] > [data-showcase-shell] > [data-showcase-panels] > [data-showcase-tone="indigo"] {
+                          --tone-base: var(--indigo-5);
+                          --tone-base-strong: var(--indigo-6);
+                          --tone-base-end: var(--indigo-8);
+                          --tone-accent: var(--indigo-5);
+                          --tone-tab-soft: hsl(229 69% 25% / 0.28);
+                          --tone-surface-start: hsl(229 40% 14%);
+                          --tone-surface-end: hsl(229 48% 10%);
+                          --tone-border: hsl(229 58% 32% / 0.56);
+                        }
+                        me > [data-showcase-root] > [data-showcase-shell] > [data-showcase-tabs] > [data-showcase-tone="sky"],
+                        me > [data-showcase-root] > [data-showcase-shell] > [data-showcase-panels] > [data-showcase-tone="sky"] {
+                          --tone-base: var(--blue-5);
+                          --tone-base-strong: var(--blue-6);
+                          --tone-base-end: var(--blue-8);
+                          --tone-accent: var(--blue-5);
+                          --tone-tab-soft: hsl(205 75% 24% / 0.28);
+                          --tone-surface-start: hsl(208 46% 14%);
+                          --tone-surface-end: hsl(212 52% 10%);
+                          --tone-border: hsl(208 64% 32% / 0.56);
+                        }
+                        me > [data-showcase-root] > [data-showcase-shell] > [data-showcase-tabs] > [data-showcase-tone="teal"],
+                        me > [data-showcase-root] > [data-showcase-shell] > [data-showcase-panels] > [data-showcase-tone="teal"] {
+                          --tone-base: var(--teal-5);
+                          --tone-base-strong: var(--teal-6);
+                          --tone-base-end: var(--cyan-8);
+                          --tone-accent: var(--teal-5);
+                          --tone-tab-soft: hsl(182 58% 24% / 0.28);
+                          --tone-surface-start: hsl(186 44% 13%);
+                          --tone-surface-end: hsl(190 52% 9%);
+                          --tone-border: hsl(184 55% 31% / 0.56);
+                        }
+                        me > [data-showcase-root] > [data-showcase-shell] > [data-showcase-tabs] > [data-showcase-tone="mint"],
+                        me > [data-showcase-root] > [data-showcase-shell] > [data-showcase-panels] > [data-showcase-tone="mint"] {
+                          --tone-base: var(--green-5);
+                          --tone-base-strong: var(--green-6);
+                          --tone-base-end: var(--lime-8);
+                          --tone-accent: var(--green-5);
+                          --tone-tab-soft: hsl(152 46% 23% / 0.28);
+                          --tone-surface-start: hsl(154 40% 13%);
+                          --tone-surface-end: hsl(158 48% 9%);
+                          --tone-border: hsl(153 48% 30% / 0.56);
+                        }
+                        me > [data-showcase-root] > [data-showcase-shell] > [data-showcase-tabs] > [data-showcase-tone="violet"],
+                        me > [data-showcase-root] > [data-showcase-shell] > [data-showcase-panels] > [data-showcase-tone="violet"] {
+                          --tone-base: var(--violet-5);
+                          --tone-base-strong: var(--violet-6);
+                          --tone-base-end: var(--purple-8);
+                          --tone-accent: var(--violet-5);
+                          --tone-tab-soft: hsl(274 53% 24% / 0.28);
+                          --tone-surface-start: hsl(275 42% 14%);
+                          --tone-surface-end: hsl(278 50% 10%);
+                          --tone-border: hsl(274 50% 32% / 0.56);
+                        }
+                        me > [data-showcase-root] > [data-showcase-shell] > [data-showcase-tabs] > [data-showcase-tone="amber"],
+                        me > [data-showcase-root] > [data-showcase-shell] > [data-showcase-panels] > [data-showcase-tone="amber"] {
+                          --tone-base: hsl(25 91% 58%);
+                          --tone-base-strong: hsl(25 91% 58%);
+                          --tone-base-end: hsl(14 89% 57%);
+                          --tone-accent: hsl(25 91% 58%);
+                          --tone-tab-soft: hsl(25 91% 58% / 0.24);
+                          --tone-surface-start: hsl(22 56% 14%);
+                          --tone-surface-end: hsl(18 66% 10%);
+                          --tone-border: hsl(24 72% 35% / 0.6);
+                        }
+                        me > [data-section-header] {
                           display: flex;
                           flex-wrap: wrap;
                           align-items: center;
                           justify-content: space-between;
-                          gap: 0.9rem 1.2rem;
-                          margin-bottom: 1.1rem;
+                          gap: var(--showcase-space-2) var(--showcase-space-3);
+                          margin-bottom: var(--showcase-space-3);
                         }
-                        me [data-section-header] h2 {
-                          margin-bottom: 0.28rem;
+                        me > [data-section-header] > div > h2 {
+                          margin-bottom: 0.24rem;
                           font-size: clamp(1.5rem, 1.2rem + 1.1vw, 2rem);
                           line-height: 1.18;
+                          background-image: linear-gradient(
+                            180deg,
+                            hsl(0 0% 100%),
+                            hsl(220 9% 66%)
+                          );
+                          color: transparent;
+                          -webkit-background-clip: text;
+                          background-clip: text;
                         }
-                        me [data-section-header] [data-muted] {
+                        me > [data-section-header] > div > [data-muted] {
                           margin-bottom: 0;
                           max-width: 70ch;
-                          color: color-mix(in srgb, var(--pico-muted-color) 94%, var(--pico-color) 6%);
+                          color: var(--showcase-copy-muted-default);
                         }
-                        me [data-showcase-root] {
+                        me > [data-showcase-root] {
+                          margin-top: var(--showcase-space-2);
+                        }
+                        me > [data-showcase-root] > [data-showcase-shell] {
+                          border: 1px solid var(--showcase-shell-border);
+                          border-radius: var(--showcase-radius-surface);
+                          padding: var(--showcase-space-2);
+                          background: var(--showcase-shell-bg);
+                          backdrop-filter: blur(6px);
+                        }
+                        me > [data-showcase-root] > [data-showcase-shell] > [data-showcase-tabs] {
                           position: relative;
-                          margin-top: 1.15rem;
-                        }
-                        me [data-showcase-shell] {
-                          border: 1px solid color-mix(in srgb, var(--tab-shell-border) 82%, transparent);
-                          border-radius: 16px;
-                          padding: 0.95rem;
-                          background:
-                            radial-gradient(circle at 0% 0%, var(--tab-shell-glow-a), transparent 55%),
-                            linear-gradient(
-                              180deg,
-                              color-mix(in srgb, var(--tab-shell-bg) 96%, transparent),
-                              color-mix(in srgb, var(--tab-shell-bg) 90%, transparent)
-                            );
-                        }
-                        me [data-showcase-tabs] {
                           display: flex;
                           align-items: stretch;
-                          gap: 0.45rem;
+                          gap: var(--showcase-space-3);
                           overflow-x: auto;
-                          padding-bottom: 0.72rem;
-                          border-bottom: 1px solid color-mix(in srgb, var(--pico-muted-color) 30%, transparent);
+                          padding-bottom: calc(var(--showcase-space-1) + var(--showcase-indicator-height));
+                          border-bottom: 1px solid var(--showcase-tab-divider);
+                          scrollbar-width: thin;
+                          --showcase-active-tone: hsl(25 91% 58%);
+                          --showcase-active-tone-shadow: 0 2px 8px hsl(25 91% 58% / 0.3);
                         }
-                        me [data-showcase-tabs] > button[role="tab"] {
+                        me > [data-showcase-root] > [data-showcase-shell] > [data-showcase-tabs] > button[role="tab"] {
                           cursor: pointer;
-                          border-radius: 10px;
-                          border: 1px solid transparent;
-                          background: var(--tab-tab-bg);
-                          color: var(--tab-tab-text);
-                          padding: 0.56rem 0.76rem;
-                          min-width: 170px;
-                          font-size: 0.81rem;
+                          border-radius: var(--radius-2);
+                          border: 1px solid var(--showcase-tab-border);
+                          background: var(--showcase-tab-bg);
+                          color: var(--showcase-tab-text);
+                          padding: var(--showcase-tab-padding-y) var(--showcase-tab-padding-x);
+                          min-width: max-content;
+                          font-size: var(--showcase-tab-font-size);
                           font-weight: 600;
+                          letter-spacing: 0.015rem;
                           display: inline-flex;
                           align-items: center;
                           gap: 0.45rem;
-                          transition: border-color 0.2s ease, background 0.2s ease, color 0.2s ease;
-                          opacity: 1;
+                          transition:
+                            border-color 0.24s var(--ease-3),
+                            background-color 0.24s var(--ease-3),
+                            color 0.24s var(--ease-3),
+                            transform 0.24s var(--ease-3);
                         }
-                        me [data-showcase-tabs] > button[role="tab"][aria-selected="true"] {
-                          border-color: color-mix(in srgb, var(--tab-accent) 52%, transparent);
-                          background: color-mix(in srgb, var(--tab-accent-soft) 44%, var(--tab-tab-bg) 56%);
-                          color: color-mix(in srgb, var(--tab-accent) 44%, var(--pico-color) 56%);
+                        me > [data-showcase-root] > [data-showcase-shell] > [data-showcase-tabs] > button[role="tab"]:hover {
+                          border-color: transparent;
+                          background: var(--tone-tab-soft);
+                          color: var(--showcase-tab-text-active);
+                          transform: translateY(-1px);
                         }
-                        me [data-showcase-tabs] > button[role="tab"]:focus-visible {
-                          outline: 2px solid color-mix(in srgb, var(--tab-accent) 65%, white);
+                        me > [data-showcase-root] > [data-showcase-shell] > [data-showcase-tabs] > button[role="tab"][aria-selected="true"] {
+                          border-color: transparent;
+                          background: transparent;
+                          color: var(--tone-accent);
+                        }
+                        me > [data-showcase-root] > [data-showcase-shell] > [data-showcase-tabs] > button[role="tab"]:focus-visible {
+                          outline: 2px solid var(--tone-accent);
                           outline-offset: 2px;
                         }
-                        me [data-showcase-tabs] > button[role="tab"] > span[aria-hidden="true"] {
+                        me > [data-showcase-root] > [data-showcase-shell] > [data-showcase-tabs] > button[role="tab"] > span[aria-hidden="true"] {
                           display: inline-flex;
                           align-items: center;
                           justify-content: center;
                           min-width: 1.2rem;
-                          font-size: 0.9rem;
+                          font-size: 0.88rem;
                           line-height: 1;
                           color: inherit;
                         }
-                        me [data-showcase-panels] {
-                          margin-top: 1rem;
+                        me > [data-showcase-root] > [data-showcase-shell] > [data-showcase-tabs] > [data-showcase-tab-indicator] {
+                          position: absolute;
+                          left: 0;
+                          bottom: 0;
+                          width: var(--showcase-indicator-width);
+                          height: var(--showcase-indicator-height);
+                          transform: translateX(var(--showcase-indicator-x));
+                          border-radius: var(--radius-round);
+                          background: var(--showcase-active-tone);
+                          box-shadow: var(--showcase-active-tone-shadow);
+                          transition:
+                            transform 0.32s var(--ease-spring-2),
+                            width 0.32s var(--ease-3),
+                            background-color 0.2s var(--ease-out-3),
+                            box-shadow 0.2s var(--ease-out-3);
+                          pointer-events: none;
                         }
-                        me [data-showcase-panel] {
+                        me > [data-showcase-root] > [data-showcase-shell] > [data-showcase-tabs][data-active-tone="indigo"] > [data-showcase-tab-indicator] {
+                          --showcase-active-tone: var(--indigo-6);
+                          --showcase-active-tone-shadow: 0 2px 8px hsl(229 68% 58% / 0.3);
+                        }
+                        me > [data-showcase-root] > [data-showcase-shell] > [data-showcase-tabs][data-active-tone="sky"] > [data-showcase-tab-indicator] {
+                          --showcase-active-tone: var(--blue-6);
+                          --showcase-active-tone-shadow: 0 2px 8px hsl(206 80% 58% / 0.3);
+                        }
+                        me > [data-showcase-root] > [data-showcase-shell] > [data-showcase-tabs][data-active-tone="teal"] > [data-showcase-tab-indicator] {
+                          --showcase-active-tone: var(--teal-6);
+                          --showcase-active-tone-shadow: 0 2px 8px hsl(183 61% 52% / 0.3);
+                        }
+                        me > [data-showcase-root] > [data-showcase-shell] > [data-showcase-tabs][data-active-tone="mint"] > [data-showcase-tab-indicator] {
+                          --showcase-active-tone: var(--green-6);
+                          --showcase-active-tone-shadow: 0 2px 8px hsl(151 48% 48% / 0.3);
+                        }
+                        me > [data-showcase-root] > [data-showcase-shell] > [data-showcase-tabs][data-active-tone="violet"] > [data-showcase-tab-indicator] {
+                          --showcase-active-tone: var(--violet-6);
+                          --showcase-active-tone-shadow: 0 2px 8px hsl(274 64% 61% / 0.3);
+                        }
+                        me > [data-showcase-root] > [data-showcase-shell] > [data-showcase-tabs][data-active-tone="amber"] > [data-showcase-tab-indicator] {
+                          --showcase-active-tone: var(--orange-6);
+                          --showcase-active-tone-shadow: 0 2px 8px hsl(25 91% 58% / 0.3);
+                        }
+                        me > [data-showcase-root] > [data-showcase-shell] > [data-showcase-panels] {
+                          margin-top: var(--showcase-space-3);
+                        }
+                        me > [data-showcase-root] > [data-showcase-shell] > [data-showcase-panels] > [data-showcase-panel] {
                           display: grid;
-                          gap: 1.2rem;
+                          gap: var(--showcase-space-3);
                           min-width: 0;
                         }
-                        me [data-showcase-panel][hidden] {
+                        me > [data-showcase-root] > [data-showcase-shell] > [data-showcase-panels] > [data-showcase-panel][hidden] {
                           display: none;
                         }
                         @media (min-width: 980px) {
-                          me [data-showcase-panel] {
+                          me > [data-showcase-root] > [data-showcase-shell] > [data-showcase-panels] > [data-showcase-panel] {
                             grid-template-columns: 1.1fr 0.9fr;
                             align-items: stretch;
                           }
-                          me [data-showcase-panel][data-panel-full] {
+                          me > [data-showcase-root] > [data-showcase-shell] > [data-showcase-panels] > [data-showcase-panel][data-panel-full] {
                             grid-template-columns: 1fr;
                           }
                         }
-                        me [data-showcase-panel] > * {
+                        me > [data-showcase-root] > [data-showcase-shell] > [data-showcase-panels] > [data-showcase-panel] > * {
                           min-width: 0;
                         }
-                        me [data-showcase-mockup] {
-                          border: 1px solid var(--tab-surface-border);
-                          border-radius: var(--ui-radius-md);
-                          padding: 1rem;
-                          background: var(--tab-surface-bg);
+                        me > [data-showcase-root] > [data-showcase-shell] > [data-showcase-panels] > [data-showcase-panel] > [data-showcase-mockup] {
+                          border: 1px solid var(--showcase-panel-border);
+                          border-radius: var(--showcase-radius-surface);
+                          padding: var(--showcase-space-3);
+                          background: var(--showcase-panel-bg);
+                          box-shadow: var(--shadow-1);
                         }
-                        me [data-showcase-mockup] h3 {
+                        me > [data-showcase-root] > [data-showcase-shell] > [data-showcase-panels] > [data-showcase-panel] > [data-showcase-mockup] > header > h3 {
                           margin-bottom: 0.3rem;
                         }
-                        me [data-showcase-rows] {
+                        me > [data-showcase-root] > [data-showcase-shell] > [data-showcase-panels] > [data-showcase-panel] > [data-showcase-mockup] > [data-showcase-rows] {
                           list-style: none;
                           margin: 1rem 0 0;
                           padding: 0;
                           display: grid;
                           gap: 0.55rem;
                         }
-                        me [data-showcase-rows] > li {
-                          border: 1px solid var(--tab-row-border);
-                          border-radius: 9px;
-                          background: var(--tab-row-bg);
-                          padding: 0.5rem 0.65rem;
+                        me > [data-showcase-root] > [data-showcase-shell] > [data-showcase-panels] > [data-showcase-panel] > [data-showcase-mockup] > [data-showcase-rows] > li {
+                          border: 1px solid var(--showcase-row-border);
+                          border-radius: var(--radius-2);
+                          background: var(--showcase-row-bg);
+                          padding: 0.5rem 0.7rem;
                           display: flex;
                           justify-content: space-between;
-                          gap: 0.6rem;
+                          gap: 0.7rem;
                         }
-                        me [data-showcase-row-label] {
-                          color: var(--pico-muted-color);
+                        me > [data-showcase-root] > [data-showcase-shell] > [data-showcase-panels] > [data-showcase-panel] > [data-showcase-mockup] > [data-showcase-rows] > li > [data-showcase-row-label] {
+                          color: var(--showcase-copy-muted-default);
                           font-size: 0.78rem;
                         }
-                        me [data-showcase-row-value] {
+                        me > [data-showcase-root] > [data-showcase-shell] > [data-showcase-panels] > [data-showcase-panel] > [data-showcase-mockup] > [data-showcase-rows] > li > [data-showcase-row-value] {
                           font-size: 0.8rem;
                           font-weight: 600;
                           text-align: right;
                         }
-                        me [data-showcase-copy] {
-                          border: 1px solid color-mix(in srgb, var(--tab-accent) 30%, transparent);
-                          border-radius: var(--ui-radius-md);
-                          padding: 1.05rem;
+                        me > [data-showcase-root] > [data-showcase-shell] > [data-showcase-panels] > [data-showcase-panel] > [data-showcase-copy] {
+                          border: 1px solid var(--tone-border);
+                          border-top: 2px solid var(--tone-accent);
+                          border-radius: var(--showcase-radius-surface);
+                          padding: clamp(1rem, 0.95rem + 0.45vw, 1.25rem);
                           background:
-                            linear-gradient(
-                              180deg,
-                              color-mix(in srgb, var(--tab-accent-soft) 36%, var(--pico-card-background-color) 64%),
-                              color-mix(in srgb, var(--pico-card-background-color) 96%, black 4%)
-                            );
-                          color: var(--pico-color);
+                            linear-gradient(180deg, var(--tone-surface-start), var(--tone-surface-end));
+                          color: var(--tone-copy-text, var(--showcase-copy-text-default));
+                          box-shadow: var(--shadow-2);
                           overflow: hidden;
                         }
-                        me [data-showcase-copy] h3 {
+                        me > [data-showcase-root] > [data-showcase-shell] > [data-showcase-panels] > [data-showcase-panel] > [data-showcase-copy] > h3 {
                           color: inherit;
                           margin-bottom: 0.35rem;
+                          font-size: var(--showcase-copy-title-size);
                         }
-                        me [data-showcase-copy] [data-muted] {
-                          color: color-mix(in srgb, var(--pico-muted-color) 92%, var(--pico-color) 8%);
+                        me > [data-showcase-root] > [data-showcase-shell] > [data-showcase-panels] > [data-showcase-panel] > [data-showcase-copy] > [data-muted] {
+                          color: var(--tone-copy-muted, var(--showcase-copy-muted-default));
+                          line-height: 1.55;
                         }
-                        me [data-showcase-bullets] {
-                          margin: 1rem 0 1.1rem;
+                        me > [data-showcase-root] > [data-showcase-shell] > [data-showcase-panels] > [data-showcase-panel] > [data-showcase-copy] > [data-showcase-bullets] {
+                          margin: 1rem 0 1.05rem;
                           padding-left: 1.1rem;
                           display: grid;
                           gap: 0.35rem;
-                          color: var(--pico-color);
-                        }
-                        me [data-showcase-bullets] li {
                           color: inherit;
                         }
-                        me [data-showcase-bullets] li::marker {
-                          color: color-mix(in srgb, var(--tab-accent) 58%, transparent);
+                        me > [data-showcase-root] > [data-showcase-shell] > [data-showcase-panels] > [data-showcase-panel] > [data-showcase-copy] > [data-showcase-bullets] > li {
+                          color: inherit;
                         }
-                        me [data-showcase-copy] .button {
-                          background: color-mix(in srgb, var(--pico-primary) 86%, black 14%);
-                          color: var(--pico-primary-inverse);
+                        me > [data-showcase-root] > [data-showcase-shell] > [data-showcase-panels] > [data-showcase-panel] > [data-showcase-copy] > [data-showcase-bullets] > li::marker {
+                          color: var(--tone-accent);
                         }
-                        me [data-showcase-integrations] {
-                          margin: 0.95rem 0 0;
+                        me > [data-showcase-root] > [data-showcase-shell] > [data-showcase-panels] > [data-showcase-panel] > [data-showcase-copy] > .button {
+                          margin-top: 0.15rem;
+                          border-radius: var(--radius-round);
+                          background: var(--tone-accent);
+                          color: var(--tone-copy-text, var(--showcase-copy-text-default));
+                          border: 1px solid hsl(0 0% 100% / 0.36);
+                          box-shadow: 0 8px 22px hsl(220 40% 2% / 0.32);
+                        }
+                        me > [data-showcase-root] > [data-showcase-shell] > [data-showcase-panels] > [data-showcase-panel] > [data-showcase-copy] > [data-showcase-integrations] {
+                          margin: 0.9rem 0 0;
                           display: flex;
                           flex-wrap: wrap;
                           align-items: center;
-                          gap: 0.4rem;
+                          gap: 0.42rem;
                           font-size: 0.76rem;
-                          color: var(--pico-muted-color);
+                          color: var(--tone-copy-muted, var(--showcase-copy-muted-default));
                         }
-                        me [data-showcase-chip] {
-                          border: 1px solid color-mix(in srgb, var(--tab-accent) 26%, var(--pico-muted-color) 74%);
-                          border-radius: 999px;
+                        me > [data-showcase-root] > [data-showcase-shell] > [data-showcase-panels] > [data-showcase-panel] > [data-showcase-copy] > [data-showcase-integrations] > [data-showcase-chip] {
+                          border: 1px solid var(--tone-chip-border);
+                          border-radius: var(--radius-round);
                           padding: 0.2rem 0.5rem;
                           font-weight: 600;
-                          background: color-mix(in srgb, var(--pico-card-background-color) 90%, var(--tab-accent-soft) 10%);
+                          background: var(--tone-chip-bg, hsl(0 0% 100% / 0.14));
+                          color: inherit;
                         }
-                        me [data-code-path] {
+                        me > [data-showcase-root] > [data-showcase-shell] > [data-showcase-panels] > [data-showcase-panel] > [data-showcase-copy] > [data-code-path] {
                           margin: 0.45rem 0 0.65rem;
-                          color: var(--pico-muted-color);
+                          color: var(--tone-copy-muted, var(--showcase-copy-muted-default));
                           font-size: 0.85rem;
                         }
-                        me [data-code-path] code {
+                        me > [data-showcase-root] > [data-showcase-shell] > [data-showcase-panels] > [data-showcase-panel] > [data-showcase-copy] > [data-code-path] > code {
                           word-break: break-all;
                         }
-                        me [data-showcase-copy] ::selection {
-                          background: hsl(223 47% 11% / 0.72);
+                        me > [data-showcase-root] > [data-showcase-shell] > [data-showcase-panels] > [data-showcase-panel] > [data-showcase-copy]::selection {
+                          background: var(--tone-accent);
                           color: hsl(210 40% 98%);
                         }
-                        me [data-showcase-copy] ::-moz-selection {
-                          background: hsl(223 47% 11% / 0.72);
+                        me > [data-showcase-root] > [data-showcase-shell] > [data-showcase-panels] > [data-showcase-panel] > [data-showcase-copy]::-moz-selection {
+                          background: var(--tone-accent);
                           color: hsl(210 40% 98%);
                         }
                         @media (max-width: 768px) {
-                          me {
+                          me[data-showcase-theme="netbird"] {
                             margin-top: 1.8rem;
-                            padding: 1rem 0.95rem 1.1rem;
-                            border-radius: 16px;
+                            padding: var(--showcase-space-3);
+                          }
+                          me > [data-showcase-root] > [data-showcase-shell] {
+                            padding: var(--showcase-space-2);
+                          }
+                          me > [data-showcase-root] > [data-showcase-shell] > [data-showcase-tabs] > button[role="tab"] {
+                            min-width: max-content;
+                            font-size: 0.76rem;
                           }
                         }
                     }
@@ -526,13 +643,36 @@ fn tabs_script(showcase_id: &Text) -> String {
   const root = document.getElementById({showcase_id_json});
   if (!root) return;
 
+  const tabList = root.querySelector('[data-showcase-tabs][role="tablist"]');
+  const indicator = root.querySelector('[data-showcase-tab-indicator]');
   const tabs = Array.from(root.querySelectorAll('[role="tab"]'));
   const panels = Array.from(root.querySelectorAll('[data-showcase-panel][role="tabpanel"]'));
-  if (!tabs.length || !panels.length) return;
+  if (!tabList || !tabs.length || !panels.length) return;
 
   const lastIndex = tabs.length - 1;
+  let activeIndex = tabs.findIndex((tab) => tab.getAttribute('aria-selected') === 'true');
+  if (activeIndex < 0) activeIndex = 0;
+
+  const moveIndicator = () => {{
+    if (!indicator) return;
+
+    const activeTab = tabs[activeIndex];
+    if (!activeTab) return;
+
+    const listRect = tabList.getBoundingClientRect();
+    const tabRect = activeTab.getBoundingClientRect();
+    const offset = tabRect.left - listRect.left + tabList.scrollLeft;
+
+    indicator.style.transform = `translateX(${{Math.max(0, offset)}}px)`;
+    indicator.style.width = `${{tabRect.width}}px`;
+
+    const tone = activeTab.getAttribute('data-showcase-tone');
+    if (tone) tabList.setAttribute('data-active-tone', tone);
+  }};
 
   const activate = (nextIndex, focusTab) => {{
+    activeIndex = nextIndex;
+
     tabs.forEach((tab, index) => {{
       const isActive = index === nextIndex;
       tab.setAttribute('aria-selected', isActive ? 'true' : 'false');
@@ -543,6 +683,8 @@ fn tabs_script(showcase_id: &Text) -> String {
     panels.forEach((panel, index) => {{
       panel.hidden = index !== nextIndex;
     }});
+
+    moveIndicator();
   }};
 
   tabs.forEach((tab, index) => {{
@@ -566,61 +708,17 @@ fn tabs_script(showcase_id: &Text) -> String {
     }});
   }});
 
-  const selectedIndex = tabs.findIndex((tab) => tab.getAttribute('aria-selected') === 'true');
-  activate(selectedIndex >= 0 ? selectedIndex : 0, false);
+  tabList.addEventListener('scroll', moveIndicator, {{ passive: true }});
+  window.addEventListener('resize', moveIndicator, {{ passive: true }});
+
+  if (document.fonts && document.fonts.ready) {{
+    document.fonts.ready
+      .then(() => requestAnimationFrame(moveIndicator))
+      .catch(() => {{}});
+  }}
+
+  activate(activeIndex, false);
 }})();
     "#
     )
-}
-
-fn hsl_css(color: Hsl) -> String {
-    format!(
-        "hsl({:.1} {:.1}% {:.1}%)",
-        color.hue.into_degrees(),
-        color.saturation * 100.0,
-        color.lightness * 100.0
-    )
-}
-
-fn css_color(color: CssColor) -> String {
-    match color.alpha {
-        Some(alpha) => hsla_css(color.hsl, alpha),
-        None => hsl_css(color.hsl),
-    }
-}
-
-fn hsla_css(color: Hsl, alpha: f32) -> String {
-    format!(
-        "hsl({:.1} {:.1}% {:.1}% / {:.2})",
-        color.hue.into_degrees(),
-        color.saturation * 100.0,
-        color.lightness * 100.0,
-        alpha
-    )
-}
-
-fn relative_luminance(color: Srgb<f32>) -> f32 {
-    let channel = |value: f32| {
-        if value <= 0.03928 {
-            value / 12.92
-        } else {
-            ((value + 0.055) / 1.055).powf(2.4)
-        }
-    };
-
-    let r = channel(color.red);
-    let g = channel(color.green);
-    let b = channel(color.blue);
-    0.2126 * r + 0.7152 * g + 0.0722 * b
-}
-
-fn contrast_ratio(a: Srgb<f32>, b: Srgb<f32>) -> f32 {
-    let a_lum = relative_luminance(a);
-    let b_lum = relative_luminance(b);
-    let (lighter, darker) = if a_lum >= b_lum {
-        (a_lum, b_lum)
-    } else {
-        (b_lum, a_lum)
-    };
-    (lighter + 0.05) / (darker + 0.05)
 }
