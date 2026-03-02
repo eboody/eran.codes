@@ -1,329 +1,8 @@
-use bon::Builder;
-use heroicons::{Icon, icon_name, icon_variant};
-use maud::{PreEscaped, Render};
-use maud_extensions::{inline_css, inline_js};
-
-use crate::types::Text;
-use crate::views::partials::components::{CodeBlock, CodeLanguage};
-
-use super::SectionHeader;
-
-#[derive(Clone, Debug, Builder)]
-pub(crate) struct TabbedShowcaseRow {
-    pub label: Text,
-    pub value: Text,
-}
-
-#[derive(Clone, Debug, Builder)]
-pub(crate) struct TabbedShowcaseAction {
-    pub label: Text,
-    pub href: Text,
-}
-
-#[derive(Clone, Debug, Builder)]
-pub(crate) struct TabbedShowcaseMockPanel {
-    pub title: Text,
-    pub subtitle: Text,
-    pub rows: Vec<TabbedShowcaseRow>,
-}
-
-#[derive(Clone, Copy, Debug)]
-pub(crate) enum TabbedShowcaseTone {
-    Indigo,
-    Sky,
-    Teal,
-    Mint,
-    Violet,
-    Amber,
-}
-
-impl TabbedShowcaseTone {
-    fn cycle(index: usize) -> Self {
-        match index % 6 {
-            0 => Self::Indigo,
-            1 => Self::Sky,
-            2 => Self::Teal,
-            3 => Self::Mint,
-            4 => Self::Violet,
-            _ => Self::Amber,
-        }
-    }
-
-    fn as_attr(self) -> &'static str {
-        match self {
-            Self::Indigo => "indigo",
-            Self::Sky => "sky",
-            Self::Teal => "teal",
-            Self::Mint => "mint",
-            Self::Violet => "violet",
-            Self::Amber => "amber",
-        }
-    }
-}
+use maud::Render;
+use maud_extensions::inline_css;
 
 #[derive(Clone, Copy, Debug, Default)]
-pub(crate) enum TabbedShowcaseTheme {
-    #[default]
-    Netbird,
-}
-
-impl TabbedShowcaseTheme {
-    fn as_attr(self) -> &'static str {
-        match self {
-            Self::Netbird => "netbird",
-        }
-    }
-}
-
-#[derive(Clone, Copy, Debug)]
-pub(crate) enum TabbedShowcaseIcon {
-    ShieldCheck,
-    ArrowsRightLeft,
-    Signal,
-    ChatBubbleLeftRight,
-}
-
-impl TabbedShowcaseIcon {
-    fn render(self) -> maud::Markup {
-        let svg = match self {
-            Self::ShieldCheck => Icon {
-                name: icon_name::ShieldCheck,
-                variant: icon_variant::Outline,
-                id: "",
-                class: "",
-            }
-            .to_string(),
-            Self::ArrowsRightLeft => Icon {
-                name: icon_name::ArrowsRightLeft,
-                variant: icon_variant::Outline,
-                id: "",
-                class: "",
-            }
-            .to_string(),
-            Self::Signal => Icon {
-                name: icon_name::Signal,
-                variant: icon_variant::Outline,
-                id: "",
-                class: "",
-            }
-            .to_string(),
-            Self::ChatBubbleLeftRight => Icon {
-                name: icon_name::ChatBubbleLeftRight,
-                variant: icon_variant::Outline,
-                id: "",
-                class: "",
-            }
-            .to_string(),
-        };
-
-        maud::html! { (PreEscaped(svg)) }
-    }
-}
-
-#[derive(Clone, Debug, Builder)]
-pub(crate) struct TabbedShowcaseTab {
-    pub tone: Option<TabbedShowcaseTone>,
-    pub tab_icon: Option<TabbedShowcaseIcon>,
-    pub tab_label: Text,
-    pub title: Text,
-    pub subtitle: Text,
-    pub bullets: Vec<Text>,
-    pub mock_panel: Option<TabbedShowcaseMockPanel>,
-    pub chips_label: Text,
-    pub chips: Vec<Text>,
-    pub action: Option<TabbedShowcaseAction>,
-    pub code_path: Option<Text>,
-    pub code: Option<Text>,
-}
-
-#[derive(Clone, Debug, Builder)]
-pub struct TabbedShowcase {
-    pub id: Text,
-    pub title: Text,
-    pub subtitle: Text,
-    pub tabs: Vec<TabbedShowcaseTab>,
-    #[builder(default)]
-    pub theme: TabbedShowcaseTheme,
-}
-
-impl Render for TabbedShowcase {
-    fn render(&self) -> maud::Markup {
-        if self.tabs.is_empty() {
-            return maud::html! {};
-        }
-
-        let initial_tone = self
-            .tabs
-            .first()
-            .and_then(|tab| tab.tone)
-            .unwrap_or_else(|| TabbedShowcaseTone::cycle(0))
-            .as_attr();
-
-        maud::html! {
-            section
-                id=(&self.id)
-                data-tabbed-showcase
-                data-showcase-theme=(self.theme.as_attr())
-            {
-                div data-showcase-heading {
-                    (SectionHeader::builder()
-                        .title(self.title.clone())
-                        .subtitle(self.subtitle.clone())
-                        .build())
-                }
-                div data-showcase-root {
-                    div data-showcase-shell {
-                        (render_showcase_tabs(&self.id, &self.tabs, initial_tone))
-                        (render_showcase_panels(&self.id, &self.tabs))
-                    }
-                }
-                (css())
-                (js())
-            }
-        }
-    }
-}
-
-fn render_showcase_tabs(
-    showcase_id: &Text,
-    tabs: &[TabbedShowcaseTab],
-    initial_tone: &str,
-) -> maud::Markup {
-    maud::html! {
-        nav
-            data-showcase-tabs
-            data-active-tone=(initial_tone)
-            aria-label="Showcase tabs"
-            role="tablist"
-        {
-            @for (index, tab) in tabs.iter().enumerate() {
-                @let tab_id = format!("{}-tab-{}", showcase_id, index);
-                @let panel_id = format!("{}-panel-{}", showcase_id, index);
-                @let tone = tab
-                    .tone
-                    .unwrap_or_else(|| TabbedShowcaseTone::cycle(index));
-                button
-                    type="button"
-                    data-tab-index=(index)
-                    data-showcase-tone=(tone.as_attr())
-                    role="tab"
-                    id=(tab_id)
-                    aria-controls=(panel_id)
-                    aria-selected=(if index == 0 { "true" } else { "false" })
-                    tabindex=(if index == 0 { "0" } else { "-1" })
-                {
-                    span data-showcase-tab-content {
-                        @if let Some(icon) = tab.tab_icon {
-                            span data-showcase-tab-icon aria-hidden="true" { (icon.render()) }
-                        }
-                        span data-showcase-tab-label { (&tab.tab_label) }
-                    }
-                }
-            }
-            span data-showcase-tab-indicator aria-hidden="true" {}
-        }
-    }
-}
-
-fn render_showcase_panels(showcase_id: &Text, tabs: &[TabbedShowcaseTab]) -> maud::Markup {
-    maud::html! {
-        div data-showcase-panels {
-            @for (index, tab) in tabs.iter().enumerate() {
-                (render_showcase_panel(showcase_id, tab, index))
-            }
-        }
-    }
-}
-
-fn render_showcase_panel(
-    showcase_id: &Text,
-    tab: &TabbedShowcaseTab,
-    index: usize,
-) -> maud::Markup {
-    let tab_id = format!("{}-tab-{}", showcase_id, index);
-    let panel_id = format!("{}-panel-{}", showcase_id, index);
-    let tone = tab
-        .tone
-        .unwrap_or_else(|| TabbedShowcaseTone::cycle(index));
-
-    maud::html! {
-        article
-            data-showcase-panel
-            data-showcase-tone=(tone.as_attr())
-            data-panel-full[tab.mock_panel.is_none()]
-            data-tab-index=(index)
-            id=(panel_id)
-            role="tabpanel"
-            aria-labelledby=(tab_id)
-            tabindex="0"
-            hidden[index != 0]
-        {
-            @if let Some(mock_panel) = &tab.mock_panel {
-                (render_showcase_mockup(mock_panel))
-            }
-            (render_showcase_copy(tab))
-        }
-    }
-}
-
-fn render_showcase_mockup(mock_panel: &TabbedShowcaseMockPanel) -> maud::Markup {
-    maud::html! {
-        div data-showcase-mockup {
-            header {
-                h3 { (&mock_panel.title) }
-                p data-muted { (&mock_panel.subtitle) }
-            }
-            ul data-showcase-rows {
-                @for row in &mock_panel.rows {
-                    li {
-                        span data-showcase-row-label { (&row.label) }
-                        span data-showcase-row-value { (&row.value) }
-                    }
-                }
-            }
-        }
-    }
-}
-
-fn render_showcase_copy(tab: &TabbedShowcaseTab) -> maud::Markup {
-    maud::html! {
-        div data-showcase-copy {
-            div data-showcase-copy-content {
-                h3 { (&tab.title) }
-                p data-muted { (&tab.subtitle) }
-                ul data-showcase-bullets {
-                    @for bullet in &tab.bullets {
-                        li { (bullet) }
-                    }
-                }
-                @if let Some(action) = &tab.action {
-                    a class="button" href=(&action.href) { (&action.label) }
-                }
-                div data-showcase-integrations {
-                    p data-showcase-integrations-label { (&tab.chips_label) }
-                    ul data-showcase-chip-list role="list" aria-label=(&tab.chips_label) {
-                        @for chip in &tab.chips {
-                            li data-showcase-chip { (chip) }
-                        }
-                    }
-                }
-                @if let Some(path) = &tab.code_path {
-                    p data-code-path {
-                        "Example: "
-                        code { (path) }
-                    }
-                }
-                @if let Some(code) = &tab.code {
-                    (CodeBlock::builder()
-                        .code(code.clone())
-                        .language(CodeLanguage::Rust)
-                        .build())
-                }
-            }
-        }
-    }
-}
-
+pub(super) struct Styles;
 
 inline_css! {
     me {
@@ -339,26 +18,22 @@ inline_css! {
       --showcase-border-size-strong: var(--border-size-2);
       --showcase-section-margin-top: var(--size-7);
       --showcase-heading-gap: var(--size-4);
-      --showcase-tab-gap: var(--size-4);
+      --showcase-tab-gap: var(--size-3);
       --showcase-tab-list-padding-bottom: var(--size-2);
+      --showcase-tabs-inline-pad: var(--size-1);
+      --showcase-tabs-edge-fade-size: var(--size-8);
+      --showcase-tabs-edge-fade-opacity: 0;
+      --showcase-tabs-edge-fade-opacity-visible: 1;
       --showcase-tab-font-size: var(--font-size-0);
       --showcase-tab-font-weight: var(--font-weight-6);
       --showcase-tab-letter-spacing: var(--font-letterspacing-2);
       --showcase-tab-padding-y: var(--size-2);
-      --showcase-tab-padding-x: var(--size-1);
+      --showcase-tab-padding-x: var(--size-2);
       --showcase-tab-hover-offset: calc(var(--border-size-1) * -1);
       --showcase-focus-outline-size: var(--border-size-2);
       --showcase-focus-outline-offset: 0;
-      --showcase-focus-border-color: color-mix(
-        in srgb,
-        var(--tone-accent) 82%,
-        white 18%
-      );
-      --showcase-focus-background: color-mix(
-        in srgb,
-        var(--tone-tab-soft) 82%,
-        transparent 18%
-      );
+      --showcase-focus-border-color: hsl(220 62% 66% / 0.92);
+      --showcase-focus-background: hsl(220 34% 16% / 0.72);
       --showcase-focus-inset-ring: inset 0 0 0 var(--showcase-focus-outline-size)
         var(--tone-accent);
       --showcase-shell-blur: var(--size-px-2);
@@ -369,95 +44,65 @@ inline_css! {
         var(--showcase-tab-icon-size) + var(--size-1)
       );
       --showcase-shell-bg: var(--gray-12);
-      --showcase-shell-bg-alt: color-mix(
-        in srgb,
-        var(--gray-12) 82%,
-        var(--blue-12) 18%
-      );
-      --showcase-shell-border: color-mix(
-        in srgb,
-        var(--gray-7) 62%,
-        transparent 38%
-      );
-      --showcase-shell-highlight-a: color-mix(
-        in srgb,
-        var(--orange-5) 16%,
-        transparent 84%
-      );
-      --showcase-shell-highlight-b: color-mix(
-        in srgb,
-        var(--blue-5) 14%,
-        transparent 86%
-      );
+      --showcase-shell-bg-alt: hsl(222 40% 8%);
+      --showcase-shell-border: hsl(220 16% 25% / 0.78);
+      --showcase-shell-highlight-a: hsl(25 91% 58% / 0.08);
+      --showcase-shell-highlight-b: hsl(205 85% 62% / 0.06);
       --showcase-shell-shadow: var(--shadow-6);
-      --showcase-panel-bg: color-mix(
-        in srgb,
-        var(--gray-12) 92%,
-        var(--gray-11) 8%
-      );
-      --showcase-panel-border: color-mix(
-        in srgb,
-        var(--gray-8) 56%,
-        transparent 44%
-      );
-      --showcase-row-bg: color-mix(in srgb, var(--gray-12) 86%, var(--gray-10) 14%);
-      --showcase-row-border: color-mix(in srgb, var(--gray-8) 54%, transparent 46%);
+      --showcase-panel-bg: hsl(220 16% 10% / 0.96);
+      --showcase-panel-border: hsl(220 12% 28% / 0.48);
+      --showcase-row-bg: hsl(220 16% 14% / 0.96);
+      --showcase-row-border: hsl(220 12% 29% / 0.42);
       --showcase-tab-bg: transparent;
-      --showcase-tab-text: var(--gray-5);
+      --showcase-tab-text: hsl(214 18% 79% / 0.92);
       --showcase-tab-text-active: var(--gray-0);
-      --showcase-tab-active-bg: color-mix(
-        in srgb,
-        var(--tone-tab-soft, hsl(220 14% 18% / 0.82)) 86%,
-        transparent 14%
-      );
-      --showcase-tab-active-border: color-mix(
-        in srgb,
-        var(--tone-accent, hsl(220 60% 58%)) 48%,
-        transparent 52%
-      );
-      --showcase-tab-active-shadow: var(--shadow-2);
+      --showcase-tab-text-selected: var(--tone-accent, var(--showcase-tab-text-active));
+      --showcase-tab-hover-bg: var(--tone-tab-soft, hsl(220 14% 18% / 0.82));
+      --showcase-tab-active-bg: transparent;
+      --showcase-tab-active-border: transparent;
+      --showcase-tab-active-shadow: none;
       --showcase-tab-border: transparent;
-      --showcase-tab-divider: color-mix(
-        in srgb,
-        var(--gray-8) 72%,
-        transparent 28%
-      );
+      --showcase-tab-divider: hsl(220 14% 24% / 0.85);
+      --showcase-heading-title-color: var(--gray-0);
+      --showcase-heading-subtitle-color: hsl(214 18% 78% / 0.9);
       --showcase-copy-text-default: var(--gray-0);
-      --showcase-copy-muted-default: color-mix(
-        in srgb,
-        var(--gray-4) 92%,
-        transparent 8%
-      );
+      --showcase-copy-muted-default: hsl(215 14% 70% / 0.92);
       --showcase-copy-title-size: var(--font-size-3);
       --showcase-copy-line-height: var(--font-lineheight-3);
-      --showcase-copy-padding: var(--size-4);
+      --showcase-copy-padding: var(--size-5);
       --showcase-copy-max-width: var(--size-content-4);
-      --showcase-copy-inner-gap: var(--size-3);
+      --showcase-copy-inner-gap: var(--size-4);
+      --showcase-copy-min-padding-bottom: var(--size-5);
+      --showcase-copy-min-height: var(--size-14);
       --showcase-copy-bullets-padding-left: var(--size-5);
       --showcase-copy-bullets-gap: var(--size-2);
       --showcase-integrations-gap: var(--size-1);
       --showcase-chip-padding-block: var(--size-1);
       --showcase-chip-padding-inline: var(--size-2);
-      --showcase-chip-font-size: var(--font-size-00);
+      --showcase-chip-font-size: var(--font-size-0);
       --showcase-row-gap: var(--size-2);
       --showcase-row-padding-block: var(--size-2);
       --showcase-row-padding-inline: var(--size-3);
-      --showcase-row-label-size: var(--font-size-00);
+      --showcase-row-label-size: var(--font-size-0);
       --showcase-row-value-size: var(--font-size-0);
+      --showcase-row-label-color: hsl(216 14% 68% / 0.88);
+      --showcase-row-value-color: hsl(216 18% 82% / 0.9);
+      --showcase-mockup-title-color: hsl(215 22% 82% / 0.9);
+      --showcase-mockup-muted-color: hsl(216 14% 66% / 0.88);
+      --showcase-mockup-min-height: var(--size-14);
       --showcase-mockup-title-margin-bottom: var(--size-1);
-      --showcase-indicator-height: var(--border-size-2);
+      --showcase-indicator-height: var(--border-size-3);
       --showcase-indicator-width: 0;
       --showcase-indicator-x: 0;
+      --showcase-panel-grid-main: 1.1fr;
+      --showcase-panel-grid-side: 0.9fr;
+      --showcase-panel-min-height: var(--size-14);
       --showcase-mobile-margin-top: var(--size-5);
       --showcase-mobile-shell-padding: var(--size-3);
-      --showcase-mobile-tab-font-size: var(--font-size-00);
+      --showcase-mobile-tab-font-size: var(--font-size-0);
       --showcase-row-value-font-weight: var(--font-weight-6);
       --showcase-chip-font-weight: var(--font-weight-6);
-      --showcase-button-border-color: color-mix(
-        in srgb,
-        var(--gray-0) 36%,
-        transparent 64%
-      );
+      --showcase-button-border-color: hsl(0 0% 100% / 0.36);
       --showcase-selection-text: var(--gray-0);
       --showcase-button-shadow: var(--shadow-3);
       margin-top: var(--showcase-section-margin-top);
@@ -482,6 +127,17 @@ inline_css! {
           var(--showcase-shell-bg),
           var(--showcase-shell-bg-alt) 74%
         );
+      box-shadow: var(--showcase-shell-shadow);
+    }
+    me[data-showcase-theme="netbird-detail"] {
+      --showcase-section-margin-top: var(--size-8);
+      border: var(--showcase-border-size) solid var(--showcase-shell-border);
+      border-radius: var(--showcase-radius-shell);
+      padding: var(--showcase-space-4);
+      background:
+        radial-gradient(circle at 0% 0%, hsl(229 68% 58% / 0.12), transparent 52%),
+        radial-gradient(circle at 100% 0%, hsl(206 80% 58% / 0.1), transparent 56%),
+        linear-gradient(180deg, hsl(220 36% 7%), hsl(223 46% 8%) 72%);
       box-shadow: var(--showcase-shell-shadow);
     }
     me
@@ -624,6 +280,27 @@ inline_css! {
     me > [data-showcase-heading] {
       margin-bottom: var(--showcase-heading-gap);
     }
+    me > [data-showcase-heading] > [data-showcase-title] {
+      display: grid;
+      gap: var(--showcase-space-1);
+    }
+    me
+      > [data-showcase-heading]
+      > [data-showcase-title]
+      > [data-showcase-title-text] {
+      margin: 0;
+      color: var(--showcase-heading-title-color);
+      font-size: var(--font-size-fluid-2);
+      line-height: var(--font-lineheight-1);
+    }
+    me
+      > [data-showcase-heading]
+      > [data-showcase-title]
+      > [data-showcase-title-subtitle] {
+      margin: 0;
+      color: var(--showcase-heading-subtitle-color);
+      max-width: var(--size-content-4);
+    }
     me > [data-showcase-root] > [data-showcase-shell] {
       border: var(--showcase-border-size) solid var(--showcase-shell-border);
       border-radius: var(--showcase-radius-surface);
@@ -637,13 +314,56 @@ inline_css! {
       align-items: stretch;
       gap: var(--showcase-tab-gap);
       overflow-x: auto;
+      padding-inline: var(--showcase-tabs-inline-pad);
       padding-bottom: calc(
         var(--showcase-tab-list-padding-bottom) + var(--showcase-indicator-height)
       );
+      scroll-padding-inline: var(--showcase-tabs-edge-fade-size);
       border-bottom: var(--showcase-border-size) solid var(--showcase-tab-divider);
       scrollbar-width: thin;
       --showcase-active-tone: hsl(25 91% 58%);
       --showcase-active-tone-shadow: 0 2px 8px hsl(25 91% 58% / 0.3);
+    }
+    me[data-showcase-theme="netbird-detail"]
+      > [data-showcase-root]
+      > [data-showcase-shell]
+      > [data-showcase-tabs] {
+      --showcase-active-tone: var(--blue-6);
+      --showcase-active-tone-shadow: 0 2px 8px hsl(206 80% 58% / 0.28);
+    }
+    me > [data-showcase-root] > [data-showcase-shell] > [data-showcase-tabs]::before,
+    me > [data-showcase-root] > [data-showcase-shell] > [data-showcase-tabs]::after {
+      content: "";
+      position: absolute;
+      top: 0;
+      bottom: calc(
+        var(--showcase-tab-list-padding-bottom) + var(--showcase-indicator-height)
+      );
+      width: var(--showcase-tabs-edge-fade-size);
+      pointer-events: none;
+      opacity: var(--showcase-tabs-edge-fade-opacity);
+      transition: opacity var(--showcase-tab-transition-duration) var(--ease-out-3);
+      z-index: 1;
+    }
+    me > [data-showcase-root] > [data-showcase-shell] > [data-showcase-tabs]::before {
+      left: 0;
+      background: linear-gradient(90deg, hsl(220 36% 7% / 0.88), transparent);
+    }
+    me > [data-showcase-root] > [data-showcase-shell] > [data-showcase-tabs]::after {
+      right: 0;
+      background: linear-gradient(270deg, hsl(220 36% 7% / 0.88), transparent);
+    }
+    me
+      > [data-showcase-root]
+      > [data-showcase-shell]
+      > [data-showcase-tabs][data-scroll-left="true"]::before {
+      opacity: var(--showcase-tabs-edge-fade-opacity-visible);
+    }
+    me
+      > [data-showcase-root]
+      > [data-showcase-shell]
+      > [data-showcase-tabs][data-scroll-right="true"]::after {
+      opacity: var(--showcase-tabs-edge-fade-opacity-visible);
     }
     me
       > [data-showcase-root]
@@ -675,7 +395,7 @@ inline_css! {
       > [data-showcase-tabs]
       > button[role="tab"]:hover {
       border-color: transparent;
-      background: var(--tone-tab-soft);
+      background: var(--showcase-tab-hover-bg);
       color: var(--showcase-tab-text-active);
       transform: translateY(var(--showcase-tab-hover-offset));
     }
@@ -686,7 +406,8 @@ inline_css! {
       > button[role="tab"][aria-selected="true"] {
       border-color: var(--showcase-tab-active-border);
       background: var(--showcase-tab-active-bg);
-      color: var(--showcase-tab-text-active);
+      color: var(--showcase-tab-text-selected);
+      font-weight: var(--font-weight-7);
       box-shadow: var(--showcase-tab-active-shadow);
     }
     me
@@ -835,6 +556,7 @@ inline_css! {
       display: grid;
       gap: var(--showcase-space-3);
       min-width: 0;
+      min-height: var(--showcase-panel-min-height);
     }
     me
       > [data-showcase-root]
@@ -849,7 +571,8 @@ inline_css! {
         > [data-showcase-shell]
         > [data-showcase-panels]
         > [data-showcase-panel] {
-        grid-template-columns: 1.1fr 0.9fr;
+        grid-template-columns: var(--showcase-panel-grid-main)
+          var(--showcase-panel-grid-side);
         align-items: stretch;
       }
       me
@@ -879,6 +602,9 @@ inline_css! {
       padding: var(--showcase-space-3);
       background: var(--showcase-panel-bg);
       box-shadow: var(--shadow-1);
+      display: grid;
+      align-content: start;
+      min-height: var(--showcase-mockup-min-height);
     }
     me
       > [data-showcase-root]
@@ -889,6 +615,18 @@ inline_css! {
       > header
       > h3 {
       margin-bottom: var(--showcase-mockup-title-margin-bottom);
+      color: var(--showcase-mockup-title-color);
+    }
+    me
+      > [data-showcase-root]
+      > [data-showcase-shell]
+      > [data-showcase-panels]
+      > [data-showcase-panel]
+      > [data-showcase-mockup]
+      > header
+      > [data-muted] {
+      margin: 0;
+      color: var(--showcase-mockup-muted-color);
     }
     me
       > [data-showcase-root]
@@ -897,7 +635,6 @@ inline_css! {
       > [data-showcase-panel]
       > [data-showcase-mockup]
       > [data-showcase-rows] {
-      list-style: none;
       margin: var(--showcase-space-4) 0 0;
       padding: 0;
       display: grid;
@@ -910,7 +647,7 @@ inline_css! {
       > [data-showcase-panel]
       > [data-showcase-mockup]
       > [data-showcase-rows]
-      > li {
+      > [data-showcase-row] {
       border: var(--showcase-border-size) solid var(--showcase-row-border);
       border-radius: var(--radius-2);
       background: var(--showcase-row-bg);
@@ -918,6 +655,7 @@ inline_css! {
       display: flex;
       justify-content: space-between;
       gap: var(--showcase-space-3);
+      margin: 0;
     }
     me
       > [data-showcase-root]
@@ -926,10 +664,11 @@ inline_css! {
       > [data-showcase-panel]
       > [data-showcase-mockup]
       > [data-showcase-rows]
-      > li
+      > [data-showcase-row]
       > [data-showcase-row-label] {
-      color: var(--showcase-copy-muted-default);
+      color: var(--showcase-row-label-color);
       font-size: var(--showcase-row-label-size);
+      margin: 0;
     }
     me
       > [data-showcase-root]
@@ -938,11 +677,13 @@ inline_css! {
       > [data-showcase-panel]
       > [data-showcase-mockup]
       > [data-showcase-rows]
-      > li
+      > [data-showcase-row]
       > [data-showcase-row-value] {
       font-size: var(--showcase-row-value-size);
       font-weight: var(--showcase-row-value-font-weight);
+      color: var(--showcase-row-value-color);
       text-align: right;
+      margin: 0;
     }
     me
       > [data-showcase-root]
@@ -964,6 +705,8 @@ inline_css! {
       overflow: hidden;
       display: flex;
       justify-content: flex-start;
+      padding-bottom: var(--showcase-copy-min-padding-bottom);
+      min-height: var(--showcase-copy-min-height);
     }
     me
       > [data-showcase-root]
@@ -1154,9 +897,13 @@ inline_css! {
       color: var(--showcase-selection-text);
     }
     @media (max-width: 48rem) {
-      me[data-showcase-theme="netbird"] {
+      me[data-showcase-theme="netbird"],
+      me[data-showcase-theme="netbird-detail"] {
         margin-top: var(--showcase-mobile-margin-top);
         padding: var(--showcase-space-3);
+        --showcase-panel-min-height: auto;
+        --showcase-mockup-min-height: auto;
+        --showcase-copy-min-height: auto;
       }
       me > [data-showcase-root] > [data-showcase-shell] {
         padding: var(--showcase-mobile-shell-padding);
@@ -1188,112 +935,10 @@ inline_css! {
     }
 }
 
-// Tab selection here is local presentation state; Surreal wires DOM behavior directly,
-// and Datastar signals are intentionally not used because no backend/shared state is involved.
-inline_js! {
-    (() => {
-      const root = me();
-      if (!root) return;
-
-      if (root.attribute("data-showcase-bound") === "true") return;
-      root.attribute("data-showcase-bound", "true");
-
-      const tabList = me("[data-showcase-tabs][role=\"tablist\"]", root, false);
-      const indicator = me("[data-showcase-tab-indicator]", root, false);
-      const tabs = any("[role=\"tab\"]", root, false);
-      const panels = any("[data-showcase-panel][role=\"tabpanel\"]", root, false);
-      if (!tabList || !tabs.length || !panels.length) return;
-
-      const prefersReducedMotion =
-        typeof window.matchMedia === "function" &&
-        window.matchMedia("(prefers-reduced-motion: reduce)").matches;
-
-      const lastIndex = tabs.length - 1;
-      let activeIndex = tabs.findIndex(
-        (tab) => tab.attribute("aria-selected") === "true",
-      );
-      if (activeIndex < 0) activeIndex = 0;
-
-      const moveIndicator = () => {
-        if (!indicator) return;
-
-        const activeTab = tabs[activeIndex];
-        if (!activeTab) return;
-
-        const listRect = tabList.getBoundingClientRect();
-        const tabRect = activeTab.getBoundingClientRect();
-        const offset = tabRect.left - listRect.left + tabList.scrollLeft;
-
-        indicator.styles({
-          transform: "translateX(" + Math.max(0, offset) + "px)",
-          width: String(tabRect.width) + "px",
-        });
-
-        const tone = activeTab.attribute("data-showcase-tone");
-        if (tone) tabList.attribute("data-active-tone", tone);
-      };
-
-      const syncActiveTabVisibility = (fromInteraction) => {
-        if (tabList.scrollWidth <= tabList.clientWidth) return;
-        const activeTab = tabs[activeIndex];
-        if (!activeTab) return;
-        const behavior =
-          fromInteraction && !prefersReducedMotion ? "smooth" : "auto";
-        activeTab.scrollIntoView({ inline: "center", block: "nearest", behavior });
-      };
-
-      const activate = (nextIndex, focusTab, fromInteraction) => {
-        activeIndex = nextIndex;
-
-        tabs.forEach((tab, index) => {
-          const isActive = index === nextIndex;
-          tab.attribute({
-            "aria-selected": isActive ? "true" : "false",
-            tabindex: isActive ? "0" : "-1",
-          });
-          if (focusTab && isActive) tab.focus();
-        });
-
-        panels.forEach((panel, index) => {
-          const isActive = index === nextIndex;
-          panel.hidden = !isActive;
-          panel.attribute("tabindex", isActive ? "0" : "-1");
-        });
-
-        syncActiveTabVisibility(fromInteraction);
-        moveIndicator();
-      };
-
-      tabs.forEach((tab, index) => {
-        tab.on("click", () => activate(index, false, true));
-        tab.on("keydown", (event) => {
-          let next = null;
-          if (event.key === "ArrowRight" || event.key === "ArrowDown") {
-            next = index === lastIndex ? 0 : index + 1;
-          } else if (event.key === "ArrowLeft" || event.key === "ArrowUp") {
-            next = index === 0 ? lastIndex : index - 1;
-          } else if (event.key === "Home") {
-            next = 0;
-          } else if (event.key === "End") {
-            next = lastIndex;
-          }
-
-          if (next !== null) {
-            event.preventDefault();
-            activate(next, true, true);
-          }
-        });
-      });
-
-      tabList.on("scroll", moveIndicator);
-      window.addEventListener("resize", moveIndicator, { passive: true });
-
-      if (document.fonts && document.fonts.ready) {
-        document.fonts.ready
-          .then(() => requestAnimationFrame(moveIndicator))
-          .catch(() => {});
-      }
-
-      activate(activeIndex, false, false);
-    })();
+impl Render for Styles {
+    fn render(&self) -> maud::Markup {
+        maud::html! {
+            (css())
+        }
+    }
 }

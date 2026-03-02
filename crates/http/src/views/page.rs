@@ -421,6 +421,7 @@ impl Render for Layout<'_> {
                     link rel="stylesheet" href="/static/open-props.min.css";
                     link rel="stylesheet" href="/static/app.css";
                     script type="module" src="/static/datastar.js" {}
+                    script src="/static/surreal.js" {}
                     script src="/static/css-scope-inline.js" {}
                 }
                 @match self.sse_mode {

@@ -23,6 +23,11 @@ Score 1-5 across:
 - Reliability engineering: fault tolerance, backpressure, observability
 - Production judgment: rollout safety, incident response, long-term maintainability
 
+For UI-heavy portfolio components under review, also assess:
+- Operational intelligibility: can maintainers reason about behavior quickly under incident/debug pressure.
+- Interaction correctness: keyboard/mouse control flow and state transitions are explicit and testable.
+- Decomposition risk: monolithic components that bundle markup/styles/behavior should be treated as reliability and change-risk concerns.
+
 ## Interview Design Checklist
 
 - Technical deep dive: candidate-owned systems component

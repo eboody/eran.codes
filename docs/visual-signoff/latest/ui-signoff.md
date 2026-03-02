@@ -3,7 +3,7 @@ agent_status: available
 result: pass
 reviewed_at: 2026-02-28
 snapshot: artifacts/visual/current/home.png
-component: crates/http/src/views/partials/demo/layout/tabbed_showcase.rs
+component: crates/http/src/views/partials/demo/layout/tabbed_showcase/mod.rs
 
 notes:
 - Verified focus-visible treatment no longer gets overridden by generic focus reset.

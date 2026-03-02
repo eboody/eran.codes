@@ -35,6 +35,11 @@ Primary local references:
 4. Produce one of the canonical usage forms below.
 5. If icon naming is ambiguous, provide 2-4 likely `icon_name::*` options and ask the user to choose.
 
+## Output Expectations
+
+- Keep responses grounded in local mirrored docs.
+- Include `sources_used` with exact local file paths consulted.
+
 ## Canonical Usage
 
 Basic icon -> SVG string:

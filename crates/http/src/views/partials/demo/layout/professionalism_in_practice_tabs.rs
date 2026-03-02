@@ -3,7 +3,7 @@ use maud::Render;
 
 use crate::types::Text;
 
-use super::{TabbedShowcase, TabbedShowcaseTab};
+use super::{TabbedShowcase, TabbedShowcaseTab, TabbedShowcaseTheme};
 
 #[derive(Clone, Debug, Builder)]
 pub struct ProfessionalismInPracticeTabs {}
@@ -12,6 +12,7 @@ impl Render for ProfessionalismInPracticeTabs {
     fn render(&self) -> maud::Markup {
         TabbedShowcase::builder()
             .id(Text::from("professionalism-practice"))
+            .theme(TabbedShowcaseTheme::NetbirdDetail)
             .title(Text::from("Professionalism In Practice (Detailed Breakdown)"))
             .subtitle(
                 Text::from(

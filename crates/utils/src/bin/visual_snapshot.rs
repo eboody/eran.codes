@@ -32,6 +32,10 @@ struct Args {
     #[arg(long, default_value_t = 1200)]
     wait_ms: u64,
     #[arg(long)]
+    click_selector: Option<String>,
+    #[arg(long, default_value_t = 600)]
+    click_wait_ms: u64,
+    #[arg(long)]
     dump_html: Option<PathBuf>,
     #[arg(long, default_value_t = false)]
     debug_events: bool,
@@ -74,6 +78,14 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
     .await?;
     page.goto_builder(args.url.as_ref()).goto().await?;
     poll_page_events(&mut events, args.wait_ms, args.debug_events).await;
+
+    if let Some(selector) = &args.click_selector {
+        if args.debug_events {
+            eprintln!("[browser:click] selector={selector}");
+        }
+        page.click_builder(selector).click().await?;
+        poll_page_events(&mut events, args.click_wait_ms, args.debug_events).await;
+    }
 
     if let Some(message) = &args.demo_message {
         let demo_input_selector =

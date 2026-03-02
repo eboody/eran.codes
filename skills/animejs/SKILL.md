@@ -41,3 +41,4 @@ Useful indexes:
 - Keep recommendations source-grounded to local mirrored docs.
 - Prefer explicit API names/options over memory-based guesses.
 - When behavior differs by version, call it out and name the version.
+- Include `sources_used` with exact local file paths consulted.

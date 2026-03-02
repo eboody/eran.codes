@@ -74,6 +74,7 @@ rg --line-number '^## ' references/upstream/open-props-main/CHANGELOG.md
 - Treat `docsite/index.html` as large; never load the whole file unless required.
 - If a task asks for the latest state beyond this snapshot, refresh the files listed in `references/reference-map.md` before answering.
 - Distinguish stable (`latest`) and beta tags explicitly when recommending package versions.
+- Include `sources_used` with exact local file paths consulted.
 - When Open Props changes affect visuals in this repo, treat visual baseline handling as mandatory:
   - run `VISUAL_UPDATE_BASELINE=1 scripts/ci/visual-snapshot.sh` for intentional UI changes,
   - run `scripts/ci/visual-snapshot.sh` after,

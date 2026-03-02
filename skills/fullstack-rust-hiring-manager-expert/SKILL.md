@@ -24,6 +24,11 @@ Score 1-5 across:
 - Delivery quality: iteration speed, tradeoff clarity, incident handling
 - Communication: written design clarity, cross-functional collaboration
 
+For portfolio/UI component reviews, explicitly assess:
+- Intelligibility: can a reviewer quickly understand what the component does and where to change it.
+- Interactivity confidence: can a user discover and operate controls (mouse + keyboard) without ambiguity.
+- Decomposition quality: whether component boundaries are small enough for maintainable iteration.
+
 ## Interview Design Checklist
 
 - Screen: motivations, impact, ownership examples
