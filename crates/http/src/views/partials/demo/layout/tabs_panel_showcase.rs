@@ -1,12 +1,7 @@
 use bon::Builder;
 use maud::Render;
 use maud_extensions::inline_css;
-use maud_iconoir::regular;
 use serde::Deserialize;
-
-use crate::types::Text;
-use crate::views::partials::components::{Tab, TabPanel};
-use crate::views::proper_theme::THEME;
 
 #[derive(Clone, Debug, Builder)]
 pub struct TabsPanelShowcase {}
@@ -14,22 +9,42 @@ pub struct TabsPanelShowcase {}
 impl Render for TabsPanelShowcase {
     fn render(&self) -> maud::Markup {
         let content = load_content();
-        let tabs = build_tabs(&content);
+        let initial_tab_id = content
+            .tabs
+            .first()
+            .map(|tab| tab.id.as_str())
+            .unwrap_or("tab_0");
 
         maud::html! {
-            section id="tabs-panel-showcase" class="tabs-panel-showcase" {
+            section
+                id="tabs-panel-showcase"
+                class="tabs-panel-showcase"
+                data-signals=(format!("{{active_tab_id: '{}'}}", initial_tab_id)) {
                 (css())
-                (TabPanel {
-                    tabs: &tabs,
-                    aria_label: Text::from("Solutions"),
-                })
-                @for (index, tab) in content.tabs.iter().enumerate() {
-                    @let panel_id = panel_id(index);
+                nav class="tabs-panel-showcase__tabs" role="tablist" aria-label="Solutions" {
+                    @for tab in &content.tabs {
+                        @let selected_expr = format!("$active_tab_id == '{}'", tab.id);
+                        button
+                            class="tabs-panel-showcase__tab"
+                            type="button"
+                            role="tab"
+                            data-tab-id=(&tab.id)
+                            data-class:is-selected=(selected_expr)
+                            data-on:click=(format!("$active_tab_id = '{}'", tab.id)) {
+                            span class="tabs-panel-showcase__tab-line" { (&tab.label.line_1) }
+                            @if let Some(line_2) = &tab.label.line_2 {
+                                span class="tabs-panel-showcase__tab-line" { (line_2) }
+                            }
+                        }
+                    }
+                }
+
+                @for tab in &content.tabs {
+                    @let show_expr = format!("$active_tab_id == '{}'", tab.id);
                     section
                         class="tabs-panel-showcase__panel"
-                        id=(panel_id)
                         role="tabpanel"
-                        hidden[index != 0] {
+                        data-show=(show_expr) {
                         div class="tabs-panel-showcase__preview" {
                             div class="tabs-panel-showcase__preview-frame" {
                                 p class="tabs-panel-showcase__preview-label" { "Preview" }
@@ -78,42 +93,6 @@ impl Render for TabsPanelShowcase {
     }
 }
 
-fn build_tabs(content: &TabsPanelContent) -> Vec<Tab> {
-    content
-        .tabs
-        .iter()
-        .enumerate()
-        .map(|(index, tab)| Tab {
-            id: Text::from(tab_id(index)),
-            controls: Text::from(panel_id(index)),
-            palette: &THEME.yellow,
-            is_selected: index == 0,
-            icon_glyph: icon_for_index(index),
-            text: Text::from(tab.label.full()),
-        })
-        .collect()
-}
-
-fn tab_id(index: usize) -> String {
-    format!("tabs-panel-showcase-tab-{index}")
-}
-
-fn panel_id(index: usize) -> String {
-    format!("tabs-panel-showcase-panel-{index}")
-}
-
-fn icon_for_index(index: usize) -> Option<maud::PreEscaped<&'static str>> {
-    match index {
-        0 => Some(regular::CHECK_CIRCLE),
-        1 => Some(regular::SETTINGS),
-        2 => Some(regular::KEY),
-        3 => Some(regular::SHIELD_CHECK),
-        4 => Some(regular::NETWORK_LEFT),
-        5 => Some(regular::STATS_REPORT),
-        _ => None,
-    }
-}
-
 #[derive(Debug, Clone, Deserialize)]
 struct TabsPanelContent {
     tabs: Vec<TabContent>,
@@ -121,6 +100,7 @@ struct TabsPanelContent {
 
 #[derive(Debug, Clone, Deserialize)]
 struct TabContent {
+    id: String,
     label: TabLabel,
     preview: Option<PreviewContent>,
     detail: Option<DetailContent>,
@@ -131,15 +111,6 @@ struct TabContent {
 struct TabLabel {
     line_1: String,
     line_2: Option<String>,
-}
-
-impl TabLabel {
-    fn full(&self) -> String {
-        match &self.line_2 {
-            Some(line_2) => format!("{} {}", self.line_1, line_2),
-            None => self.line_1.clone(),
-        }
-    }
 }
 
 #[derive(Debug, Clone, Deserialize)]
@@ -195,9 +166,37 @@ inline_css! {
       background: var(--portfolio-surface);
     }
 
-    me > nav.showcase-tabs {
-      border-bottom-color: var(--portfolio-surface-border);
+    me > .tabs-panel-showcase__tabs {
+      display: flex;
+      gap: var(--size-2);
+      overflow-x: auto;
       padding-bottom: 0.8rem;
+      border-bottom: var(--border-size-1) solid var(--portfolio-surface-border);
+    }
+
+    me .tabs-panel-showcase__tab {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.35rem;
+      padding: 0.55rem 0.85rem;
+      border-radius: 999px;
+      border: 1px solid var(--ui-border-soft);
+      background: transparent;
+      color: var(--ui-text-muted);
+      cursor: pointer;
+      font-size: 0.82rem;
+      font-weight: 600;
+      white-space: nowrap;
+    }
+
+    me .tabs-panel-showcase__tab.is-selected {
+      color: var(--ui-text);
+      border-color: color-mix(in srgb, var(--ui-text) 30%, transparent);
+      background: color-mix(in srgb, var(--ui-surface-soft) 84%, transparent);
+    }
+
+    me .tabs-panel-showcase__tab-line + .tabs-panel-showcase__tab-line {
+      margin-left: 0.2rem;
     }
 
     me > .tabs-panel-showcase__panel {

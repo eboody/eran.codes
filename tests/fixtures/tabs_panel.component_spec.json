@@ -132,6 +132,15 @@
           "class": "tabs-panel__cta",
           "type": "button"
         }
+      },
+      {
+        "id": "panel_item",
+        "parent_id": "content_panel",
+        "tag": "section",
+        "attrs": {
+          "class": "tabs-panel__panel",
+          "role": "tabpanel"
+        }
       }
     ],
     "slots": [
@@ -164,19 +173,24 @@
         "path": "is-selected:($active_tab_id == $el.dataset.tabId)"
       },
       {
+        "node_id": "panel_item",
+        "kind": "datastar-show",
+        "path": "$item.id == $active_tab_id"
+      },
+      {
         "node_id": "preview_surface",
         "kind": "content",
-        "path": "tabs[].preview"
+        "path": "tabs[active_tab_id].preview"
       },
       {
         "node_id": "copy_column",
         "kind": "content",
-        "path": "tabs[].detail"
+        "path": "tabs[active_tab_id].detail"
       },
       {
         "node_id": "cta_button",
         "kind": "content",
-        "path": "tabs[].cta"
+        "path": "tabs[active_tab_id].cta"
       }
     ]
   },
