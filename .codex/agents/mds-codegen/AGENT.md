@@ -34,6 +34,8 @@ Generate Rust Maud + Datastar component code from a verified `component_spec`.
   - fixture payload representing one realistic CMS entry
   - renderer input accepts `content`/view-model object, not many loose string args
 - Keep content mapping separate from rendering (infra/app mapping before view render).
+- Prefer importing/reusing existing components from `crates/http/src/views/partials/components` before generating new feature-local structures.
+- When adding a new reusable component, use generic library-style names (for example `tab_item`, `tabs_panel`) instead of request-specific wording.
 - Keep output file set stable unless explicitly requested (`view.rs`, `state.rs`, `events.rs`, `handler.rs`).
 
 ## Checklist Of Required Invariants

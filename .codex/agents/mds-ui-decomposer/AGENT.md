@@ -25,6 +25,8 @@ Define structural UI composition for Maud output and Datastar binding points.
 - Every binding references an existing node id.
 - Slot names are unique per component.
 - UI structure can be populated from CMS-shaped `*Content` rather than fixed inline strings.
+- Prefer existing reusable view components from `crates/http/src/views/partials/components` before creating new structures.
+- Public-facing ids/slot names should be generic/reusable (`tab_item`, `tabs_panel`, `card_header`) rather than request-specific names.
 
 ## Minimal Valid Output Snippet
 ```json

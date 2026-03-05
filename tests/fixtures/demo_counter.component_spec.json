@@ -374,5 +374,18 @@
     "root_type": "CounterWidgetContent",
     "fixture_path": "tests/fixtures/cms/counter_widget.json",
     "notes": "Copy and labels are fixture-driven; template literals should stay placeholder/debug-only."
+  },
+  "design": {
+    "reuse_scan": {
+      "checked_components": [
+        "crates/http/src/views/partials/components/mod.rs",
+        "crates/http/src/views/partials/components/tab.rs",
+        "crates/http/src/views/partials/components/tab_panel.rs"
+      ],
+      "reused": [],
+      "created": [
+        "counter_widget"
+      ]
+    }
   }
 }

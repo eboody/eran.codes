@@ -85,6 +85,10 @@ This policy applies by default when a user asks to create/build/add a component 
 - Default component decomposition:
   - Split new UI into orchestrator/container, child feature components, and shared primitives.
   - Do not collapse into one monolithic component unless explicitly requested.
+  - Reuse existing primitives/composites from `crates/http/src/views/partials/components` first.
+  - If no fit exists, add a new reusable component there before introducing feature-specific view fragments.
+  - Use generic, library-style public names for reusable surfaces (for example `tabs_panel`, `tab_item`, `card_header`), not screenshot-specific names.
+  - Include `design.reuse_scan` in `component_spec` to record checked/reused/created reusable components.
 - Default CMS-shaped content model:
   - Assume component copy/images/features/CTAs/tabs come from CMS content, not inline literals.
   - `component_spec` must include a top-level `content` contract (`source: "cms"`, typed `root_type`, and `fixture_path`).
@@ -96,5 +100,10 @@ This policy applies by default when a user asks to create/build/add a component 
     - App validates/maps payload into `*Content` / view model.
     - HTTP/View renders only from the view model.
   - Rule: no literal marketing copy in templates except placeholder/debug text.
+  - Keep public naming generic on:
+    - `meta.component_id`
+    - `content.root_type`
+    - reusable component files/types under `views/partials/components`
+    - top-level slot names and root-level UI node ids
 - Opt-out is explicit:
   - Only bypass this default when the user clearly asks for `single component`, `skip spec`, or `end-to-end in one pass`.

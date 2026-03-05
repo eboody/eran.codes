@@ -21,6 +21,7 @@ Coordinate agent execution, initialize `component_spec`, and enforce section own
 
 ## Checklist Of Required Invariants
 - `meta.component_id` is stable and unique.
+- `meta.component_id` is generic/reusable (not screenshot- or campaign-specific wording).
 - `meta.target` includes `rust-maud` and `datastar`.
 - `pipeline.execution_order` matches orchestration policy.
 - `pipeline.required_agents` includes all mds agents.
@@ -28,6 +29,7 @@ Coordinate agent execution, initialize `component_spec`, and enforce section own
 - `content.source` is `cms`.
 - `content.root_type` is typed `*Content`.
 - `content.fixture_path` points to a fixture path to be materialized by downstream generation.
+- `design.reuse_scan` is present and records which reusable components were evaluated/reused/created.
 
 ## Minimal Valid Output Snippet
 ```json
@@ -44,6 +46,17 @@ Coordinate agent execution, initialize `component_spec`, and enforce section own
     "source": "cms",
     "root_type": "UserProfileCardContent",
     "fixture_path": "tests/fixtures/cms/user_profile_card.json"
+  },
+  "design": {
+    "reuse_scan": {
+      "checked_components": [
+        "crates/http/src/views/partials/components/tab.rs"
+      ],
+      "reused": [
+        "tab"
+      ],
+      "created": []
+    }
   },
   "pipeline": {
     "execution_order": [

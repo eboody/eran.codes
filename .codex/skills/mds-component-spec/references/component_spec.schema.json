@@ -8,6 +8,7 @@
     "scope",
     "pipeline",
     "content",
+    "design",
     "ui",
     "state",
     "events",
@@ -81,6 +82,33 @@
         },
         "notes": {
           "type": "string"
+        }
+      },
+      "additionalProperties": true
+    },
+    "design": {
+      "type": "object",
+      "required": ["reuse_scan"],
+      "properties": {
+        "reuse_scan": {
+          "type": "object",
+          "required": ["checked_components", "reused", "created"],
+          "properties": {
+            "checked_components": {
+              "type": "array",
+              "items": {"type": "string", "minLength": 1},
+              "minItems": 1
+            },
+            "reused": {
+              "type": "array",
+              "items": {"type": "string", "minLength": 1}
+            },
+            "created": {
+              "type": "array",
+              "items": {"type": "string", "minLength": 1}
+            }
+          },
+          "additionalProperties": true
         }
       },
       "additionalProperties": true

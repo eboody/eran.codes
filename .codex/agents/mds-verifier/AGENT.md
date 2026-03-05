@@ -25,6 +25,8 @@ Validate full `component_spec` correctness against schema, cross-references, doc
 - Execution order must include all required agents and end with verifier gate.
 - `content` contract must exist with `source = cms`, typed `root_type`, and a real `fixture_path`.
 - `pipeline.parallel_groups` must include `mds-cms-content-modeler` with spec-design agents for component creation.
+- Public naming must remain generic/reusable on `meta.component_id`, `content.root_type`, and reusable component surfaces.
+- `design.reuse_scan` must document reuse-first evaluation against `views/partials/components`.
 - Docs-backed contradictions require valid `component_spec.override`.
 
 ## Authority Enforcement Checks

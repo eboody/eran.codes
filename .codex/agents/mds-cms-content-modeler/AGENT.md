@@ -22,14 +22,16 @@ Define and validate the CMS-shaped content contract for component generation.
 - `content.root_type` is a typed `*Content` model.
 - `content.fixture_path` points to a checked-in fixture file.
 - Content contract is decomposition-friendly: child components can consume specific slices.
+- `content.root_type` naming is generic/library-style (avoid campaign/request-specific names).
+- Must cooperate with `design.reuse_scan` so component creation records reuse-first evaluation against `views/partials/components`.
 
 ## Minimal Valid Output Snippet
 ```json
 {
   "content": {
     "source": "cms",
-    "root_type": "SecureAccessCarouselContent",
-    "fixture_path": "tests/fixtures/cms/secure_access_carousel.json",
+    "root_type": "TabsPanelContent",
+    "fixture_path": "tests/fixtures/cms/tabs_panel.json",
     "notes": "All feature copy, CTA labels, tabs, and logo refs come from CMS payload."
   }
 }

@@ -19,6 +19,7 @@ Define and govern the shared `component_spec` contract used by all MDS agents.
 - `scope`
 - `pipeline`
 - `content`
+- `design`
 - `ui`
 - `state`
 - `events`
@@ -33,6 +34,25 @@ Every generated component spec must declare a CMS-shaped content contract:
 Semantics:
 - Copy/images/features/CTAs/tabs come from `content.root_type`, not inline literals in templates.
 - Subcomponents should consume only the content slice they own.
+
+## Public Naming Contract (Library Style)
+Component-creation outputs should be reusable by default. Public identifiers must be generic and role-based:
+- Good: `tabs_panel`, `tab_item`, `status_card`, `hero_banner`
+- Bad: `secure_remote_access_tabs`, `feature_tab_item`, `image_1_panel`
+
+Applies to public surfaces:
+- `meta.component_id`
+- `content.root_type`
+- reusable component file/type names
+- top-level slot names and root-level UI node ids
+
+Feature-specific naming is allowed only when explicitly justified via `override`.
+
+## Reuse-First Contract
+For component creation, specs must include `design.reuse_scan` to record reuse decisions:
+- `checked_components[]`: reusable components evaluated (usually under `crates/http/src/views/partials/components`)
+- `reused[]`: components chosen for reuse
+- `created[]`: new reusable components added when no fit existed
 
 ## Optional Governance Section
 - `override`
@@ -68,6 +88,7 @@ This declares semantic dispatch style. Projects may still use local Datastar exp
 
 ## Section Ownership
 - `mds-orchestrator`: `meta`, `scope`, `pipeline`
+- `mds-orchestrator`: `design.reuse_scan` (plan metadata)
 - `mds-cms-content-modeler`: `content`
 - `mds-ui-decomposer`: `ui`
 - `mds-state-modeler`: `state`
@@ -86,6 +107,7 @@ This declares semantic dispatch style. Projects may still use local Datastar exp
 - `backend_contracts.actions[].input_type` and `output_type` must exist in `backend_contracts.types[].id`.
 - `pipeline.execution_order` must include all required `mds-*` agents.
 - `pipeline.parallel_groups` must include `mds-cms-content-modeler` in the same group as other spec-design agents for component creation.
+- `design.reuse_scan` must include at least one checked component entry.
 - Docs-backed rules from `/docs` must be honored unless `override` is present and valid.
 
 ## Docs Policy
@@ -103,6 +125,7 @@ This declares semantic dispatch style. Projects may still use local Datastar exp
   "scope": {"description": "example"},
   "pipeline": {"execution_order": ["mds-orchestrator", "mds-docs-librarian", "mds-ui-decomposer", "mds-cms-content-modeler", "mds-state-modeler", "mds-events-designer", "mds-backend-contracts", "mds-codegen", "mds-verifier"], "required_agents": ["mds-orchestrator", "mds-docs-librarian", "mds-ui-decomposer", "mds-cms-content-modeler", "mds-state-modeler", "mds-events-designer", "mds-backend-contracts", "mds-codegen", "mds-verifier"], "parallel_groups": [["mds-ui-decomposer", "mds-cms-content-modeler", "mds-state-modeler", "mds-events-designer", "mds-backend-contracts"]]},
   "content": {"source": "cms", "root_type": "ExampleContent", "fixture_path": "tests/fixtures/cms/example.json"},
+  "design": {"reuse_scan": {"checked_components": ["crates/http/src/views/partials/components/tab.rs"], "reused": ["tab"], "created": []}},
   "ui": {"event_dispatch": {"syntax": "@dispatch('<handler_id>')", "description": "semantic event dispatch"}, "nodes": [], "slots": [], "bindings": []},
   "state": {"fields": [{"id": "local_count", "type": "integer", "initial": 0, "authority": "ui", "sync": "optimistic"}, {"id": "server_count", "type": "integer", "initial": 0, "authority": "app", "sync": "authoritative"}], "derived": [], "persistence": []},
   "events": {"handlers": [], "ui_transitions": [], "app_mappings": {"backend_responses": [], "sse_events": []}, "effects": []},
