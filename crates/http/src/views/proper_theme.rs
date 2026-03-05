@@ -3,6 +3,7 @@ use std::sync::LazyLock;
 use bon::Builder;
 use csscolorparser::Color;
 use maud::Render;
+use modum::modum;
 use nutype::nutype;
 
 #[nutype(derive(Clone, Debug, PartialEq, AsRef, Deref, From, Into))]
@@ -84,6 +85,7 @@ pub static THEME: LazyLock<Theme> = LazyLock::new(|| Theme {
     white: "#FFFFFF".into(),
     transparent: "transparent".into(),
 });
+
 impl From<&str> for ThemeColor {
     fn from(value: &str) -> Self {
         match Color::from_html(value) {

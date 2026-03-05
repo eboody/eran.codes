@@ -1,14 +1,14 @@
 use async_stream::stream;
 use axum::{
     extract::Extension,
-    http::header::{CACHE_CONTROL, HeaderName, HeaderValue},
+    http::header::{HeaderName, HeaderValue, CACHE_CONTROL},
     response::Sse,
 };
 use core::convert::Infallible;
 use datastar::axum::ReadSignals;
 use serde::Deserialize;
 use tokio::sync::broadcast::error::RecvError;
-use tokio::time::{Duration, sleep};
+use tokio::time::{sleep, Duration};
 use tower_cookies::Cookies;
 
 use crate::types::{SessionId, SseTabId, Text};

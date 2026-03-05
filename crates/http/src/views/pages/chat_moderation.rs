@@ -42,10 +42,10 @@ impl Render for ChatModeration {
                           line-height: 1.08;
                         }
                         me [data-chat-moderation-flow] {
-                          border: 1px dashed var(--pico-muted-border-color);
+                          border: 1px dashed var(--ui-border-muted);
                           border-radius: 20px;
                           padding: 1.15rem;
-                          background: var(--pico-card-background-color);
+                          background: var(--ui-surface-card);
                         }
                         me [data-chat-moderation-stack] {
                           display: grid;
@@ -61,7 +61,7 @@ impl Render for ChatModeration {
                           margin-bottom: 0.2rem;
                         }
                         me [data-chat-moderation-card] [data-muted] {
-                          color: color-mix(in srgb, var(--pico-muted-color) 94%, var(--pico-color) 6%);
+                          color: color-mix(in srgb, var(--ui-text-muted) 94%, var(--ui-text) 6%);
                         }
                         me [data-chat-moderation-flow] [data-cta-row] {
                           margin-top: 0.75rem;

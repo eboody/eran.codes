@@ -23,8 +23,8 @@ impl Render for Styles {
                       margin-top: 0.8rem;
                       padding: 0.8rem 1rem;
                       border-radius: var(--ui-radius-sm);
-                      border: 1px solid var(--pico-muted-border-color);
-                      background: var(--pico-card-background-color);
+                      border: 1px solid var(--ui-border-muted);
+                      background: var(--ui-surface-card);
                     }
                     me [data-log-heading] h3 {
                       margin: 0;
@@ -87,12 +87,12 @@ impl Render for Styles {
                     me table[data-log-table] td {
                       padding: 0.45rem 0.4rem;
                       border-bottom: 1px solid
-                        color-mix(in srgb, var(--pico-muted-color) 28%, transparent);
+                        color-mix(in srgb, var(--ui-text-muted) 28%, transparent);
                       vertical-align: top;
                     }
                     me table[data-log-table] th {
                       text-align: left;
-                      color: var(--pico-muted-color);
+                      color: var(--ui-text-muted);
                       font-weight: 600;
                       white-space: nowrap;
                     }
@@ -105,13 +105,13 @@ impl Render for Styles {
                       gap: 0.6rem;
                     }
                     me [data-log-group] {
-                      border: 1px solid color-mix(in srgb, var(--pico-muted-color) 24%, transparent);
+                      border: 1px solid color-mix(in srgb, var(--ui-text-muted) 24%, transparent);
                       border-radius: var(--ui-radius-sm);
                       padding: 0.5rem 0.6rem;
                       background: color-mix(
                         in srgb,
-                        var(--pico-card-background-color) 88%,
-                        var(--pico-muted-color) 12%
+                        var(--ui-surface-card) 88%,
+                        var(--ui-text-muted) 12%
                       );
                     }
                     me [data-log-group-header] {

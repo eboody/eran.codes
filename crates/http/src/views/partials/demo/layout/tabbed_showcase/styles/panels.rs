@@ -5,361 +5,188 @@ use maud_extensions::inline_css;
 pub(super) struct PanelStyles;
 
 inline_css! {
-    me > [data-showcase-root] > [data-showcase-shell] > [data-showcase-panels] {
-      margin-top: var(--showcase-space-3);
-      padding: var(--showcase-space-2);
-      border: var(--showcase-border-size) solid var(--showcase-panels-surface-border);
-      border-radius: var(--showcase-radius-surface);
-      background: var(--showcase-panels-surface-bg);
-      box-shadow: var(--showcase-panels-surface-shadow);
+    me .showcase-panels {
+      margin-top: var(--size-3);
+      padding: var(--size-2);
+      border: var(--border-size-1) solid var(--surface-panel-border);
+      border-radius: var(--radius-4);
+      background: var(--surface-panel);
     }
-    me
-      > [data-showcase-root]
-      > [data-showcase-shell]
-      > [data-showcase-panels]
-      > [data-showcase-panel] {
+
+    me .showcase-panel {
       display: grid;
-      gap: var(--showcase-space-3);
+      gap: var(--size-3);
       min-width: 0;
-      min-height: var(--showcase-panel-min-height);
+      min-height: var(--size-14);
     }
-    me
-      > [data-showcase-root]
-      > [data-showcase-shell]
-      > [data-showcase-panels]
-      > [data-showcase-panel][hidden] {
-      display: none;
-    }
+
     @media (min-width: 64rem) {
-      me
-        > [data-showcase-root]
-        > [data-showcase-shell]
-        > [data-showcase-panels]
-        > [data-showcase-panel] {
-        grid-template-columns: var(--showcase-panel-grid-main)
-          var(--showcase-panel-grid-side);
-        align-items: stretch;
+      me .showcase-panel {
+        grid-template-columns: 1.1fr 0.9fr;
       }
-      me
-        > [data-showcase-root]
-        > [data-showcase-shell]
-        > [data-showcase-panels]
-        > [data-showcase-panel][data-panel-full] {
+
+      me .showcase-panel--full {
         grid-template-columns: 1fr;
       }
     }
-    me
-      > [data-showcase-root]
-      > [data-showcase-shell]
-      > [data-showcase-panels]
-      > [data-showcase-panel]
-      > * {
+
+    me .showcase-panel > * {
       min-width: 0;
     }
-    me
-      > [data-showcase-root]
-      > [data-showcase-shell]
-      > [data-showcase-panels]
-      > [data-showcase-panel]
-      > [data-showcase-mockup] {
-      border: var(--showcase-border-size) solid var(--showcase-panel-border);
-      border-radius: var(--showcase-radius-surface);
-      padding: var(--showcase-space-3);
-      background: var(--showcase-panel-bg);
+
+    me .showcase-mockup {
+      border: var(--border-size-1) solid var(--surface-row-border);
+      border-radius: var(--radius-4);
+      padding: var(--size-3);
+      background: var(--surface-row);
       box-shadow: var(--shadow-1);
       display: grid;
       align-content: start;
-      min-height: var(--showcase-mockup-min-height);
+      min-height: var(--size-14);
     }
-    me
-      > [data-showcase-root]
-      > [data-showcase-shell]
-      > [data-showcase-panels]
-      > [data-showcase-panel]
-      > [data-showcase-mockup]
-      > header
-      > h3 {
-      margin-bottom: var(--showcase-mockup-title-margin-bottom);
-      color: var(--showcase-mockup-title-color);
+
+    me .showcase-mockup > header > h3 {
+      margin: 0 0 var(--size-1);
+      color: var(--ui-text);
     }
-    me
-      > [data-showcase-root]
-      > [data-showcase-shell]
-      > [data-showcase-panels]
-      > [data-showcase-panel]
-      > [data-showcase-mockup]
-      > header
-      > [data-muted] {
+
+    me .showcase-mockup > header > .is-muted {
       margin: 0;
-      color: var(--showcase-mockup-muted-color);
+      color: var(--ui-text-muted);
     }
-    me
-      > [data-showcase-root]
-      > [data-showcase-shell]
-      > [data-showcase-panels]
-      > [data-showcase-panel]
-      > [data-showcase-mockup]
-      > [data-showcase-rows] {
-      margin: var(--showcase-space-4) 0 0;
+
+    me .showcase-rows {
+      margin: var(--size-4) 0 0;
       padding: 0;
       display: grid;
-      gap: var(--showcase-row-gap);
+      gap: var(--size-2);
     }
-    me
-      > [data-showcase-root]
-      > [data-showcase-shell]
-      > [data-showcase-panels]
-      > [data-showcase-panel]
-      > [data-showcase-mockup]
-      > [data-showcase-rows]
-      > [data-showcase-row] {
-      border: var(--showcase-border-size) solid var(--showcase-row-border);
+
+    me .showcase-row {
+      border: var(--border-size-1) solid var(--surface-row-border);
       border-radius: var(--radius-2);
-      background: var(--showcase-row-bg);
-      padding: var(--showcase-row-padding-block) var(--showcase-row-padding-inline);
+      background: color-mix(in srgb, var(--surface-row) 90%, transparent);
+      padding: var(--size-2) var(--size-3);
       display: flex;
       justify-content: space-between;
-      gap: var(--showcase-space-3);
+      gap: var(--size-3);
       margin: 0;
     }
-    me
-      > [data-showcase-root]
-      > [data-showcase-shell]
-      > [data-showcase-panels]
-      > [data-showcase-panel]
-      > [data-showcase-mockup]
-      > [data-showcase-rows]
-      > [data-showcase-row]
-      > [data-showcase-row-label] {
-      color: var(--showcase-row-label-color);
-      font-size: var(--showcase-row-label-size);
+
+    me .showcase-row-label {
       margin: 0;
+      color: var(--ui-text-muted);
+      font-size: var(--font-size-0);
     }
-    me
-      > [data-showcase-root]
-      > [data-showcase-shell]
-      > [data-showcase-panels]
-      > [data-showcase-panel]
-      > [data-showcase-mockup]
-      > [data-showcase-rows]
-      > [data-showcase-row]
-      > [data-showcase-row-value] {
-      font-size: var(--showcase-row-value-size);
-      font-weight: var(--showcase-row-value-font-weight);
-      color: var(--showcase-row-value-color);
+
+    me .showcase-row-value {
+      margin: 0;
+      color: var(--ui-text);
+      font-size: var(--font-size-0);
+      font-weight: var(--font-weight-6);
       text-align: right;
-      margin: 0;
     }
-    me
-      > [data-showcase-root]
-      > [data-showcase-shell]
-      > [data-showcase-panels]
-      > [data-showcase-panel]
-      > [data-showcase-copy] {
-      border: var(--showcase-border-size) solid var(--tone-border);
-      border-top: var(--showcase-border-size-strong) solid var(--tone-accent);
-      border-radius: var(--showcase-radius-surface);
-      padding: var(--showcase-copy-padding);
+
+    me .showcase-copy {
+      border: var(--border-size-1) solid var(--showcase-tone-border);
+      border-top: var(--border-size-2) solid var(--showcase-tone-accent);
+      border-radius: var(--radius-4);
+      padding: var(--size-5);
       background: linear-gradient(
         180deg,
-        var(--tone-surface-start),
-        var(--tone-surface-end)
+        var(--showcase-tone-surface-start),
+        var(--showcase-tone-surface-end)
       );
-      color: var(--tone-copy-text, var(--showcase-copy-text-default));
+      color: var(--ui-text);
       box-shadow: var(--shadow-2);
       overflow: hidden;
-      display: flex;
-      justify-content: flex-start;
-      padding-bottom: var(--showcase-copy-min-padding-bottom);
-      min-height: var(--showcase-copy-min-height);
+      min-height: var(--size-14);
     }
-    me
-      > [data-showcase-root]
-      > [data-showcase-shell]
-      > [data-showcase-panels]
-      > [data-showcase-panel]
-      > [data-showcase-copy]
-      > [data-showcase-copy-content] {
+
+    me .showcase-copy-content {
       width: 100%;
-      max-width: var(--showcase-copy-max-width);
+      max-width: var(--size-content-4);
       display: grid;
-      gap: var(--showcase-copy-inner-gap);
+      gap: var(--size-4);
     }
-    me
-      > [data-showcase-root]
-      > [data-showcase-shell]
-      > [data-showcase-panels]
-      > [data-showcase-panel]
-      > [data-showcase-copy]
-      > [data-showcase-copy-content]
-      > h3 {
+
+    me .showcase-copy-content > h3 {
+      margin: 0;
       color: inherit;
-      margin: 0;
-      font-size: var(--showcase-copy-title-size);
+      font-size: var(--font-size-3);
     }
-    me
-      > [data-showcase-root]
-      > [data-showcase-shell]
-      > [data-showcase-panels]
-      > [data-showcase-panel]
-      > [data-showcase-copy]
-      > [data-showcase-copy-content]
-      > [data-muted] {
+
+    me .showcase-copy-content > .is-muted {
       margin: 0;
-      color: var(--tone-copy-muted, var(--showcase-copy-muted-default));
-      line-height: var(--showcase-copy-line-height);
+      color: color-mix(
+        in srgb,
+        var(--ui-text-muted) 84%,
+        var(--showcase-tone-accent) 16%
+      );
+      line-height: var(--font-lineheight-3);
     }
-    me
-      > [data-showcase-root]
-      > [data-showcase-shell]
-      > [data-showcase-panels]
-      > [data-showcase-panel]
-      > [data-showcase-copy]
-      > [data-showcase-copy-content]
-      > [data-showcase-bullets] {
+
+    me .showcase-bullets {
       margin: 0;
-      padding-left: var(--showcase-copy-bullets-padding-left);
+      padding-left: var(--size-5);
       display: grid;
-      gap: var(--showcase-copy-bullets-gap);
-      color: inherit;
+      gap: var(--size-2);
     }
-    me
-      > [data-showcase-root]
-      > [data-showcase-shell]
-      > [data-showcase-panels]
-      > [data-showcase-panel]
-      > [data-showcase-copy]
-      > [data-showcase-copy-content]
-      > [data-showcase-bullets]
-      > li {
-      color: inherit;
+
+    me .showcase-bullets > li::marker {
+      color: var(--showcase-tone-accent);
     }
-    me
-      > [data-showcase-root]
-      > [data-showcase-shell]
-      > [data-showcase-panels]
-      > [data-showcase-panel]
-      > [data-showcase-copy]
-      > [data-showcase-copy-content]
-      > [data-showcase-bullets]
-      > li::marker {
-      color: var(--tone-accent);
-    }
-    me
-      > [data-showcase-root]
-      > [data-showcase-shell]
-      > [data-showcase-panels]
-      > [data-showcase-panel]
-      > [data-showcase-copy]
-      > [data-showcase-copy-content]
-      > .button {
+
+    me .showcase-copy-content > .button {
       margin: 0;
       border-radius: var(--radius-round);
-      background: var(--tone-accent);
-      color: var(--tone-copy-text, var(--showcase-copy-text-default));
-      border: var(--showcase-border-size) solid var(--showcase-button-border-color);
-      box-shadow: var(--showcase-button-shadow);
+      border: var(--border-size-1) solid color-mix(in srgb, var(--ui-text) 24%, transparent);
+      background: var(--showcase-tone-accent);
+      color: var(--ui-text-on-accent);
+      box-shadow: var(--shadow-2);
       justify-self: start;
     }
-    me
-      > [data-showcase-root]
-      > [data-showcase-shell]
-      > [data-showcase-panels]
-      > [data-showcase-panel]
-      > [data-showcase-copy]
-      > [data-showcase-copy-content]
-      > [data-showcase-integrations] {
+
+    me .showcase-integrations {
       margin: 0;
       display: grid;
-      gap: var(--showcase-space-1);
-      font-size: var(--showcase-chip-font-size);
-      color: var(--tone-copy-muted, var(--showcase-copy-muted-default));
+      gap: var(--size-1);
+      color: var(--ui-text-muted);
+      font-size: var(--font-size-0);
     }
-    me
-      > [data-showcase-root]
-      > [data-showcase-shell]
-      > [data-showcase-panels]
-      > [data-showcase-panel]
-      > [data-showcase-copy]
-      > [data-showcase-copy-content]
-      > [data-showcase-integrations]
-      > [data-showcase-integrations-label] {
+
+    me .showcase-integrations-label {
       margin: 0;
     }
-    me
-      > [data-showcase-root]
-      > [data-showcase-shell]
-      > [data-showcase-panels]
-      > [data-showcase-panel]
-      > [data-showcase-copy]
-      > [data-showcase-copy-content]
-      > [data-showcase-integrations]
-      > [data-showcase-chip-list] {
+
+    me .showcase-chip-list {
       list-style: none;
       margin: 0;
       padding: 0;
       display: flex;
       flex-wrap: wrap;
-      gap: var(--showcase-integrations-gap);
+      gap: var(--size-1);
     }
-    me
-      > [data-showcase-root]
-      > [data-showcase-shell]
-      > [data-showcase-panels]
-      > [data-showcase-panel]
-      > [data-showcase-copy]
-      > [data-showcase-copy-content]
-      > [data-showcase-integrations]
-      > [data-showcase-chip-list]
-      > [data-showcase-chip] {
-      border: var(--showcase-border-size) solid var(--tone-chip-border);
+
+    me .showcase-chip {
+      border: var(--border-size-1) solid var(--showcase-tone-chip-border);
       border-radius: var(--radius-round);
-      padding: var(--showcase-chip-padding-block)
-        var(--showcase-chip-padding-inline);
-      font-weight: var(--showcase-chip-font-weight);
-      background: var(--tone-chip-bg, hsl(0 0% 100% / 0.14));
-      color: inherit;
-    }
-    me
-      > [data-showcase-root]
-      > [data-showcase-shell]
-      > [data-showcase-panels]
-      > [data-showcase-panel]
-      > [data-showcase-copy]
-      > [data-showcase-copy-content]
-      > [data-code-path] {
-      margin: 0;
-      color: var(--tone-copy-muted, var(--showcase-copy-muted-default));
+      padding: var(--size-1) var(--size-2);
+      background: var(--showcase-tone-chip-bg);
+      color: var(--ui-text);
+      font-weight: var(--font-weight-6);
       font-size: var(--font-size-0);
     }
-    me
-      > [data-showcase-root]
-      > [data-showcase-shell]
-      > [data-showcase-panels]
-      > [data-showcase-panel]
-      > [data-showcase-copy]
-      > [data-showcase-copy-content]
-      > [data-code-path]
-      > code {
-      word-break: break-all;
+
+    me .showcase-code-path {
+      margin: 0;
+      color: var(--ui-text-muted);
+      font-size: var(--font-size-0);
     }
-    me
-      > [data-showcase-root]
-      > [data-showcase-shell]
-      > [data-showcase-panels]
-      > [data-showcase-panel]
-      > [data-showcase-copy]::selection {
-      background: var(--tone-accent);
-      color: var(--showcase-selection-text);
-    }
-    me
-      > [data-showcase-root]
-      > [data-showcase-shell]
-      > [data-showcase-panels]
-      > [data-showcase-panel]
-      > [data-showcase-copy]::-moz-selection {
-      background: var(--tone-accent);
-      color: var(--showcase-selection-text);
+
+    me .showcase-code-path > code {
+      font-family: var(--ui-font-mono);
+      color: var(--ui-text);
     }
 }
 

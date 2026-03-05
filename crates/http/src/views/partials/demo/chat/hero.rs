@@ -60,7 +60,7 @@ impl Render for Hero {
                       margin: 0.3rem 0 0;
                     }
                     [data-chat-hero-card] {
-                      background: color-mix(in srgb, var(--pico-card-background-color) 90%, transparent);
+                      background: color-mix(in srgb, var(--ui-surface-card) 90%, transparent);
                       padding: 1rem;
                       border-radius: var(--ui-radius-md);
                       border: 1px solid var(--ui-border-soft);
@@ -69,7 +69,7 @@ impl Render for Hero {
                       margin-bottom: 0.45rem;
                     }
                     [data-chat-hero-card] [data-muted] {
-                      color: color-mix(in srgb, var(--pico-muted-color) 94%, var(--pico-color) 6%);
+                      color: color-mix(in srgb, var(--ui-text-muted) 94%, var(--ui-text) 6%);
                     }
                     @media (max-width: 768px) {
                       [data-chat-hero] {

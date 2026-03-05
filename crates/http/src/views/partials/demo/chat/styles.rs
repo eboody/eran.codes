@@ -54,8 +54,8 @@ inline_css! {
       --chat-shell-live-dot: color-mix(in srgb, #22c55e 78%, #bbf7d0 22%);
       --chat-shell-live-ring: color-mix(in srgb, #22c55e 24%, transparent);
 
-      --chat-compose-border: color-mix(in srgb, var(--pico-muted-color) 18%, transparent);
-      --chat-compose-surface: color-mix(in srgb, var(--pico-card-background-color) 90%, transparent);
+      --chat-compose-border: color-mix(in srgb, var(--ui-text-muted) 18%, transparent);
+      --chat-compose-surface: color-mix(in srgb, var(--ui-surface-card) 90%, transparent);
 
       --chat-avatar-border: #334155;
       --chat-avatar-bg-left: #334155;

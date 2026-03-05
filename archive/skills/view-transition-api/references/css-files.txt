@@ -1,0 +1,11 @@
+files/en-us/web/css/guides/view_transitions/index.md
+files/en-us/web/css/reference/at-rules/@view-transition/index.md
+files/en-us/web/css/reference/properties/view-transition-class/index.md
+files/en-us/web/css/reference/properties/view-transition-name/index.md
+files/en-us/web/css/reference/selectors/_colon_active-view-transition-type/index.md
+files/en-us/web/css/reference/selectors/_colon_active-view-transition/index.md
+files/en-us/web/css/reference/selectors/_doublecolon_view-transition-group/index.md
+files/en-us/web/css/reference/selectors/_doublecolon_view-transition-image-pair/index.md
+files/en-us/web/css/reference/selectors/_doublecolon_view-transition-new/index.md
+files/en-us/web/css/reference/selectors/_doublecolon_view-transition-old/index.md
+files/en-us/web/css/reference/selectors/_doublecolon_view-transition/index.md

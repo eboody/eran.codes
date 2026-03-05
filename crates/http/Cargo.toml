@@ -16,10 +16,11 @@ time = "0.3.47"
 
 axum = "0.8.8"
 maud = { version = "0.27.0", features = ["axum"] }
-heroicons = "0.2.0"
+maud-iconoir = "7.11.0"
 tower-http = { version = "0.6.8", features = ["fs", "request-id", "trace"] }
-maud-extensions = "0.1.4"
+maud-extensions = "0.2.0"
 secrecy = "0.10.3"
+csscolorparser = "0.8.2"
 
 jiff = "0.2.19"
 tower-livereload = { version = "0.10.2", optional = true }
@@ -43,6 +44,7 @@ nutype = { workspace = true, features = ["serde"] }
 strum = { workspace = true }
 strum_macros = { workspace = true }
 syntect = "5.3.0"
+modum = "0.1.1"
 
 [dev-dependencies]
 async-trait = "0.1.89"

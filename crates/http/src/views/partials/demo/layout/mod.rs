@@ -7,8 +7,3 @@ pub use home_hero::HomeHero;
 pub use professionalism_in_practice_tabs::ProfessionalismInPracticeTabs;
 pub use request_burst_demo::RequestBurstDemo;
 pub use section_header::SectionHeader;
-pub use tabbed_showcase::TabbedShowcase;
-pub(crate) use tabbed_showcase::{
-    TabbedShowcaseAction, TabbedShowcaseIcon, TabbedShowcaseMockPanel, TabbedShowcaseRow,
-    TabbedShowcaseTab, TabbedShowcaseTheme, TabbedShowcaseTone,
-};

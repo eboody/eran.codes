@@ -83,7 +83,7 @@ impl Render for HomeHero {
                       margin-top: 0.35rem;
                       max-width: 52ch;
                       font-size: 1.03rem;
-                      color: color-mix(in srgb, var(--pico-color) 90%, var(--pico-muted-color) 10%);
+                      color: color-mix(in srgb, var(--ui-text) 90%, var(--ui-text-muted) 10%);
                     }
                     me [data-home-hero] h1 {
                       margin-bottom: 0.25rem;
@@ -97,7 +97,7 @@ impl Render for HomeHero {
                       margin-top: 0.75rem;
                     }
                     me [data-home-hero-card] {
-                      background: color-mix(in srgb, var(--pico-card-background-color) 90%, transparent);
+                      background: color-mix(in srgb, var(--ui-surface-card) 90%, transparent);
                       padding: 1.25rem;
                       border-radius: var(--ui-radius-md);
                       border: 1px solid var(--ui-border-soft);
@@ -107,7 +107,7 @@ impl Render for HomeHero {
                       margin-bottom: 0.6rem;
                     }
                     me [data-home-hero-card] [data-muted] {
-                      color: color-mix(in srgb, var(--pico-muted-color) 94%, var(--pico-color) 6%);
+                      color: color-mix(in srgb, var(--ui-text-muted) 94%, var(--ui-text) 6%);
                     }
                     @media (max-width: 768px) {
                       me [data-home-hero] {

@@ -63,7 +63,7 @@ inline_css! {
       font-weight: 700;
       letter-spacing: 0.05rem;
       text-transform: uppercase;
-      color: color-mix(in srgb, var(--pico-muted-color) 90%, var(--chat-shell-title) 10%);
+      color: color-mix(in srgb, var(--ui-text-muted) 90%, var(--chat-shell-title) 10%);
     }
 }
 

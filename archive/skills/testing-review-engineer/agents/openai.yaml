@@ -1,0 +1,4 @@
+interface:
+  display_name: "Testing Review Engineer"
+  short_description: "Findings-first code audit and test strategy specialist"
+  default_prompt: "Use $testing-review-engineer with local docs first (via docs/reference-map.md), then produce severity-ranked findings, tests to add, residual risk, and sources_used."

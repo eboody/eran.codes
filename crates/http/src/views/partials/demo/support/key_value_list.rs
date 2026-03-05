@@ -22,7 +22,7 @@ impl Render for KeyValueList {
                       margin: 0.5rem 0 0;
                       padding-left: 1rem;
                       font-size: 0.82rem;
-                      color: var(--pico-muted-color);
+                      color: var(--ui-text-muted);
                     }
                     me [data-key-value-list] li {
                       margin: 0.2rem 0;

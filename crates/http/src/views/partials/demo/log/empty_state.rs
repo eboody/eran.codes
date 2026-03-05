@@ -18,7 +18,7 @@ impl Render for EmptyState {
                       margin: 0;
                       font-size: 0.86rem;
                       line-height: 1.45;
-                      color: color-mix(in srgb, var(--pico-muted-color) 94%, var(--pico-color) 6%);
+                      color: color-mix(in srgb, var(--ui-text-muted) 94%, var(--ui-text) 6%);
                     }
                 }
             })

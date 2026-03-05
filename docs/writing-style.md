@@ -169,6 +169,19 @@ For Maud partials/components:
 - Use bare `me`/quick structural selectors only for simple local styling, not as a substitute for clear hooks.
 - Avoid per-rule magic numbers; define reusable design tokens (space, radius, type, color, motion) at the component root and override tokens responsively.
 
+### Open Props token-first styling
+
+Open Props is the default token system for UI styling in this repo (loaded from `/static/open-props.min.css` in the page shell).
+
+- Prefer Open Props tokens over raw literals for spacing, typography, radii, shadows, color, layout, and motion (`--size-*`, `--font-*`, `--radius-*`, `--shadow-*`, `--gray-*`, `--indigo-*`, `--ease-*`, etc.).
+- Define component-local semantic aliases with `--_` variables at the component root, then consume those aliases in nested rules.
+- Prefer logical properties (`padding-inline`, `padding-block`, `margin-inline`, `inset-inline`, `inline-size`, `block-size`) over physical-direction properties when both are viable.
+- Prefer fluid/content tokens (`--size-fluid-*`, `--size-content-*`, `--font-size-fluid-*`) before fixed pixel values.
+- Keep motion accessible: use Open Props easing/animation tokens and guard non-essential animations with reduced-motion checks.
+- If custom media aliases are supported in the current styling pipeline, prefer Open Props media aliases (`@media (--motionOK)`, `@media (--OSdark)`); otherwise use native equivalents.
+- Prefer importing only the packs needed for a feature (for example `open-props/easings`, `open-props/sizes`) instead of unrelated full bundles.
+- Treat hard-coded values as exceptions for intentional brand/art direction or missing-token edge cases; keep them local and briefly document intent.
+
 ## Readability Standard
 
 Code should read like a domain explanation.
@@ -212,6 +225,9 @@ Use `use` statements to import descriptive namespaces, not deeply nested leaves,
 - Keep deep leaf imports for narrow internal helpers, tests, or one-off local usage where module qualification harms readability.
 - For modules explicitly marked as descriptive namespaces, enforce this with `// ci: descriptive-module-import <module_path>` in the exposing module; CI will reject leaf imports from that module path.
 - Within a marked descriptive module tree, consume the parent surface instead of sibling leaf modules (prefer `use super::{Message, Messages};` over `use super::message::{Message, Messages};`).
+- For descriptive namespace roots that expose builders, prefer `module::builder()` over `module::RootType::builder()` when the type repeats the module meaning.
+- For `tabbed_showcase`, import the namespace and qualify from it: `use super::tabbed_showcase;` then `tabbed_showcase::builder()`, `tabbed_showcase::Tab::builder()`, `tabbed_showcase::Icon::outline(...)`, `tabbed_showcase::Color::AMBER`.
+- Avoid tautological forms like `tabbed_showcase::Showcase::builder()` and `TabbedShowcaseIcon`.
 
 ### Avoid tautological enum/type pairs
 
@@ -353,6 +369,61 @@ let window = chat::Window::builder().build();
 let panel = chat::Panel::builder().build();
 ```
 
+### Namespace root builders
+
+Bad:
+
+```rust
+use super::tabbed_showcase;
+use heroicons::icon_name;
+use super::tabbed_showcase::{Tab};
+
+let view = tabbed_showcase::builder()
+    .tabs(vec![
+        Tab::builder()
+            .icon(tabbed_showcase::Icon::outline(icon_name::ShieldCheck))
+            .color(tabbed_showcase::Color::AMBER)
+            .text(Text::from("Identity + Sessions"))
+            .build(),
+    ])
+    .panels(vec![
+        tabbed_showcase::Panel::builder()
+            .title(Text::from("Identity and Session Durability"))
+            .subtitle(Text::from("..."))
+            .bullets(vec![Text::from("...")])
+            .chips_label(Text::from("Built with"))
+            .chips(vec![Text::from("axum-login")])
+            .build(),
+    ])
+    .build();
+```
+
+Good:
+
+```rust
+use super::tabbed_showcase;
+use heroicons::icon_name;
+
+let view = tabbed_showcase::builder()
+    .tabs(vec![
+        tabbed_showcase::Tab::builder()
+            .icon(tabbed_showcase::Icon::outline(icon_name::ShieldCheck))
+            .color(tabbed_showcase::Color::AMBER)
+            .text(Text::from("Identity + Sessions"))
+            .build(),
+    ])
+    .panels(vec![
+        tabbed_showcase::Panel::builder()
+            .title(Text::from("Identity and Session Durability"))
+            .subtitle(Text::from("..."))
+            .bullets(vec![Text::from("...")])
+            .chips_label(Text::from("Built with"))
+            .chips(vec![Text::from("axum-login")])
+            .build(),
+    ])
+    .build();
+```
+
 ### Parent module API curation
 
 Bad:
@@ -431,6 +502,38 @@ impl maud::Render for Button {
 }
 ```
 
+### Open Props styling
+
+Bad:
+
+```css
+.card {
+  border-radius: 14px;
+  padding: 24px;
+  box-shadow: 0 8px 24px hsl(220 40% 2% / 0.25);
+  color: #0f172a;
+}
+```
+
+Good:
+
+```css
+.card {
+  --_surface: var(--surface-2);
+  --_ink: var(--text-1);
+
+  color: var(--_ink);
+  background: var(--_surface);
+  border-radius: var(--radius-3);
+  padding: var(--size-fluid-3);
+  box-shadow: var(--shadow-2);
+
+  @media (prefers-reduced-motion: no-preference) {
+    transition: transform 180ms var(--ease-3);
+  }
+}
+```
+
 ## Exception Policy
 
 Defaults are strong, but exceptions are allowed when justified.
@@ -457,6 +560,10 @@ Use this checklist for new features and substantial refactors:
 - Errors explicit, typed, and properly converted with derive strategy?
 - Boundaries respected (domain/app/http/infra)?
 - Public Maud components typed and `Render`-based?
+- Open Props tokens used before ad-hoc literals for layout/typography/color/motion?
+- Component-local semantic aliases (`--_...`) used when mapping tokens to feature-specific meaning?
+- Logical properties and fluid/content tokens preferred where applicable?
+- Non-essential motion guarded by reduced-motion checks and tokenized easings/durations?
 - Docs tone concrete and non-hype?
 
 ## Relationship to Tool-Specific Style Files

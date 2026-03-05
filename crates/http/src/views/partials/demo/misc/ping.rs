@@ -15,11 +15,11 @@ impl maud::Render for Ping {
                 ({
                     css! {
                         me {
-                          border: 1px dashed var(--pico-primary);
+                          border: 1px dashed var(--ui-accent-primary);
                         }
                         me em {
                           font-style: normal;
-                          color: var(--pico-primary);
+                          color: var(--ui-accent-primary);
                         }
                     }
                 })

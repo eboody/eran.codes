@@ -21,8 +21,12 @@ impl Render for UserNav {
     fn render(&self) -> Markup {
         maud::html! {
             ul class="site-auth-links" {
-                li { span { "Signed in as " (&self.username) } }
-                li { a href=(Route::Protected) { "Account" } }
+                li {
+                    span { "Signed in as " (&self.username) }
+                }
+                li {
+                    a href=(Route::Protected) { "Account" }
+                }
                 li {
                     form method="post" action=(Route::Logout) {
                         button type="submit" class="secondary" { "Sign out" }
@@ -45,7 +49,7 @@ impl Render for AppShellStyles {
                       font-family: "Space Grotesk", "Avenir Next", "Segoe UI", sans-serif;
                       font-size: 17px;
                       line-height: 1.58;
-                      color: color-mix(in srgb, var(--pico-color) 96%, white 4%);
+                      color: color-mix(in srgb, var(--ui-text) 96%, white 4%);
                       background:
                         radial-gradient(circle at 2% 0%, var(--portfolio-accent-a), transparent 45%),
                         radial-gradient(circle at 100% 12%, var(--portfolio-accent-b), transparent 46%),
@@ -77,8 +81,8 @@ impl Render for AppShellStyles {
                       justify-content: space-between;
                       gap: 0.55rem 1rem;
                       border-radius: var(--ui-radius-md);
-                      border: 1px solid color-mix(in srgb, var(--pico-muted-color) 20%, transparent);
-                      background: color-mix(in srgb, var(--pico-card-background-color) 96%, transparent);
+                      border: 1px solid color-mix(in srgb, var(--ui-text-muted) 20%, transparent);
+                      background: color-mix(in srgb, var(--ui-surface-card) 96%, transparent);
                       backdrop-filter: blur(10px);
                       box-shadow: 0 4px 14px color-mix(in srgb, black 14%, transparent);
                       padding: 0.5rem 0.85rem;
@@ -113,7 +117,7 @@ impl Render for AppShellStyles {
                     }
                     me .site-auth-links span {
                       font-size: 0.84rem;
-                      color: var(--pico-muted-color);
+                      color: var(--ui-text-muted);
                     }
                     me .site-auth-links form {
                       margin: 0;
@@ -129,10 +133,10 @@ impl Render for AppShellStyles {
                     }
                     me .portfolio-nav-links a {
                       font-size: 0.84rem;
-                      color: var(--pico-muted-color);
+                      color: var(--ui-text-muted);
                     }
                     me .portfolio-nav-links a:hover {
-                      color: var(--pico-color);
+                      color: var(--ui-text);
                     }
                     me button,
                     me .button {
@@ -146,27 +150,27 @@ impl Render for AppShellStyles {
                       padding: 0.52rem 1.05rem;
                       background: linear-gradient(
                         180deg,
-                        color-mix(in srgb, var(--pico-primary) 86%, white 14%),
-                        color-mix(in srgb, var(--pico-primary) 88%, black 12%)
+                        color-mix(in srgb, var(--ui-accent-primary) 86%, white 14%),
+                        color-mix(in srgb, var(--ui-accent-primary) 88%, black 12%)
                       );
-                      color: var(--pico-primary-inverse);
+                      color: var(--ui-text-on-accent);
                       text-decoration: none;
-                      border: 1px solid color-mix(in srgb, var(--pico-primary) 56%, transparent);
+                      border: 1px solid color-mix(in srgb, var(--ui-accent-primary) 56%, transparent);
                       box-shadow: 0 4px 12px color-mix(in srgb, black 20%, transparent);
                     }
                     me a.button.secondary {
-                      background: color-mix(in srgb, var(--pico-card-background-color) 80%, transparent);
-                      color: var(--pico-color);
+                      background: color-mix(in srgb, var(--ui-surface-card) 80%, transparent);
+                      color: var(--ui-text);
                       border: 1px solid var(--ui-border-soft);
                     }
                     me button.secondary,
                     me .button.secondary {
-                      background: color-mix(in srgb, var(--pico-card-background-color) 80%, transparent);
+                      background: color-mix(in srgb, var(--ui-surface-card) 80%, transparent);
                       border: 1px solid var(--ui-border-soft);
                     }
                     me .muted,
                     me [data-muted] {
-                      color: color-mix(in srgb, var(--pico-muted-color) 94%, var(--pico-color) 6%);
+                      color: color-mix(in srgb, var(--ui-text-muted) 94%, var(--ui-text) 6%);
                     }
                     me ::selection {
                       background: hsl(217 91% 60% / 0.35);
@@ -181,13 +185,13 @@ impl Render for AppShellStyles {
                       align-items: center;
                       padding: 0.1rem 0.4rem;
                       border-radius: 999px;
-                      border: 1px solid var(--pico-muted-border-color);
+                      border: 1px solid var(--ui-border-muted);
                       font-size: 0.72rem;
                       font-weight: 600;
                       letter-spacing: 0.01rem;
                       line-height: 1.15;
                       color: var(--pill-accent, inherit);
-                      border-color: var(--pill-accent, var(--pico-muted-border-color));
+                      border-color: var(--pill-accent, var(--ui-border-muted));
                     }
                     me .pill.method {
                       text-transform: uppercase;
@@ -264,11 +268,11 @@ impl Render for AppShellStyles {
                     me .log-target {
                       background: color-mix(
                         in srgb,
-                        var(--pico-card-background-color) 86%,
-                        var(--pico-muted-color) 14%
+                        var(--ui-surface-card) 86%,
+                        var(--ui-text-muted) 14%
                       );
-                      border-color: color-mix(in srgb, var(--pico-muted-color) 30%, transparent);
-                      color: var(--pico-muted-color);
+                      border-color: color-mix(in srgb, var(--ui-text-muted) 30%, transparent);
+                      color: var(--ui-text-muted);
                     }
                     me .log-fields {
                       color: rgb(148, 163, 184);
@@ -276,8 +280,8 @@ impl Render for AppShellStyles {
                     }
                     me .pill.badge-secondary {
                       background: transparent;
-                      color: var(--pico-color);
-                      border: 1px solid var(--pico-muted-border-color);
+                      color: var(--ui-text);
+                      border: 1px solid var(--ui-border-muted);
                     }
                     me .pill.badge-you {
                       background: #0f766e;
@@ -368,35 +372,30 @@ impl Render for Layout<'_> {
                             a href=(PORTFOLIO_RESUME_URL) { "Resume" }
                         }
                         li {
-                            a
-                                href=(PORTFOLIO_GITHUB_URL)
-                                target="_blank"
-                                rel="noopener noreferrer"
-                            {
+                            a href=(PORTFOLIO_GITHUB_URL) target="_blank" rel="noopener noreferrer" {
                                 "GitHub"
                             }
                         }
                         li {
-                            a
-                                href=(PORTFOLIO_LINKEDIN_URL)
+                            a   href=(PORTFOLIO_LINKEDIN_URL)
                                 target="_blank"
                                 rel="noopener noreferrer"
-                            {
-                                "LinkedIn"
-                            }
+                            { "LinkedIn" }
                         }
                         li {
                             a href=(PORTFOLIO_CONTACT_URL) { "Contact" }
                         }
                     }
                     @match &self.user {
-                        Some(user) => {
-                            (user.render())
-                        }
+                        Some(user) => { (user.render()) }
                         None => {
                             ul class="site-auth-links" {
-                                li { a href=(Route::Login) { "Sign in" } }
-                                li { a href=(Route::Register) { "Create account" } }
+                                li {
+                                    a href=(Route::Login) { "Sign in" }
+                                }
+                                li {
+                                    a href=(Route::Register) { "Create account" }
+                                }
                             }
                         }
                     }
@@ -412,14 +411,22 @@ impl Render for Layout<'_> {
                     meta charset="utf-8";
                     meta name="viewport" content="width=device-width, initial-scale=1";
                     title { (self.title) }
-                    link rel="icon" type="image/png" sizes="1024x1024" href="/static/eran.codes.png";
+                    link
+                        rel="icon"
+                        type="image/png"
+                        sizes="1024x1024"
+                        href="/static/eran.codes.png";
                     link rel="apple-touch-icon" sizes="1024x1024" href="/static/eran.codes.png";
                     link rel="preconnect" href="https://fonts.googleapis.com";
                     link rel="preconnect" href="https://fonts.gstatic.com" crossorigin;
-                    link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600&display=swap";
-                    link rel="stylesheet" href="/static/pico.min.css";
+                    link
+                        rel="stylesheet"
+                        href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600&display=swap";
                     link rel="stylesheet" href="/static/open-props.min.css";
                     link rel="stylesheet" href="/static/app.css";
+                    link
+                        rel="stylesheet"
+                        href="https://cdn.jsdelivr.net/gh/iconoir-icons/iconoir@main/css/iconoir.css";
                     script type="module" src="/static/datastar.js" {}
                     script src="/static/surreal.js" {}
                     script src="/static/css-scope-inline.js" {}
@@ -429,14 +436,10 @@ impl Render for Layout<'_> {
                         body
                             data-signals=(format!("{{sseTabId: '{}'}}", sse_tab_id))
                             data-init=(format!("@get('{}')", Route::Events))
-                        {
-                            (body_content)
-                        }
+                        { (body_content) }
                     }
                     SseMode::Disabled => {
-                        body {
-                            (body_content)
-                        }
+                        body { (body_content) }
                     }
                 }
             }

@@ -15,11 +15,11 @@ impl Render for Error {
                 ({
                     css! {
                         me {
-                          border: 1px solid var(--pico-del-color);
-                          background: var(--pico-del-background);
+                          border: 1px solid var(--ui-text-danger);
+                          background: var(--ui-surface-danger);
                         }
                         me strong {
-                          color: var(--pico-del-color);
+                          color: var(--ui-text-danger);
                         }
                     }
                 })

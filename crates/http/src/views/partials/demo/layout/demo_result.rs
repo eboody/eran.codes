@@ -25,11 +25,11 @@ impl Render for DemoResultPlaceholder {
                       margin-top: 0.8rem;
                       padding: 0.8rem 1rem;
                       border-radius: var(--ui-radius-sm);
-                      border: 1px solid var(--pico-muted-border-color);
-                      background: var(--pico-card-background-color);
+                      border: 1px solid var(--ui-border-muted);
+                      background: var(--ui-surface-card);
                     }
                     me [data-demo-result][data-muted] {
-                      color: color-mix(in srgb, var(--pico-muted-color) 94%, var(--pico-color) 6%);
+                      color: color-mix(in srgb, var(--ui-text-muted) 94%, var(--ui-text) 6%);
                     }
                 }
             })

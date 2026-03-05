@@ -1,0 +1,22 @@
+[system]
+name = "mds-maud-datastar"
+version = "0.1.0"
+entry = ".codex/AGENTS.md"
+
+[agents]
+mds-orchestrator = { definition = ".codex/agents/mds-orchestrator/AGENT.md" }
+mds-docs-librarian = { definition = ".codex/agents/mds-docs-librarian/AGENT.md" }
+mds-ui-decomposer = { definition = ".codex/agents/mds-ui-decomposer/AGENT.md" }
+mds-state-modeler = { definition = ".codex/agents/mds-state-modeler/AGENT.md" }
+mds-events-designer = { definition = ".codex/agents/mds-events-designer/AGENT.md" }
+mds-backend-contracts = { definition = ".codex/agents/mds-backend-contracts/AGENT.md" }
+mds-verifier = { definition = ".codex/agents/mds-verifier/AGENT.md" }
+mds-codegen = { definition = ".codex/agents/mds-codegen/AGENT.md" }
+
+[skills]
+mds-component-spec = { definition = ".codex/skills/mds-component-spec/SKILL.md" }
+mds-repo-docs-index = { definition = ".codex/skills/mds-repo-docs-index/SKILL.md" }
+mds-maud-patterns = { definition = ".codex/skills/mds-maud-patterns/SKILL.md" }
+mds-datastar-patterns = { definition = ".codex/skills/mds-datastar-patterns/SKILL.md" }
+mds-axum-integration = { definition = ".codex/skills/mds-axum-integration/SKILL.md" }
+mds-css-conventions = { definition = ".codex/skills/mds-css-conventions/SKILL.md" }

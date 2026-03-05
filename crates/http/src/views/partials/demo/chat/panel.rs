@@ -179,7 +179,7 @@ inline_css! {
       font-weight: 700;
       letter-spacing: 0.05rem;
       text-transform: uppercase;
-      color: color-mix(in srgb, var(--pico-muted-color) 92%, var(--pico-color) 8%);
+      color: color-mix(in srgb, var(--ui-text-muted) 92%, var(--ui-text) 8%);
     }
     me > [data-chat-compose] > [data-chat-compose-row] {
       display: grid;
@@ -195,12 +195,12 @@ inline_css! {
       min-width: var(--chat-send-min-width);
     }
     me > [data-chat-compose] > [data-chat-compose-row] > [data-chat-send="demo"] {
-      background: color-mix(in srgb, var(--pico-card-background-color) 82%, transparent);
+      background: color-mix(in srgb, var(--ui-surface-card) 82%, transparent);
       border-color: var(--ui-border-soft);
-      color: var(--pico-color);
+      color: var(--ui-text);
     }
     me > [data-chat-readonly] {
-      border: 1px dashed var(--pico-muted-border-color);
+      border: 1px dashed var(--ui-border-muted);
       border-radius: var(--chat-radius-compose);
       padding: var(--chat-space-2) var(--chat-readonly-pad-inline);
       font-size: var(--chat-font-body-sm);

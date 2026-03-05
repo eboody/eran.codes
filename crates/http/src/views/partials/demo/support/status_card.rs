@@ -24,8 +24,8 @@ impl Render for StatusCard {
                       margin-top: 0.8rem;
                       padding: 0.8rem 1rem;
                       border-radius: var(--ui-radius-sm);
-                      border: 1px solid var(--pico-muted-border-color);
-                      background: var(--pico-card-background-color);
+                      border: 1px solid var(--ui-border-muted);
+                      background: var(--ui-surface-card);
                     }
                     me [data-status-card] > p {
                       margin: 0;

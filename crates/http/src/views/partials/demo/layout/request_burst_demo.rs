@@ -87,12 +87,12 @@ impl Render for RequestBurstDemo {
                         me [data-burst-slider] input[type="range"] {
                           width: 100%;
                           margin: 0;
-                          accent-color: var(--pico-primary);
+                          accent-color: var(--ui-accent-primary);
                         }
                         me [data-burst-selected] {
                           margin: 0;
                           font-size: 0.94rem;
-                          color: var(--pico-muted-color);
+                          color: var(--ui-text-muted);
                         }
                         me [data-burst-actions] {
                           display: flex;
@@ -113,7 +113,7 @@ impl Render for RequestBurstDemo {
                           font-family: var(--ui-font-mono);
                           font-size: 0.8rem;
                           line-height: 1.42;
-                          color: var(--pico-muted-color);
+                          color: var(--ui-text-muted);
                         }
                         @media (max-width: 768px) {
                           me {

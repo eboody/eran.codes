@@ -140,19 +140,19 @@ inline_css! {
       line-height: 1.1;
       padding: 0.1rem 0.32rem;
       border-radius: 999px;
-      border: 1px solid color-mix(in srgb, var(--pico-muted-color) 26%, transparent);
-      color: color-mix(in srgb, var(--pico-muted-color) 94%, var(--pico-color) 6%);
+      border: 1px solid color-mix(in srgb, var(--ui-text-muted) 26%, transparent);
+      color: color-mix(in srgb, var(--ui-text-muted) 94%, var(--ui-text) 6%);
     }
     me > [data-chat-messages] > [data-chat-message] > [data-chat-bubble] > [data-chat-meta] > [data-chat-status-kind="visible"] {
       display: none;
     }
     me > [data-chat-messages] > [data-chat-message] > [data-chat-bubble] > [data-chat-meta] > [data-chat-status-kind="pending"] {
       border-color: color-mix(in srgb, #f59e0b 38%, transparent);
-      color: color-mix(in srgb, #f59e0b 74%, var(--pico-color) 26%);
+      color: color-mix(in srgb, #f59e0b 74%, var(--ui-text) 26%);
     }
     me > [data-chat-messages] > [data-chat-message] > [data-chat-bubble] > [data-chat-meta] > [data-chat-status-kind="removed"] {
       border-color: color-mix(in srgb, #ef4444 38%, transparent);
-      color: color-mix(in srgb, #ef4444 74%, var(--pico-color) 26%);
+      color: color-mix(in srgb, #ef4444 74%, var(--ui-text) 26%);
     }
     me > [data-chat-messages] > [data-chat-message] > [data-chat-bubble] > [data-chat-body] {
       margin: var(--chat-message-body-top) 0 0;
