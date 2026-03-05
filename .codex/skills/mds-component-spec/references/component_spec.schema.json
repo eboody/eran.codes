@@ -7,6 +7,7 @@
     "meta",
     "scope",
     "pipeline",
+    "content",
     "ui",
     "state",
     "events",
@@ -49,6 +50,37 @@
           "type": "array",
           "items": {"type": "string", "pattern": "^mds-"},
           "minItems": 1
+        },
+        "parallel_groups": {
+          "type": "array",
+          "items": {
+            "type": "array",
+            "items": {"type": "string", "pattern": "^mds-"},
+            "minItems": 2
+          }
+        }
+      },
+      "additionalProperties": true
+    },
+    "content": {
+      "type": "object",
+      "required": ["source", "root_type", "fixture_path"],
+      "properties": {
+        "source": {
+          "type": "string",
+          "const": "cms"
+        },
+        "root_type": {
+          "type": "string",
+          "minLength": 1,
+          "pattern": "^[A-Z][A-Za-z0-9]*Content$"
+        },
+        "fixture_path": {
+          "type": "string",
+          "minLength": 1
+        },
+        "notes": {
+          "type": "string"
         }
       },
       "additionalProperties": true

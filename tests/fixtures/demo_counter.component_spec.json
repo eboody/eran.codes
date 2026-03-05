@@ -15,21 +15,32 @@
       "mds-orchestrator",
       "mds-docs-librarian",
       "mds-ui-decomposer",
+      "mds-cms-content-modeler",
       "mds-state-modeler",
       "mds-events-designer",
       "mds-backend-contracts",
-      "mds-verifier",
-      "mds-codegen"
+      "mds-codegen",
+      "mds-verifier"
     ],
     "required_agents": [
       "mds-orchestrator",
       "mds-docs-librarian",
       "mds-ui-decomposer",
+      "mds-cms-content-modeler",
       "mds-state-modeler",
       "mds-events-designer",
       "mds-backend-contracts",
-      "mds-verifier",
-      "mds-codegen"
+      "mds-codegen",
+      "mds-verifier"
+    ],
+    "parallel_groups": [
+      [
+        "mds-ui-decomposer",
+        "mds-cms-content-modeler",
+        "mds-state-modeler",
+        "mds-events-designer",
+        "mds-backend-contracts"
+      ]
     ]
   },
   "docs_lookup": {
@@ -357,5 +368,11 @@
         "mds-codegen"
       ]
     }
+  },
+  "content": {
+    "source": "cms",
+    "root_type": "CounterWidgetContent",
+    "fixture_path": "tests/fixtures/cms/counter_widget.json",
+    "notes": "Copy and labels are fixture-driven; template literals should stay placeholder/debug-only."
   }
 }

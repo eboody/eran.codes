@@ -6,22 +6,25 @@ This repository uses a project-local multi-agent system for generating Rust Maud
 
 1. `mds-orchestrator`
 2. `mds-docs-librarian`
-3. `mds-ui-decomposer`
-4. `mds-state-modeler`
-5. `mds-events-designer`
-6. `mds-backend-contracts`
-7. `mds-codegen`
-8. `mds-verifier` (stop-the-line gate)
+3. Parallel spec-design phase:
+   - `mds-ui-decomposer`
+   - `mds-cms-content-modeler`
+   - `mds-state-modeler`
+   - `mds-events-designer`
+   - `mds-backend-contracts`
+4. `mds-codegen`
+5. `mds-verifier` (stop-the-line gate)
 
 ## Routing Rules
 
 - Run `mds-orchestrator` first for every new component request.
 - Run `mds-docs-librarian` immediately after orchestration to collect docs-backed rules for decision areas in scope.
+- Run `mds-cms-content-modeler` for component creation requests; it defines `component_spec.content` and fixture contract.
 - Run `mds-ui-decomposer` when UI structure is missing or changed.
 - Run `mds-state-modeler` when state, derived values, or data flow is missing or changed.
 - Run `mds-events-designer` when event triggers, payloads, or transitions are missing or changed.
 - Run `mds-backend-contracts` when server endpoints, actions, or validation constraints are missing or changed.
-- Run `mds-codegen` only after `ui`, `state`, `events`, and `backend_contracts` are valid and internally linked.
+- Run `mds-codegen` only after `content`, `ui`, `state`, `events`, and `backend_contracts` are valid and internally linked.
 - Run `mds-verifier` last on every run. Verification is mandatory before accepting output.
 
 ## Docs-First Decision Rules
@@ -84,6 +87,7 @@ This policy applies by default when a user asks to create/build/add a component 
   - Do not collapse into one monolithic component unless explicitly requested.
 - Default CMS-shaped content model:
   - Assume component copy/images/features/CTAs/tabs come from CMS content, not inline literals.
+  - `component_spec` must include a top-level `content` contract (`source: "cms"`, typed `root_type`, and `fixture_path`).
   - Define a typed `*Content` schema first (required/optional, enums for variants, asset refs for media).
   - Add a realistic fixture entry and treat it as the source of truth during development.
   - Keep component APIs content-shaped (`content: *Content`, optional small `ui: *UiState`), not many loose string props.

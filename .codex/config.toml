@@ -7,6 +7,7 @@ entry = ".codex/AGENTS.md"
 mds-orchestrator = { definition = ".codex/agents/mds-orchestrator/AGENT.md" }
 mds-docs-librarian = { definition = ".codex/agents/mds-docs-librarian/AGENT.md" }
 mds-ui-decomposer = { definition = ".codex/agents/mds-ui-decomposer/AGENT.md" }
+mds-cms-content-modeler = { definition = ".codex/agents/mds-cms-content-modeler/AGENT.md" }
 mds-state-modeler = { definition = ".codex/agents/mds-state-modeler/AGENT.md" }
 mds-events-designer = { definition = ".codex/agents/mds-events-designer/AGENT.md" }
 mds-backend-contracts = { definition = ".codex/agents/mds-backend-contracts/AGENT.md" }

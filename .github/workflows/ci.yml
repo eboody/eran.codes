@@ -17,6 +17,10 @@ jobs:
         run: scripts/ci/typed-hasher-errors.sh
       - name: datastar command+sse architecture
         run: scripts/ci/datastar-command-sse-architecture.sh
+      - name: component spec content contract
+        run: scripts/ci/component-spec-content-contract.sh
+      - name: cms content model templates
+        run: scripts/ci/cms-content-model.sh
       - name: partials render
         run: scripts/ci/partials-render.sh
       - name: skill agent coverage

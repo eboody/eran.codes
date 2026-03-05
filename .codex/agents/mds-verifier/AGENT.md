@@ -23,6 +23,8 @@ Validate full `component_spec` correctness against schema, cross-references, doc
 - JSON Schema validation must pass.
 - Reference integrity must pass (`node_id`, `field_id`, `action_id`, type references).
 - Execution order must include all required agents and end with verifier gate.
+- `content` contract must exist with `source = cms`, typed `root_type`, and a real `fixture_path`.
+- `pipeline.parallel_groups` must include `mds-cms-content-modeler` with spec-design agents for component creation.
 - Docs-backed contradictions require valid `component_spec.override`.
 
 ## Authority Enforcement Checks
