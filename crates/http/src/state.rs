@@ -1,4 +1,4 @@
-use std::sync::atomic::AtomicU64;
+use std::sync::atomic::{AtomicI64, AtomicU64};
 
 use bon::bon;
 use tower_cookies::Key;
@@ -17,6 +17,7 @@ pub struct State {
 #[derive(Clone)]
 pub struct DemoState {
     pub surreal: SurrealState,
+    pub counter: CounterState,
 }
 
 impl DemoState {
@@ -29,6 +30,26 @@ impl Default for DemoState {
     fn default() -> Self {
         Self {
             surreal: SurrealState::new(),
+            counter: CounterState::new(),
+        }
+    }
+}
+
+#[derive(Clone)]
+pub struct CounterState {
+    pub server_count: std::sync::Arc<AtomicI64>,
+}
+
+impl CounterState {
+    pub fn new() -> Self {
+        Self::default()
+    }
+}
+
+impl Default for CounterState {
+    fn default() -> Self {
+        Self {
+            server_count: std::sync::Arc::new(AtomicI64::new(0)),
         }
     }
 }

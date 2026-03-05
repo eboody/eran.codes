@@ -9,5 +9,5 @@ pub use demo::{
     moderation_page, ping_partial, post_chat_message, post_demo_chat_message,
     request_burst_probe, request_meta_partial, session_status_partial,
 };
-pub use pages::{error_test, health, home};
+pub use pages::{counter_sync, error_test, health, home};
 pub use sse::{events, surreal_message_cancel, surreal_message_guarded};

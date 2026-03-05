@@ -15,8 +15,12 @@ jobs:
         run: scripts/ci/no-string-fields.sh
       - name: typed hasher errors
         run: scripts/ci/typed-hasher-errors.sh
+      - name: datastar command+sse architecture
+        run: scripts/ci/datastar-command-sse-architecture.sh
       - name: partials render
         run: scripts/ci/partials-render.sh
+      - name: skill agent coverage
+        run: scripts/ci/skill-agent-coverage.sh
       - name: descriptive module imports
         run: scripts/ci/descriptive-module-imports.sh
       - name: visual expert signoff

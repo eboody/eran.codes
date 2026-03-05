@@ -6,8 +6,8 @@ use crate::paths::Route;
 use crate::types::Text;
 use crate::views::page::{SseMode, UserNav};
 use crate::views::partials::{
-    CapabilityShowcase, DemoResultPlaceholder, HomeHero,
-    ProfessionalismInPracticeTabs, RequestBurstDemo, SectionHeader, chat,
+    chat, CapabilityShowcase, DemoResultPlaceholder, HomeHero,
+    ProfessionalismInPracticeTabs, RequestBurstDemo, SectionHeader,
 };
 
 #[derive(Builder)]
@@ -61,7 +61,7 @@ impl Render for HomeStyles {
                       margin: 0.26rem 0 0;
                       font-size: 0.84rem;
                       line-height: 1.45;
-                      color: var(--pico-muted-color);
+                      color: var(--ui-text-muted);
                     }
                     me [data-operations-grid] {
                       display: grid;
@@ -96,17 +96,17 @@ impl Render for HomeStyles {
                       font-weight: 700;
                       letter-spacing: 0.07rem;
                       text-transform: uppercase;
-                      color: var(--pico-muted-color);
+                      color: var(--ui-text-muted);
                     }
                     me [data-selected-work-grid] > article ul {
                       margin: 0.72rem 0 0.9rem;
                       padding-left: 1rem;
                       font-size: 0.86rem;
                       line-height: 1.48;
-                      color: var(--pico-muted-color);
+                      color: var(--ui-text-muted);
                     }
                     me [data-selected-work-grid] > article [data-muted] {
-                      color: color-mix(in srgb, var(--pico-muted-color) 94%, var(--pico-color) 6%);
+                      color: color-mix(in srgb, var(--ui-text-muted) 94%, var(--ui-text) 6%);
                     }
                     @media (hover: hover) {
                       me [data-selected-work-grid] > article:hover,
@@ -182,6 +182,33 @@ impl maud::Render for Home {
         let content = maud::html! {
             main class="container" {
                 (HomeStyles.render())
+                section
+                    id="counter-demo"
+                    data-signals="{count: 0, server_count: 0, server_connected: false}" {
+                    ({
+                        SectionHeader::builder()
+                            .title(Text::from("Counter Test"))
+                            .subtitle(
+                                Text::from(
+                                    "Quick Datastar command + SSE check. +/- updates local count and server_count updates arrive from SSE patches only.",
+                                ),
+                            )
+                            .build()
+                    })
+                    div style="display:flex; gap:.75rem; align-items:center; flex-wrap:wrap;" {
+                        button
+                            class="button secondary"
+                            type="button"
+                            data-on:click="$count = $count - 1; @post('/api/counter/sync', {delta: -1})" { "-" }
+                        button
+                            class="button"
+                            type="button"
+                            data-on:click="$count = $count + 1; @post('/api/counter/sync', {delta: 1})" { "+" }
+                        span { "local: " strong data-text="$count" { "0" } }
+                        span { "server: " strong data-text="$server_count" { "0" } }
+                        span data-text="$server_connected ? 'synced' : 'disconnected'" { "disconnected" }
+                    }
+                }
                 (HomeHero::builder().maybe_user(self.user.clone()).build())
 
                 section data-proof-first {

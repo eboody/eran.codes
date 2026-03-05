@@ -1,4 +1,8 @@
 use axum::extract::Extension;
+use datastar::axum::ReadSignals;
+use serde::Deserialize;
+use std::sync::atomic::Ordering;
+use tower_cookies::Cookies;
 
 use crate::types::Text;
 use crate::views::partials::chat;
@@ -46,4 +50,51 @@ pub async fn home(
 
 pub async fn error_test() -> crate::Result<axum::response::Html<String>> {
     Err(crate::error::Error::Internal)
+}
+
+#[derive(Debug, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct CounterRequestSignals {
+    pub delta: Option<i64>,
+}
+
+// ci: datastar-command counter_sync
+pub async fn counter_sync(
+    Extension(state): Extension<crate::State>,
+    Extension(cookies): Extension<Cookies>,
+    ReadSignals(signals): ReadSignals<CounterRequestSignals>,
+) -> axum::http::StatusCode {
+    let delta = signals.delta.unwrap_or_default();
+    let session = crate::sse::Handle::from_cookies(&cookies, &state.cookie_key);
+    if !state.sse.has_streams_for_session(&session.id()) {
+        return axum::http::StatusCode::PRECONDITION_REQUIRED;
+    }
+
+    let mut current = state.demo.counter.server_count.load(Ordering::Relaxed);
+    loop {
+        let next = (current + delta).max(0);
+        match state.demo.counter.server_count.compare_exchange(
+            current,
+            next,
+            Ordering::Relaxed,
+            Ordering::Relaxed,
+        ) {
+            Ok(_) => {
+                let event = crate::sse::Event::patch_signals(serde_json::json!({
+                    "server_count": next,
+                    "server_connected": true
+                }));
+                return match state.sse.send_by_id(&session.id(), event) {
+                    Ok(_) => axum::http::StatusCode::NO_CONTENT,
+                    Err(crate::sse::SendError::SessionMissing) => {
+                        axum::http::StatusCode::PRECONDITION_REQUIRED
+                    }
+                    Err(crate::sse::SendError::SendFailed) => {
+                        axum::http::StatusCode::SERVICE_UNAVAILABLE
+                    }
+                };
+            }
+            Err(observed) => current = observed,
+        }
+    }
 }
