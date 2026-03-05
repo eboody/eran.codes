@@ -10,7 +10,7 @@ Design event triggers, payloads, and state transitions for Datastar-driven UI be
 
 ## Outputs It Must Produce
 - `component_spec.events.handlers`
-- `component_spec.events.transitions`
+- `component_spec.events.ui_transitions`
 - `component_spec.events.effects`
 
 ## Non-Goals / Forbidden Behaviors
@@ -21,7 +21,10 @@ Design event triggers, payloads, and state transitions for Datastar-driven UI be
 ## Checklist Of Required Invariants
 - Every event handler has unique `id`.
 - `source_node_id` references an existing UI node.
-- Transition `from`/`to` fields reference existing state field ids.
+- `ui_transitions.updates[].field_id` references existing state field ids.
+- Handlers should declare `protocol_mode` (`ui_local|command_sse`) and `protocol_rationale`.
+- `protocol_mode = command_sse` requires matching `invoke_backend` effect.
+- `protocol_mode = ui_local` should not invoke backend unless explicitly justified.
 - Effects reference declared handler ids.
 
 ## Minimal Valid Output Snippet
@@ -31,12 +34,15 @@ Design event triggers, payloads, and state transitions for Datastar-driven UI be
     "handlers": [
       {
         "id": "save_click",
+        "class": "ui",
         "source_node_id": "root",
         "trigger": "click",
-        "payload": {"display_name": "$state.display_name"}
+        "payload": {"display_name": "$state.display_name"},
+        "protocol_mode": "command_sse",
+        "protocol_rationale": "save mutates canonical app state"
       }
     ],
-    "transitions": [
+    "ui_transitions": [
       {
         "handler_id": "save_click",
         "updates": [{"field_id": "display_name", "value": "$payload.display_name"}]

@@ -7,6 +7,7 @@ mod support;
 pub use layout::{
     CapabilityShowcase, CtaRow, DemoResultPlaceholder, HomeHero,
     ProfessionalismInPracticeTabs, RequestBurstDemo, SectionHeader,
+    TabsPanelShowcase,
 };
 pub use log::{LiveLog, NetworkLog, TraceLog};
 pub use misc::{ModerationAction, Ping};

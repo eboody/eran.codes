@@ -148,21 +148,27 @@
         "type": "integer",
         "initial": 0,
         "authority": "ui",
-        "sync": "optimistic"
+        "sync": "optimistic",
+        "interaction_scope": "presentation",
+        "authority_rationale": "local optimistic control state for immediate UI response"
       },
       {
         "id": "server_count",
         "type": "integer",
         "initial": 0,
         "authority": "app",
-        "sync": "authoritative"
+        "sync": "authoritative",
+        "interaction_scope": "app",
+        "authority_rationale": "canonical server count converges via SSE patches"
       },
       {
         "id": "server_connected",
         "type": "boolean",
         "initial": false,
         "authority": "app",
-        "sync": "authoritative"
+        "sync": "authoritative",
+        "interaction_scope": "app",
+        "authority_rationale": "connection status is server-observed and SSE-driven"
       }
     ],
     "derived": [
@@ -186,14 +192,18 @@
         "class": "ui",
         "source_node_id": "increment_button",
         "trigger": "click",
-        "payload": {}
+        "payload": {},
+        "protocol_mode": "command_sse",
+        "protocol_rationale": "interaction mutates canonical server_count via command then SSE"
       },
       {
         "id": "decrement_click",
         "class": "ui",
         "source_node_id": "decrement_button",
         "trigger": "click",
-        "payload": {}
+        "payload": {},
+        "protocol_mode": "command_sse",
+        "protocol_rationale": "interaction mutates canonical server_count via command then SSE"
       },
       {
         "id": "counter_update_event",
@@ -203,7 +213,9 @@
         "payload": {
           "server_count": "$event.server_count",
           "server_connected": "$event.server_connected"
-        }
+        },
+        "protocol_mode": "command_sse",
+        "protocol_rationale": "app state converges from global SSE patches"
       }
     ],
     "ui_transitions": [

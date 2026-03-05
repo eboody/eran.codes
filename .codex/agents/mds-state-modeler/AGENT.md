@@ -22,6 +22,9 @@ Define reactive state model, initial values, and derived fields used by Datastar
 ## Checklist Of Required Invariants
 - Every state field has unique `id`.
 - Field types are explicit and valid.
+- Every field declares `interaction_scope` (`presentation|session|app`).
+- Every field declares `authority_rationale` describing why chosen authority/protocol is appropriate.
+- `interaction_scope = app` must use `authority = app`.
 - Derived formulas reference only declared field ids.
 - Persistence keys are unique.
 
@@ -30,7 +33,14 @@ Define reactive state model, initial values, and derived fields used by Datastar
 {
   "state": {
     "fields": [
-      {"id": "display_name", "type": "string", "initial": ""}
+      {
+        "id": "display_name",
+        "type": "string",
+        "initial": "",
+        "authority": "ui",
+        "interaction_scope": "presentation",
+        "authority_rationale": "local input state"
+      }
     ],
     "derived": [
       {"id": "display_name_len", "type": "number", "formula": "len(display_name)"}

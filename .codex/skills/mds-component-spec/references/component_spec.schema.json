@@ -186,7 +186,14 @@
           "type": "array",
           "items": {
             "type": "object",
-            "required": ["id", "type", "initial", "authority"],
+            "required": [
+              "id",
+              "type",
+              "initial",
+              "authority",
+              "interaction_scope",
+              "authority_rationale"
+            ],
             "properties": {
               "id": {"type": "string", "minLength": 1},
               "type": {"type": "string", "minLength": 1},
@@ -195,11 +202,29 @@
                 "type": "string",
                 "enum": ["ui", "app"]
               },
+              "interaction_scope": {
+                "type": "string",
+                "enum": ["presentation", "session", "app"]
+              },
+              "authority_rationale": {
+                "type": "string",
+                "minLength": 1
+              },
               "sync": {
                 "type": "string",
                 "enum": ["none", "optimistic", "authoritative"]
               }
             },
+            "allOf": [
+              {
+                "if": {
+                  "properties": {"interaction_scope": {"const": "app"}}
+                },
+                "then": {
+                  "properties": {"authority": {"const": "app"}}
+                }
+              }
+            ],
             "additionalProperties": true
           }
         },
@@ -245,8 +270,23 @@
               "class": {"type": "string", "enum": ["ui", "app"]},
               "source_node_id": {"type": "string", "minLength": 1},
               "trigger": {"type": "string", "minLength": 1},
-              "payload": {"type": "object"}
+              "payload": {"type": "object"},
+              "protocol_mode": {
+                "type": "string",
+                "enum": ["ui_local", "command_sse"]
+              },
+              "protocol_rationale": {"type": "string", "minLength": 1}
             },
+            "allOf": [
+              {
+                "if": {
+                  "required": ["protocol_mode"]
+                },
+                "then": {
+                  "required": ["protocol_rationale"]
+                }
+              }
+            ],
             "additionalProperties": true
           }
         },

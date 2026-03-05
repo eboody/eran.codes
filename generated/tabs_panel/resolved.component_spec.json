@@ -1,0 +1,307 @@
+{
+  "meta": {
+    "component_id": "tabs_panel",
+    "version": "0.1.0",
+    "target": [
+      "rust-maud",
+      "datastar"
+    ]
+  },
+  "scope": {
+    "description": "Reusable tabs panel with preview area, feature list, and CTA driven by CMS content"
+  },
+  "pipeline": {
+    "execution_order": [
+      "mds-orchestrator",
+      "mds-docs-librarian",
+      "mds-ui-decomposer",
+      "mds-cms-content-modeler",
+      "mds-state-modeler",
+      "mds-events-designer",
+      "mds-backend-contracts",
+      "mds-codegen",
+      "mds-verifier"
+    ],
+    "required_agents": [
+      "mds-orchestrator",
+      "mds-docs-librarian",
+      "mds-ui-decomposer",
+      "mds-cms-content-modeler",
+      "mds-state-modeler",
+      "mds-events-designer",
+      "mds-backend-contracts",
+      "mds-codegen",
+      "mds-verifier"
+    ],
+    "parallel_groups": [
+      [
+        "mds-ui-decomposer",
+        "mds-cms-content-modeler",
+        "mds-state-modeler",
+        "mds-events-designer",
+        "mds-backend-contracts"
+      ]
+    ]
+  },
+  "content": {
+    "source": "cms",
+    "root_type": "TabsPanelContent",
+    "fixture_path": "tests/fixtures/cms/tabs_panel_showcase.json",
+    "notes": "All tabs, preview media, feature bullets, CTA labels, and logos are CMS-provided."
+  },
+  "design": {
+    "reuse_scan": {
+      "checked_components": [
+        "crates/http/src/views/partials/components/tab.rs",
+        "crates/http/src/views/partials/components/tab_panel.rs",
+        "crates/http/src/views/partials/components/primitives/icon.rs"
+      ],
+      "reused": [
+        "tab",
+        "tab_panel"
+      ],
+      "created": [
+        "tabs_panel"
+      ]
+    }
+  },
+  "ui": {
+    "event_dispatch": {
+      "syntax": "@dispatch('<handler_id>', payload)",
+      "description": "Dispatch semantic handlers from tab interactions while keeping local signal updates explicit."
+    },
+    "nodes": [
+      {
+        "id": "tabs_panel_root",
+        "parent_id": null,
+        "tag": "section",
+        "attrs": {
+          "class": "tabs-panel",
+          "data-signals": "{active_tab_id: 'policy', server_connected: false}"
+        }
+      },
+      {
+        "id": "tabs_bar",
+        "parent_id": "tabs_panel_root",
+        "tag": "nav",
+        "attrs": {
+          "class": "tabs-panel__tabs",
+          "role": "tablist",
+          "aria-label": "Solutions"
+        }
+      },
+      {
+        "id": "tab_item",
+        "parent_id": "tabs_bar",
+        "tag": "button",
+        "attrs": {
+          "class": "tabs-panel__tab",
+          "role": "tab",
+          "data-on:click": "@dispatch('tab_select', {tab_id: $el.dataset.tabId}); $active_tab_id = $el.dataset.tabId"
+        }
+      },
+      {
+        "id": "content_panel",
+        "parent_id": "tabs_panel_root",
+        "tag": "article",
+        "attrs": {
+          "class": "tabs-panel__content"
+        }
+      },
+      {
+        "id": "preview_surface",
+        "parent_id": "content_panel",
+        "tag": "figure",
+        "attrs": {
+          "class": "tabs-panel__preview"
+        }
+      },
+      {
+        "id": "copy_column",
+        "parent_id": "content_panel",
+        "tag": "div",
+        "attrs": {
+          "class": "tabs-panel__copy"
+        }
+      },
+      {
+        "id": "cta_button",
+        "parent_id": "copy_column",
+        "tag": "button",
+        "attrs": {
+          "class": "tabs-panel__cta",
+          "type": "button"
+        }
+      }
+    ],
+    "slots": [
+      {
+        "name": "tabs",
+        "required": true
+      },
+      {
+        "name": "preview",
+        "required": true
+      },
+      {
+        "name": "features",
+        "required": true
+      },
+      {
+        "name": "cta",
+        "required": false
+      }
+    ],
+    "bindings": [
+      {
+        "node_id": "tabs_panel_root",
+        "kind": "datastar-signal",
+        "path": "active_tab_id"
+      },
+      {
+        "node_id": "tab_item",
+        "kind": "datastar-class",
+        "path": "is-selected:($active_tab_id == $el.dataset.tabId)"
+      },
+      {
+        "node_id": "preview_surface",
+        "kind": "content",
+        "path": "tabs[].preview"
+      },
+      {
+        "node_id": "copy_column",
+        "kind": "content",
+        "path": "tabs[].detail"
+      },
+      {
+        "node_id": "cta_button",
+        "kind": "content",
+        "path": "tabs[].cta"
+      }
+    ]
+  },
+  "state": {
+    "fields": [
+      {
+        "id": "active_tab_id",
+        "type": "string",
+        "initial": "policy",
+        "authority": "ui",
+        "sync": "none",
+        "interaction_scope": "presentation",
+        "authority_rationale": "tab selection controls local panel visibility only"
+      },
+      {
+        "id": "server_connected",
+        "type": "boolean",
+        "initial": false,
+        "authority": "app",
+        "sync": "authoritative",
+        "interaction_scope": "app",
+        "authority_rationale": "global SSE connection status is server-authoritative"
+      }
+    ],
+    "derived": [
+      {
+        "id": "has_connection",
+        "type": "boolean",
+        "formula": "server_connected == true"
+      }
+    ],
+    "persistence": [
+      {
+        "field_id": "active_tab_id",
+        "storage": "session"
+      }
+    ]
+  },
+  "events": {
+    "handlers": [
+      {
+        "id": "tab_select",
+        "class": "ui",
+        "source_node_id": "tab_item",
+        "trigger": "click",
+        "payload": {
+          "tab_id": "string"
+        },
+        "protocol_mode": "ui_local",
+        "protocol_rationale": "tab switching is a presentation interaction and should not invoke backend"
+      },
+      {
+        "id": "tabs_panel_sse",
+        "class": "app",
+        "source_node_id": "tabs_panel_root",
+        "trigger": "sse:datastar-patch-signals",
+        "payload": {
+          "server_connected": "$event.server_connected"
+        },
+        "protocol_mode": "command_sse",
+        "protocol_rationale": "app-state connectivity comes from SSE convergence"
+      }
+    ],
+    "ui_transitions": [
+      {
+        "handler_id": "tab_select",
+        "updates": [
+          {
+            "field_id": "active_tab_id",
+            "value": "$payload.tab_id"
+          }
+        ]
+      }
+    ],
+    "app_mappings": {
+      "backend_responses": [],
+      "sse_events": [
+        {
+          "event_name": "datastar-patch-signals",
+          "updates": [
+            {
+              "field_id": "server_connected",
+              "value": "$event.server_connected"
+            }
+          ]
+        }
+      ]
+    },
+    "effects": []
+  },
+  "backend_contracts": {
+    "actions": [
+      {
+        "id": "global_events_stream",
+        "method": "GET",
+        "path": "/events",
+        "input_type": "EventsStreamInput",
+        "output_type": "TabsPanelSseEvent"
+      }
+    ],
+    "types": [
+      {
+        "id": "EventsStreamInput",
+        "fields": [
+          {
+            "name": "sse_tab_id",
+            "type": "string"
+          }
+        ]
+      },
+      {
+        "id": "TabsPanelSseEvent",
+        "fields": [
+          {
+            "name": "server_connected",
+            "type": "boolean"
+          }
+        ]
+      }
+    ],
+    "validation": [
+      {
+        "target": "EventsStreamInput.sse_tab_id",
+        "rule": "required, non-empty"
+      }
+    ]
+  }
+}

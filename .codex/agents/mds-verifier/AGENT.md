@@ -27,6 +27,9 @@ Validate full `component_spec` correctness against schema, cross-references, doc
 - `pipeline.parallel_groups` must include `mds-cms-content-modeler` with spec-design agents for component creation.
 - Public naming must remain generic/reusable on `meta.component_id`, `content.root_type`, and reusable component surfaces.
 - `design.reuse_scan` must document reuse-first evaluation against `views/partials/components`.
+- Every state field must provide `interaction_scope` + `authority_rationale`.
+- Scope/authority must be consistent (`app` scope requires `authority = app`; `presentation` defaults to `authority = ui` unless `override`).
+- Handler protocol metadata should be consistent with effects (`command_sse` => `invoke_backend`, `ui_local` => no backend command unless `override`).
 - Docs-backed contradictions require valid `component_spec.override`.
 
 ## Authority Enforcement Checks

@@ -15,6 +15,10 @@ Apply repo-approved Datastar signal, attribute, expression, and SSE interaction 
 - Prefer docs-backed attribute and SSE rules over priors.
 - Apply `.codex/skills/mds-datastar-architecture/SKILL.md` as the architecture baseline for command handlers and SSE convergence.
 - Route edge cases through `mds-docs-librarian`.
+- Classify interaction scope before choosing protocol:
+  - `presentation`/`session` interactions default to `ui_local`.
+  - `app` interactions use `command_sse` with SSE convergence.
 - Respect state authority split:
   - `authority = "ui"` fields may use local `data-on:*` expressions.
   - `authority = "app"` fields must be updated only via SSE mappings (`datastar-patch-signals`), never by local UI expressions.
+- Tabs/selectors are presentation concerns by default; do not require backend commands unless explicit app-level semantics are requested.

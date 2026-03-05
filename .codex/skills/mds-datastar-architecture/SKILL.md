@@ -16,12 +16,16 @@ Enforce one Datastar architecture across specs and generated code:
 - Specs model app-state updates through SSE mappings only.
 
 ## Required Rules
+- Classify interaction scope before protocol:
+  - `presentation`/`session` interactions default to `ui_local`.
+  - `app` interactions use command + SSE.
 - Command handlers used by Datastar UI intents must be marked:
   - `// ci: datastar-command <handler_name>`
 - Command handlers must return `StatusCode`:
   - `StatusCode::NO_CONTENT` or `StatusCode::ACCEPTED`
 - Command handlers must not return `Json<...>` state payloads.
 - App-authority state fields must not be mutated by UI transitions.
+- Tabs/selectors are presentation interactions by default and should not require backend commands unless explicit app-level semantics exist.
 - Datastar component specs must satisfy:
   - `events.app_mappings.backend_responses == []`
   - app event trigger: `sse:datastar-patch-signals`

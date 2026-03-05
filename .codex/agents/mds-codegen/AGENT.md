@@ -22,6 +22,9 @@ Generate Rust Maud + Datastar component code from a verified `component_spec`.
 
 ## Mapping Rules (Authority-Aware)
 - Map `events.ui_transitions` to client-local Datastar behavior for `authority = "ui"` fields.
+- Respect handler protocol selection:
+  - `protocol_mode = ui_local` => local interaction wiring only.
+  - `protocol_mode = command_sse` => command endpoint intent + SSE convergence for app-authority updates.
 - Map `events.effects` `invoke_backend` to backend intents only (no direct app-state mutation).
 - Datastar command handlers must be generated as command-only:
   - mark handler with `// ci: datastar-command <handler_name>`

@@ -1,0 +1,280 @@
+{
+  "tabs": [
+    {
+      "id": "policy",
+      "label": {
+        "line_1": "Secure",
+        "line_2": "Remote Access"
+      },
+      "icon": {
+        "asset_ref": "icons/grid-circle",
+        "alt": "Secure tab"
+      },
+      "preview": {
+        "image": {
+          "asset_ref": "images/policy-preview",
+          "alt": "Policy editor preview"
+        },
+        "badge": {
+          "text": "Integrates with Azure, Google, Okta"
+        }
+      },
+      "detail": {
+        "title": "Secure Remote Access",
+        "subtitle": "Enable least privilege network access in a few clicks",
+        "features": [
+          {
+            "id": "users",
+            "text": "Provision users and groups from your identity provider"
+          },
+          {
+            "id": "segment",
+            "text": "Segment your network by grouping teams and infrastructure"
+          },
+          {
+            "id": "policy",
+            "text": "Define granular policies to limit network access"
+          },
+          {
+            "id": "mfa",
+            "text": "Enforce MFA and device security posture checks"
+          }
+        ]
+      },
+      "cta": {
+        "label": "Explore",
+        "href": "/explore"
+      }
+    },
+    {
+      "id": "zero_config",
+      "label": {
+        "line_1": "Zero-Config",
+        "line_2": "Deployment"
+      },
+      "icon": {
+        "asset_ref": "icons/sliders",
+        "alt": "Deployment tab"
+      },
+      "preview": {
+        "image": {
+          "asset_ref": "images/zero_config-preview",
+          "alt": "Zero-Config preview"
+        },
+        "badge": {
+          "text": "CMS fixture preview"
+        }
+      },
+      "detail": {
+        "title": "Zero-Config Deployment",
+        "subtitle": "Content rendered from CMS-shaped fixture data",
+        "features": [
+          {
+            "id": "capability",
+            "text": "Capability details are scoped to this tab"
+          },
+          {
+            "id": "policy",
+            "text": "Rules and controls remain isolated per view"
+          },
+          {
+            "id": "operations",
+            "text": "Operational behavior can be inspected in logs"
+          },
+          {
+            "id": "access",
+            "text": "Access and posture controls are explicitly defined"
+          }
+        ]
+      },
+      "cta": {
+        "label": "Explore",
+        "href": "/explore"
+      }
+    },
+    {
+      "id": "sso_mfa",
+      "label": {
+        "line_1": "Seamless",
+        "line_2": "SSO with MFA"
+      },
+      "icon": {
+        "asset_ref": "icons/key",
+        "alt": "SSO tab"
+      },
+      "preview": {
+        "image": {
+          "asset_ref": "images/sso_mfa-preview",
+          "alt": "Seamless preview"
+        },
+        "badge": {
+          "text": "CMS fixture preview"
+        }
+      },
+      "detail": {
+        "title": "Seamless SSO with MFA",
+        "subtitle": "Content rendered from CMS-shaped fixture data",
+        "features": [
+          {
+            "id": "capability",
+            "text": "Capability details are scoped to this tab"
+          },
+          {
+            "id": "policy",
+            "text": "Rules and controls remain isolated per view"
+          },
+          {
+            "id": "operations",
+            "text": "Operational behavior can be inspected in logs"
+          },
+          {
+            "id": "access",
+            "text": "Access and posture controls are explicitly defined"
+          }
+        ]
+      },
+      "cta": {
+        "label": "Explore",
+        "href": "/explore"
+      }
+    },
+    {
+      "id": "posture",
+      "label": {
+        "line_1": "Dynamic",
+        "line_2": "Posture Checks"
+      },
+      "icon": {
+        "asset_ref": "icons/triangle",
+        "alt": "Posture tab"
+      },
+      "preview": {
+        "image": {
+          "asset_ref": "images/posture-preview",
+          "alt": "Dynamic preview"
+        },
+        "badge": {
+          "text": "CMS fixture preview"
+        }
+      },
+      "detail": {
+        "title": "Dynamic Posture Checks",
+        "subtitle": "Content rendered from CMS-shaped fixture data",
+        "features": [
+          {
+            "id": "capability",
+            "text": "Capability details are scoped to this tab"
+          },
+          {
+            "id": "policy",
+            "text": "Rules and controls remain isolated per view"
+          },
+          {
+            "id": "operations",
+            "text": "Operational behavior can be inspected in logs"
+          },
+          {
+            "id": "access",
+            "text": "Access and posture controls are explicitly defined"
+          }
+        ]
+      },
+      "cta": {
+        "label": "Explore",
+        "href": "/explore"
+      }
+    },
+    {
+      "id": "network",
+      "label": {
+        "line_1": "Centralized",
+        "line_2": "Network Management"
+      },
+      "icon": {
+        "asset_ref": "icons/globe",
+        "alt": "Network tab"
+      },
+      "preview": {
+        "image": {
+          "asset_ref": "images/network-preview",
+          "alt": "Centralized preview"
+        },
+        "badge": {
+          "text": "CMS fixture preview"
+        }
+      },
+      "detail": {
+        "title": "Centralized Network Management",
+        "subtitle": "Content rendered from CMS-shaped fixture data",
+        "features": [
+          {
+            "id": "capability",
+            "text": "Capability details are scoped to this tab"
+          },
+          {
+            "id": "policy",
+            "text": "Rules and controls remain isolated per view"
+          },
+          {
+            "id": "operations",
+            "text": "Operational behavior can be inspected in logs"
+          },
+          {
+            "id": "access",
+            "text": "Access and posture controls are explicitly defined"
+          }
+        ]
+      },
+      "cta": {
+        "label": "Explore",
+        "href": "/explore"
+      }
+    },
+    {
+      "id": "logging",
+      "label": {
+        "line_1": "Detailed",
+        "line_2": "Activity Logging"
+      },
+      "icon": {
+        "asset_ref": "icons/chart",
+        "alt": "Logging tab"
+      },
+      "preview": {
+        "image": {
+          "asset_ref": "images/logging-preview",
+          "alt": "Detailed preview"
+        },
+        "badge": {
+          "text": "CMS fixture preview"
+        }
+      },
+      "detail": {
+        "title": "Detailed Activity Logging",
+        "subtitle": "Content rendered from CMS-shaped fixture data",
+        "features": [
+          {
+            "id": "capability",
+            "text": "Capability details are scoped to this tab"
+          },
+          {
+            "id": "policy",
+            "text": "Rules and controls remain isolated per view"
+          },
+          {
+            "id": "operations",
+            "text": "Operational behavior can be inspected in logs"
+          },
+          {
+            "id": "access",
+            "text": "Access and posture controls are explicitly defined"
+          }
+        ]
+      },
+      "cta": {
+        "label": "Explore",
+        "href": "/explore"
+      }
+    }
+  ]
+}

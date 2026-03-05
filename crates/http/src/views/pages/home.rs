@@ -8,6 +8,7 @@ use crate::views::page::{SseMode, UserNav};
 use crate::views::partials::{
     chat, CapabilityShowcase, DemoResultPlaceholder, HomeHero,
     ProfessionalismInPracticeTabs, RequestBurstDemo, SectionHeader,
+    TabsPanelShowcase,
 };
 
 #[derive(Builder)]
@@ -210,6 +211,7 @@ impl maud::Render for Home {
                     }
                 }
                 (HomeHero::builder().maybe_user(self.user.clone()).build())
+                (TabsPanelShowcase::builder().build())
 
                 section data-proof-first {
                     ({

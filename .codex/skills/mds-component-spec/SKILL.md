@@ -35,6 +35,24 @@ Semantics:
 - Copy/images/features/CTAs/tabs come from `content.root_type`, not inline literals in templates.
 - Subcomponents should consume only the content slice they own.
 
+## Interaction Scope Contract (Required)
+Every interactive state field must declare:
+- `interaction_scope`: `presentation` | `session` | `app`
+- `authority_rationale`: non-empty rationale explaining why field authority/protocol is appropriate
+
+Protocol defaults by scope:
+- `presentation`
+  - Default `authority = "ui"`.
+  - No backend command required for core interaction behavior.
+- `session`
+  - Default `authority = "ui"`; may be persisted.
+  - Backend sync only when explicitly justified.
+- `app`
+  - Must use `authority = "app"`.
+  - Converges via SSE (`datastar-patch-signals`) for Datastar architecture.
+
+Tabs/selectors default to `presentation` unless explicit app-level semantics are requested.
+
 ## Public Naming Contract (Library Style)
 Component-creation outputs should be reusable by default. Public identifiers must be generic and role-based:
 - Good: `tabs_panel`, `tab_item`, `status_card`, `hero_banner`
@@ -79,6 +97,9 @@ Semantics:
 - `app_mappings.backend_responses[]`: server response to app-state mapping.
 - `app_mappings.sse_events[]`: SSE event to app-state mapping.
 - `effects[]`: intents (for example, backend invocation). Intents do not directly mutate app state.
+- Optional handler protocol metadata:
+  - `protocol_mode`: `ui_local` | `command_sse`
+  - `protocol_rationale`: non-empty rationale for selected protocol
 
 ## UI Dispatch Convention
 `ui.event_dispatch` must document dispatch syntax, for example:
@@ -92,7 +113,7 @@ This declares semantic dispatch style. Projects may still use local Datastar exp
 - `mds-cms-content-modeler`: `content`
 - `mds-ui-decomposer`: `ui`
 - `mds-state-modeler`: `state`
-- `mds-events-designer`: `events`
+- `mds-events-designer`: `events` (including optional handler protocol metadata)
 - `mds-backend-contracts`: `backend_contracts`
 - `mds-codegen`: `codegen`
 - `mds-verifier`: `verification`
@@ -104,6 +125,12 @@ This declares semantic dispatch style. Projects may still use local Datastar exp
 - `events.app_mappings.backend_responses[].updates[].field_id` must exist in `state.fields[].id`.
 - `events.app_mappings.sse_events[].updates[].field_id` must exist in `state.fields[].id`.
 - `events.effects[].action_id` must exist in `backend_contracts.actions[].id` when `type == "invoke_backend"`.
+- `state.fields[].interaction_scope` must be present and valid.
+- `state.fields[].authority_rationale` must be present and non-empty.
+- `state.fields[].interaction_scope == "presentation"` must default to `authority = "ui"` unless `override` is present.
+- `state.fields[].interaction_scope == "app"` requires `authority = "app"` and SSE mapping coverage.
+- If `events.handlers[].protocol_mode == "command_sse"`, `events.effects` must include matching `invoke_backend`.
+- If `events.handlers[].protocol_mode == "ui_local"`, matching `invoke_backend` effect is disallowed unless `override` is present.
 - `backend_contracts.actions[].input_type` and `output_type` must exist in `backend_contracts.types[].id`.
 - `pipeline.execution_order` must include all required `mds-*` agents.
 - `pipeline.parallel_groups` must include `mds-cms-content-modeler` in the same group as other spec-design agents for component creation.
@@ -127,8 +154,8 @@ This declares semantic dispatch style. Projects may still use local Datastar exp
   "content": {"source": "cms", "root_type": "ExampleContent", "fixture_path": "tests/fixtures/cms/example.json"},
   "design": {"reuse_scan": {"checked_components": ["crates/http/src/views/partials/components/tab.rs"], "reused": ["tab"], "created": []}},
   "ui": {"event_dispatch": {"syntax": "@dispatch('<handler_id>')", "description": "semantic event dispatch"}, "nodes": [], "slots": [], "bindings": []},
-  "state": {"fields": [{"id": "local_count", "type": "integer", "initial": 0, "authority": "ui", "sync": "optimistic"}, {"id": "server_count", "type": "integer", "initial": 0, "authority": "app", "sync": "authoritative"}], "derived": [], "persistence": []},
-  "events": {"handlers": [], "ui_transitions": [], "app_mappings": {"backend_responses": [], "sse_events": []}, "effects": []},
+  "state": {"fields": [{"id": "local_count", "type": "integer", "initial": 0, "authority": "ui", "sync": "optimistic", "interaction_scope": "presentation", "authority_rationale": "local presentation control"}, {"id": "server_count", "type": "integer", "initial": 0, "authority": "app", "sync": "authoritative", "interaction_scope": "app", "authority_rationale": "canonical server value"}], "derived": [], "persistence": []},
+  "events": {"handlers": [{"id": "increment_click", "class": "ui", "source_node_id": "root", "trigger": "click", "payload": {}, "protocol_mode": "ui_local", "protocol_rationale": "presentation-only increment"}], "ui_transitions": [], "app_mappings": {"backend_responses": [], "sse_events": []}, "effects": []},
   "backend_contracts": {"actions": [], "types": [], "validation": []}
 }
 ```

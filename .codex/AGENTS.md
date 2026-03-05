@@ -82,6 +82,10 @@ This policy applies by default when a user asks to create/build/add a component 
   - App-authority state converges via the global `/events` SSE stream.
   - SSE event name for app-state convergence is `datastar-patch-signals`.
   - Datastar component specs use `backend_responses: []`.
+  - Choose protocol by interaction scope:
+    - `presentation`/`session` interactions default to `ui_local`.
+    - `app` interactions use command + SSE.
+  - Tabs/selectors are presentation-state by default unless explicit app-level semantics are requested.
 - Default component decomposition:
   - Split new UI into orchestrator/container, child feature components, and shared primitives.
   - Do not collapse into one monolithic component unless explicitly requested.
