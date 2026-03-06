@@ -48,6 +48,13 @@ This repository uses a project-local multi-agent system for generating Rust Maud
   - `.codex/skills/mds-css-conventions/SKILL.md`
 - Docs under `/docs` are evergreen source of truth and override agent priors.
 
+## Prompt Contradiction Rule (Stop-The-Line)
+
+- If a new user prompt conflicts with previously established user instructions or accepted architecture constraints, agents must pause and ask the user to reconcile the conflict before implementing.
+- Agents must not treat unrelated or ambiguous prompts as implicit permission to override existing instructions.
+- Resolution must be explicit in the current conversation (for example: "override prior instruction X for this task").
+- When unresolved conflict exists, return a reconciliation question instead of generating code/spec changes.
+
 ## Stop-The-Line Verification Gate
 
 - `mds-verifier` validates `component_spec` against:

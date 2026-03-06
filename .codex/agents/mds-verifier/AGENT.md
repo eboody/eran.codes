@@ -32,6 +32,8 @@ Validate full `component_spec` correctness against schema, cross-references, doc
 - Handler protocol metadata should be consistent with effects (`command_sse` => `invoke_backend`, `ui_local` => no backend command unless `override`).
 - Styling contract must exist with `mode = hybrid`, reusable `global_packages`, and declared `scoped_exceptions`.
 - Docs-backed contradictions require valid `component_spec.override`.
+- Prompt-level contradictions must be reconciled explicitly in user intent before generation:
+  - if request conflicts with accepted instructions/policy and no explicit reconciliation is present, verification outcome must be `fail`.
 
 ## Authority Enforcement Checks
 - Fail if any `authority = "app"` field is updated by:
@@ -65,3 +67,4 @@ Run Policy:
 - MUST FAIL on reference violations.
 - MUST FAIL on authority-model violations.
 - MUST FAIL on docs contradictions without explicit valid `component_spec.override`.
+- MUST FAIL when unresolved prompt contradictions are detected (missing explicit user reconciliation).

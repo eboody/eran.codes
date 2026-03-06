@@ -31,6 +31,8 @@ jobs:
         run: scripts/ci/partials-render.sh
       - name: skill agent coverage
         run: scripts/ci/skill-agent-coverage.sh
+      - name: contradiction reconciliation policy
+        run: scripts/ci/contradiction-reconciliation-policy.sh
       - name: descriptive module imports
         run: scripts/ci/descriptive-module-imports.sh
       - name: visual expert signoff

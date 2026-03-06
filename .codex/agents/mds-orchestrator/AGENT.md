@@ -18,6 +18,7 @@ Coordinate agent execution, initialize `component_spec`, and enforce section own
 - Must not define UI nodes, state fields, events, backend contracts, or code output details.
 - Must not skip verifier execution.
 - Must not mutate sections owned by other agents after ownership is assigned.
+- Must not proceed when request intent conflicts with established instructions/policies; require explicit user reconciliation first.
 
 ## Checklist Of Required Invariants
 - `meta.component_id` is stable and unique.
@@ -31,6 +32,8 @@ Coordinate agent execution, initialize `component_spec`, and enforce section own
 - `content.root_type` is typed `*Content`.
 - `content.fixture_path` points to a fixture path to be materialized by downstream generation.
 - `design.reuse_scan` is present and records which reusable components were evaluated/reused/created.
+- Prompt contradiction handling is explicit:
+  - if prompt conflicts with prior user instructions or accepted architecture policy, orchestrator must emit a reconciliation question and halt downstream generation until clarified.
 
 ## Minimal Valid Output Snippet
 ```json
