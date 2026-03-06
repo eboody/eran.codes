@@ -1,7 +1,7 @@
 use bon::Builder;
 use maud::Render;
 
-use crate::views::partials::{StatusCard, TraceLog};
+use crate::views::partials::{StatusCard, RequestTraceLog};
 use crate::types::Text;
 
 #[derive(Clone, Copy, Debug)]
@@ -69,7 +69,7 @@ impl Render for AuthStatus {
                     .title(Text::from(status))
                     .items(items)
                     .build())
-                (TraceLog::builder().entries(&self.trace).build())
+                (RequestTraceLog::builder().entries(&self.trace).build())
             }
         }
     }

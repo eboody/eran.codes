@@ -6,7 +6,7 @@ mod error;
 pub use demo::chat;
 pub use demo::{
     AuthStatus, BoundaryCheck, CtaRow, DbCheck, DemoResultPlaceholder, EngineeringQuality,
-    HomeHero, KeyValueList, LiveLog, ModerationAction, NetworkLog, Ping, RequestBurstDemo,
-    RequestMeta, SectionHeader, SessionStatus, StatusCard, TabSetShowcase, TraceLog,
+    HomeHero, KeyValueList, EventStreamLog, ModerationAction, TransportLogSet, Ping, RequestBurstDemo,
+    RequestMeta, SectionHeader, SessionStatus, StatusCard, TabSetShowcase, RequestTraceLog,
 };
 pub use error::Error;

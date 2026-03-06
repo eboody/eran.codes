@@ -19,7 +19,7 @@ if [[ ! -f "$APP_CSS" ]]; then
   exit 1
 fi
 
-for cls in ".ui-surface-card" ".ui-tabs" ".ui-tab" ".ui-panel" ".ui-preview-frame" ".ui-feature-list" ".ui-cta"; do
+for cls in ".ui-surface-card" ".ui-tabs" ".ui-tab" ".ui-panel" ".ui-preview-frame" ".ui-feature-list" ".ui-cta" ".ui-nav-shell" ".ui-nav" ".ui-nav-list" ".ui-nav-links" ".ui-nav-auth"; do
   if ! rg -q "^\s*\\${cls}\b|^\s*${cls}\b" "$APP_CSS"; then
     echo "${APP_CSS}: missing reusable package class ${cls}."
     status=1
@@ -84,5 +84,11 @@ for file in "${style_components[@]}"; do
     status=1
   fi
 done
+
+if rg --no-heading --line-number 'site-nav|site-brand-links|portfolio-nav-links|site-auth-links' \
+  crates/http/src/views/page.rs >/dev/null; then
+  echo "crates/http/src/views/page.rs: navbar should use reusable ui-nav-* classes, not legacy site-* selectors."
+  status=1
+fi
 
 exit "$status"

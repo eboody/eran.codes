@@ -1,7 +1,7 @@
 use bon::Builder;
 use maud::Render;
 
-use crate::views::partials::{StatusCard, TraceLog};
+use crate::views::partials::{StatusCard, RequestTraceLog};
 use crate::types::Text;
 
 #[derive(Clone, Debug, Builder)]
@@ -25,7 +25,7 @@ impl Render for BoundaryCheck {
                         (Text::from("result"), self.result.clone()),
                     ])
                     .build())
-                (TraceLog::builder().entries(&self.trace).build())
+                (RequestTraceLog::builder().entries(&self.trace).build())
             }
         }
     }

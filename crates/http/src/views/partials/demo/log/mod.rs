@@ -1,13 +1,6 @@
 // ci: descriptive-module-import crate::views::partials::demo::log
-moddef::moddef!(mod { live_log, trace_log, network_log, panel, row, data_table, empty_state, field_value, chat_flow, styles });
+moddef::moddef!(mod { event_stream_log, request_trace_log, transport_log_set, chat_flow, vm });
 
-pub use chat_flow::ChatFlow;
-pub use data_table::{DataTable, TableVariant};
-pub use empty_state::EmptyState;
-pub use field_value::FieldValue;
-pub use live_log::LiveLog;
-pub use network_log::NetworkLog;
-pub use panel::Panel;
-pub use row::Row;
-pub use styles::Styles;
-pub use trace_log::TraceLog;
+pub use event_stream_log::EventStreamLog;
+pub use request_trace_log::RequestTraceLog;
+pub use transport_log_set::TransportLogSet;

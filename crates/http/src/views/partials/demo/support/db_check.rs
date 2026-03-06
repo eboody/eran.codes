@@ -1,7 +1,7 @@
 use bon::Builder;
 use maud::Render;
 
-use crate::views::partials::{StatusCard, TraceLog};
+use crate::views::partials::{StatusCard, RequestTraceLog};
 use crate::types::Text;
 
 #[derive(Clone, Copy, Debug)]
@@ -42,7 +42,7 @@ impl Render for DbCheck {
                         (Text::from("result"), Text::from(status)),
                     ])
                     .build())
-                (TraceLog::builder().entries(&self.trace).build())
+                (RequestTraceLog::builder().entries(&self.trace).build())
             }
         }
     }

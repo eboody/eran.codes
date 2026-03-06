@@ -143,5 +143,12 @@ This policy applies by default when a user asks to create/build/add a component 
   - Behavior variants must be typed (enum/struct fields), not ad-hoc string flags.
   - Prefer namespace imports and qualified usage (`use ...::tab_set; ... tab_set::pane::Body`) over leaf imports that hide ownership context.
   - Tab interactions default to `ui_local` Datastar for presentation concerns unless explicitly overridden.
+- Log componentization contract:
+  - Shared log rendering primitives must live in `crates/http/src/views/partials/components/logs`.
+  - Demo/request-specific filtering and trace-entry mapping must live in `crates/http/src/views/partials/demo/log/vm`.
+  - Avoid duplicate helper functions for field extraction/grouping/pill mapping across log views.
+  - Preserve SSE `patch_elements` targets `live-log-target` and `network-log-target` unless explicitly changing transport semantics.
+  - Runtime log copy (titles/empty-state text) stays typed in Rust view models; it does not require CMS fixtures by default.
+  - Reusable log styles must use global `ui-log-*` classes in `crates/http/static/app.css`; avoid inline `css!` in log components.
 - Opt-out is explicit:
   - Only bypass this default when the user clearly asks for `single component`, `skip spec`, or `end-to-end in one pass`.

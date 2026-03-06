@@ -90,22 +90,7 @@ impl TraceLogStore {
             && let Some(session_id) = session_id
         {
             let entries = self.snapshot_session(session_id);
-            let live_log = views::partials::LiveLog::builder()
-                .entries(&entries)
-                .build()
-                .render()
-                .into_string();
-            let network_log = views::partials::NetworkLog::builder()
-                .entries(&entries)
-                .build()
-                .render()
-                .into_string();
-            let _ = self
-                .sse
-                .send_by_id(session_id, sse::Event::patch_elements(live_log));
-            let _ = self
-                .sse
-                .send_by_id(session_id, sse::Event::patch_elements(network_log));
+            self.emit_session_log_panels(session_id, &entries);
         }
     }
 
@@ -129,23 +114,27 @@ impl TraceLogStore {
             && let Some(session_id) = session_id
         {
             let entries = self.snapshot_session(session_id);
-            let live_log = views::partials::LiveLog::builder()
-                .entries(&entries)
-                .build()
-                .render()
-                .into_string();
-            let network_log = views::partials::NetworkLog::builder()
-                .entries(&entries)
-                .build()
-                .render()
-                .into_string();
-            let _ = self
-                .sse
-                .send_by_id(session_id, sse::Event::patch_elements(live_log));
-            let _ = self
-                .sse
-                .send_by_id(session_id, sse::Event::patch_elements(network_log));
+            self.emit_session_log_panels(session_id, &entries);
         }
+    }
+
+    fn emit_session_log_panels(&self, session_id: &SessionId, entries: &[TraceEntry]) {
+        let live_log = views::partials::EventStreamLog::builder()
+            .entries(entries)
+            .build()
+            .render()
+            .into_string();
+        let network_log = views::partials::TransportLogSet::builder()
+            .entries(entries)
+            .build()
+            .render()
+            .into_string();
+        let _ = self
+            .sse
+            .send_by_id(session_id, sse::Event::patch_elements(live_log));
+        let _ = self
+            .sse
+            .send_by_id(session_id, sse::Event::patch_elements(network_log));
     }
 
     pub fn snapshot_request(&self, request_id: &RequestId) -> Vec<TraceEntry> {

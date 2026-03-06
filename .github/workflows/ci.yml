@@ -27,6 +27,8 @@ jobs:
         run: scripts/ci/reusable-component-naming.sh
       - name: render composition contract
         run: scripts/ci/render-composition-contract.sh
+      - name: log componentization contract
+        run: scripts/ci/log-componentization-contract.sh
       - name: tab icon reference contract
         run: scripts/ci/tab-icon-reference-contract.sh
       - name: cms content model templates

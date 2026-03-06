@@ -26,6 +26,7 @@ Apply repo CSS conventions and css-scope-inline usage patterns to class design a
 - Foundation: tokens/aliases for spacing, type, radius, elevation, borders, and shared surface patterns.
 - Reusable component packages: tabs, panel shells, preview frames, feature lists, CTA surfaces.
 - Layout primitives that are shared across unrelated components/pages.
+- Log package classes (`ui-log-*`) used by reusable log components (surface, panel, table, grouped feed, empty state).
 
 ## What May Stay Scoped
 - One-off component-specific styling with no reuse value.
@@ -37,3 +38,4 @@ Apply repo CSS conventions and css-scope-inline usage patterns to class design a
 - Prefer consuming tokens/aliases already present in `app.css`.
 - Avoid raw magic values when equivalent tokens exist.
 - Prefer OpenProps token aliases (`--size-*`, `--radius-*`, `--border-size-*`, etc.) in reusable package classes.
+- Do not leave inline `css!` blocks in reusable log components; log styling should be consumed via global `ui-log-*` classes.

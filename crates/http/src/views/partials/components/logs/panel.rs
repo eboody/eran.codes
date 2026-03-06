@@ -2,7 +2,8 @@ use bon::Builder;
 use maud::Render;
 
 use crate::types::Text;
-use crate::views::partials::components::EmptyState;
+
+use super::EmptyState;
 
 #[derive(Clone, Debug, Builder)]
 pub struct Panel {
@@ -18,12 +19,13 @@ impl Render for Panel {
         } else {
             self.body.clone()
         };
+
         maud::html! {
-            article data-demo-result data-log-panel {
+            article class="ui-log-panel" data-log-panel {
                 header data-log-heading {
                     h3 { (&self.title) }
                 }
-                div data-log-scroll {
+                div class="ui-log-scroll" data-log-scroll {
                     (body)
                 }
             }

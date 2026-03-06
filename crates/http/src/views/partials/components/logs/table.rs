@@ -1,6 +1,7 @@
-use crate::types::Text;
 use bon::Builder;
 use maud::Render;
+
+use crate::types::Text;
 
 #[derive(Clone, Copy, Debug, Default)]
 pub enum TableVariant {
@@ -16,17 +17,17 @@ impl TableVariant {
 }
 
 #[derive(Clone, Debug, Builder)]
-pub struct DataTable {
+pub struct Table {
     pub headers: Vec<Text>,
     pub rows: Vec<Vec<maud::Markup>>,
     #[builder(default)]
     pub variant: TableVariant,
 }
 
-impl Render for DataTable {
+impl Render for Table {
     fn render(&self) -> maud::Markup {
         maud::html! {
-            table data-log-table data-chat-flow[self.variant.is_chat_flow()] {
+            table class="ui-log-table" data-log-table data-chat-flow[self.variant.is_chat_flow()] {
                 thead {
                     tr {
                         @for header in &self.headers {

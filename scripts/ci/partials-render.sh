@@ -11,11 +11,11 @@ if ! command -v rg >/dev/null 2>&1; then
 fi
 
 if command -v rg >/dev/null 2>&1; then
-  mapfile -t structs < <(rg -N --no-heading "pub struct ([A-Za-z0-9_]+)" "$root" \
+  mapfile -t structs < <(rg -N --no-heading "^[[:space:]]*pub struct ([A-Za-z0-9_]+)" "$root" \
     | sed -E 's/.*pub struct ([A-Za-z0-9_]+).*/\1/' \
     | sort -u)
 else
-  mapfile -t structs < <(grep -Rno "pub struct [A-Za-z0-9_]\+" "$root" \
+  mapfile -t structs < <(grep -Rno "^[[:space:]]*pub struct [A-Za-z0-9_]\+" "$root" \
     | sed -E 's/.*pub struct ([A-Za-z0-9_]+).*/\1/' \
     | sort -u)
 fi

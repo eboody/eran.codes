@@ -22,3 +22,5 @@ Apply repo-approved Maud composition, escaping, and structure patterns when buil
 - Reuse primitives composition-first (for example, compose `Icon` inside `Tab`) rather than duplicating leaf markup.
 - Keep behavior variants typed (enum-driven render branches) instead of raw string flags.
 - Prefer module-scoped render APIs and qualified calls (`tab_set::pane::Body`) over flat prefixed type names.
+- For log surfaces, keep render primitives under `views/partials/components/logs` and keep trace-entry mapping in a separate VM layer (`views/partials/demo/log/vm`).
+- Preserve stable patch-target roots (`live-log-target`, `network-log-target`) when refactoring internals so SSE `patch_elements` convergence does not drift.

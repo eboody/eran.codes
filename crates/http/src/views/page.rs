@@ -4,6 +4,7 @@ use maud_extensions::css;
 
 use crate::paths::Route;
 use crate::types::Text;
+use crate::views::partials::components::{NavBar, NavLink, NavLinkList};
 
 pub(crate) const PORTFOLIO_RESUME_URL: &str = "/static/resume.txt";
 pub(crate) const PORTFOLIO_GITHUB_URL: &str = "https://github.com/eboody/eran.codes";
@@ -20,16 +21,16 @@ pub struct UserNav {
 impl Render for UserNav {
     fn render(&self) -> Markup {
         maud::html! {
-            ul class="site-auth-links" {
+            ul class="ui-nav-list ui-nav-auth" {
                 li {
-                    span { "Signed in as " (&self.username) }
+                    span class="ui-nav-auth-text" { "Signed in as " (&self.username) }
                 }
                 li {
-                    a href=(Route::Protected) { "Account" }
+                    a class="ui-nav-link" href=(Route::Protected) { "Account" }
                 }
                 li {
                     form method="post" action=(Route::Logout) {
-                        button type="submit" class="secondary" { "Sign out" }
+                        button type="submit" class="secondary ui-nav-auth-action" { "Sign out" }
                     }
                 }
             }
@@ -67,76 +68,6 @@ impl Render for AppShellStyles {
                     me h2,
                     me h3 {
                       letter-spacing: -0.02rem;
-                    }
-                    me .site-nav-wrap {
-                      position: sticky;
-                      top: 0.55rem;
-                      z-index: 20;
-                      margin-top: 0.45rem;
-                    }
-                    me .site-nav {
-                      display: flex;
-                      flex-wrap: wrap;
-                      align-items: center;
-                      justify-content: space-between;
-                      gap: 0.55rem 1rem;
-                      border-radius: var(--ui-radius-md);
-                      border: 1px solid color-mix(in srgb, var(--ui-text-muted) 20%, transparent);
-                      background: color-mix(in srgb, var(--ui-surface-card) 96%, transparent);
-                      backdrop-filter: blur(10px);
-                      box-shadow: 0 4px 14px color-mix(in srgb, black 14%, transparent);
-                      padding: 0.5rem 0.85rem;
-                    }
-                    me .site-nav ul {
-                      list-style: none;
-                      margin: 0;
-                      padding: 0;
-                    }
-                    me .site-brand-links a {
-                      font-size: 0.86rem;
-                      font-weight: 700;
-                      letter-spacing: 0.03rem;
-                      text-transform: uppercase;
-                    }
-                    me .portfolio-nav-links {
-                      display: flex;
-                      flex-wrap: wrap;
-                      align-items: center;
-                      gap: 0.22rem;
-                      flex: 1;
-                      justify-self: center;
-                      justify-content: center;
-                    }
-                    me .site-auth-links {
-                      display: flex;
-                      flex-wrap: wrap;
-                      align-items: center;
-                      gap: 0.24rem;
-                      margin-left: auto;
-                      justify-self: end;
-                    }
-                    me .site-auth-links span {
-                      font-size: 0.84rem;
-                      color: var(--ui-text-muted);
-                    }
-                    me .site-auth-links form {
-                      margin: 0;
-                    }
-                    me .site-auth-links button,
-                    me .portfolio-nav-links a,
-                    me .site-brand-links a {
-                      margin-bottom: 0;
-                    }
-                    me .site-auth-links button {
-                      padding: 0.34rem 0.72rem;
-                      font-size: 0.8rem;
-                    }
-                    me .portfolio-nav-links a {
-                      font-size: 0.84rem;
-                      color: var(--ui-text-muted);
-                    }
-                    me .portfolio-nav-links a:hover {
-                      color: var(--ui-text);
                     }
                     me button,
                     me .button {
@@ -300,33 +231,6 @@ impl Render for AppShellStyles {
                       }
                     }
                     @media (max-width: 768px) {
-                      me .site-nav-wrap {
-                        top: 0.35rem;
-                      }
-                      me .site-nav {
-                        border-radius: 16px;
-                        padding: 0.55rem 0.7rem;
-                        gap: 0.45rem 0.75rem;
-                      }
-                      me .site-auth-links {
-                        margin-left: auto;
-                      }
-                      me .portfolio-nav-links {
-                        order: 3;
-                        flex: 0 0 100%;
-                        justify-content: flex-start;
-                        overflow-x: auto;
-                        flex-wrap: nowrap;
-                        padding-bottom: 0.15rem;
-                        scrollbar-width: thin;
-                      }
-                      me .site-brand-links a {
-                        font-size: 0.8rem;
-                      }
-                      me .portfolio-nav-links a,
-                      me .site-auth-links a {
-                        font-size: 0.78rem;
-                      }
                       me .pill.path {
                         max-width: 100%;
                         overflow-wrap: anywhere;
@@ -358,49 +262,65 @@ pub struct Layout<'a> {
 impl Render for Layout<'_> {
     fn render(&self) -> Markup {
         let sse_tab_id = crate::types::SseTabId::new(uuid::Uuid::new_v4().to_string());
+        let brand_links = NavLinkList::builder()
+            .class_name(Text::from("ui-nav-list ui-nav-brand"))
+            .children(vec![
+                NavLink::builder()
+                    .label(Text::from("eran.codes"))
+                    .href(Text::from(Route::Home.as_str()))
+                    .build(),
+            ])
+            .build();
+        let portfolio_links = NavLinkList::builder()
+            .class_name(Text::from("ui-nav-list ui-nav-links"))
+            .children(vec![
+                NavLink::builder()
+                    .label(Text::from("Resume"))
+                    .href(Text::from(PORTFOLIO_RESUME_URL))
+                    .build(),
+                NavLink::builder()
+                    .label(Text::from("GitHub"))
+                    .href(Text::from(PORTFOLIO_GITHUB_URL))
+                    .external(true)
+                    .build(),
+                NavLink::builder()
+                    .label(Text::from("LinkedIn"))
+                    .href(Text::from(PORTFOLIO_LINKEDIN_URL))
+                    .external(true)
+                    .build(),
+                NavLink::builder()
+                    .label(Text::from("Contact"))
+                    .href(Text::from(PORTFOLIO_CONTACT_URL))
+                    .build(),
+            ])
+            .build();
+        let auth_slot = match &self.user {
+            Some(user) => user.render(),
+            None => {
+                NavLinkList::builder()
+                    .class_name(Text::from("ui-nav-list ui-nav-auth"))
+                    .children(vec![
+                        NavLink::builder()
+                            .label(Text::from("Sign in"))
+                            .href(Text::from(Route::Login.as_str()))
+                            .build(),
+                        NavLink::builder()
+                            .label(Text::from("Create account"))
+                            .href(Text::from(Route::Register.as_str()))
+                            .build(),
+                    ])
+                    .build()
+                    .render()
+            }
+        };
+        let nav_bar = NavBar::builder()
+            .brand(brand_links)
+            .links(portfolio_links)
+            .auth_slot(auth_slot)
+            .build();
         let body_content = maud::html! {
             (AppShellStyles.render())
-            header class="container site-nav-wrap" {
-                nav class="site-nav" {
-                    ul class="site-brand-links" {
-                        li {
-                            a href=(Route::Home) { "eran.codes" }
-                        }
-                    }
-                    ul class="portfolio-nav-links" {
-                        li {
-                            a href=(PORTFOLIO_RESUME_URL) { "Resume" }
-                        }
-                        li {
-                            a href=(PORTFOLIO_GITHUB_URL) target="_blank" rel="noopener noreferrer" {
-                                "GitHub"
-                            }
-                        }
-                        li {
-                            a   href=(PORTFOLIO_LINKEDIN_URL)
-                                target="_blank"
-                                rel="noopener noreferrer"
-                            { "LinkedIn" }
-                        }
-                        li {
-                            a href=(PORTFOLIO_CONTACT_URL) { "Contact" }
-                        }
-                    }
-                    @match &self.user {
-                        Some(user) => { (user.render()) }
-                        None => {
-                            ul class="site-auth-links" {
-                                li {
-                                    a href=(Route::Login) { "Sign in" }
-                                }
-                                li {
-                                    a href=(Route::Register) { "Create account" }
-                                }
-                            }
-                        }
-                    }
-                }
-            }
+            (nav_bar)
             div id="error-target" {}
             (self.content.clone())
         };
