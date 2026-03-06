@@ -185,7 +185,7 @@ impl maud::Render for Home {
                 (HomeStyles.render())
                 section
                     id="counter-demo"
-                    data-signals="{count: 0, server_count: 0, server_connected: false}" {
+                    data-signals="{count: 0, delta: 0, server_count: 0, server_connected: false}" {
                     ({
                         SectionHeader::builder()
                             .title(Text::from("Counter Test"))
@@ -200,11 +200,11 @@ impl maud::Render for Home {
                         button
                             class="button secondary"
                             type="button"
-                            data-on:click="$count = $count - 1; @post('/api/counter/sync', {delta: -1})" { "-" }
+                            data-on:click="$count = $count - 1; $delta = -1; @post('/api/counter/sync')" { "-" }
                         button
                             class="button"
                             type="button"
-                            data-on:click="$count = $count + 1; @post('/api/counter/sync', {delta: 1})" { "+" }
+                            data-on:click="$count = $count + 1; $delta = 1; @post('/api/counter/sync')" { "+" }
                         span { "local: " strong data-text="$count" { "0" } }
                         span { "server: " strong data-text="$server_count" { "0" } }
                         span data-text="$server_connected ? 'synced' : 'disconnected'" { "disconnected" }
