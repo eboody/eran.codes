@@ -254,6 +254,13 @@ check_general_compound_prefix_groups() {
     while IFS= read -r hit; do
       local base
       base="$(basename "$hit" .rs)"
+
+      # Files that explicitly declare descriptive module import policy are
+      # already namespaced surfaces; skip generic sibling-prefix heuristics.
+      if grep -Eq '^[[:space:]]*//[[:space:]]*ci:[[:space:]]*descriptive-module-import[[:space:]]+[A-Za-z0-9_:]+' "$hit"; then
+        continue
+      fi
+
       if [[ "$base" != *_* ]]; then
         continue
       fi

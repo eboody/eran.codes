@@ -25,6 +25,10 @@ jobs:
         run: scripts/ci/style-system-consistency.sh
       - name: reusable component naming
         run: scripts/ci/reusable-component-naming.sh
+      - name: render composition contract
+        run: scripts/ci/render-composition-contract.sh
+      - name: tab icon reference contract
+        run: scripts/ci/tab-icon-reference-contract.sh
       - name: cms content model templates
         run: scripts/ci/cms-content-model.sh
       - name: partials render
@@ -35,6 +39,8 @@ jobs:
         run: scripts/ci/contradiction-reconciliation-policy.sh
       - name: quality closure policy
         run: scripts/ci/quality-closure-policy.sh
+      - name: runtime generated duplication
+        run: scripts/ci/runtime-generated-duplication.sh
       - name: descriptive module imports
         run: scripts/ci/descriptive-module-imports.sh
       - name: visual expert signoff

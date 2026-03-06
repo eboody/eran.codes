@@ -1,0 +1,354 @@
+use maud::Render;
+
+// ci: style-system-component
+// ci: render-composition-component
+// ci: descriptive-module-import crate::views::partials::components::tab_set
+#[derive(Clone, Debug)]
+pub(crate) struct Component<'a> {
+    pub id: &'a str,
+    pub class: &'a str,
+    pub active_tab_id: &'a str,
+    pub tabs: tab::Set<'a>,
+    pub panes: pane::List<'a>,
+}
+
+impl Render for Component<'_> {
+    fn render(&self) -> maud::Markup {
+        maud::html! {
+            section
+                id=(self.id)
+                class=(self.class)
+                data-signals=(format!("{{active_tab_id: '{}'}}", self.active_tab_id)) {
+                (self.tabs)
+                (self.panes)
+            }
+        }
+    }
+}
+
+pub(crate) mod tab {
+    use maud::Render;
+
+    use crate::types::Text;
+    use crate::views::partials::components::Tab;
+
+    #[derive(Clone, Debug)]
+    pub(crate) struct Set<'a> {
+        pub aria_label: Text,
+        pub tabs: List<'a>,
+    }
+
+    impl Render for Set<'_> {
+        fn render(&self) -> maud::Markup {
+            maud::html! {
+                nav class="tab-set__tabs ui-tabs" role="tablist" aria-label=(&self.aria_label) {
+                    (self.tabs)
+                }
+            }
+        }
+    }
+
+    #[derive(Clone, Debug)]
+    pub(crate) struct List<'a> {
+        pub children: &'a [Tab],
+    }
+
+    impl Render for List<'_> {
+        fn render(&self) -> maud::Markup {
+            maud::html! {
+                @for tab in self.children {
+                    (tab)
+                }
+            }
+        }
+    }
+}
+
+pub(crate) mod pane {
+    use maud::Render;
+
+    use crate::types::Text;
+    use crate::views::partials::components::Tab;
+
+    use super::content;
+
+    #[derive(Clone, Debug)]
+    pub(crate) struct List<'a> {
+        pub children: &'a [Item],
+    }
+
+    impl Render for List<'_> {
+        fn render(&self) -> maud::Markup {
+            maud::html! {
+                @for pane in self.children {
+                    (pane)
+                }
+            }
+        }
+    }
+
+    #[derive(Clone, Debug)]
+    pub(crate) struct Item {
+        pub tab_dom_id: Text,
+        pub panel_dom_id: Text,
+        pub tab_value: Text,
+        pub preview: Option<Preview>,
+        pub body: Option<Body>,
+        pub action: Option<Action>,
+    }
+
+    impl Item {
+        pub(crate) fn from_content(tab: &Tab, tab_value: Text, tab_content: &content::Tab) -> Self {
+            Self {
+                tab_dom_id: tab.id.clone(),
+                panel_dom_id: tab.controls.clone(),
+                tab_value,
+                preview: tab_content.preview.as_ref().map(Preview::from_content),
+                body: tab_content.body.as_ref().map(Body::from_content),
+                action: tab_content.action.as_ref().map(Action::from_content),
+            }
+        }
+    }
+
+    impl Render for Item {
+        fn render(&self) -> maud::Markup {
+            let show_expr = format!("$active_tab_id == '{}'", self.tab_value);
+            let tabindex_expr = format!("{} ? '0' : '-1'", show_expr);
+
+            maud::html! {
+                section
+                    id=(&self.panel_dom_id)
+                    class="tab-set__panel ui-panel"
+                    role="tabpanel"
+                    aria-labelledby=(&self.tab_dom_id)
+                    data-show=(show_expr)
+                    data-attr:tabindex=(tabindex_expr) {
+                    @if let Some(preview) = &self.preview {
+                        (preview)
+                    }
+                    div class="tab-set__copy" {
+                        @if let Some(body) = &self.body {
+                            (body)
+                        }
+                        @if let Some(action) = &self.action {
+                            (action)
+                        }
+                    }
+                }
+            }
+        }
+    }
+
+    #[derive(Clone, Debug)]
+    pub(crate) struct Preview {
+        pub asset_ref: Option<Text>,
+        pub badge_text: Option<Text>,
+    }
+
+    impl Preview {
+        pub(crate) fn from_content(preview: &content::Preview) -> Self {
+            Self {
+                asset_ref: preview
+                    .image
+                    .as_ref()
+                    .map(|image| image.asset_ref.clone()),
+                badge_text: preview.badge.as_ref().map(|badge| badge.text.clone()),
+            }
+        }
+    }
+
+    impl Render for Preview {
+        fn render(&self) -> maud::Markup {
+            maud::html! {
+                div class="tab-set__preview" {
+                    div class="tab-set__preview-frame ui-preview-frame" {
+                        p class="tab-set__preview-label" { "Preview" }
+                        @if let Some(asset_ref) = &self.asset_ref {
+                            p class="tab-set__preview-asset" { (asset_ref) }
+                        }
+                        @if let Some(badge_text) = &self.badge_text {
+                            p class="tab-set__badge" { (badge_text) }
+                        }
+                    }
+                }
+            }
+        }
+    }
+
+    #[derive(Clone, Debug)]
+    pub(crate) struct Body {
+        pub title: Text,
+        pub subtitle: Option<Text>,
+        pub features: FeatureList,
+    }
+
+    impl Body {
+        pub(crate) fn from_content(body: &content::Body) -> Self {
+            Self {
+                title: body.title.clone(),
+                subtitle: body.subtitle.clone(),
+                features: FeatureList {
+                    children: body.features.iter().map(Feature::from_content).collect(),
+                },
+            }
+        }
+    }
+
+    impl Render for Body {
+        fn render(&self) -> maud::Markup {
+            maud::html! {
+                h2 { (&self.title) }
+                @if let Some(subtitle) = &self.subtitle {
+                    p class="tab-set__subtitle" { (subtitle) }
+                }
+                (self.features)
+            }
+        }
+    }
+
+    #[derive(Clone, Debug)]
+    pub(crate) struct FeatureList {
+        pub children: Vec<Feature>,
+    }
+
+    impl Render for FeatureList {
+        fn render(&self) -> maud::Markup {
+            maud::html! {
+                ul class="tab-set__features ui-feature-list" {
+                    @for feature in &self.children {
+                        (feature)
+                    }
+                }
+            }
+        }
+    }
+
+    #[derive(Clone, Debug)]
+    pub(crate) struct Feature {
+        pub text: Text,
+    }
+
+    impl Feature {
+        pub(crate) fn from_content(feature: &content::Feature) -> Self {
+            Self {
+                text: feature.text.clone(),
+            }
+        }
+    }
+
+    impl Render for Feature {
+        fn render(&self) -> maud::Markup {
+            maud::html! {
+                li { (&self.text) }
+            }
+        }
+    }
+
+    #[derive(Clone, Debug)]
+    pub(crate) struct Action {
+        pub label: Text,
+        pub href: Option<Text>,
+    }
+
+    impl Action {
+        pub(crate) fn from_content(action: &content::Action) -> Self {
+            Self {
+                label: action.label.clone(),
+                href: action.href.clone(),
+            }
+        }
+    }
+
+    impl Render for Action {
+        fn render(&self) -> maud::Markup {
+            maud::html! {
+                @if let Some(href) = &self.href {
+                    a class="button tab-set__cta ui-cta" href=(href) {
+                        (&self.label)
+                    }
+                } @else {
+                    button class="button tab-set__cta ui-cta" type="button" {
+                        (&self.label)
+                    }
+                }
+            }
+        }
+    }
+}
+
+pub(crate) mod content {
+    use serde::Deserialize;
+
+    use crate::types::Text;
+    use crate::views::partials::components::primitives::Icon;
+
+    #[derive(Debug, Clone, Deserialize)]
+    pub(crate) struct TabSetContent {
+        pub tabs: Vec<Tab>,
+    }
+
+    #[derive(Debug, Clone, Deserialize)]
+    pub(crate) struct Tab {
+        pub id: Text,
+        pub label: Label,
+        pub icon: Option<Icon>,
+        pub preview: Option<Preview>,
+        #[serde(default, alias = "detail")]
+        pub body: Option<Body>,
+        #[serde(default, alias = "cta")]
+        pub action: Option<Action>,
+    }
+
+    #[derive(Debug, Clone, Deserialize)]
+    pub(crate) struct Label {
+        #[serde(alias = "line_1")]
+        pub primary: Text,
+        #[serde(default, alias = "line_2")]
+        pub secondary: Option<Text>,
+    }
+
+    impl Label {
+        pub(crate) fn text(&self) -> Text {
+            self.secondary
+                .as_ref()
+                .map(|secondary| Text::from(format!("{} {}", self.primary, secondary)))
+                .unwrap_or_else(|| self.primary.clone())
+        }
+    }
+
+    #[derive(Debug, Clone, Deserialize)]
+    pub(crate) struct Preview {
+        pub image: Option<Image>,
+        pub badge: Option<Badge>,
+    }
+
+    #[derive(Debug, Clone, Deserialize)]
+    pub(crate) struct Image {
+        pub asset_ref: Text,
+        #[serde(default, rename = "alt")]
+        pub _alt: Option<Text>,
+    }
+
+    #[derive(Debug, Clone, Deserialize)]
+    pub(crate) struct Badge {
+        pub text: Text,
+    }
+
+    #[derive(Debug, Clone, Deserialize)]
+    pub(crate) struct Body {
+        pub title: Text,
+        pub subtitle: Option<Text>,
+        pub features: Vec<Feature>,
+    }
+
+    #[derive(Debug, Clone, Deserialize)]
+    pub(crate) struct Feature {
+        pub text: Text,
+    }
+
+    #[derive(Debug, Clone, Deserialize)]
+    pub(crate) struct Action {
+        pub label: Text,
+        pub href: Option<Text>,
+    }
+}

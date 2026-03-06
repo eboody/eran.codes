@@ -400,6 +400,12 @@
       "created": [
         "counter_widget"
       ]
+    },
+    "render_contract": {
+      "composable_render": true,
+      "children_as_props": true,
+      "primitive_reuse": [],
+      "interaction_mode": "mixed_ui_local_command_sse"
     }
   },
   "styling": {

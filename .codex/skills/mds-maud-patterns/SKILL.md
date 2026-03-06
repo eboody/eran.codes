@@ -14,3 +14,11 @@ Apply repo-approved Maud composition, escaping, and structure patterns when buil
 - Use before defining `ui.nodes`, slot strategy, and render patterns.
 - Prefer documented Maud idioms over agent priors.
 - Defer unresolved ambiguities to `mds-docs-librarian`.
+
+## Render Composition Contract
+- Prefer typed render components over large inline render blocks.
+- Where repeated UI exists, model child component structs that each `impl Render`.
+- Parent components should accept child component collections as props and compose them directly in Maud.
+- Reuse primitives composition-first (for example, compose `Icon` inside `Tab`) rather than duplicating leaf markup.
+- Keep behavior variants typed (enum-driven render branches) instead of raw string flags.
+- Prefer module-scoped render APIs and qualified calls (`tab_set::pane::Body`) over flat prefixed type names.

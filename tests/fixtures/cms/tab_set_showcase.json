@@ -3,12 +3,11 @@
     {
       "id": "policy",
       "label": {
-        "line_1": "Secure",
-        "line_2": "Remote Access"
+        "primary": "Secure",
+        "secondary": "Remote Access"
       },
       "icon": {
-        "asset_ref": "icons/grid-circle",
-        "alt": "Secure tab"
+        "key": "circle"
       },
       "preview": {
         "image": {
@@ -19,7 +18,7 @@
           "text": "Integrates with Azure, Google, Okta"
         }
       },
-      "detail": {
+      "body": {
         "title": "Secure Remote Access",
         "subtitle": "Enable least privilege network access in a few clicks",
         "features": [
@@ -41,7 +40,7 @@
           }
         ]
       },
-      "cta": {
+      "action": {
         "label": "Explore",
         "href": "/explore"
       }
@@ -49,12 +48,11 @@
     {
       "id": "zero_config",
       "label": {
-        "line_1": "Zero-Config",
-        "line_2": "Deployment"
+        "primary": "Zero-Config",
+        "secondary": "Deployment"
       },
       "icon": {
-        "asset_ref": "icons/sliders",
-        "alt": "Deployment tab"
+        "key": "control-slider"
       },
       "preview": {
         "image": {
@@ -65,7 +63,7 @@
           "text": "CMS fixture preview"
         }
       },
-      "detail": {
+      "body": {
         "title": "Zero-Config Deployment",
         "subtitle": "Content rendered from CMS-shaped fixture data",
         "features": [
@@ -87,7 +85,7 @@
           }
         ]
       },
-      "cta": {
+      "action": {
         "label": "Explore",
         "href": "/explore"
       }
@@ -95,12 +93,11 @@
     {
       "id": "sso_mfa",
       "label": {
-        "line_1": "Seamless",
-        "line_2": "SSO with MFA"
+        "primary": "Seamless",
+        "secondary": "SSO with MFA"
       },
       "icon": {
-        "asset_ref": "icons/key",
-        "alt": "SSO tab"
+        "key": "key"
       },
       "preview": {
         "image": {
@@ -111,7 +108,7 @@
           "text": "CMS fixture preview"
         }
       },
-      "detail": {
+      "body": {
         "title": "Seamless SSO with MFA",
         "subtitle": "Content rendered from CMS-shaped fixture data",
         "features": [
@@ -133,7 +130,7 @@
           }
         ]
       },
-      "cta": {
+      "action": {
         "label": "Explore",
         "href": "/explore"
       }
@@ -141,12 +138,11 @@
     {
       "id": "posture",
       "label": {
-        "line_1": "Dynamic",
-        "line_2": "Posture Checks"
+        "primary": "Dynamic",
+        "secondary": "Posture Checks"
       },
       "icon": {
-        "asset_ref": "icons/triangle",
-        "alt": "Posture tab"
+        "key": "triangle"
       },
       "preview": {
         "image": {
@@ -157,7 +153,7 @@
           "text": "CMS fixture preview"
         }
       },
-      "detail": {
+      "body": {
         "title": "Dynamic Posture Checks",
         "subtitle": "Content rendered from CMS-shaped fixture data",
         "features": [
@@ -179,7 +175,7 @@
           }
         ]
       },
-      "cta": {
+      "action": {
         "label": "Explore",
         "href": "/explore"
       }
@@ -187,12 +183,11 @@
     {
       "id": "network",
       "label": {
-        "line_1": "Centralized",
-        "line_2": "Network Management"
+        "primary": "Centralized",
+        "secondary": "Network Management"
       },
       "icon": {
-        "asset_ref": "icons/globe",
-        "alt": "Network tab"
+        "key": "globe"
       },
       "preview": {
         "image": {
@@ -203,7 +198,7 @@
           "text": "CMS fixture preview"
         }
       },
-      "detail": {
+      "body": {
         "title": "Centralized Network Management",
         "subtitle": "Content rendered from CMS-shaped fixture data",
         "features": [
@@ -225,7 +220,7 @@
           }
         ]
       },
-      "cta": {
+      "action": {
         "label": "Explore",
         "href": "/explore"
       }
@@ -233,12 +228,11 @@
     {
       "id": "logging",
       "label": {
-        "line_1": "Detailed",
-        "line_2": "Activity Logging"
+        "primary": "Detailed",
+        "secondary": "Activity Logging"
       },
       "icon": {
-        "asset_ref": "icons/chart",
-        "alt": "Logging tab"
+        "key": "candlestick-chart"
       },
       "preview": {
         "image": {
@@ -249,7 +243,7 @@
           "text": "CMS fixture preview"
         }
       },
-      "detail": {
+      "body": {
         "title": "Detailed Activity Logging",
         "subtitle": "Content rendered from CMS-shaped fixture data",
         "features": [
@@ -271,7 +265,7 @@
           }
         ]
       },
-      "cta": {
+      "action": {
         "label": "Explore",
         "href": "/explore"
       }

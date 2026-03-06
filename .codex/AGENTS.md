@@ -66,6 +66,9 @@ This repository uses a project-local multi-agent system for generating Rust Maud
 - `mds-verifier` validates `component_spec` against:
   - `.codex/skills/mds-component-spec/references/component_spec.schema.json`
   - Cross-reference invariants in `.codex/skills/mds-component-spec/SKILL.md`
+- CI stop-the-line scripts also enforce composition contracts:
+  - `scripts/ci/render-composition-contract.sh`
+  - `scripts/ci/tab-icon-reference-contract.sh`
 - The run must fail if:
   - Any required field is missing.
   - Any reference points to a non-existent id.
@@ -108,7 +111,8 @@ This policy applies by default when a user asks to create/build/add a component 
   - Do not collapse into one monolithic component unless explicitly requested.
   - Reuse existing primitives/composites from `crates/http/src/views/partials/components` first.
   - If no fit exists, add a new reusable component there before introducing feature-specific view fragments.
-  - Use generic, library-style public names for reusable surfaces (for example `tabs_panel`, `tab_item`, `card_header`), not screenshot-specific names.
+  - Use generic, library-style public names for reusable surfaces (for example `tab_set`, `tab_item`, `card_header`), not screenshot-specific names.
+  - Prefer module-scoped type families for readability (for example `tab_set::pane::Body`, `application::Service`) instead of long prefixed standalone type names.
   - Include `design.reuse_scan` in `component_spec` to record checked/reused/created reusable components.
 - Default styling policy (Hybrid):
   - Reusable package styles belong in `crates/http/static/app.css` (tabs, panels, card shells, CTA, layout primitives).
@@ -130,5 +134,12 @@ This policy applies by default when a user asks to create/build/add a component 
     - `content.root_type`
     - reusable component files/types under `views/partials/components`
     - top-level slot names and root-level UI node ids
+- Render composition contract:
+  - Reusable components and meaningful child parts should be typed structs that `impl Render`.
+  - Parent components should accept child components as props (`Vec<TChild>`/slices) instead of inlining repeated markup.
+  - Reuse primitives composition-first (for example `Tab` composes `Icon`) instead of duplicating leaf markup.
+  - Behavior variants must be typed (enum/struct fields), not ad-hoc string flags.
+  - Prefer namespace imports and qualified usage (`use ...::tab_set; ... tab_set::pane::Body`) over leaf imports that hide ownership context.
+  - Tab interactions default to `ui_local` Datastar for presentation concerns unless explicitly overridden.
 - Opt-out is explicit:
   - Only bypass this default when the user clearly asks for `single component`, `skip spec`, or `end-to-end in one pass`.

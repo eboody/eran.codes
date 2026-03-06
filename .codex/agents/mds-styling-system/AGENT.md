@@ -32,7 +32,7 @@ Apply the hybrid styling policy at the end of component generation: extract reus
   "styling": {
     "mode": "hybrid",
     "global_packages": ["ui-tabs", "ui-tab", "ui-panel", "ui-cta"],
-    "scoped_exceptions": ["tabs_panel_showcase: panel-specific media query tweak"],
+    "scoped_exceptions": ["tab_set_showcase: panel-specific media query tweak"],
     "tokens_used": ["--ui-border-soft", "--ui-text-muted", "--portfolio-surface-border"]
   }
 }

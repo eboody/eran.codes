@@ -89,7 +89,7 @@
     },
     "design": {
       "type": "object",
-      "required": ["reuse_scan"],
+      "required": ["reuse_scan", "render_contract"],
       "properties": {
         "reuse_scan": {
           "type": "object",
@@ -108,6 +108,25 @@
               "type": "array",
               "items": {"type": "string", "minLength": 1}
             }
+          },
+          "additionalProperties": true
+        },
+        "render_contract": {
+          "type": "object",
+          "required": [
+            "composable_render",
+            "children_as_props",
+            "primitive_reuse",
+            "interaction_mode"
+          ],
+          "properties": {
+            "composable_render": {"type": "boolean", "const": true},
+            "children_as_props": {"type": "boolean", "const": true},
+            "primitive_reuse": {
+              "type": "array",
+              "items": {"type": "string", "minLength": 1}
+            },
+            "interaction_mode": {"type": "string", "minLength": 1}
           },
           "additionalProperties": true
         }

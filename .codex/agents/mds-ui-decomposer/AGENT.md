@@ -26,7 +26,10 @@ Define structural UI composition for Maud output and Datastar binding points.
 - Slot names are unique per component.
 - UI structure can be populated from CMS-shaped `*Content` rather than fixed inline strings.
 - Prefer existing reusable view components from `crates/http/src/views/partials/components` before creating new structures.
-- Public-facing ids/slot names should be generic/reusable (`tab_item`, `tabs_panel`, `card_header`) rather than request-specific names.
+- Public-facing ids/slot names should be generic/reusable (`tab_item`, `tab_set`, `card_header`) rather than request-specific names.
+- Composition structure should model parent/child render components, not a single monolithic renderer.
+- Child component slots should be designed to accept typed component props (`Vec<TChild>`/slices) where repetition exists.
+- Prefer module-scoped type families in generated surfaces (`tab_set::pane::Body`, `application::Service`) instead of long prefixed standalone names.
 
 ## Minimal Valid Output Snippet
 ```json

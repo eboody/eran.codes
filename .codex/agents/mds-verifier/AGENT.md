@@ -26,7 +26,9 @@ Validate full `component_spec` correctness against schema, cross-references, doc
 - `content` contract must exist with `source = cms`, typed `root_type`, and a real `fixture_path`.
 - `pipeline.parallel_groups` must include `mds-cms-content-modeler` with spec-design agents for component creation.
 - Public naming must remain generic/reusable on `meta.component_id`, `content.root_type`, and reusable component surfaces.
+- Reusable type families should be module-scoped where multiple companions exist (for example `tab_set::pane::Body` instead of `TabSetPaneBody`).
 - `design.reuse_scan` must document reuse-first evaluation against `views/partials/components`.
+- `design.render_contract` must exist and declare composable render expectations.
 - Every state field must provide `interaction_scope` + `authority_rationale`.
 - Scope/authority must be consistent (`app` scope requires `authority = app`; `presentation` defaults to `authority = ui` unless `override`).
 - Handler protocol metadata should be consistent with effects (`command_sse` => `invoke_backend`, `ui_local` => no backend command unless `override`).
@@ -36,6 +38,13 @@ Validate full `component_spec` correctness against schema, cross-references, doc
   - if request conflicts with accepted instructions/policy and no explicit reconciliation is present, verification outcome must be `fail`.
 - Known material quality gaps must block final-complete status:
   - if run output still has known defects/architecture drift, verification outcome must be `fail` unless the handoff explicitly requests another pass with concrete remaining scope.
+- Reusable component implementations should satisfy render-composition contract:
+  - parent/child typed render surfaces exist,
+  - children are composed via props, and
+  - primitive reuse is preferred over duplicate leaf components.
+- CI enforcement references for this contract:
+  - `scripts/ci/render-composition-contract.sh`
+  - `scripts/ci/tab-icon-reference-contract.sh`
 
 ## Authority Enforcement Checks
 - Fail if any `authority = "app"` field is updated by:
@@ -71,3 +80,4 @@ Run Policy:
 - MUST FAIL on docs contradictions without explicit valid `component_spec.override`.
 - MUST FAIL when unresolved prompt contradictions are detected (missing explicit user reconciliation).
 - MUST FAIL when unresolved material quality gaps are present without explicit next-pass handoff.
+- MUST FAIL when required render-composition contract metadata/checks are missing.

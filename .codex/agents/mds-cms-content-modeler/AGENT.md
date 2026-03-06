@@ -30,8 +30,8 @@ Define and validate the CMS-shaped content contract for component generation.
 {
   "content": {
     "source": "cms",
-    "root_type": "TabsPanelContent",
-    "fixture_path": "tests/fixtures/cms/tabs_panel.json",
+    "root_type": "TabSetContent",
+    "fixture_path": "tests/fixtures/cms/tab_set.json",
     "notes": "All feature copy, CTA labels, tabs, and logo refs come from CMS payload."
   }
 }

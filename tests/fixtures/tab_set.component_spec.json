@@ -1,6 +1,6 @@
 {
   "meta": {
-    "component_id": "tabs_panel",
+    "component_id": "tab_set",
     "version": "0.1.0",
     "target": [
       "rust-maud",
@@ -47,9 +47,9 @@
   },
   "content": {
     "source": "cms",
-    "root_type": "TabsPanelContent",
-    "fixture_path": "tests/fixtures/cms/tabs_panel_showcase.json",
-    "notes": "All tabs, preview media, feature bullets, CTA labels, and logos are CMS-provided."
+    "root_type": "TabSetContent",
+    "fixture_path": "tests/fixtures/cms/tab_set_showcase.json",
+    "notes": "All tabs, icon tokens, preview media, feature bullets, CTA labels, and logos are CMS-provided."
   },
   "design": {
     "reuse_scan": {
@@ -63,8 +63,17 @@
         "tab_panel"
       ],
       "created": [
-        "tabs_panel"
+        "tab_set"
       ]
+    },
+    "render_contract": {
+      "composable_render": true,
+      "children_as_props": true,
+      "primitive_reuse": [
+        "icon",
+        "tab"
+      ],
+      "interaction_mode": "ui_local_datastar"
     }
   },
   "ui": {
@@ -74,20 +83,20 @@
     },
     "nodes": [
       {
-        "id": "tabs_panel_root",
+        "id": "tab_set_root",
         "parent_id": null,
         "tag": "section",
         "attrs": {
-          "class": "tabs-panel",
+          "class": "tab-set",
           "data-signals": "{active_tab_id: 'policy', server_connected: false}"
         }
       },
       {
         "id": "tabs_bar",
-        "parent_id": "tabs_panel_root",
+        "parent_id": "tab_set_root",
         "tag": "nav",
         "attrs": {
-          "class": "tabs-panel__tabs",
+          "class": "tab-set__tabs",
           "role": "tablist",
           "aria-label": "Solutions"
         }
@@ -97,17 +106,17 @@
         "parent_id": "tabs_bar",
         "tag": "button",
         "attrs": {
-          "class": "tabs-panel__tab",
+          "class": "tab-set__tab",
           "role": "tab",
           "data-on:click": "@dispatch('tab_select', {tab_id: $el.dataset.tabId}); $active_tab_id = $el.dataset.tabId"
         }
       },
       {
         "id": "content_panel",
-        "parent_id": "tabs_panel_root",
+        "parent_id": "tab_set_root",
         "tag": "article",
         "attrs": {
-          "class": "tabs-panel__content"
+          "class": "tab-set__content"
         }
       },
       {
@@ -115,7 +124,7 @@
         "parent_id": "content_panel",
         "tag": "figure",
         "attrs": {
-          "class": "tabs-panel__preview"
+          "class": "tab-set__preview"
         }
       },
       {
@@ -123,7 +132,7 @@
         "parent_id": "content_panel",
         "tag": "div",
         "attrs": {
-          "class": "tabs-panel__copy"
+          "class": "tab-set__copy"
         }
       },
       {
@@ -131,7 +140,7 @@
         "parent_id": "copy_column",
         "tag": "button",
         "attrs": {
-          "class": "tabs-panel__cta",
+          "class": "tab-set__cta",
           "type": "button"
         }
       },
@@ -140,7 +149,7 @@
         "parent_id": "content_panel",
         "tag": "section",
         "attrs": {
-          "class": "tabs-panel__panel",
+          "class": "tab-set__panel",
           "role": "tabpanel"
         }
       }
@@ -165,7 +174,7 @@
     ],
     "bindings": [
       {
-        "node_id": "tabs_panel_root",
+        "node_id": "tab_set_root",
         "kind": "datastar-signal",
         "path": "active_tab_id"
       },
@@ -187,12 +196,12 @@
       {
         "node_id": "copy_column",
         "kind": "content",
-        "path": "tabs[active_tab_id].detail"
+        "path": "tabs[active_tab_id].body"
       },
       {
         "node_id": "cta_button",
         "kind": "content",
-        "path": "tabs[active_tab_id].cta"
+        "path": "tabs[active_tab_id].action"
       }
     ]
   },
@@ -245,9 +254,9 @@
         "protocol_rationale": "tab switching is a presentation interaction and should not invoke backend"
       },
       {
-        "id": "tabs_panel_sse",
+        "id": "tab_set_sse",
         "class": "app",
-        "source_node_id": "tabs_panel_root",
+        "source_node_id": "tab_set_root",
         "trigger": "sse:datastar-patch-signals",
         "payload": {
           "server_connected": "$event.server_connected"
@@ -290,7 +299,7 @@
         "method": "GET",
         "path": "/events",
         "input_type": "EventsStreamInput",
-        "output_type": "TabsPanelSseEvent"
+        "output_type": "TabSetSseEvent"
       }
     ],
     "types": [
@@ -304,7 +313,7 @@
         ]
       },
       {
-        "id": "TabsPanelSseEvent",
+        "id": "TabSetSseEvent",
         "fields": [
           {
             "name": "server_connected",

@@ -38,7 +38,10 @@ Generate Rust Maud + Datastar component code from a verified `component_spec`.
   - renderer input accepts `content`/view-model object, not many loose string args
 - Keep content mapping separate from rendering (infra/app mapping before view render).
 - Prefer importing/reusing existing components from `crates/http/src/views/partials/components` before generating new feature-local structures.
-- When adding a new reusable component, use generic library-style names (for example `tab_item`, `tabs_panel`) instead of request-specific wording.
+- For reusable components, generate typed child render components and compose them as props instead of flattening repeated markup into one render block.
+- Reuse existing primitives (for example `Tab`, `Icon`) before creating parallel equivalents.
+- When adding a new reusable component, use generic library-style names (for example `tab_item`, `tab_set`) instead of request-specific wording.
+- Prefer module-scoped type families and namespace usage (for example `tab_set::pane::Body`, `application::Service`) over flat prefixed type naming.
 - Emit markup that can consume shared global `app.css` package classes for reusable patterns.
 - Keep scoped `inline_css!` for exception-only component-specific behavior.
 - Keep output file set stable unless explicitly requested (`view.rs`, `state.rs`, `events.rs`, `handler.rs`).
@@ -50,6 +53,7 @@ Generate Rust Maud + Datastar component code from a verified `component_spec`.
 - Generated server mapping code updates app-authority fields only from SSE mapping paths (`datastar-patch-signals`).
 - Generated templates avoid literal marketing copy (placeholder/debug text only).
 - Codegen trace includes schema/version used.
+- Generated reusable component roots and declared child parts should each `impl Render`.
 
 ## Minimal Valid Output Snippet
 ```json

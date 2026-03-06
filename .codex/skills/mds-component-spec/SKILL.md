@@ -56,7 +56,7 @@ Tabs/selectors default to `presentation` unless explicit app-level semantics are
 
 ## Public Naming Contract (Library Style)
 Component-creation outputs should be reusable by default. Public identifiers must be generic and role-based:
-- Good: `tabs_panel`, `tab_item`, `status_card`, `hero_banner`
+- Good: `tab_set`, `tab_item`, `status_card`, `hero_banner`
 - Bad: `secure_remote_access_tabs`, `feature_tab_item`, `image_1_panel`
 
 Applies to public surfaces:
@@ -64,6 +64,7 @@ Applies to public surfaces:
 - `content.root_type`
 - reusable component file/type names
 - top-level slot names and root-level UI node ids
+- module-scoped companion type names (prefer `module::Type` families like `tab_set::pane::Body` over flat `TabSetPaneBody`)
 
 Feature-specific naming is allowed only when explicitly justified via `override`.
 
@@ -72,6 +73,17 @@ For component creation, specs must include `design.reuse_scan` to record reuse d
 - `checked_components[]`: reusable components evaluated (usually under `crates/http/src/views/partials/components`)
 - `reused[]`: components chosen for reuse
 - `created[]`: new reusable components added when no fit existed
+
+## Render Contract (Required)
+Every component spec must declare `design.render_contract`:
+- `composable_render`: `true`
+- `children_as_props`: `true`
+- `primitive_reuse`: array of primitive component ids reused by composition (for example `["icon", "tab"]`)
+- `interaction_mode`: string describing the component interaction model (for example `ui_local_datastar`)
+
+Semantics:
+- Parent/child render composition is explicit and typed.
+- Reused primitives should be listed when applicable.
 
 ## Styling Contract (Required)
 Every generated component spec must declare a styling plan:
@@ -149,6 +161,9 @@ This declares semantic dispatch style. Projects may still use local Datastar exp
 - `pipeline.parallel_groups` must include `mds-cms-content-modeler` in the same group as other spec-design agents for component creation.
 - `pipeline.execution_order` must include `mds-styling-system` after `mds-codegen` and before `mds-verifier`.
 - `design.reuse_scan` must include at least one checked component entry.
+- `design.render_contract.composable_render` must be `true`.
+- `design.render_contract.children_as_props` must be `true`.
+- `design.render_contract.interaction_mode` must be non-empty.
 - `styling.mode` must be `hybrid`.
 - `styling.global_packages` must include at least one reusable package class.
 - Docs-backed rules from `/docs` must be honored unless `override` is present and valid.
@@ -175,7 +190,10 @@ This declares semantic dispatch style. Projects may still use local Datastar exp
   "scope": {"description": "example"},
   "pipeline": {"execution_order": ["mds-orchestrator", "mds-docs-librarian", "mds-ui-decomposer", "mds-cms-content-modeler", "mds-state-modeler", "mds-events-designer", "mds-backend-contracts", "mds-codegen", "mds-styling-system", "mds-verifier"], "required_agents": ["mds-orchestrator", "mds-docs-librarian", "mds-ui-decomposer", "mds-cms-content-modeler", "mds-state-modeler", "mds-events-designer", "mds-backend-contracts", "mds-codegen", "mds-styling-system", "mds-verifier"], "parallel_groups": [["mds-ui-decomposer", "mds-cms-content-modeler", "mds-state-modeler", "mds-events-designer", "mds-backend-contracts"]]},
   "content": {"source": "cms", "root_type": "ExampleContent", "fixture_path": "tests/fixtures/cms/example.json"},
-  "design": {"reuse_scan": {"checked_components": ["crates/http/src/views/partials/components/tab.rs"], "reused": ["tab"], "created": []}},
+  "design": {
+    "reuse_scan": {"checked_components": ["crates/http/src/views/partials/components/tab.rs"], "reused": ["tab"], "created": []},
+    "render_contract": {"composable_render": true, "children_as_props": true, "primitive_reuse": ["tab"], "interaction_mode": "ui_local_datastar"}
+  },
   "styling": {"mode": "hybrid", "global_packages": ["ui-tabs", "ui-panel"], "scoped_exceptions": [], "tokens_used": ["--ui-border-soft"]},
   "ui": {"event_dispatch": {"syntax": "@dispatch('<handler_id>')", "description": "semantic event dispatch"}, "nodes": [], "slots": [], "bindings": []},
   "state": {"fields": [{"id": "local_count", "type": "integer", "initial": 0, "authority": "ui", "sync": "optimistic", "interaction_scope": "presentation", "authority_rationale": "local presentation control"}, {"id": "server_count", "type": "integer", "initial": 0, "authority": "app", "sync": "authoritative", "interaction_scope": "app", "authority_rationale": "canonical server value"}], "derived": [], "persistence": []},

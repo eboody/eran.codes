@@ -2,7 +2,7 @@ use bon::Builder;
 use maud::Render;
 
 use crate::types::Text;
-use crate::views::partials::components::Tab;
+use crate::views::partials::components::{Tab, TabInteraction};
 use crate::views::proper_theme::THEME;
 
 use super::tabbed_showcase;
@@ -28,48 +28,54 @@ impl Render for ProfessionalismInPracticeTabs {
                         controls: Text::from("professionalism-practice-panel-0"),
                         palette: &THEME.gray,
                         is_selected: true,
-                        icon_glyph: None,
+                        icon: None,
                         text: Text::from("Boundary-first modeling"),
+                        interaction: TabInteraction::PanelJs,
                     },
                     Tab {
                         id: Text::from("professionalism-practice-tab-1"),
                         controls: Text::from("professionalism-practice-panel-1"),
                         palette: &THEME.gray,
                         is_selected: false,
-                        icon_glyph: None,
+                        icon: None,
                         text: Text::from("Typed invariants"),
+                        interaction: TabInteraction::PanelJs,
                     },
                     Tab {
                         id: Text::from("professionalism-practice-tab-2"),
                         controls: Text::from("professionalism-practice-panel-2"),
                         palette: &THEME.gray,
                         is_selected: false,
-                        icon_glyph: None,
+                        icon: None,
                         text: Text::from("Error contracts"),
+                        interaction: TabInteraction::PanelJs,
                     },
                     Tab {
                         id: Text::from("professionalism-practice-tab-3"),
                         controls: Text::from("professionalism-practice-panel-3"),
                         palette: &THEME.gray,
                         is_selected: false,
-                        icon_glyph: None,
+                        icon: None,
                         text: Text::from("Observability"),
+                        interaction: TabInteraction::PanelJs,
                     },
                     Tab {
                         id: Text::from("professionalism-practice-tab-4"),
                         controls: Text::from("professionalism-practice-panel-4"),
                         palette: &THEME.gray,
                         is_selected: false,
-                        icon_glyph: None,
+                        icon: None,
                         text: Text::from("Reusable views"),
+                        interaction: TabInteraction::PanelJs,
                     },
                     Tab {
                         id: Text::from("professionalism-practice-tab-5"),
                         controls: Text::from("professionalism-practice-panel-5"),
                         palette: &THEME.gray,
                         is_selected: false,
-                        icon_glyph: None,
+                        icon: None,
                         text: Text::from("Readable wiring"),
+                        interaction: TabInteraction::PanelJs,
                     },
                 ])
                 .panels(vec![

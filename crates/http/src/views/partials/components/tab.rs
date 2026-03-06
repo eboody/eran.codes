@@ -4,7 +4,7 @@ use maud_extensions::inline_css;
 use crate::types::Text;
 use crate::views::proper_theme::Palette;
 
-use super::primitives::{Icon, IconGlyph};
+use super::primitives::Icon;
 
 #[derive(Clone, Debug)]
 pub(crate) struct Tab {
@@ -12,8 +12,15 @@ pub(crate) struct Tab {
     pub controls: Text,
     pub palette: &'static Palette,
     pub is_selected: bool,
-    pub icon_glyph: Option<IconGlyph>,
+    pub icon: Option<Icon>,
     pub text: Text,
+    pub interaction: TabInteraction,
+}
+
+#[derive(Clone, Debug)]
+pub(crate) enum TabInteraction {
+    PanelJs,
+    DatastarLocal { signal: Text, value: Text },
 }
 
 impl Render for Tab {
@@ -25,31 +32,68 @@ impl Render for Tab {
             self.palette.main.clone()
         };
 
-        let icon = self.icon_glyph.as_ref().map(|glyph| Icon {
-            glyph: glyph.clone(),
-            color: foreground_color.clone(),
-        });
+        let icon = self
+            .icon
+            .as_ref()
+            .map(|icon| icon.clone().with_color(foreground_color.clone()));
 
-        maud::html! {
-            button.showcase-tab.is-selected[self.is_selected]
-                type="button"
-                role="tab"
-                id=(&self.id)
-                aria-controls=(&self.controls)
-                aria-selected=(self.is_selected)
-                tabindex=(tab_index)
-                style={
-                    "--tab-accent: " (&self.palette.main) "; "
-                    "--tab-fg: " (&foreground_color) ";"
+        let style = format!(
+            "--tab-accent: {}; --tab-fg: {};",
+            self.palette.main.as_ref(),
+            foreground_color.as_ref()
+        );
+
+        match &self.interaction {
+            TabInteraction::PanelJs => {
+                maud::html! {
+                    button.showcase-tab.is-selected[self.is_selected]
+                        type="button"
+                        role="tab"
+                        id=(&self.id)
+                        aria-controls=(&self.controls)
+                        aria-selected=(self.is_selected)
+                        tabindex=(tab_index)
+                        style=(style) {
+                        (css())
+                        (render_content(&icon, &self.text))
+                    }
                 }
-            {
-                (css())
-                @if let Some(icon) = &icon {
-                    span class="showcase-tab-icon" { (icon) }
+            }
+            TabInteraction::DatastarLocal { signal, value } => {
+                let selected_expr = format!("${} == '{}'", signal, value);
+                let selected_attr = format!("{} ? 'true' : 'false'", selected_expr);
+                let tabindex_attr = format!("{} ? '0' : '-1'", selected_expr);
+                let click_expr = format!("${} = '{}'", signal, value);
+
+                maud::html! {
+                    button.showcase-tab.tab-set__tab.ui-tab.is-selected[self.is_selected]
+                        type="button"
+                        role="tab"
+                        id=(&self.id)
+                        aria-controls=(&self.controls)
+                        aria-selected=(self.is_selected)
+                        tabindex=(tab_index)
+                        data-tab-id=(value)
+                        data-class:is-selected=(selected_expr)
+                        data-attr:aria-selected=(selected_attr)
+                        data-attr:tabindex=(tabindex_attr)
+                        data-on:click=(click_expr)
+                        style=(style) {
+                        (css())
+                        (render_content(&icon, &self.text))
+                    }
                 }
-                span class="showcase-tab-label" { (&self.text) }
             }
         }
+    }
+}
+
+fn render_content(icon: &Option<Icon>, text: &Text) -> maud::Markup {
+    maud::html! {
+        @if let Some(icon) = icon {
+            span class="showcase-tab-icon" { (icon) }
+        }
+        span class="showcase-tab-label tab-set__tab-line" { (text) }
     }
 }
 

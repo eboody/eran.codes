@@ -1,10 +1,9 @@
 use bon::Builder;
 use maud::Render;
-use maud_iconoir::regular;
 
 use crate::paths::Route;
 use crate::types::Text;
-use crate::views::partials::components::Tab;
+use crate::views::partials::components::{Tab, TabInteraction, primitives::Icon};
 use crate::views::proper_theme::THEME;
 
 use super::tabbed_showcase;
@@ -30,32 +29,36 @@ impl Render for CapabilityShowcase {
                         controls: Text::from("portfolio-showcase-panel-0"),
                         palette: &THEME.yellow,
                         is_selected: true,
-                        icon_glyph: Some(regular::HEART),
+                        icon: Some(Icon::from_token("heart")),
                         text: Text::from("Identity + Sessions"),
+                        interaction: TabInteraction::PanelJs,
                     },
                     Tab {
                         id: Text::from("portfolio-showcase-tab-1"),
                         controls: Text::from("portfolio-showcase-panel-1"),
                         palette: &THEME.teal,
                         is_selected: false,
-                        icon_glyph: Some(regular::REFRESH_DOUBLE),
+                        icon: Some(Icon::from_token("refresh-double")),
                         text: Text::from("Boundary-Safe Flows"),
+                        interaction: TabInteraction::PanelJs,
                     },
                     Tab {
                         id: Text::from("portfolio-showcase-tab-2"),
                         controls: Text::from("portfolio-showcase-panel-2"),
                         palette: &THEME.green,
                         is_selected: false,
-                        icon_glyph: Some(regular::ACTIVITY),
+                        icon: Some(Icon::from_token("activity")),
                         text: Text::from("Observability + SSE"),
+                        interaction: TabInteraction::PanelJs,
                     },
                     Tab {
                         id: Text::from("portfolio-showcase-tab-3"),
                         controls: Text::from("portfolio-showcase-panel-3"),
                         palette: &THEME.purple,
                         is_selected: false,
-                        icon_glyph: Some(regular::CHAT_LINES),
+                        icon: Some(Icon::from_token("chat-lines")),
                         text: Text::from("Live Chat Capstone"),
+                        interaction: TabInteraction::PanelJs,
                     },
                 ])
                 .panels(vec![

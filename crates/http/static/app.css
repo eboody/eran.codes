@@ -137,15 +137,15 @@
 }
 
 /* Component-level application of package classes */
-.tabs-panel-showcase .tabs-panel-showcase__tab-line + .tabs-panel-showcase__tab-line {
+.tab-set .tab-set__tab-line + .tab-set__tab-line {
   margin-left: 0.2rem;
 }
 
-.tabs-panel-showcase .tabs-panel-showcase__preview {
+.tab-set .tab-set__preview {
   min-width: 0;
 }
 
-.tabs-panel-showcase .tabs-panel-showcase__preview-label {
+.tab-set .tab-set__preview-label {
   margin: 0;
   font-size: 0.72rem;
   letter-spacing: 0.08rem;
@@ -153,13 +153,13 @@
   color: var(--ui-text-muted);
 }
 
-.tabs-panel-showcase .tabs-panel-showcase__preview-asset {
+.tab-set .tab-set__preview-asset {
   margin: 0;
   font-size: 0.9rem;
   font-weight: 600;
 }
 
-.tabs-panel-showcase .tabs-panel-showcase__badge {
+.tab-set .tab-set__badge {
   margin: 0.5rem 0 0;
   width: fit-content;
   border-radius: 999px;
@@ -170,14 +170,14 @@
   background: var(--ui-surface-soft);
 }
 
-.tabs-panel-showcase .tabs-panel-showcase__copy h2 {
+.tab-set .tab-set__copy h2 {
   margin: 0;
   font-size: 2rem;
   line-height: 1.1;
   letter-spacing: -0.02rem;
 }
 
-.tabs-panel-showcase .tabs-panel-showcase__subtitle {
+.tab-set .tab-set__subtitle {
   margin: 0.6rem 0 0;
   color: var(--ui-text-muted);
   max-width: 52ch;
@@ -188,7 +188,7 @@
     grid-template-columns: 1fr;
   }
 
-  .tabs-panel-showcase .tabs-panel-showcase__copy h2 {
+  .tab-set .tab-set__copy h2 {
     font-size: 1.65rem;
   }
 }
