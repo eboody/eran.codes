@@ -118,6 +118,8 @@ This policy applies by default when a user asks to create/build/add a component 
   - Reusable package styles belong in `crates/http/static/app.css` (tabs, panels, card shells, CTA, layout primitives).
   - Component-scoped inline styles are allowed only for non-reusable component-specific behavior.
   - New reusable components should consume shared `ui-*` package classes plus existing token conventions.
+  - `mds-styling-system` review is required before final completion of component prompts.
+  - Prefer OpenProps/shared tokens (`--size-*`, `--radius-*`, `--border-size-*`, etc.) over raw numeric literals in reusable `ui-*` package classes.
 - Default CMS-shaped content model:
   - Assume component copy/images/features/CTAs/tabs come from CMS content, not inline literals.
   - `component_spec` must include a top-level `content` contract (`source: "cms"`, typed `root_type`, and `fixture_path`).

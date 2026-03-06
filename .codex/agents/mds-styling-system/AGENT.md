@@ -25,6 +25,8 @@ Apply the hybrid styling policy at the end of component generation: extract reus
 - Reusable patterns (tabs/panels/cards/cta/layout primitives) are represented in global `app.css` package classes.
 - Scoped inline CSS is kept only for non-reusable, component-specific behavior and documented in `scoped_exceptions`.
 - Reusable class names are generic and library-oriented (`ui-tabs`, `ui-panel`, `ui-cta`, etc.).
+- Reusable package rules prefer OpenProps/shared tokens (`--size-*`, `--radius-*`, `--border-size-*`) instead of raw numeric literals.
+- A styling-system review pass must happen before the prompt is considered complete.
 
 ## Minimal Valid Output Snippet
 ```json

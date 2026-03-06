@@ -14,6 +14,7 @@ Apply repo CSS conventions and css-scope-inline usage patterns to class design a
 - Use before finalizing class names and style scoping assumptions.
 - Enforce local conventions from `/docs/css-scope-inline` and writing/style signoff docs.
 - Flag unresolved stylistic conflicts for explicit override review.
+- Run a styling-system review before marking component work complete.
 
 ## Hybrid Styling Policy (Default)
 - Use a hybrid model:
@@ -35,3 +36,4 @@ Apply repo CSS conventions and css-scope-inline usage patterns to class design a
 - If a style pattern appears in two or more components, extract to global package classes.
 - Prefer consuming tokens/aliases already present in `app.css`.
 - Avoid raw magic values when equivalent tokens exist.
+- Prefer OpenProps token aliases (`--size-*`, `--radius-*`, `--border-size-*`, etc.) in reusable package classes.

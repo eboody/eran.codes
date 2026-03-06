@@ -1,273 +1,273 @@
 {
   "tabs": [
     {
-      "id": "policy",
+      "id": "identity_sessions",
       "label": {
-        "primary": "Secure",
-        "secondary": "Remote Access"
-      },
-      "icon": {
-        "key": "circle"
-      },
-      "preview": {
-        "image": {
-          "asset_ref": "images/policy-preview",
-          "alt": "Policy editor preview"
-        },
-        "badge": {
-          "text": "Integrates with Azure, Google, Okta"
-        }
-      },
-      "body": {
-        "title": "Secure Remote Access",
-        "subtitle": "Enable least privilege network access in a few clicks",
-        "features": [
-          {
-            "id": "users",
-            "text": "Provision users and groups from your identity provider"
-          },
-          {
-            "id": "segment",
-            "text": "Segment your network by grouping teams and infrastructure"
-          },
-          {
-            "id": "policy",
-            "text": "Define granular policies to limit network access"
-          },
-          {
-            "id": "mfa",
-            "text": "Enforce MFA and device security posture checks"
-          }
-        ]
-      },
-      "action": {
-        "label": "Explore",
-        "href": "/explore"
-      }
-    },
-    {
-      "id": "zero_config",
-      "label": {
-        "primary": "Zero-Config",
-        "secondary": "Deployment"
-      },
-      "icon": {
-        "key": "control-slider"
-      },
-      "preview": {
-        "image": {
-          "asset_ref": "images/zero_config-preview",
-          "alt": "Zero-Config preview"
-        },
-        "badge": {
-          "text": "CMS fixture preview"
-        }
-      },
-      "body": {
-        "title": "Zero-Config Deployment",
-        "subtitle": "Content rendered from CMS-shaped fixture data",
-        "features": [
-          {
-            "id": "capability",
-            "text": "Capability details are scoped to this tab"
-          },
-          {
-            "id": "policy",
-            "text": "Rules and controls remain isolated per view"
-          },
-          {
-            "id": "operations",
-            "text": "Operational behavior can be inspected in logs"
-          },
-          {
-            "id": "access",
-            "text": "Access and posture controls are explicitly defined"
-          }
-        ]
-      },
-      "action": {
-        "label": "Explore",
-        "href": "/explore"
-      }
-    },
-    {
-      "id": "sso_mfa",
-      "label": {
-        "primary": "Seamless",
-        "secondary": "SSO with MFA"
+        "primary": "Identity",
+        "secondary": "Continuity"
       },
       "icon": {
         "key": "key"
       },
       "preview": {
         "image": {
-          "asset_ref": "images/sso_mfa-preview",
-          "alt": "Seamless preview"
+          "asset_ref": "images/identity-session-surface",
+          "alt": "Identity and session context preview"
         },
         "badge": {
-          "text": "CMS fixture preview"
+          "text": "Anchor target: Home hero"
         }
       },
       "body": {
-        "title": "Seamless SSO with MFA",
-        "subtitle": "Content rendered from CMS-shaped fixture data",
+        "title": "Identity Context Across Requests",
+        "subtitle": "Session-backed authentication keeps request and UI identity aligned over time.",
         "features": [
           {
-            "id": "capability",
-            "text": "Capability details are scoped to this tab"
+            "id": "session_store",
+            "text": "Registration, login, and protected routes operate on one durable session model."
           },
           {
-            "id": "policy",
-            "text": "Rules and controls remain isolated per view"
+            "id": "cookie_contract",
+            "text": "Cookie and server session state remain coherent during normal navigation."
           },
           {
-            "id": "operations",
-            "text": "Operational behavior can be inspected in logs"
+            "id": "handler_context",
+            "text": "User context is available where handlers and views require it."
           },
           {
-            "id": "access",
-            "text": "Access and posture controls are explicitly defined"
+            "id": "reviewability",
+            "text": "The identity path can be validated directly from public routes."
           }
         ]
       },
       "action": {
-        "label": "Explore",
-        "href": "/explore"
+        "label": "Inspect identity flow",
+        "href": "#home-hero"
       }
     },
     {
-      "id": "posture",
+      "id": "load_harness",
       "label": {
-        "primary": "Dynamic",
-        "secondary": "Posture Checks"
+        "primary": "Load",
+        "secondary": "Harness"
       },
       "icon": {
-        "key": "triangle"
+        "key": "control-slider"
       },
       "preview": {
         "image": {
-          "asset_ref": "images/posture-preview",
-          "alt": "Dynamic preview"
+          "asset_ref": "images/request-burst-surface",
+          "alt": "Request burst controls preview"
         },
         "badge": {
-          "text": "CMS fixture preview"
+          "text": "Anchor target: Request burst"
         }
       },
       "body": {
-        "title": "Dynamic Posture Checks",
-        "subtitle": "Content rendered from CMS-shaped fixture data",
+        "title": "Client-Side Burst Driver for Throughput Checks",
+        "subtitle": "One control generates high request volume so latency and failures become visible quickly.",
         "features": [
           {
-            "id": "capability",
-            "text": "Capability details are scoped to this tab"
+            "id": "volume_control",
+            "text": "A range input sets request volume before execution starts."
           },
           {
-            "id": "policy",
-            "text": "Rules and controls remain isolated per view"
+            "id": "parallel_workers",
+            "text": "Parallel workers dispatch traffic from a single browser session."
           },
           {
-            "id": "operations",
-            "text": "Operational behavior can be inspected in logs"
+            "id": "live_counts",
+            "text": "Progress shows sent, successful, failed, and requests per second."
           },
           {
-            "id": "access",
-            "text": "Access and posture controls are explicitly defined"
+            "id": "smoke_usage",
+            "text": "The harness is useful for quick smoke checks after backend changes."
           }
         ]
       },
       "action": {
-        "label": "Explore",
-        "href": "/explore"
+        "label": "Run burst harness",
+        "href": "#request-burst-demo"
       }
     },
     {
-      "id": "network",
+      "id": "live_chat",
       "label": {
-        "primary": "Centralized",
-        "secondary": "Network Management"
+        "primary": "Live",
+        "secondary": "Chat Flow"
       },
       "icon": {
-        "key": "globe"
+        "key": "chat-lines"
       },
       "preview": {
         "image": {
-          "asset_ref": "images/network-preview",
-          "alt": "Centralized preview"
+          "asset_ref": "images/live-chat-surface",
+          "alt": "Live chat and moderation preview"
         },
         "badge": {
-          "text": "CMS fixture preview"
+          "text": "Anchor target: Chat demo"
         }
       },
       "body": {
-        "title": "Centralized Network Management",
-        "subtitle": "Content rendered from CMS-shaped fixture data",
+        "title": "Persisted Chat With Multi-Client Fanout",
+        "subtitle": "Messages are stored once and streamed to connected viewers without polling.",
         "features": [
           {
-            "id": "capability",
-            "text": "Capability details are scoped to this tab"
+            "id": "persist_first",
+            "text": "Posting a message writes to storage before broadcast fanout."
           },
           {
-            "id": "policy",
-            "text": "Rules and controls remain isolated per view"
+            "id": "moderation_path",
+            "text": "Moderation status is part of the same message lifecycle."
           },
           {
-            "id": "operations",
-            "text": "Operational behavior can be inspected in logs"
+            "id": "realtime_delivery",
+            "text": "Connected clients receive updates over the event stream."
           },
           {
-            "id": "access",
-            "text": "Access and posture controls are explicitly defined"
+            "id": "dual_modes",
+            "text": "The demo supports both signed-in and guided demo interaction modes."
           }
         ]
       },
       "action": {
-        "label": "Explore",
-        "href": "/explore"
+        "label": "Open chat flow",
+        "href": "#chat-demo"
       }
     },
     {
-      "id": "logging",
+      "id": "runtime_visibility",
       "label": {
-        "primary": "Detailed",
-        "secondary": "Activity Logging"
+        "primary": "Runtime",
+        "secondary": "Visibility"
       },
       "icon": {
         "key": "candlestick-chart"
       },
       "preview": {
         "image": {
-          "asset_ref": "images/logging-preview",
-          "alt": "Detailed preview"
+          "asset_ref": "images/runtime-visibility-surface",
+          "alt": "Operational log panels preview"
         },
         "badge": {
-          "text": "CMS fixture preview"
+          "text": "Anchor target: Operational view"
         }
       },
       "body": {
-        "title": "Detailed Activity Logging",
-        "subtitle": "Content rendered from CMS-shaped fixture data",
+        "title": "Operational Panels for Request and Network Signals",
+        "subtitle": "Backend events and network telemetry are visible side by side during interaction.",
         "features": [
           {
-            "id": "capability",
-            "text": "Capability details are scoped to this tab"
+            "id": "live_panel",
+            "text": "The live panel streams backend events as they happen."
           },
           {
-            "id": "policy",
-            "text": "Rules and controls remain isolated per view"
+            "id": "network_table",
+            "text": "Network output includes method, path, status, and timing context."
           },
           {
-            "id": "operations",
-            "text": "Operational behavior can be inspected in logs"
+            "id": "action_correlation",
+            "text": "UI actions can be correlated with transport behavior immediately."
           },
           {
-            "id": "access",
-            "text": "Access and posture controls are explicitly defined"
+            "id": "debug_speed",
+            "text": "This setup shortens the cycle for reproducing and isolating issues."
           }
         ]
       },
       "action": {
-        "label": "Explore",
-        "href": "/explore"
+        "label": "Open operations panels",
+        "href": "#operations-surface"
+      }
+    },
+    {
+      "id": "command_sse",
+      "label": {
+        "primary": "Command",
+        "secondary": "SSE Model"
+      },
+      "icon": {
+        "key": "refresh-double"
+      },
+      "preview": {
+        "image": {
+          "asset_ref": "images/command-sse-surface",
+          "alt": "Command and SSE model preview"
+        },
+        "badge": {
+          "text": "Anchor target: Operational view"
+        }
+      },
+      "body": {
+        "title": "Command Endpoints With SSE State Convergence",
+        "subtitle": "Mutations travel through commands, while authoritative state converges from the event stream.",
+        "features": [
+          {
+            "id": "command_contract",
+            "text": "Client actions invoke commands without returning JSON state payloads."
+          },
+          {
+            "id": "patch_stream",
+            "text": "Server updates are published as Datastar signal patches on the stream."
+          },
+          {
+            "id": "single_channel",
+            "text": "State convergence uses one global event channel instead of mixed update paths."
+          },
+          {
+            "id": "consistency",
+            "text": "The model reduces drift between immediate UI writes and backend truth."
+          }
+        ]
+      },
+      "action": {
+        "label": "Inspect convergence model",
+        "href": "#operations-surface"
+      }
+    },
+    {
+      "id": "engineering_quality",
+      "label": {
+        "primary": "Engineering",
+        "secondary": "Quality"
+      },
+      "icon": {
+        "key": "globe"
+      },
+      "preview": {
+        "image": {
+          "asset_ref": "images/engineering-quality-surface",
+          "alt": "Engineering quality checklist preview"
+        },
+        "badge": {
+          "text": "Anchor target: Engineering quality"
+        }
+      },
+      "body": {
+        "title": "Codebase Quality Signals Built Into Delivery",
+        "subtitle": "Typed contracts, reusable composition, and CI rules keep the system maintainable as it evolves.",
+        "features": [
+          {
+            "id": "cms_contract",
+            "text": "Component content is delivered through explicit CMS-shaped fixtures."
+          },
+          {
+            "id": "render_composition",
+            "text": "Reusable primitives keep view composition predictable and reviewable."
+          },
+          {
+            "id": "ci_guardrails",
+            "text": "CI checks enforce architecture, naming, and interaction conventions."
+          },
+          {
+            "id": "evolution",
+            "text": "The code can evolve with fewer cross-layer regressions."
+          }
+        ]
+      },
+      "action": {
+        "label": "Review quality signals",
+        "href": "#engineering-quality"
       }
     }
   ]
