@@ -161,6 +161,13 @@ This declares semantic dispatch style. Projects may still use local Datastar exp
 ## Verifier Failure Policy
 `mds-verifier` must fail the run if any schema, reference, authority, or docs contradiction invariant fails.
 
+## Quality Closure Policy
+- Do not mark a component request as fully complete if known material gaps remain.
+- If material gaps exist, response/handoff must:
+  - list the gaps explicitly, and
+  - request a focused next pass with concrete scope.
+- "Done" without a next-pass request is valid only when no known material quality gaps remain.
+
 ## Minimal Example Skeleton
 ```json
 {

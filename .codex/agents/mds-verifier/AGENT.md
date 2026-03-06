@@ -34,6 +34,8 @@ Validate full `component_spec` correctness against schema, cross-references, doc
 - Docs-backed contradictions require valid `component_spec.override`.
 - Prompt-level contradictions must be reconciled explicitly in user intent before generation:
   - if request conflicts with accepted instructions/policy and no explicit reconciliation is present, verification outcome must be `fail`.
+- Known material quality gaps must block final-complete status:
+  - if run output still has known defects/architecture drift, verification outcome must be `fail` unless the handoff explicitly requests another pass with concrete remaining scope.
 
 ## Authority Enforcement Checks
 - Fail if any `authority = "app"` field is updated by:
@@ -68,3 +70,4 @@ Run Policy:
 - MUST FAIL on authority-model violations.
 - MUST FAIL on docs contradictions without explicit valid `component_spec.override`.
 - MUST FAIL when unresolved prompt contradictions are detected (missing explicit user reconciliation).
+- MUST FAIL when unresolved material quality gaps are present without explicit next-pass handoff.

@@ -19,6 +19,7 @@ Coordinate agent execution, initialize `component_spec`, and enforce section own
 - Must not skip verifier execution.
 - Must not mutate sections owned by other agents after ownership is assigned.
 - Must not proceed when request intent conflicts with established instructions/policies; require explicit user reconciliation first.
+- Must not declare the run complete when known quality gaps remain; require explicit next-pass proposal.
 
 ## Checklist Of Required Invariants
 - `meta.component_id` is stable and unique.
@@ -34,6 +35,8 @@ Coordinate agent execution, initialize `component_spec`, and enforce section own
 - `design.reuse_scan` is present and records which reusable components were evaluated/reused/created.
 - Prompt contradiction handling is explicit:
   - if prompt conflicts with prior user instructions or accepted architecture policy, orchestrator must emit a reconciliation question and halt downstream generation until clarified.
+- Quality closure handling is explicit:
+  - if known quality defects remain after implementation, orchestrator output must call out gaps and request another pass instead of marking complete.
 
 ## Minimal Valid Output Snippet
 ```json

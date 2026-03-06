@@ -55,6 +55,12 @@ This repository uses a project-local multi-agent system for generating Rust Maud
 - Resolution must be explicit in the current conversation (for example: "override prior instruction X for this task").
 - When unresolved conflict exists, return a reconciliation question instead of generating code/spec changes.
 
+## Quality Closure Rule
+
+- Agents must not present output as complete/final when they are aware of material quality gaps (for example: known behavior regressions, missing composition boundaries, unresolved accessibility defects, or architecture drift).
+- When such gaps remain, agents must explicitly call them out and ask for another pass before treating the task as done.
+- A "done for now" response is allowed only when residual gaps are listed with concrete next-pass scope.
+
 ## Stop-The-Line Verification Gate
 
 - `mds-verifier` validates `component_spec` against:
