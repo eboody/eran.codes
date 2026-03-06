@@ -13,6 +13,7 @@ mds-events-designer = { definition = ".codex/agents/mds-events-designer/AGENT.md
 mds-backend-contracts = { definition = ".codex/agents/mds-backend-contracts/AGENT.md" }
 mds-verifier = { definition = ".codex/agents/mds-verifier/AGENT.md" }
 mds-codegen = { definition = ".codex/agents/mds-codegen/AGENT.md" }
+mds-styling-system = { definition = ".codex/agents/mds-styling-system/AGENT.md" }
 
 [skills]
 mds-component-spec = { definition = ".codex/skills/mds-component-spec/SKILL.md" }

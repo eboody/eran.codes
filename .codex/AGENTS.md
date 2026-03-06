@@ -13,7 +13,8 @@ This repository uses a project-local multi-agent system for generating Rust Maud
    - `mds-events-designer`
    - `mds-backend-contracts`
 4. `mds-codegen`
-5. `mds-verifier` (stop-the-line gate)
+5. `mds-styling-system`
+6. `mds-verifier` (stop-the-line gate)
 
 ## Routing Rules
 
@@ -25,6 +26,9 @@ This repository uses a project-local multi-agent system for generating Rust Maud
 - Run `mds-events-designer` when event triggers, payloads, or transitions are missing or changed.
 - Run `mds-backend-contracts` when server endpoints, actions, or validation constraints are missing or changed.
 - Run `mds-codegen` only after `content`, `ui`, `state`, `events`, and `backend_contracts` are valid and internally linked.
+- Run `mds-styling-system` after codegen to enforce hybrid styling:
+  - reusable package styles in global `app.css`
+  - scoped inline styles only for justified component-specific behavior
 - Run `mds-verifier` last on every run. Verification is mandatory before accepting output.
 
 ## Docs-First Decision Rules
@@ -93,6 +97,10 @@ This policy applies by default when a user asks to create/build/add a component 
   - If no fit exists, add a new reusable component there before introducing feature-specific view fragments.
   - Use generic, library-style public names for reusable surfaces (for example `tabs_panel`, `tab_item`, `card_header`), not screenshot-specific names.
   - Include `design.reuse_scan` in `component_spec` to record checked/reused/created reusable components.
+- Default styling policy (Hybrid):
+  - Reusable package styles belong in `crates/http/static/app.css` (tabs, panels, card shells, CTA, layout primitives).
+  - Component-scoped inline styles are allowed only for non-reusable component-specific behavior.
+  - New reusable components should consume shared `ui-*` package classes plus existing token conventions.
 - Default CMS-shaped content model:
   - Assume component copy/images/features/CTAs/tabs come from CMS content, not inline literals.
   - `component_spec` must include a top-level `content` contract (`source: "cms"`, typed `root_type`, and `fixture_path`).

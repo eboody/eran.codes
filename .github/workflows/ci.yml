@@ -21,6 +21,8 @@ jobs:
         run: scripts/ci/component-spec-content-contract.sh
       - name: interaction protocol consistency
         run: scripts/ci/interaction-protocol-consistency.sh
+      - name: style system consistency
+        run: scripts/ci/style-system-consistency.sh
       - name: reusable component naming
         run: scripts/ci/reusable-component-naming.sh
       - name: cms content model templates

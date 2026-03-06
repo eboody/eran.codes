@@ -26,6 +26,7 @@ Coordinate agent execution, initialize `component_spec`, and enforce section own
 - `pipeline.execution_order` matches orchestration policy.
 - `pipeline.required_agents` includes all mds agents.
 - `pipeline.parallel_groups` includes `mds-cms-content-modeler` with other spec-design agents.
+- `pipeline.execution_order` includes `mds-styling-system` after `mds-codegen` and before `mds-verifier`.
 - `content.source` is `cms`.
 - `content.root_type` is typed `*Content`.
 - `content.fixture_path` points to a fixture path to be materialized by downstream generation.
@@ -68,6 +69,7 @@ Coordinate agent execution, initialize `component_spec`, and enforce section own
       "mds-events-designer",
       "mds-backend-contracts",
       "mds-codegen",
+      "mds-styling-system",
       "mds-verifier"
     ],
     "required_agents": [
@@ -79,6 +81,7 @@ Coordinate agent execution, initialize `component_spec`, and enforce section own
       "mds-events-designer",
       "mds-backend-contracts",
       "mds-codegen",
+      "mds-styling-system",
       "mds-verifier"
     ],
     "parallel_groups": [

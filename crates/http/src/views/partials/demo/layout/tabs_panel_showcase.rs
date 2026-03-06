@@ -1,8 +1,8 @@
 use bon::Builder;
 use maud::Render;
-use maud_extensions::inline_css;
 use serde::Deserialize;
 
+// ci: style-system-component
 #[derive(Clone, Debug, Builder)]
 pub struct TabsPanelShowcase {}
 
@@ -18,14 +18,13 @@ impl Render for TabsPanelShowcase {
         maud::html! {
             section
                 id="tabs-panel-showcase"
-                class="tabs-panel-showcase"
+                class="tabs-panel-showcase ui-surface-card"
                 data-signals=(format!("{{active_tab_id: '{}'}}", initial_tab_id)) {
-                (css())
-                nav class="tabs-panel-showcase__tabs" role="tablist" aria-label="Solutions" {
+                nav class="tabs-panel-showcase__tabs ui-tabs" role="tablist" aria-label="Solutions" {
                     @for tab in &content.tabs {
                         @let selected_expr = format!("$active_tab_id == '{}'", tab.id);
                         button
-                            class="tabs-panel-showcase__tab"
+                            class="tabs-panel-showcase__tab ui-tab"
                             type="button"
                             role="tab"
                             data-tab-id=(&tab.id)
@@ -42,11 +41,11 @@ impl Render for TabsPanelShowcase {
                 @for tab in &content.tabs {
                     @let show_expr = format!("$active_tab_id == '{}'", tab.id);
                     section
-                        class="tabs-panel-showcase__panel"
+                        class="tabs-panel-showcase__panel ui-panel"
                         role="tabpanel"
                         data-show=(show_expr) {
                         div class="tabs-panel-showcase__preview" {
-                            div class="tabs-panel-showcase__preview-frame" {
+                            div class="tabs-panel-showcase__preview-frame ui-preview-frame" {
                                 p class="tabs-panel-showcase__preview-label" { "Preview" }
                                 @if let Some(preview) = &tab.preview {
                                     @if let Some(image) = &preview.image {
@@ -68,7 +67,7 @@ impl Render for TabsPanelShowcase {
                                 @if let Some(subtitle) = &detail.subtitle {
                                     p class="tabs-panel-showcase__subtitle" { (subtitle) }
                                 }
-                                ul class="tabs-panel-showcase__features" {
+                                ul class="tabs-panel-showcase__features ui-feature-list" {
                                     @for feature in &detail.features {
                                         li { (&feature.text) }
                                     }
@@ -76,11 +75,11 @@ impl Render for TabsPanelShowcase {
                             }
                             @if let Some(cta) = &tab.cta {
                                 @if let Some(href) = &cta.href {
-                                    a class="button tabs-panel-showcase__cta" href=(href) {
+                                    a class="button tabs-panel-showcase__cta ui-cta" href=(href) {
                                         (&cta.label)
                                     }
                                 } @else {
-                                    button class="button tabs-panel-showcase__cta" type="button" {
+                                    button class="button tabs-panel-showcase__cta ui-cta" type="button" {
                                         (&cta.label)
                                     }
                                 }
@@ -153,137 +152,4 @@ fn load_content() -> TabsPanelContent {
         "/../../tests/fixtures/cms/tabs_panel_showcase.json"
     ));
     serde_json::from_str(raw).unwrap_or_else(|_| TabsPanelContent { tabs: vec![] })
-}
-
-inline_css! {
-    me {
-      display: grid;
-      gap: 1rem;
-      margin-top: 1.5rem;
-      padding: 1rem;
-      border: 1px solid var(--portfolio-surface-border);
-      border-radius: 18px;
-      background: var(--portfolio-surface);
-    }
-
-    me > .tabs-panel-showcase__tabs {
-      display: flex;
-      gap: var(--size-2);
-      overflow-x: auto;
-      padding-bottom: 0.8rem;
-      border-bottom: var(--border-size-1) solid var(--portfolio-surface-border);
-    }
-
-    me .tabs-panel-showcase__tab {
-      display: inline-flex;
-      align-items: center;
-      gap: 0.35rem;
-      padding: 0.55rem 0.85rem;
-      border-radius: 999px;
-      border: 1px solid var(--ui-border-soft);
-      background: transparent;
-      color: var(--ui-text-muted);
-      cursor: pointer;
-      font-size: 0.82rem;
-      font-weight: 600;
-      white-space: nowrap;
-    }
-
-    me .tabs-panel-showcase__tab.is-selected {
-      color: var(--ui-text);
-      border-color: color-mix(in srgb, var(--ui-text) 30%, transparent);
-      background: color-mix(in srgb, var(--ui-surface-soft) 84%, transparent);
-    }
-
-    me .tabs-panel-showcase__tab-line + .tabs-panel-showcase__tab-line {
-      margin-left: 0.2rem;
-    }
-
-    me > .tabs-panel-showcase__panel {
-      display: grid;
-      gap: 1rem;
-      align-items: start;
-      grid-template-columns: 1.15fr 1fr;
-      padding: 0.45rem 0.2rem 0.2rem;
-    }
-
-    me > .tabs-panel-showcase__panel[hidden] {
-      display: none;
-    }
-
-    me > .tabs-panel-showcase__panel > .tabs-panel-showcase__preview {
-      min-width: 0;
-    }
-
-    me > .tabs-panel-showcase__panel > .tabs-panel-showcase__preview > .tabs-panel-showcase__preview-frame {
-      border: 1px solid var(--ui-border-soft);
-      border-radius: 14px;
-      min-height: 260px;
-      background: color-mix(in srgb, var(--surface-shell) 90%, black 10%);
-      padding: 1rem;
-      display: grid;
-      gap: 0.6rem;
-      align-content: start;
-    }
-
-    me .tabs-panel-showcase__preview-label {
-      margin: 0;
-      font-size: 0.72rem;
-      letter-spacing: 0.08rem;
-      text-transform: uppercase;
-      color: var(--ui-text-muted);
-    }
-
-    me .tabs-panel-showcase__preview-asset {
-      margin: 0;
-      font-size: 0.9rem;
-      font-weight: 600;
-    }
-
-    me .tabs-panel-showcase__badge {
-      margin: 0.5rem 0 0;
-      width: fit-content;
-      border-radius: 999px;
-      padding: 0.35rem 0.65rem;
-      border: 1px solid var(--ui-border-soft);
-      font-size: 0.78rem;
-      color: var(--ui-text-muted);
-      background: var(--ui-surface-soft);
-    }
-
-    me .tabs-panel-showcase__copy h2 {
-      margin: 0;
-      font-size: 2rem;
-      line-height: 1.1;
-      letter-spacing: -0.02rem;
-    }
-
-    me .tabs-panel-showcase__subtitle {
-      margin: 0.6rem 0 0;
-      color: var(--ui-text-muted);
-      max-width: 52ch;
-    }
-
-    me .tabs-panel-showcase__features {
-      margin: 1rem 0 1.1rem;
-      padding-left: 1.1rem;
-      display: grid;
-      gap: 0.45rem;
-    }
-
-    me .tabs-panel-showcase__cta {
-      width: fit-content;
-      min-width: 10rem;
-      justify-content: center;
-    }
-
-    @media (max-width: 980px) {
-      me > .tabs-panel-showcase__panel {
-        grid-template-columns: 1fr;
-      }
-
-      me .tabs-panel-showcase__copy h2 {
-        font-size: 1.65rem;
-      }
-    }
 }

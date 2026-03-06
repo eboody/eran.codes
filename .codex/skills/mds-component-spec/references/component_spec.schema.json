@@ -9,6 +9,7 @@
     "pipeline",
     "content",
     "design",
+    "styling",
     "ui",
     "state",
     "events",
@@ -109,6 +110,31 @@
             }
           },
           "additionalProperties": true
+        }
+      },
+      "additionalProperties": true
+    },
+    "styling": {
+      "type": "object",
+      "required": ["mode", "global_packages", "scoped_exceptions", "tokens_used"],
+      "properties": {
+        "mode": {
+          "type": "string",
+          "const": "hybrid"
+        },
+        "global_packages": {
+          "type": "array",
+          "items": {"type": "string", "minLength": 1},
+          "minItems": 1
+        },
+        "scoped_exceptions": {
+          "type": "array",
+          "items": {"type": "string", "minLength": 1}
+        },
+        "tokens_used": {
+          "type": "array",
+          "items": {"type": "string", "minLength": 1},
+          "minItems": 1
         }
       },
       "additionalProperties": true

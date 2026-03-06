@@ -30,6 +30,7 @@ Validate full `component_spec` correctness against schema, cross-references, doc
 - Every state field must provide `interaction_scope` + `authority_rationale`.
 - Scope/authority must be consistent (`app` scope requires `authority = app`; `presentation` defaults to `authority = ui` unless `override`).
 - Handler protocol metadata should be consistent with effects (`command_sse` => `invoke_backend`, `ui_local` => no backend command unless `override`).
+- Styling contract must exist with `mode = hybrid`, reusable `global_packages`, and declared `scoped_exceptions`.
 - Docs-backed contradictions require valid `component_spec.override`.
 
 ## Authority Enforcement Checks

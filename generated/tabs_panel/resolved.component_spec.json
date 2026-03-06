@@ -20,6 +20,7 @@
       "mds-events-designer",
       "mds-backend-contracts",
       "mds-codegen",
+      "mds-styling-system",
       "mds-verifier"
     ],
     "required_agents": [
@@ -31,7 +32,8 @@
       "mds-events-designer",
       "mds-backend-contracts",
       "mds-codegen",
-      "mds-verifier"
+      "mds-verifier",
+      "mds-styling-system"
     ],
     "parallel_groups": [
       [
@@ -316,6 +318,25 @@
         "target": "EventsStreamInput.sse_tab_id",
         "rule": "required, non-empty"
       }
+    ]
+  },
+  "styling": {
+    "mode": "hybrid",
+    "global_packages": [
+      "ui-surface-card",
+      "ui-tabs",
+      "ui-tab",
+      "ui-panel",
+      "ui-preview-frame",
+      "ui-feature-list",
+      "ui-cta"
+    ],
+    "scoped_exceptions": [],
+    "tokens_used": [
+      "--portfolio-surface-border",
+      "--ui-border-soft",
+      "--ui-text-muted",
+      "--ui-surface-soft"
     ]
   }
 }

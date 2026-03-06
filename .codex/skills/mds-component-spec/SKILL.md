@@ -20,6 +20,7 @@ Define and govern the shared `component_spec` contract used by all MDS agents.
 - `pipeline`
 - `content`
 - `design`
+- `styling`
 - `ui`
 - `state`
 - `events`
@@ -72,6 +73,17 @@ For component creation, specs must include `design.reuse_scan` to record reuse d
 - `reused[]`: components chosen for reuse
 - `created[]`: new reusable components added when no fit existed
 
+## Styling Contract (Required)
+Every generated component spec must declare a styling plan:
+- `styling.mode`: `hybrid`
+- `styling.global_packages[]`: reusable global class packages used by the component
+- `styling.scoped_exceptions[]`: explicit list of scoped-style exceptions that remain inline
+- `styling.tokens_used[]`: shared tokens/aliases consumed by the component
+
+Semantics:
+- Reusable patterns belong in global `app.css` package classes.
+- Scoped inline styles should be exception-only and documented.
+
 ## Optional Governance Section
 - `override`
   - Purpose: explicit exception metadata when generated decisions intentionally contradict docs-backed rules.
@@ -110,6 +122,7 @@ This declares semantic dispatch style. Projects may still use local Datastar exp
 ## Section Ownership
 - `mds-orchestrator`: `meta`, `scope`, `pipeline`
 - `mds-orchestrator`: `design.reuse_scan` (plan metadata)
+- `mds-styling-system`: `styling`
 - `mds-cms-content-modeler`: `content`
 - `mds-ui-decomposer`: `ui`
 - `mds-state-modeler`: `state`
@@ -134,7 +147,10 @@ This declares semantic dispatch style. Projects may still use local Datastar exp
 - `backend_contracts.actions[].input_type` and `output_type` must exist in `backend_contracts.types[].id`.
 - `pipeline.execution_order` must include all required `mds-*` agents.
 - `pipeline.parallel_groups` must include `mds-cms-content-modeler` in the same group as other spec-design agents for component creation.
+- `pipeline.execution_order` must include `mds-styling-system` after `mds-codegen` and before `mds-verifier`.
 - `design.reuse_scan` must include at least one checked component entry.
+- `styling.mode` must be `hybrid`.
+- `styling.global_packages` must include at least one reusable package class.
 - Docs-backed rules from `/docs` must be honored unless `override` is present and valid.
 
 ## Docs Policy
@@ -150,9 +166,10 @@ This declares semantic dispatch style. Projects may still use local Datastar exp
 {
   "meta": {"component_id": "example", "version": "0.1.0", "target": ["rust-maud", "datastar"]},
   "scope": {"description": "example"},
-  "pipeline": {"execution_order": ["mds-orchestrator", "mds-docs-librarian", "mds-ui-decomposer", "mds-cms-content-modeler", "mds-state-modeler", "mds-events-designer", "mds-backend-contracts", "mds-codegen", "mds-verifier"], "required_agents": ["mds-orchestrator", "mds-docs-librarian", "mds-ui-decomposer", "mds-cms-content-modeler", "mds-state-modeler", "mds-events-designer", "mds-backend-contracts", "mds-codegen", "mds-verifier"], "parallel_groups": [["mds-ui-decomposer", "mds-cms-content-modeler", "mds-state-modeler", "mds-events-designer", "mds-backend-contracts"]]},
+  "pipeline": {"execution_order": ["mds-orchestrator", "mds-docs-librarian", "mds-ui-decomposer", "mds-cms-content-modeler", "mds-state-modeler", "mds-events-designer", "mds-backend-contracts", "mds-codegen", "mds-styling-system", "mds-verifier"], "required_agents": ["mds-orchestrator", "mds-docs-librarian", "mds-ui-decomposer", "mds-cms-content-modeler", "mds-state-modeler", "mds-events-designer", "mds-backend-contracts", "mds-codegen", "mds-styling-system", "mds-verifier"], "parallel_groups": [["mds-ui-decomposer", "mds-cms-content-modeler", "mds-state-modeler", "mds-events-designer", "mds-backend-contracts"]]},
   "content": {"source": "cms", "root_type": "ExampleContent", "fixture_path": "tests/fixtures/cms/example.json"},
   "design": {"reuse_scan": {"checked_components": ["crates/http/src/views/partials/components/tab.rs"], "reused": ["tab"], "created": []}},
+  "styling": {"mode": "hybrid", "global_packages": ["ui-tabs", "ui-panel"], "scoped_exceptions": [], "tokens_used": ["--ui-border-soft"]},
   "ui": {"event_dispatch": {"syntax": "@dispatch('<handler_id>')", "description": "semantic event dispatch"}, "nodes": [], "slots": [], "bindings": []},
   "state": {"fields": [{"id": "local_count", "type": "integer", "initial": 0, "authority": "ui", "sync": "optimistic", "interaction_scope": "presentation", "authority_rationale": "local presentation control"}, {"id": "server_count", "type": "integer", "initial": 0, "authority": "app", "sync": "authoritative", "interaction_scope": "app", "authority_rationale": "canonical server value"}], "derived": [], "persistence": []},
   "events": {"handlers": [{"id": "increment_click", "class": "ui", "source_node_id": "root", "trigger": "click", "payload": {}, "protocol_mode": "ui_local", "protocol_rationale": "presentation-only increment"}], "ui_transitions": [], "app_mappings": {"backend_responses": [], "sse_events": []}, "effects": []},
