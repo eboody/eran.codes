@@ -32,7 +32,7 @@ pub struct Surface {
     pub layout: SurfaceLayout,
     #[builder(default)]
     pub classes: Vec<Text>,
-    pub children: Vec<maud::Markup>,
+    pub children: Vec<logs::primitives::Panel>,
     pub auto_scroll: Option<logs::primitives::AutoScroll>,
 }
 

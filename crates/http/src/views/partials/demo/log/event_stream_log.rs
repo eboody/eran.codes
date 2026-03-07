@@ -32,8 +32,7 @@ impl Render for EventStreamLog<'_> {
                 logs::primitives::Panel::builder()
                     .title(Text::from("Live backend log"))
                     .body(body)
-                    .build()
-                    .render(),
+                    .build(),
             ])
             .auto_scroll(
                 logs::primitives::AutoScroll::builder()

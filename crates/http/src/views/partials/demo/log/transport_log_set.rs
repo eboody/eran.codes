@@ -27,8 +27,7 @@ impl Render for TransportLogSet<'_> {
                 logs::primitives::Panel::builder()
                     .title(Text::from("System flow timeline"))
                     .body(flow_body)
-                    .build()
-                    .render(),
+                    .build(),
             ])
             .auto_scroll(
                 logs::primitives::AutoScroll::builder()

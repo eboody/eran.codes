@@ -29,8 +29,7 @@ impl Render for RequestTraceLog<'_> {
                 logs::primitives::Panel::builder()
                     .title(Text::from("Trace log"))
                     .body(body)
-                    .build()
-                    .render(),
+                    .build(),
             ])
             .build()
             .render()

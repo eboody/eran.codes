@@ -155,80 +155,10 @@ fn hydrate_request_fields(
 
 fn build_flow_event(kind: FlowEventKind, entry: &TraceEntry) -> logs::composed::FlowEvent {
     let (summary, stage_label, pills) = match kind {
-        FlowEventKind::RequestEnd => {
-            let method = field_text(entry, LogFieldKey::Method)
-                .unwrap_or_else(|| Text::from("UNKNOWN"));
-            let path =
-                field_text(entry, LogFieldKey::Path).unwrap_or_else(|| Text::from("/"));
-            let status =
-                field_text(entry, LogFieldKey::Status).unwrap_or_else(|| Text::from("-"));
-
-            let mut pills = vec![Pill::method(method.clone()), Pill::path(path.clone())];
-            pills.push(Pill::status(status.clone()));
-            if let Some(latency) = field_text(entry, LogFieldKey::LatencyMs) {
-                pills.push(Pill::fields(format!("latency_ms={latency}")));
-            }
-
-            (
-                Text::from(format!("HTTP {method} {path} -> {status}")),
-                Text::from("request"),
-                pills,
-            )
-        }
-        FlowEventKind::RequestStart => {
-            let method = field_text(entry, LogFieldKey::Method)
-                .unwrap_or_else(|| Text::from("UNKNOWN"));
-            let path =
-                field_text(entry, LogFieldKey::Path).unwrap_or_else(|| Text::from("/"));
-            (
-                Text::from(format!("HTTP {method} {path} started")),
-                Text::from("request"),
-                vec![Pill::method(method), Pill::path(path)],
-            )
-        }
-        FlowEventKind::ChatIncoming => {
-            let sender = field_text(entry, LogFieldKey::Sender)
-                .unwrap_or_else(|| Text::from("unknown"));
-            let mut pills = vec![Pill::fields(format!("sender={sender}"))];
-            if let Some(receiver) = field_text(entry, LogFieldKey::Receiver) {
-                pills.push(Pill::fields(format!("receiver={receiver}")));
-            }
-            if let Some(user_id) = field_text(entry, LogFieldKey::UserId) {
-                pills.push(Pill::fields(format!("user_id={user_id}")));
-            }
-            if let Some(payload_bytes) = field_text(entry, LogFieldKey::PayloadBytes) {
-                pills.push(Pill::fields(format!("payload_bytes={payload_bytes}")));
-            }
-
-            (
-                Text::from(format!("Backend accepted chat message from {sender}")),
-                Text::from("backend"),
-                pills,
-            )
-        }
-        FlowEventKind::ChatBroadcast => {
-            let selector = field_text(entry, LogFieldKey::Selector)
-                .unwrap_or_else(|| Text::from("[unknown-selector]"));
-            let mut pills = vec![Pill::fields(format!("selector={selector}"))];
-            if let Some(mode) = field_text(entry, LogFieldKey::Mode) {
-                pills.push(Pill::fields(format!("mode={mode}")));
-            }
-            if let Some(payload_bytes) = field_text(entry, LogFieldKey::PayloadBytes) {
-                pills.push(Pill::fields(format!("payload_bytes={payload_bytes}")));
-            }
-            if let Some(sender) = field_text(entry, LogFieldKey::Sender) {
-                pills.push(Pill::fields(format!("sender={sender}")));
-            }
-            if let Some(receiver) = field_text(entry, LogFieldKey::Receiver) {
-                pills.push(Pill::fields(format!("receiver={receiver}")));
-            }
-
-            (
-                Text::from(format!("SSE broadcast to {selector}")),
-                Text::from("sse"),
-                pills,
-            )
-        }
+        FlowEventKind::RequestEnd => request_end_event(entry),
+        FlowEventKind::RequestStart => request_start_event(entry),
+        FlowEventKind::ChatIncoming => chat_incoming_event(entry),
+        FlowEventKind::ChatBroadcast => chat_broadcast_event(entry),
         FlowEventKind::Sse => (
             Text::from(format!("SSE event: {}", entry.message)),
             Text::from("sse"),
@@ -249,8 +179,98 @@ fn build_flow_event(kind: FlowEventKind, entry: &TraceEntry) -> logs::composed::
     }
 }
 
+fn request_end_event(entry: &TraceEntry) -> (Text, Text, Vec<Pill>) {
+    let method = method_or_unknown(entry);
+    let path = path_or_root(entry);
+    let status = status_or_dash(entry);
+
+    let mut pills = vec![
+        Pill::method(method.clone()),
+        Pill::path(path.clone()),
+        Pill::status(status.clone()),
+    ];
+    push_fields_as_pills(
+        &mut pills,
+        entry,
+        &[(LogFieldKey::LatencyMs, "latency_ms")],
+    );
+
+    (
+        Text::from(format!("HTTP {method} {path} -> {status}")),
+        Text::from("request"),
+        pills,
+    )
+}
+
+fn request_start_event(entry: &TraceEntry) -> (Text, Text, Vec<Pill>) {
+    let method = method_or_unknown(entry);
+    let path = path_or_root(entry);
+
+    (
+        Text::from(format!("HTTP {method} {path} started")),
+        Text::from("request"),
+        vec![Pill::method(method), Pill::path(path)],
+    )
+}
+
+fn chat_incoming_event(entry: &TraceEntry) -> (Text, Text, Vec<Pill>) {
+    let sender = field_text(entry, LogFieldKey::Sender)
+        .unwrap_or_else(|| Text::from("unknown"));
+    let mut pills = vec![Pill::fields(format!("sender={sender}"))];
+    push_fields_as_pills(
+        &mut pills,
+        entry,
+        &[
+            (LogFieldKey::Receiver, "receiver"),
+            (LogFieldKey::UserId, "user_id"),
+            (LogFieldKey::PayloadBytes, "payload_bytes"),
+        ],
+    );
+
+    (
+        Text::from(format!("Backend accepted chat message from {sender}")),
+        Text::from("backend"),
+        pills,
+    )
+}
+
+fn chat_broadcast_event(entry: &TraceEntry) -> (Text, Text, Vec<Pill>) {
+    let selector = field_text(entry, LogFieldKey::Selector)
+        .unwrap_or_else(|| Text::from("[unknown-selector]"));
+    let mut pills = vec![Pill::fields(format!("selector={selector}"))];
+    push_fields_as_pills(
+        &mut pills,
+        entry,
+        &[
+            (LogFieldKey::Mode, "mode"),
+            (LogFieldKey::PayloadBytes, "payload_bytes"),
+            (LogFieldKey::Sender, "sender"),
+            (LogFieldKey::Receiver, "receiver"),
+        ],
+    );
+
+    (
+        Text::from(format!("SSE broadcast to {selector}")),
+        Text::from("sse"),
+        pills,
+    )
+}
+
+fn method_or_unknown(entry: &TraceEntry) -> Text {
+    field_text(entry, LogFieldKey::Method).unwrap_or_else(|| Text::from("UNKNOWN"))
+}
+
+fn path_or_root(entry: &TraceEntry) -> Text {
+    field_text(entry, LogFieldKey::Path).unwrap_or_else(|| Text::from("/"))
+}
+
+fn status_or_dash(entry: &TraceEntry) -> Text {
+    field_text(entry, LogFieldKey::Status).unwrap_or_else(|| Text::from("-"))
+}
+
 fn field_pills(entry: &TraceEntry) -> Vec<Pill> {
     let mut pills = Vec::new();
+
     if let Some(method) = field_text(entry, LogFieldKey::Method) {
         pills.push(Pill::method(method));
     }
@@ -260,31 +280,36 @@ fn field_pills(entry: &TraceEntry) -> Vec<Pill> {
     if let Some(status) = field_text(entry, LogFieldKey::Status) {
         pills.push(Pill::status(status));
     }
-    if let Some(latency) = field_text(entry, LogFieldKey::LatencyMs) {
-        pills.push(Pill::fields(format!("latency_ms={latency}")));
-    }
-    if let Some(sender) = field_text(entry, LogFieldKey::Sender) {
-        pills.push(Pill::fields(format!("sender={sender}")));
-    }
-    if let Some(receiver) = field_text(entry, LogFieldKey::Receiver) {
-        pills.push(Pill::fields(format!("receiver={receiver}")));
-    }
-    if let Some(user_id) = field_text(entry, LogFieldKey::UserId) {
-        pills.push(Pill::fields(format!("user_id={user_id}")));
-    }
-    if let Some(selector) = field_text(entry, LogFieldKey::Selector) {
-        pills.push(Pill::fields(format!("selector={selector}")));
-    }
-    if let Some(mode) = field_text(entry, LogFieldKey::Mode) {
-        pills.push(Pill::fields(format!("mode={mode}")));
-    }
-    if let Some(payload_bytes) = field_text(entry, LogFieldKey::PayloadBytes) {
-        pills.push(Pill::fields(format!("payload_bytes={payload_bytes}")));
-    }
+    push_fields_as_pills(
+        &mut pills,
+        entry,
+        &[
+            (LogFieldKey::LatencyMs, "latency_ms"),
+            (LogFieldKey::Sender, "sender"),
+            (LogFieldKey::Receiver, "receiver"),
+            (LogFieldKey::UserId, "user_id"),
+            (LogFieldKey::Selector, "selector"),
+            (LogFieldKey::Mode, "mode"),
+            (LogFieldKey::PayloadBytes, "payload_bytes"),
+        ],
+    );
+
     if pills.is_empty() {
         pills.push(Pill::target(entry.target.clone()));
     }
     pills
+}
+
+fn push_fields_as_pills(
+    pills: &mut Vec<Pill>,
+    entry: &TraceEntry,
+    fields: &[(LogFieldKey, &'static str)],
+) {
+    for (key, name) in fields {
+        if let Some(value) = field_text(entry, key.clone()) {
+            pills.push(Pill::fields(format!("{name}={value}")));
+        }
+    }
 }
 
 fn flow_title(flow: &FlowAggregate) -> Text {
