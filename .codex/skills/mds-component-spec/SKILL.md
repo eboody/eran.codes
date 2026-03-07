@@ -85,6 +85,18 @@ Semantics:
 - Parent/child render composition is explicit and typed.
 - Reused primitives should be listed when applicable.
 
+## Variant Modeling Contract (Required)
+For component/view models generated from the spec:
+- Finite semantic sets must be typed enums/newtypes (for example `mode`, `variant`, `kind`, `role`, `type`, `scope`, `authority`).
+- Do not model finite variant fields as `Text`/`String` in render structs.
+- Boundary strings may exist only at content/transport edges and should map into typed variants before rendering.
+
+## Builder Contract (Required)
+Use `bon` for component construction APIs:
+- Prefer typestate-style builder/state-machine APIs when valid construction order is part of correctness.
+- Prefer regular `#[derive(Builder)]` when staged named construction improves readability and typestate is unnecessary.
+- Avoid ad-hoc manual builder patterns when `bon` can encode the same intent.
+
 ## Styling Contract (Required)
 Every generated component spec must declare a styling plan:
 - `styling.mode`: `hybrid`
@@ -191,7 +203,7 @@ This declares semantic dispatch style. Projects may still use local Datastar exp
   "pipeline": {"execution_order": ["mds-orchestrator", "mds-docs-librarian", "mds-ui-decomposer", "mds-cms-content-modeler", "mds-state-modeler", "mds-events-designer", "mds-backend-contracts", "mds-codegen", "mds-styling-system", "mds-verifier"], "required_agents": ["mds-orchestrator", "mds-docs-librarian", "mds-ui-decomposer", "mds-cms-content-modeler", "mds-state-modeler", "mds-events-designer", "mds-backend-contracts", "mds-codegen", "mds-styling-system", "mds-verifier"], "parallel_groups": [["mds-ui-decomposer", "mds-cms-content-modeler", "mds-state-modeler", "mds-events-designer", "mds-backend-contracts"]]},
   "content": {"source": "cms", "root_type": "ExampleContent", "fixture_path": "tests/fixtures/cms/example.json"},
   "design": {
-    "reuse_scan": {"checked_components": ["crates/http/src/views/partials/components/tab.rs"], "reused": ["tab"], "created": []},
+    "reuse_scan": {"checked_components": ["crates/http/src/views/partials/components/primitives/tab.rs"], "reused": ["tab"], "created": []},
     "render_contract": {"composable_render": true, "children_as_props": true, "primitive_reuse": ["tab"], "interaction_mode": "ui_local_datastar"}
   },
   "styling": {"mode": "hybrid", "global_packages": ["ui-tabs", "ui-panel"], "scoped_exceptions": [], "tokens_used": ["--ui-border-soft"]},

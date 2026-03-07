@@ -20,25 +20,31 @@ if rg --no-heading --line-number '\b(LiveLog|NetworkLog|TraceLog)\b' \
   status=1
 fi
 
-# Trace log store should patch using renamed log composites.
-if ! rg --no-heading --line-number 'EventStreamLog::builder\(\)' crates/http/src/trace_log.rs >/dev/null; then
-  echo "crates/http/src/trace_log.rs: expected EventStreamLog::builder() usage."
-  status=1
-fi
-
+# Trace log store should patch using renamed log composite.
 if ! rg --no-heading --line-number 'TransportLogSet::builder\(\)' crates/http/src/trace_log.rs >/dev/null; then
   echo "crates/http/src/trace_log.rs: expected TransportLogSet::builder() usage."
   status=1
 fi
 
 # Stable patch targets must remain present.
-if ! rg --no-heading --line-number 'live-log-target' crates/http/src/views/partials/demo/log/event_stream_log.rs >/dev/null; then
-  echo "event_stream_log.rs: expected stable patch target live-log-target."
+if ! rg --no-heading --line-number 'network-log-target' crates/http/src/views/partials/demo/log/transport_log_set.rs >/dev/null; then
+  echo "transport_log_set.rs: expected stable patch target network-log-target."
   status=1
 fi
 
-if ! rg --no-heading --line-number 'network-log-target' crates/http/src/views/partials/demo/log/transport_log_set.rs >/dev/null; then
-  echo "transport_log_set.rs: expected stable patch target network-log-target."
+if ! rg --no-heading --line-number 'FlowTimeline::builder\(\)' crates/http/src/views/partials/demo/log/transport_log_set.rs >/dev/null; then
+  echo "transport_log_set.rs: expected FlowTimeline::builder() usage for request timeline composition."
+  status=1
+fi
+
+if ! rg --no-heading --line-number 'request_flows\(' crates/http/src/views/partials/demo/log/transport_log_set.rs >/dev/null; then
+  echo "transport_log_set.rs: expected vm::request_flows(...) mapping usage."
+  status=1
+fi
+
+count_chat_request_id=$(rg --no-heading --line-number 'LogFieldKey::RequestId' crates/http/src/handlers/demo/chat.rs | wc -l | tr -d ' ')
+if [[ "${count_chat_request_id}" -lt "2" ]]; then
+  echo "crates/http/src/handlers/demo/chat.rs: expected RequestId field to be recorded on chat incoming + broadcast events."
   status=1
 fi
 
@@ -67,12 +73,29 @@ if [[ "${count_field_text}" != "1" ]]; then
   status=1
 fi
 
+for vm_file in \
+  "crates/http/src/views/partials/demo/log/vm/network_tables.rs" \
+  "crates/http/src/views/partials/demo/log/vm/chat_flow_rows.rs" \
+  "crates/http/src/views/partials/demo/log/vm/request_flow.rs"
+do
+  if ! rg --no-heading --line-number '#\[cfg\(test\)\]' "${vm_file}" >/dev/null; then
+    echo "${vm_file}: expected vm-layer regression tests."
+    status=1
+  fi
+done
+
 APP_CSS="crates/http/static/app.css"
 for cls in \
   ".ui-log-surface" \
   ".ui-log-panels" \
   ".ui-log-panel" \
   ".ui-log-scroll" \
+  ".ui-log-flow-shell" \
+  ".ui-log-flow-list" \
+  ".ui-log-flow-item" \
+  ".ui-log-flow-details" \
+  ".ui-log-flow-detail" \
+  ".ui-log-flow-event" \
   ".ui-log-groups" \
   ".ui-log-group" \
   ".ui-log-group-header" \

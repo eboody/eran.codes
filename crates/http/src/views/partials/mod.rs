@@ -4,9 +4,12 @@ mod error;
 
 // ci: descriptive-module-import crate::views::partials::chat
 pub use demo::chat;
+pub use components::{CtaButton, CtaButtonType, CtaItem, CtaLink, CtaRow, CtaTone};
 pub use demo::{
-    AuthStatus, BoundaryCheck, CtaRow, DbCheck, DemoResultPlaceholder, EngineeringQuality,
-    HomeHero, KeyValueList, EventStreamLog, ModerationAction, TransportLogSet, Ping, RequestBurstDemo,
-    RequestMeta, SectionHeader, SessionStatus, StatusCard, TabSetShowcase, RequestTraceLog,
+    AuthStatus, BoundaryCheck, DbCheck, DemoResultPlaceholder, EngineeringQuality,
+    HomeHero, KeyValueList, ModerationAction, Ping, RequestBurstDemo, RequestMeta,
+    RequestTraceLog, SectionHeader, SectionHeaderActionLink,
+    SectionHeaderMetaText, SessionStatus, StatusCard, TabSetShowcase,
+    TransportLogSet,
 };
 pub use error::Error;

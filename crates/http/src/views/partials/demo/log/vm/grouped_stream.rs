@@ -7,7 +7,7 @@ use crate::views::partials::components::Pill;
 
 use super::{field_text, short_request_id};
 
-pub fn build_grouped_feed<'a, I>(entries: I) -> logs::GroupedFeed
+pub fn build_grouped_feed<'a, I>(entries: I) -> logs::composed::GroupedFeed
 where
     I: IntoIterator<Item = &'a TraceEntry>,
 {
@@ -23,14 +23,14 @@ where
                 .entries
                 .iter()
                 .map(|entry| {
-                    logs::EventRow::builder()
+                    logs::primitives::EventRow::builder()
                         .timestamp(Text::from(entry.timestamp.clone()))
                         .message(Text::from(entry.message.clone()))
                         .pills(build_pills(entry))
                         .build()
                 })
                 .collect();
-            logs::Group::builder()
+            logs::composed::Group::builder()
                 .request_pill(Pill::fields(format!("request_id={}", request_label)))
                 .count_label(Text::from(format!("{} events", group.entries.len())))
                 .rows(rows)
@@ -38,7 +38,7 @@ where
         })
         .collect();
 
-    logs::GroupedFeed::builder().children(groups).build()
+    logs::composed::GroupedFeed::builder().children(groups).build()
 }
 
 struct LogGroup<'a> {

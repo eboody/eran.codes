@@ -1,6 +1,6 @@
 // Views: pages are full documents, partials are Datastar fragments.
 moddef::moddef!(
-    pub mod { page, pages, partials, theme, proper_theme }
+    pub mod { page, pages, partials, proper_theme }
 );
 
 pub fn render(view: impl maud::Render) -> axum::response::Html<String> {

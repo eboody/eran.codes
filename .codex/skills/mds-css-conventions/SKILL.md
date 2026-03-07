@@ -27,6 +27,7 @@ Apply repo CSS conventions and css-scope-inline usage patterns to class design a
 - Reusable component packages: tabs, panel shells, preview frames, feature lists, CTA surfaces.
 - Layout primitives that are shared across unrelated components/pages.
 - Log package classes (`ui-log-*`) used by reusable log components (surface, panel, table, grouped feed, empty state).
+- Flow tracing packages (`ui-log-flow-*`) used by request timeline components (flow shell, selector list, detail lane).
 
 ## What May Stay Scoped
 - One-off component-specific styling with no reuse value.

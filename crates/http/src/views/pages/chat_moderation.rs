@@ -2,7 +2,10 @@ use bon::Builder;
 use maud::Render;
 use maud_extensions::css;
 
-use crate::views::partials::{CtaRow, ModerationAction};
+use crate::types::Text;
+use crate::views::partials::{
+    CtaButton, CtaButtonType, CtaItem, CtaRow, CtaTone, ModerationAction,
+};
 use crate::views::page::{Layout, UserNav};
 use crate::paths::Route;
 
@@ -109,12 +112,28 @@ impl Render for ChatModeration {
                                         input type="hidden" name="reason" value=(&entry.reason);
                                         (CtaRow::builder()
                                             .items(vec![
-                                                maud::html! {
-                                                    button type="submit" name="decision" value=(ModerationAction::Approve) class="button secondary" { "Approve" }
-                                                },
-                                                maud::html! {
-                                                    button type="submit" name="decision" value=(ModerationAction::Remove) class="button" { "Remove" }
-                                                },
+                                                CtaItem::Button(
+                                                    CtaButton::builder()
+                                                        .label(Text::from("Approve"))
+                                                        .button_type(CtaButtonType::Submit)
+                                                        .name(Text::from("decision"))
+                                                        .value(Text::from(
+                                                            ModerationAction::Approve.to_string(),
+                                                        ))
+                                                        .tone(CtaTone::Secondary)
+                                                        .build(),
+                                                ),
+                                                CtaItem::Button(
+                                                    CtaButton::builder()
+                                                        .label(Text::from("Remove"))
+                                                        .button_type(CtaButtonType::Submit)
+                                                        .name(Text::from("decision"))
+                                                        .value(Text::from(
+                                                            ModerationAction::Remove.to_string(),
+                                                        ))
+                                                        .tone(CtaTone::Primary)
+                                                        .build(),
+                                                ),
                                             ])
                                             .build())
                                     }

@@ -3,7 +3,7 @@ use maud::Render;
 
 use crate::types::Text;
 
-use super::EmptyState;
+use crate::views::partials::components::logs;
 
 #[derive(Clone, Debug, Builder)]
 pub struct Panel {
@@ -15,7 +15,7 @@ pub struct Panel {
 impl Render for Panel {
     fn render(&self) -> maud::Markup {
         let body = if let Some(message) = &self.empty_message {
-            maud::html! { (EmptyState::builder().message(message.clone()).build()) }
+            maud::html! { (logs::primitives::EmptyState::builder().message(message.clone()).build()) }
         } else {
             self.body.clone()
         };

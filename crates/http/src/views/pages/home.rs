@@ -4,8 +4,8 @@ use crate::paths::Route;
 use crate::types::Text;
 use crate::views::page::{SseMode, UserNav};
 use crate::views::partials::{
-    chat, DemoResultPlaceholder, EngineeringQuality, HomeHero, RequestBurstDemo,
-    SectionHeader, TabSetShowcase,
+    DemoResultPlaceholder, EngineeringQuality, HomeHero, RequestBurstDemo, SectionHeader,
+    SectionHeaderActionLink, TabSetShowcase, chat,
 };
 
 #[derive(Builder)]
@@ -36,12 +36,11 @@ impl maud::Render for Home {
                                         "Sign in to send messages and see the chat room.",
                                     ),
                                 )
-                                .action(
-                                    maud::html! {
-                                        a class = "button secondary" href = (Route::Login) {
-                                        "Sign in" }
-                                    },
-                                )
+                                .action(SectionHeaderActionLink::builder()
+                                    .label(Text::from("Sign in"))
+                                    .href(Text::from(Route::Login.as_str()))
+                                    .secondary(true)
+                                    .build())
                                 .build()
                         })
                     }
@@ -53,33 +52,21 @@ impl maud::Render for Home {
                             .title(Text::from("Operational View"))
                             .subtitle(
                                 Text::from(
-                                    "Run a demo interaction, then inspect request, DB, and SSE behavior in real time.",
+                                    "Run a demo interaction, then follow request, backend, and SSE behavior in one timeline.",
                                 ),
                             )
                             .build()
                     })
-                    div class="ui-grid-two-column" {
-                        ({
-                            DemoResultPlaceholder::builder()
-                                .target_id(Text::from("live-log-target"))
-                                .message(
-                                    Text::from(
-                                        "No backend events yet. Trigger a demo action to start streaming.",
-                                    ),
-                                )
-                                .build()
-                        })
-                        ({
-                            DemoResultPlaceholder::builder()
-                                .target_id(Text::from("network-log-target"))
-                                .message(
-                                    Text::from(
-                                        "No network events yet. Trigger a demo action to populate this table.",
-                                    ),
-                                )
-                                .build()
-                        })
-                    }
+                    ({
+                        DemoResultPlaceholder::builder()
+                            .target_id(Text::from("network-log-target"))
+                            .message(
+                                Text::from(
+                                    "No timeline events yet. Trigger a demo action to populate this view.",
+                                ),
+                            )
+                            .build()
+                    })
                 }
 
                 (EngineeringQuality::builder().build())

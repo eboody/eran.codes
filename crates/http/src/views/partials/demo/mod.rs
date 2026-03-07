@@ -5,10 +5,10 @@ pub(super) mod misc;
 mod support;
 
 pub use layout::{
-    CtaRow, DemoResultPlaceholder, EngineeringQuality, HomeHero, RequestBurstDemo,
-    SectionHeader, TabSetShowcase,
+    DemoResultPlaceholder, EngineeringQuality, HomeHero, RequestBurstDemo,
+    SectionHeader, SectionHeaderActionLink, SectionHeaderMetaText, TabSetShowcase,
 };
-pub use log::{EventStreamLog, TransportLogSet, RequestTraceLog};
+pub use log::{RequestTraceLog, TransportLogSet};
 pub use misc::{ModerationAction, Ping};
 pub use support::{
     AuthStatus, BoundaryCheck, DbCheck, KeyValueList, RequestMeta, SessionStatus,

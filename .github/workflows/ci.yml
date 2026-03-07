@@ -13,6 +13,8 @@ jobs:
         run: scripts/ci/stringy-check.sh
       - name: no String fields
         run: scripts/ci/no-string-fields.sh
+      - name: enum + builder contract
+        run: scripts/ci/enum-builder-contract.sh
       - name: typed hasher errors
         run: scripts/ci/typed-hasher-errors.sh
       - name: datastar command+sse architecture

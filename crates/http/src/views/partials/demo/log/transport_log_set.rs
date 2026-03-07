@@ -5,7 +5,6 @@ use crate::trace_log::TraceEntry;
 use crate::types::Text;
 use crate::views::partials::components::logs;
 
-use super::chat_flow::ChatFlowPanel;
 use super::vm;
 
 #[derive(Builder)]
@@ -15,79 +14,125 @@ pub struct TransportLogSet<'a> {
 
 impl Render for TransportLogSet<'_> {
     fn render(&self) -> maud::Markup {
-        let request_rows = vm::request_rows(self.entries);
-        let sse_rows = vm::sse_rows(self.entries);
-        let chat_entries = vm::chat_entries(self.entries);
+        let request_flows = vm::request_flows(self.entries, 20);
+        let flow_body = logs::composed::FlowTimeline::builder()
+            .flows(request_flows)
+            .build()
+            .render();
 
-        let request_body = if request_rows.is_empty() {
-            logs::EmptyState::builder()
-                .message(Text::from(
-                    "No requests yet. Trigger a demo action to populate this table.",
-                ))
-                .build()
-                .render()
-        } else {
-            logs::Table::builder()
-                .headers(vec![
-                    Text::from("Time"),
-                    Text::from("Status"),
-                    Text::from("Method"),
-                    Text::from("Path"),
-                    Text::from("Source"),
-                    Text::from("Latency"),
-                ])
-                .rows(request_rows)
-                .variant(logs::TableVariant::Default)
-                .build()
-                .render()
-        };
-
-        let sse_body = if sse_rows.is_empty() {
-            logs::EmptyState::builder()
-                .message(Text::from(
-                    "No SSE pushes yet. Send a chat message to broadcast an update.",
-                ))
-                .build()
-                .render()
-        } else {
-            logs::Table::builder()
-                .headers(vec![
-                    Text::from("Time"),
-                    Text::from("Event"),
-                    Text::from("Selector"),
-                    Text::from("Mode"),
-                    Text::from("Payload (bytes)"),
-                ])
-                .rows(sse_rows)
-                .variant(logs::TableVariant::Default)
-                .build()
-                .render()
-        };
-
-        logs::Surface::builder()
+        logs::primitives::Surface::builder()
             .target_id(Text::from("network-log-target"))
-            .layout(logs::SurfaceLayout::Panels)
+            .layout(logs::primitives::SurfaceLayout::Panels)
             .children(vec![
-                logs::Panel::builder()
-                    .title(Text::from("HTTP requests"))
-                    .body(request_body)
+                logs::primitives::Panel::builder()
+                    .title(Text::from("System flow timeline"))
+                    .body(flow_body)
                     .build()
                     .render(),
-                logs::Panel::builder()
-                    .title(Text::from("SSE pushes"))
-                    .body(sse_body)
-                    .build()
-                    .render(),
-                ChatFlowPanel::builder().entries(&chat_entries).build().render(),
             ])
             .auto_scroll(
-                logs::AutoScroll::builder()
+                logs::primitives::AutoScroll::builder()
                     .root_id(Text::from("network-log-target"))
                     .selector(Text::from("[data-log-scroll]"))
-                    .scope(logs::AutoScrollScope::All)
+                    .scope(logs::primitives::AutoScrollScope::Single)
                     .build(),
             )
             .build()
             .render()
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use crate::types::{
+        LogFieldName, LogFieldValue, LogLevelText, LogMessageText, LogTargetText,
+        TimestampText,
+    };
+
+    fn entry(
+        timestamp: &str,
+        target: &str,
+        message: &str,
+        fields: Vec<(&str, &str)>,
+    ) -> TraceEntry {
+        TraceEntry::builder()
+            .timestamp(TimestampText::new(timestamp))
+            .level(LogLevelText::new("INFO"))
+            .target(LogTargetText::new(target))
+            .message(LogMessageText::new(message))
+            .fields(
+                fields
+                    .into_iter()
+                    .map(|(name, value)| {
+                        (LogFieldName::new(name), LogFieldValue::new(value))
+                    })
+                    .collect(),
+            )
+            .build()
+    }
+
+    #[test]
+    fn renders_empty_states_and_stable_patch_target() {
+        let markup = TransportLogSet::builder()
+            .entries(&[])
+            .build()
+            .render()
+            .into_string();
+
+        assert!(markup.contains("id=\"network-log-target\""));
+        assert_eq!(markup.matches("id=\"network-log-target\"").count(), 1);
+        assert!(markup.contains("System flow timeline"));
+        assert!(markup.contains("No request flows yet."));
+    }
+
+    #[test]
+    fn renders_flow_timeline_for_chat_request_sequence() {
+        let entries = vec![
+            entry(
+                "12:00:01",
+                "demo.request",
+                "request.end",
+                vec![
+                    ("request_id", "req-aaa-111"),
+                    ("method", "POST"),
+                    ("path", "/demo/chat/messages"),
+                    ("status", "202"),
+                ],
+            ),
+            entry(
+                "12:00:02",
+                "demo.chat",
+                "chat.message.incoming",
+                vec![
+                    ("request_id", "req-aaa-111"),
+                    ("sender", "you"),
+                    ("receiver", "server"),
+                ],
+            ),
+            entry(
+                "12:00:03",
+                "demo.sse",
+                "chat message broadcast",
+                vec![
+                    ("request_id", "req-aaa-111"),
+                    ("selector", "[data-chat-messages]"),
+                    ("mode", "prepend"),
+                ],
+            ),
+        ];
+
+        let markup = TransportLogSet::builder()
+            .entries(&entries)
+            .build()
+            .render()
+            .into_string();
+
+        assert!(markup.contains("ui-log-flow-shell"));
+        assert!(markup.contains("network-flow-req-aaa-111"));
+        assert!(markup.contains("SSE broadcast"));
+        assert!(!markup.contains("HTTP requests"));
+        assert!(!markup.contains("SSE pushes"));
+        assert!(!markup.contains("Chat message flow"));
     }
 }

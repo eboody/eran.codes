@@ -47,20 +47,20 @@ impl Render for TabSetShowcase {
         let active_tab_id = active_tab_id.as_str();
 
         maud::html! {
-            (tab_set::Component {
-                id: "tab-set-showcase",
-                class: "tab-set ui-surface-card",
-                active_tab_id,
-                tabs: tab_set::tab::Set {
+            (tab_set::Component::builder()
+                .id("tab-set-showcase")
+                .class("tab-set ui-surface-card")
+                .active_tab_id(active_tab_id)
+                .tabs(tab_set::tab::Set {
                     aria_label: Text::from("Solutions"),
                     tabs: tab_set::tab::List {
                         children: tabs.as_slice(),
                     },
-                },
-                panes: tab_set::pane::List {
+                })
+                .panes(tab_set::pane::List {
                     children: panes.as_slice(),
-                },
-            })
+                })
+                .build())
         }
     }
 }
@@ -70,5 +70,6 @@ fn load_content() -> tab_set::content::TabSetContent {
         env!("CARGO_MANIFEST_DIR"),
         "/../../tests/fixtures/cms/tab_set_showcase.json"
     ));
-    serde_json::from_str(raw).unwrap_or_else(|_| tab_set::content::TabSetContent { tabs: vec![] })
+    serde_json::from_str(raw)
+        .expect("tab_set_showcase fixture must be valid JSON")
 }

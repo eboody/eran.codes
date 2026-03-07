@@ -30,6 +30,7 @@ If a value has a finite meaningful set, use an enum.
 
 - Status, role, action, lifecycle stage, variant, kind, mode, level -> enum.
 - Do not represent invariant sets as string literals.
+- In component/view structs, semantic fields (`*mode`, `*variant`, `*kind`, `*role`, `*type`, `*scope`, `*authority`) must not be `Text`/`String`.
 
 ### No stringly domain logic
 
@@ -85,6 +86,9 @@ Use `bon` when:
 - there are many construction steps,
 - named setters improve readability,
 - typestate modeling is unnecessary overhead.
+
+Default for this repo:
+- If a component/view needs a builder, use `bon` (typestate or regular as appropriate), not hand-rolled builder code.
 
 ### Constructor fallback
 

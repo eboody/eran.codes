@@ -246,23 +246,17 @@ async fn home_page_includes_demo_sections() {
     let body = String::from_utf8_lossy(&body);
     assert_eq!(status, axum::http::StatusCode::OK, "home body:\n{body}");
 
-    for copy in HomeCopy::all() {
+    for copy in HomeContract::all() {
         assert!(body.contains(copy.as_str()));
     }
 }
 
 #[derive(Clone, Copy, Debug)]
-enum HomeCopy {
-    LiveProof,
-    OperationalView,
-    SelectedWork,
-    ProfessionalismSection,
-    CapabilityShowcase,
-    RequestBurst,
+enum HomeContract {
+    OperationsSurface,
+    NetworkLogTarget,
     RequestBurstEndpoint,
-    ChatRoom,
     ChatAnchor,
-    ReadOnlyPreview,
     TablistRole,
     TabRole,
     TabpanelRole,
@@ -275,58 +269,44 @@ enum HomeCopy {
     LoginPath,
 }
 
-impl HomeCopy {
-    fn all() -> &'static [HomeCopy] {
+impl HomeContract {
+    fn all() -> &'static [HomeContract] {
         &[
-            HomeCopy::LiveProof,
-            HomeCopy::OperationalView,
-            HomeCopy::SelectedWork,
-            HomeCopy::ProfessionalismSection,
-            HomeCopy::CapabilityShowcase,
-            HomeCopy::RequestBurst,
-            HomeCopy::RequestBurstEndpoint,
-            HomeCopy::ChatRoom,
-            HomeCopy::ChatAnchor,
-            HomeCopy::ReadOnlyPreview,
-            HomeCopy::TablistRole,
-            HomeCopy::TabRole,
-            HomeCopy::TabpanelRole,
-            HomeCopy::ResumeLink,
-            HomeCopy::GithubLink,
-            HomeCopy::LinkedInLink,
-            HomeCopy::ContactLink,
-            HomeCopy::SignIn,
-            HomeCopy::RegisterPath,
-            HomeCopy::LoginPath,
+            HomeContract::OperationsSurface,
+            HomeContract::NetworkLogTarget,
+            HomeContract::RequestBurstEndpoint,
+            HomeContract::ChatAnchor,
+            HomeContract::TablistRole,
+            HomeContract::TabRole,
+            HomeContract::TabpanelRole,
+            HomeContract::ResumeLink,
+            HomeContract::GithubLink,
+            HomeContract::LinkedInLink,
+            HomeContract::ContactLink,
+            HomeContract::SignIn,
+            HomeContract::RegisterPath,
+            HomeContract::LoginPath,
         ]
     }
 
     fn as_str(self) -> &'static str {
         match self {
-            HomeCopy::LiveProof => "Live Proof, Not Slideware",
-            HomeCopy::OperationalView => "Operational View",
-            HomeCopy::SelectedWork => "Selected Work",
-            HomeCopy::ProfessionalismSection => {
-                "Professionalism In Practice (Detailed Breakdown)"
-            }
-            HomeCopy::CapabilityShowcase => "Capability Showcase",
-            HomeCopy::RequestBurst => "High-Volume Request Burst",
-            HomeCopy::RequestBurstEndpoint => "/partials/request-burst-probe",
-            HomeCopy::ChatRoom => "Live chat room",
-            HomeCopy::ChatAnchor => "id=\"chat-demo\"",
-            HomeCopy::ReadOnlyPreview => "Read-only preview.",
-            HomeCopy::TablistRole => "role=\"tablist\"",
-            HomeCopy::TabRole => "role=\"tab\"",
-            HomeCopy::TabpanelRole => "role=\"tabpanel\"",
-            HomeCopy::ResumeLink => "/static/resume.txt",
-            HomeCopy::GithubLink => "https://github.com/eboody/eran.codes",
-            HomeCopy::LinkedInLink => {
+            HomeContract::OperationsSurface => "id=\"operations-surface\"",
+            HomeContract::NetworkLogTarget => "id=\"network-log-target\"",
+            HomeContract::RequestBurstEndpoint => "/partials/request-burst-probe",
+            HomeContract::ChatAnchor => "id=\"chat-demo\"",
+            HomeContract::TablistRole => "role=\"tablist\"",
+            HomeContract::TabRole => "role=\"tab\"",
+            HomeContract::TabpanelRole => "role=\"tabpanel\"",
+            HomeContract::ResumeLink => "/static/resume.txt",
+            HomeContract::GithubLink => "https://github.com/eboody/eran.codes",
+            HomeContract::LinkedInLink => {
                 "https://www.linkedin.com/search/results/all/?keywords=Eran%20Boodnero"
             }
-            HomeCopy::ContactLink => "mailto:eboodnero@gmail.com",
-            HomeCopy::SignIn => "Sign in",
-            HomeCopy::RegisterPath => "/register",
-            HomeCopy::LoginPath => "/login",
+            HomeContract::ContactLink => "mailto:eboodnero@gmail.com",
+            HomeContract::SignIn => "Sign in",
+            HomeContract::RegisterPath => "/register",
+            HomeContract::LoginPath => "/login",
         }
     }
 }

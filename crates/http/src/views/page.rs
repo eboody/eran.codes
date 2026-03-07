@@ -4,7 +4,9 @@ use maud_extensions::css;
 
 use crate::paths::Route;
 use crate::types::Text;
-use crate::views::partials::components::{NavBar, NavLink, NavLinkList};
+use crate::views::partials::components::{
+    NavAuth, NavBar, NavLink, NavLinkList, NavSignedIn,
+};
 
 pub(crate) const PORTFOLIO_RESUME_URL: &str = "/static/resume.txt";
 pub(crate) const PORTFOLIO_GITHUB_URL: &str = "https://github.com/eboody/eran.codes";
@@ -294,9 +296,15 @@ impl Render for Layout<'_> {
                     .build(),
             ])
             .build();
-        let auth_slot = match &self.user {
-            Some(user) => user.render(),
-            None => {
+        let auth = match &self.user {
+            Some(user) => NavAuth::SignedIn(
+                NavSignedIn::builder()
+                    .username(user.username.clone())
+                    .account_href(Text::from(Route::Protected.as_str()))
+                    .logout_action(Text::from(Route::Logout.as_str()))
+                    .build(),
+            ),
+            None => NavAuth::Guest(
                 NavLinkList::builder()
                     .class_name(Text::from("ui-nav-list ui-nav-auth"))
                     .children(vec![
@@ -309,14 +317,13 @@ impl Render for Layout<'_> {
                             .href(Text::from(Route::Register.as_str()))
                             .build(),
                     ])
-                    .build()
-                    .render()
-            }
+                    .build(),
+            ),
         };
         let nav_bar = NavBar::builder()
             .brand(brand_links)
             .links(portfolio_links)
-            .auth_slot(auth_slot)
+            .auth(auth)
             .build();
         let body_content = maud::html! {
             (AppShellStyles.render())

@@ -15,7 +15,7 @@ pub struct RequestTraceLog<'a> {
 impl Render for RequestTraceLog<'_> {
     fn render(&self) -> maud::Markup {
         let body = if self.entries.is_empty() {
-            logs::EmptyState::builder()
+            logs::primitives::EmptyState::builder()
                 .message(Text::from("No trace entries recorded yet."))
                 .build()
                 .render()
@@ -23,10 +23,10 @@ impl Render for RequestTraceLog<'_> {
             vm::build_grouped_feed(self.entries.iter()).render()
         };
 
-        logs::Surface::builder()
-            .layout(logs::SurfaceLayout::Stack)
+        logs::primitives::Surface::builder()
+            .layout(logs::primitives::SurfaceLayout::Stack)
             .children(vec![
-                logs::Panel::builder()
+                logs::primitives::Panel::builder()
                     .title(Text::from("Trace log"))
                     .body(body)
                     .build()

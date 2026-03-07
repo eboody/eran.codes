@@ -1,10 +1,13 @@
 use bon::Builder;
 use maud::Render;
 use maud_extensions::inline_js;
+use serde_json::json;
 
 use crate::paths::Route;
 use crate::types::Text;
-use crate::views::partials::{chat, SectionHeader};
+use crate::views::partials::{
+    SectionHeader, SectionHeaderActionLink, SectionHeaderMetaText, chat,
+};
 
 #[derive(Clone, Debug, Builder)]
 pub struct DemoSection {
@@ -54,22 +57,30 @@ impl Render for DemoSection {
             section
                 id=(Self::ANCHOR_ID)
                 data-chat-surface
-                data-signals=(format!(
-                    "{{roomId: '{}', body: '', botBody: '', sseConnected: false}}",
-                    self.room_id
-                )) {
+                data-signals=(json!({
+                    "roomId": self.room_id.to_string(),
+                    "body": "",
+                    "botBody": "",
+                    "sseConnected": false
+                }).to_string()) {
                 (SectionHeader::builder()
                     .title(Text::from("Live chat room"))
                     .subtitle(subtitle)
                     .action(match self.interactivity {
-                        chat::Mode::Interactive => maud::html! {
-                            a class="button secondary" href=(Route::ChatModeration) { "Moderation queue" }
-                        },
-                        chat::Mode::DemoOnly => maud::html! {
-                            a class="button secondary" href=(Route::Login) { "Sign in to interact" }
-                        },
+                        chat::Mode::Interactive => SectionHeaderActionLink::builder()
+                            .label(Text::from("Moderation queue"))
+                            .href(Text::from(Route::ChatModeration.as_str()))
+                            .secondary(true)
+                            .build(),
+                        chat::Mode::DemoOnly => SectionHeaderActionLink::builder()
+                            .label(Text::from("Sign in to interact"))
+                            .href(Text::from(Route::Login.as_str()))
+                            .secondary(true)
+                            .build(),
                     })
-                    .meta(maud::html! { p data-muted { "Room: " (&self.room_name) } })
+                    .meta(SectionHeaderMetaText::builder()
+                        .text(Text::from(format!("Room: {}", self.room_name)))
+                        .build())
                     .build())
                 (chat::Connection::builder()
                     .connected_signal(Text::from("$sseConnected"))

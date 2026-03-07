@@ -13,9 +13,10 @@ fi
 
 status=0
 
-tab_set_component="crates/http/src/views/partials/components/tab_set.rs"
+tab_set_component="crates/http/src/views/partials/components/composed/tab_set/mod.rs"
+tab_set_content_module="crates/http/src/views/partials/components/composed/tab_set/content.rs"
 tab_set_showcase="crates/http/src/views/partials/demo/layout/tab_set_showcase.rs"
-tab_component="crates/http/src/views/partials/components/tab.rs"
+tab_component="crates/http/src/views/partials/components/primitives/tab.rs"
 fixture="tests/fixtures/cms/tab_set_showcase.json"
 
 if ! rg --no-heading --line-number '^//\s*ci:\s*descriptive-module-import\s+crate::views::partials::components::tab_set$' "$tab_set_component" >/dev/null; then
@@ -30,28 +31,28 @@ for module in tab pane content; do
   fi
 done
 
-if ! rg --no-heading --line-number 'use crate::views::partials::components::primitives::Icon;' "$tab_set_component" >/dev/null; then
-  echo "${tab_set_component}: content module must use shared primitive Icon contract."
+if ! rg --no-heading --line-number 'use crate::views::partials::components::primitives::Icon;' "$tab_set_content_module" >/dev/null; then
+  echo "${tab_set_content_module}: content module must use shared primitive Icon contract."
   status=1
 fi
 
-if ! rg --no-heading --line-number 'pub\s+icon:\s+Option<Icon>' "$tab_set_component" >/dev/null; then
-  echo "${tab_set_component}: tab content must expose icon as Option<Icon>."
+if ! rg --no-heading --line-number 'pub\s+icon:\s+Option<Icon>' "$tab_set_content_module" >/dev/null; then
+  echo "${tab_set_content_module}: tab content must expose icon as Option<Icon>."
   status=1
 fi
 
-if rg --no-heading --line-number 'IconKey' "$tab_set_component" >/dev/null; then
-  echo "${tab_set_component}: IconKey enum mapping is disallowed; use CMS icon tokens through primitive Icon."
+if rg --no-heading --line-number 'IconKey' "$tab_set_content_module" >/dev/null; then
+  echo "${tab_set_content_module}: IconKey enum mapping is disallowed; use CMS icon tokens through primitive Icon."
   status=1
 fi
 
-if rg --no-heading --line-number 'glyph_from_asset_ref' "$tab_set_component" >/dev/null; then
-  echo "${tab_set_component}: legacy asset_ref->glyph mapping is disallowed."
+if rg --no-heading --line-number 'glyph_from_asset_ref' crates/http/src/views/partials/components/composed/tab_set >/dev/null; then
+  echo "crates/http/src/views/partials/components/composed/tab_set: legacy asset_ref->glyph mapping is disallowed."
   status=1
 fi
 
-if rg --no-heading --line-number 'maud_iconoir::regular' "$tab_set_component" >/dev/null; then
-  echo "${tab_set_component}: tab_set should not bind icon tokens through maud_iconoir const maps."
+if rg --no-heading --line-number 'maud_iconoir::regular' crates/http/src/views/partials/components/composed/tab_set >/dev/null; then
+  echo "crates/http/src/views/partials/components/composed/tab_set: tab_set should not bind icon tokens through maud_iconoir const maps."
   status=1
 fi
 
@@ -80,7 +81,7 @@ if ! rg --no-heading --line-number 'icon:\s+tab\.icon\.clone\(\)' "$tab_set_show
   status=1
 fi
 
-if ! rg --no-heading --line-number 'use super::primitives::Icon;' "$tab_component" >/dev/null; then
+if ! rg --no-heading --line-number 'use (super::Icon|crate::views::partials::components::primitives::Icon);' "$tab_component" >/dev/null; then
   echo "${tab_component}: tab component must compose primitive Icon."
   status=1
 fi

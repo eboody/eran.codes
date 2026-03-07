@@ -57,7 +57,7 @@ Coordinate agent execution, initialize `component_spec`, and enforce section own
   "design": {
     "reuse_scan": {
       "checked_components": [
-        "crates/http/src/views/partials/components/tab.rs"
+        "crates/http/src/views/partials/components/primitives/tab.rs"
       ],
       "reused": [
         "tab"

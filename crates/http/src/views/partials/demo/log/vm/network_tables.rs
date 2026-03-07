@@ -109,3 +109,132 @@ fn source_pill(entry: &TraceEntry) -> Markup {
         None => Pill::fields("source=unknown").render(),
     }
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use crate::types::{
+        LogFieldName, LogFieldValue, LogLevelText, LogMessageText, LogTargetText,
+        TimestampText,
+    };
+
+    fn entry(
+        timestamp: &str,
+        target: &str,
+        message: &str,
+        fields: Vec<(&str, &str)>,
+    ) -> TraceEntry {
+        TraceEntry::builder()
+            .timestamp(TimestampText::new(timestamp))
+            .level(LogLevelText::new("INFO"))
+            .target(LogTargetText::new(target))
+            .message(LogMessageText::new(message))
+            .fields(
+                fields
+                    .into_iter()
+                    .map(|(name, value)| {
+                        (LogFieldName::new(name), LogFieldValue::new(value))
+                    })
+                    .collect(),
+            )
+            .build()
+    }
+
+    #[test]
+    fn request_rows_only_include_demo_request_ends() {
+        let entries = vec![
+            entry(
+                "12:00:01",
+                "demo.request",
+                "request.end",
+                vec![
+                    ("status", "202"),
+                    ("method", "POST"),
+                    ("path", "/demo/chat/messages"),
+                    ("sender", "you"),
+                ],
+            ),
+            entry(
+                "12:00:02",
+                "demo.request",
+                "request.start",
+                vec![("status", "200")],
+            ),
+            entry(
+                "12:00:03",
+                "demo.sse",
+                "chat message broadcast",
+                vec![("selector", "[data-chat-messages]")],
+            ),
+        ];
+
+        let rows = request_rows(&entries);
+
+        assert_eq!(rows.len(), 1);
+        let rendered = rows[0]
+            .iter()
+            .map(|cell| cell.clone().into_string())
+            .collect::<String>();
+        assert!(rendered.contains("POST"));
+        assert!(rendered.contains("/demo/chat/messages"));
+    }
+
+    #[test]
+    fn sse_rows_only_include_demo_sse_and_apply_fallbacks() {
+        let entries = vec![
+            entry(
+                "12:00:01",
+                "demo.sse",
+                "chat message broadcast",
+                vec![("selector", "[data-chat-messages]"), ("mode", "prepend")],
+            ),
+            entry(
+                "12:00:02",
+                "demo.chat",
+                "chat.message.incoming",
+                vec![("sender", "you")],
+            ),
+        ];
+
+        let rows = sse_rows(&entries);
+
+        assert_eq!(rows.len(), 1);
+        let rendered = rows[0]
+            .iter()
+            .map(|cell| cell.clone().into_string())
+            .collect::<String>();
+        assert!(rendered.contains("[data-chat-messages]"));
+        assert!(rendered.contains("prepend"));
+        assert!(rendered.contains("-"));
+    }
+
+    #[test]
+    fn chat_entries_include_only_incoming_and_broadcast_events() {
+        let entries = vec![
+            entry(
+                "12:00:01",
+                "demo.chat",
+                "chat.message.incoming",
+                vec![("sender", "you")],
+            ),
+            entry(
+                "12:00:02",
+                "demo.sse",
+                "chat message broadcast",
+                vec![("selector", "[data-chat-messages]")],
+            ),
+            entry(
+                "12:00:03",
+                "demo.request",
+                "request.end",
+                vec![("status", "202")],
+            ),
+        ];
+
+        let rows = chat_entries(&entries);
+
+        assert_eq!(rows.len(), 2);
+        assert_eq!(rows[0].target.to_string(), "demo.chat");
+        assert_eq!(rows[1].target.to_string(), "demo.sse");
+    }
+}

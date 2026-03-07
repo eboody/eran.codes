@@ -2,9 +2,11 @@ use bon::Builder;
 use maud::Render;
 use maud_extensions::css;
 
+use super::item::CtaItem;
+
 #[derive(Clone, Debug, Builder)]
 pub struct CtaRow {
-    pub items: Vec<maud::Markup>,
+    pub items: Vec<CtaItem>,
 }
 
 impl Render for CtaRow {
@@ -12,7 +14,7 @@ impl Render for CtaRow {
         maud::html! {
             div data-cta-row {
                 @for item in &self.items {
-                    (item.clone())
+                    (item)
                 }
             }
             ({

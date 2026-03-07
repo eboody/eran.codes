@@ -1,10 +1,11 @@
 use maud::Render;
 use maud_extensions::inline_css;
+use serde_json::json;
 
 use crate::types::Text;
 use crate::views::proper_theme::Palette;
 
-use super::primitives::Icon;
+use super::Icon;
 
 #[derive(Clone, Debug)]
 pub(crate) struct Tab {
@@ -19,7 +20,6 @@ pub(crate) struct Tab {
 
 #[derive(Clone, Debug)]
 pub(crate) enum TabInteraction {
-    PanelJs,
     DatastarLocal { signal: Text, value: Text },
 }
 
@@ -44,26 +44,11 @@ impl Render for Tab {
         );
 
         match &self.interaction {
-            TabInteraction::PanelJs => {
-                maud::html! {
-                    button.showcase-tab.is-selected[self.is_selected]
-                        type="button"
-                        role="tab"
-                        id=(&self.id)
-                        aria-controls=(&self.controls)
-                        aria-selected=(self.is_selected)
-                        tabindex=(tab_index)
-                        style=(style) {
-                        (css())
-                        (render_content(&icon, &self.text))
-                    }
-                }
-            }
             TabInteraction::DatastarLocal { signal, value } => {
-                let selected_expr = format!("${} == '{}'", signal, value);
+                let selected_expr = format!("${} == {}", signal, json_literal(value));
                 let selected_attr = format!("{} ? 'true' : 'false'", selected_expr);
                 let tabindex_attr = format!("{} ? '0' : '-1'", selected_expr);
-                let click_expr = format!("${} = '{}'", signal, value);
+                let click_expr = format!("${} = {}", signal, json_literal(value));
 
                 maud::html! {
                     button.showcase-tab.tab-set__tab.ui-tab.is-selected[self.is_selected]
@@ -94,6 +79,28 @@ fn render_content(icon: &Option<Icon>, text: &Text) -> maud::Markup {
             span class="showcase-tab-icon" { (icon) }
         }
         span class="showcase-tab-label tab-set__tab-line" { (text) }
+    }
+}
+
+fn json_literal(value: &Text) -> String {
+    json!(value.to_string()).to_string()
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn datastar_local_interaction_uses_json_literal_for_signal_value() {
+        let value = Text::from("sso'and\"quotes");
+        let selected_expr = format!("$active_tab_id == {}", json_literal(&value));
+        let click_expr = format!("$active_tab_id = {}", json_literal(&value));
+
+        assert_eq!(
+            selected_expr,
+            "$active_tab_id == \"sso'and\\\"quotes\""
+        );
+        assert_eq!(click_expr, "$active_tab_id = \"sso'and\\\"quotes\"");
     }
 }
 

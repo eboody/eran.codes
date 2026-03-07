@@ -3,7 +3,6 @@ use std::sync::LazyLock;
 use bon::Builder;
 use csscolorparser::Color;
 use maud::Render;
-use modum::modum;
 use nutype::nutype;
 
 #[nutype(derive(Clone, Debug, PartialEq, AsRef, Deref, From, Into))]

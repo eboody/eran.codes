@@ -2,7 +2,7 @@ use bon::Builder;
 use maud::Render;
 
 use crate::types::Text;
-use crate::views::partials::components::logs::AutoScroll;
+use crate::views::partials::components::logs;
 
 #[derive(Clone, Copy, Debug, Default)]
 pub enum SurfaceLayout {
@@ -33,7 +33,7 @@ pub struct Surface {
     #[builder(default)]
     pub classes: Vec<Text>,
     pub children: Vec<maud::Markup>,
-    pub auto_scroll: Option<AutoScroll>,
+    pub auto_scroll: Option<logs::primitives::AutoScroll>,
 }
 
 impl Render for Surface {

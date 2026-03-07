@@ -4,7 +4,7 @@ use maud::Render;
 use crate::types::Text;
 use crate::views::partials::components::Pill;
 
-use super::EventRow;
+use crate::views::partials::components::logs;
 
 #[derive(Clone, Debug, Builder)]
 pub struct GroupedFeed {
@@ -27,7 +27,7 @@ impl Render for GroupedFeed {
 pub struct Group {
     pub request_pill: Pill,
     pub count_label: Text,
-    pub rows: Vec<EventRow>,
+    pub rows: Vec<logs::primitives::EventRow>,
 }
 
 impl Render for Group {

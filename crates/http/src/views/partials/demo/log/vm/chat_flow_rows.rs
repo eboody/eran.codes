@@ -136,3 +136,63 @@ impl From<FlowDirectionKnown> for FlowDirection {
         }
     }
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use crate::types::{
+        LogFieldName, LogFieldValue, LogLevelText, LogMessageText, LogTargetText,
+        TimestampText,
+    };
+
+    fn entry(timestamp: &str, fields: Vec<(&str, &str)>) -> TraceEntry {
+        TraceEntry::builder()
+            .timestamp(TimestampText::new(timestamp))
+            .level(LogLevelText::new("INFO"))
+            .target(LogTargetText::new("demo.chat"))
+            .message(LogMessageText::new("chat.message.incoming"))
+            .fields(
+                fields
+                    .into_iter()
+                    .map(|(name, value)| {
+                        (LogFieldName::new(name), LogFieldValue::new(value))
+                    })
+                    .collect(),
+            )
+            .build()
+    }
+
+    #[test]
+    fn rows_are_newest_first() {
+        let a = entry(
+            "12:00:01",
+            vec![("direction", "incoming"), ("sender", "you")],
+        );
+        let b = entry(
+            "12:00:02",
+            vec![("direction", "outgoing"), ("sender", "demo")],
+        );
+        let rows = chat_flow_rows(&[&a, &b]);
+
+        assert_eq!(rows.len(), 2);
+        let first_row = rows[0]
+            .iter()
+            .map(|cell| cell.clone().into_string())
+            .collect::<String>();
+        assert!(first_row.contains("12:00:02"));
+    }
+
+    #[test]
+    fn unknown_sender_and_direction_fallbacks_are_rendered() {
+        let row = entry("12:00:01", vec![("receiver", "clients")]);
+        let rows = chat_flow_rows(&[&row]);
+
+        let rendered = rows[0]
+            .iter()
+            .map(|cell| cell.clone().into_string())
+            .collect::<String>();
+        assert!(rendered.contains("unknown"));
+        assert!(rendered.contains("to:clients"));
+        assert!(rendered.contains("user:unknown"));
+    }
+}

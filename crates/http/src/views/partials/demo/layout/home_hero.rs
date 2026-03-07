@@ -5,7 +5,7 @@ use crate::paths::Route;
 use crate::types::Text;
 use crate::views::page::UserNav;
 use crate::views::partials::components::Pill;
-use crate::views::partials::CtaRow;
+use crate::views::partials::{CtaItem, CtaLink, CtaRow, CtaTone};
 
 #[derive(Clone, Debug, Builder)]
 pub struct HomeHero {
@@ -30,8 +30,20 @@ impl Render for HomeHero {
                     }
                     (CtaRow::builder()
                         .items(vec![
-                            maud::html! { a class="button" href="#chat-demo" { "Open live demo" } },
-                            maud::html! { a class="button secondary" href="#engineering-quality" { "Review engineering quality" } },
+                            CtaItem::Link(
+                                CtaLink::builder()
+                                    .label(Text::from("Open live demo"))
+                                    .href(Text::from("#chat-demo"))
+                                    .tone(CtaTone::Primary)
+                                    .build(),
+                            ),
+                            CtaItem::Link(
+                                CtaLink::builder()
+                                    .label(Text::from("Review engineering quality"))
+                                    .href(Text::from("#engineering-quality"))
+                                    .tone(CtaTone::Secondary)
+                                    .build(),
+                            ),
                         ])
                         .build())
                 }
@@ -46,8 +58,20 @@ impl Render for HomeHero {
                         p data-muted { "Create an account to see session-backed auth." }
                         (CtaRow::builder()
                             .items(vec![
-                                maud::html! { a class="button" href=(Route::Register) { "Create account" } },
-                                maud::html! { a class="button secondary" href=(Route::Login) { "Sign in" } },
+                                CtaItem::Link(
+                                    CtaLink::builder()
+                                        .label(Text::from("Create account"))
+                                        .href(Text::from(Route::Register.as_str()))
+                                        .tone(CtaTone::Primary)
+                                        .build(),
+                                ),
+                                CtaItem::Link(
+                                    CtaLink::builder()
+                                        .label(Text::from("Sign in"))
+                                        .href(Text::from(Route::Login.as_str()))
+                                        .tone(CtaTone::Secondary)
+                                        .build(),
+                                ),
                             ])
                             .build())
                     }

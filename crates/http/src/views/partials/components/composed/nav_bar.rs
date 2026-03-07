@@ -47,13 +47,57 @@ impl Render for NavLinkList {
     }
 }
 
+#[derive(Clone, Debug, Builder)]
+pub struct NavSignedIn {
+    pub username: Text,
+    pub account_href: Text,
+    pub logout_action: Text,
+}
+
+impl Render for NavSignedIn {
+    fn render(&self) -> maud::Markup {
+        maud::html! {
+            ul class="ui-nav-list ui-nav-auth" {
+                li {
+                    span class="ui-nav-auth-text" { "Signed in as " (&self.username) }
+                }
+                li {
+                    a class="ui-nav-link" href=(&self.account_href) { "Account" }
+                }
+                li {
+                    form method="post" action=(&self.logout_action) {
+                        button type="submit" class="secondary ui-nav-auth-action" {
+                            "Sign out"
+                        }
+                    }
+                }
+            }
+        }
+    }
+}
+
+#[derive(Clone, Debug)]
+pub enum NavAuth {
+    Guest(NavLinkList),
+    SignedIn(NavSignedIn),
+}
+
+impl Render for NavAuth {
+    fn render(&self) -> maud::Markup {
+        match self {
+            Self::Guest(links) => links.render(),
+            Self::SignedIn(signed_in) => signed_in.render(),
+        }
+    }
+}
+
 // ci: style-system-component
 // ci: render-composition-component
 #[derive(Clone, Debug, Builder)]
 pub struct NavBar {
     pub brand: NavLinkList,
     pub links: NavLinkList,
-    pub auth_slot: maud::Markup,
+    pub auth: NavAuth,
 }
 
 impl Render for NavBar {
@@ -63,7 +107,7 @@ impl Render for NavBar {
                 nav class="ui-nav" {
                     (&self.brand)
                     (&self.links)
-                    (self.auth_slot.clone())
+                    (&self.auth)
                 }
             }
         }

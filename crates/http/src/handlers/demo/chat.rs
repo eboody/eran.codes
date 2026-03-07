@@ -102,10 +102,17 @@ pub async fn post_chat_message(
         )
         .await?;
 
+    let request_id = current_request_id_text();
     let user_id = crate::types::UserIdText::new(user.id.to_string());
-    record_incoming_chat_event(&state, ChatSender::You, &user_id, body_text.len());
+    record_incoming_chat_event(
+        &state,
+        ChatSender::You,
+        &user_id,
+        &request_id,
+        body_text.len(),
+    );
     let message_html = render_chat_message_html(&message, &user.username.to_string());
-    broadcast_message(&state, &message_html, ChatSender::You, user_id);
+    broadcast_message(&state, &message_html, ChatSender::You, user_id, &request_id);
 
     Ok(chat_post_response())
 }
@@ -138,10 +145,23 @@ pub async fn post_demo_chat_message(
         )
         .await?;
 
+    let request_id = current_request_id_text();
     let demo_user_id = crate::types::UserIdText::new(demo_user.id.as_uuid().to_string());
-    record_incoming_chat_event(&state, ChatSender::Demo, &demo_user_id, body_text.len());
+    record_incoming_chat_event(
+        &state,
+        ChatSender::Demo,
+        &demo_user_id,
+        &request_id,
+        body_text.len(),
+    );
     let message_html = render_chat_message_html(&message, &demo_user.username.to_string());
-    broadcast_message(&state, &message_html, ChatSender::Demo, demo_user_id);
+    broadcast_message(
+        &state,
+        &message_html,
+        ChatSender::Demo,
+        demo_user_id,
+        &request_id,
+    );
 
     Ok(chat_post_response())
 }
@@ -168,6 +188,7 @@ fn record_incoming_chat_event(
     state: &crate::State,
     sender: ChatSender,
     user_id: &crate::types::UserIdText,
+    request_id: &Text,
     payload_bytes: usize,
 ) {
     state.trace_log.record_sse_event(
@@ -202,6 +223,10 @@ fn record_incoming_chat_event(
                     crate::types::LogFieldName::from(LogFieldKey::PayloadBytes),
                     crate::types::LogFieldValue::new(payload_bytes.to_string()),
                 ),
+                (
+                    crate::types::LogFieldName::from(LogFieldKey::RequestId),
+                    crate::types::LogFieldValue::new(request_id.to_string()),
+                ),
             ])
             .build(),
     );
@@ -223,6 +248,7 @@ fn broadcast_message(
     message_html: &str,
     sender: ChatSender,
     user_id: crate::types::UserIdText,
+    request_id: &Text,
 ) {
     let event = PatchElements::new(message_html)
         .selector("[data-chat-messages]")
@@ -276,9 +302,20 @@ fn broadcast_message(
                     crate::types::LogFieldName::from(LogFieldKey::UserId),
                     crate::types::LogFieldValue::new(user_id.to_string()),
                 ),
+                (
+                    crate::types::LogFieldName::from(LogFieldKey::RequestId),
+                    crate::types::LogFieldValue::new(request_id.to_string()),
+                ),
             ])
             .build(),
     );
+}
+
+fn current_request_id_text() -> Text {
+    request::current_context()
+        .and_then(|context| context.request_id)
+        .map(|request_id| Text::from(request_id.to_string()))
+        .unwrap_or_else(|| Text::from(format!("fallback-{}", uuid::Uuid::new_v4())))
 }
 
 #[derive(Clone, Copy, Debug)]
