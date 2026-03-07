@@ -5,19 +5,25 @@ use crate::types::Text;
 
 use crate::views::partials::components::logs;
 
+#[derive(Clone, Debug)]
+pub enum PanelBody {
+    Content(maud::Markup),
+    Empty(Text),
+}
+
 #[derive(Clone, Debug, Builder)]
 pub struct Panel {
     pub title: Text,
-    pub body: maud::Markup,
-    pub empty_message: Option<Text>,
+    pub body: PanelBody,
 }
 
 impl Render for Panel {
     fn render(&self) -> maud::Markup {
-        let body = if let Some(message) = &self.empty_message {
-            maud::html! { (logs::primitives::EmptyState::builder().message(message.clone()).build()) }
-        } else {
-            self.body.clone()
+        let body = match &self.body {
+            PanelBody::Content(markup) => markup.clone(),
+            PanelBody::Empty(message) => {
+                maud::html! { (logs::primitives::EmptyState::builder().message(message.clone()).build()) }
+            }
         };
 
         maud::html! {

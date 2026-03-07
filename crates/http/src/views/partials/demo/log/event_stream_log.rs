@@ -15,14 +15,14 @@ pub struct EventStreamLog<'a> {
 impl Render for EventStreamLog<'_> {
     fn render(&self) -> maud::Markup {
         let body = if self.entries.is_empty() {
-            logs::primitives::EmptyState::builder()
-                .message(Text::from(
-                    "No events yet. Trigger a demo action to start streaming.",
-                ))
-                .build()
-                .render()
+            logs::primitives::PanelBody::Empty(Text::from(
+                "No events yet. Trigger a demo action to start streaming.",
+            ))
         } else {
-            vm::build_grouped_feed(self.entries.iter().rev().take(40)).render()
+            logs::primitives::PanelBody::Content(
+                vm::build_grouped_feed(self.entries.iter().rev().take(40))
+                    .render(),
+            )
         };
 
         logs::primitives::Surface::builder()

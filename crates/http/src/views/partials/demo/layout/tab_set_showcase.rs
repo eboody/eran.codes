@@ -68,7 +68,7 @@ impl Render for TabSetShowcase {
 fn load_content() -> tab_set::content::TabSetContent {
     let raw = include_str!(concat!(
         env!("CARGO_MANIFEST_DIR"),
-        "/../../tests/fixtures/cms/tab_set_showcase.json"
+        "/src/views/partials/demo/layout/content/tab_set_showcase.json"
     ));
     serde_json::from_str(raw)
         .expect("tab_set_showcase fixture must be valid JSON")

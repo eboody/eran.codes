@@ -15,26 +15,25 @@ pub struct ChatFlowPanel<'a> {
 impl Render for ChatFlowPanel<'_> {
     fn render(&self) -> maud::Markup {
         let body = if self.entries.is_empty() {
-            logs::primitives::EmptyState::builder()
-                .message(Text::from(
-                    "No chat messages yet. Send a message to see request/response flow.",
-                ))
-                .build()
-                .render()
+            logs::primitives::PanelBody::Empty(Text::from(
+                "No chat messages yet. Send a message to see request/response flow.",
+            ))
         } else {
-            logs::primitives::Table::builder()
-                .headers(vec![
-                    Text::from("Time"),
-                    Text::from("Direction"),
-                    Text::from("Sender"),
-                    Text::from("Receiver"),
-                    Text::from("User"),
-                    Text::from("Body"),
-                ])
-                .rows(vm::chat_flow_rows(self.entries))
-                .variant(logs::primitives::TableVariant::ChatFlow)
-                .build()
-                .render()
+            logs::primitives::PanelBody::Content(
+                logs::primitives::Table::builder()
+                    .headers(vec![
+                        Text::from("Time"),
+                        Text::from("Direction"),
+                        Text::from("Sender"),
+                        Text::from("Receiver"),
+                        Text::from("User"),
+                        Text::from("Body"),
+                    ])
+                    .rows(vm::chat_flow_rows(self.entries))
+                    .variant(logs::primitives::TableVariant::ChatFlow)
+                    .build()
+                    .render(),
+            )
         };
 
         logs::primitives::Panel::builder()

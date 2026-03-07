@@ -84,6 +84,8 @@ Every component spec must declare `design.render_contract`:
 Semantics:
 - Parent/child render composition is explicit and typed.
 - Reused primitives should be listed when applicable.
+- Reusable parent props should be typed at composition edges; `maud::Markup` slots are exception-only and must be explicitly justified.
+- Dense mapping/reducer logic should be modularized into focused companion modules instead of monolithic single files.
 
 ## Variant Modeling Contract (Required)
 For component/view models generated from the spec:

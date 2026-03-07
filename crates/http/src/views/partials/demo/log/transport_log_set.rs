@@ -26,7 +26,7 @@ impl Render for TransportLogSet<'_> {
             .children(vec![
                 logs::primitives::Panel::builder()
                     .title(Text::from("System flow timeline"))
-                    .body(flow_body)
+                    .body(logs::primitives::PanelBody::Content(flow_body))
                     .build(),
             ])
             .auto_scroll(

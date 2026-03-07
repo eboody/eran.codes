@@ -29,6 +29,8 @@ jobs:
         run: scripts/ci/reusable-component-naming.sh
       - name: render composition contract
         run: scripts/ci/render-composition-contract.sh
+      - name: lean component contract
+        run: scripts/ci/lean-component-contract.sh
       - name: log componentization contract
         run: scripts/ci/log-componentization-contract.sh
       - name: tab icon reference contract

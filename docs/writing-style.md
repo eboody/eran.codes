@@ -153,6 +153,14 @@ Do not chain `.build().render()` at call sites.
 - Outside `html!` (when a `maud::Markup` value is required immediately), call `.render()` on an already-built value.
 - Keep one terminal call at the call site: either `.build()` in splices or `.render()` on a value, not both.
 
+### Lean component heuristics
+
+- Prefer typed composition edges for reusable components (for example `Vec<Panel>` over `Vec<maud::Markup>` for parent `children` props).
+- Allow `maud::Markup` props only at explicit rich-content boundaries where typed alternatives would add noise.
+- Any intentional `maud::Markup` prop slot in reusable component surfaces must carry a local exemption marker comment:
+  - `// ci: markup-slot-exempt <reason>`
+- For dense mapping logic (for example event/trace projection), split into module families (`kind`, `builders`, `helpers`) before files become monolithic.
+
 ### Inline style/script policy
 
 Where inline CSS/JS is appropriate:

@@ -3,6 +3,9 @@ use maud::Render;
 
 use crate::types::Text;
 
+// ci: markup-slot-exempt table rows require rich typed render cells.
+pub type Cell = maud::Markup;
+
 #[derive(Clone, Copy, Debug, Default)]
 pub enum TableVariant {
     #[default]
@@ -19,7 +22,7 @@ impl TableVariant {
 #[derive(Clone, Debug, Builder)]
 pub struct Table {
     pub headers: Vec<Text>,
-    pub rows: Vec<Vec<maud::Markup>>,
+    pub rows: Vec<Vec<Cell>>,
     #[builder(default)]
     pub variant: TableVariant,
 }

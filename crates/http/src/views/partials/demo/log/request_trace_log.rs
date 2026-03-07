@@ -15,12 +15,13 @@ pub struct RequestTraceLog<'a> {
 impl Render for RequestTraceLog<'_> {
     fn render(&self) -> maud::Markup {
         let body = if self.entries.is_empty() {
-            logs::primitives::EmptyState::builder()
-                .message(Text::from("No trace entries recorded yet."))
-                .build()
-                .render()
+            logs::primitives::PanelBody::Empty(Text::from(
+                "No trace entries recorded yet.",
+            ))
         } else {
-            vm::build_grouped_feed(self.entries.iter()).render()
+            logs::primitives::PanelBody::Content(
+                vm::build_grouped_feed(self.entries.iter()).render(),
+            )
         };
 
         logs::primitives::Surface::builder()

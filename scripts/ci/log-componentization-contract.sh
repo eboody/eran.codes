@@ -76,7 +76,7 @@ fi
 for vm_file in \
   "crates/http/src/views/partials/demo/log/vm/network_tables.rs" \
   "crates/http/src/views/partials/demo/log/vm/chat_flow_rows.rs" \
-  "crates/http/src/views/partials/demo/log/vm/request_flow.rs"
+  "crates/http/src/views/partials/demo/log/vm/request_flow/mod.rs"
 do
   if ! rg --no-heading --line-number '#\[cfg\(test\)\]' "${vm_file}" >/dev/null; then
     echo "${vm_file}: expected vm-layer regression tests."

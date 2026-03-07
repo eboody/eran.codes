@@ -1,0 +1,274 @@
+{
+  "tabs": [
+    {
+      "id": "identity_sessions",
+      "label": {
+        "primary": "Identity",
+        "secondary": "Continuity"
+      },
+      "icon": {
+        "key": "key"
+      },
+      "preview": {
+        "image": {
+          "asset_ref": "images/identity-session-surface",
+          "alt": "Identity and session context preview"
+        },
+        "badge": {
+          "text": "Anchor target: Home hero"
+        }
+      },
+      "body": {
+        "title": "Identity Context Across Requests",
+        "subtitle": "Session-backed authentication keeps request and UI identity aligned over time.",
+        "features": [
+          {
+            "id": "session_store",
+            "text": "Registration, login, and protected routes operate on one durable session model."
+          },
+          {
+            "id": "cookie_contract",
+            "text": "Cookie and server session state remain coherent during normal navigation."
+          },
+          {
+            "id": "handler_context",
+            "text": "User context is available where handlers and views require it."
+          },
+          {
+            "id": "reviewability",
+            "text": "The identity path can be validated directly from public routes."
+          }
+        ]
+      },
+      "action": {
+        "label": "Inspect identity flow",
+        "href": "#home-hero"
+      }
+    },
+    {
+      "id": "load_harness",
+      "label": {
+        "primary": "Load",
+        "secondary": "Harness"
+      },
+      "icon": {
+        "key": "control-slider"
+      },
+      "preview": {
+        "image": {
+          "asset_ref": "images/request-burst-surface",
+          "alt": "Request burst controls preview"
+        },
+        "badge": {
+          "text": "Anchor target: Request burst"
+        }
+      },
+      "body": {
+        "title": "Client-Side Burst Driver for Throughput Checks",
+        "subtitle": "One control generates high request volume so latency and failures become visible quickly.",
+        "features": [
+          {
+            "id": "volume_control",
+            "text": "A range input sets request volume before execution starts."
+          },
+          {
+            "id": "parallel_workers",
+            "text": "Parallel workers dispatch traffic from a single browser session."
+          },
+          {
+            "id": "live_counts",
+            "text": "Progress shows sent, successful, failed, and requests per second."
+          },
+          {
+            "id": "smoke_usage",
+            "text": "The harness is useful for quick smoke checks after backend changes."
+          }
+        ]
+      },
+      "action": {
+        "label": "Run burst harness",
+        "href": "#request-burst-demo"
+      }
+    },
+    {
+      "id": "live_chat",
+      "label": {
+        "primary": "Live",
+        "secondary": "Chat Flow"
+      },
+      "icon": {
+        "key": "chat-lines"
+      },
+      "preview": {
+        "image": {
+          "asset_ref": "images/live-chat-surface",
+          "alt": "Live chat and moderation preview"
+        },
+        "badge": {
+          "text": "Anchor target: Chat demo"
+        }
+      },
+      "body": {
+        "title": "Persisted Chat With Multi-Client Fanout",
+        "subtitle": "Messages are stored once and streamed to connected viewers without polling.",
+        "features": [
+          {
+            "id": "persist_first",
+            "text": "Posting a message writes to storage before broadcast fanout."
+          },
+          {
+            "id": "moderation_path",
+            "text": "Moderation status is part of the same message lifecycle."
+          },
+          {
+            "id": "realtime_delivery",
+            "text": "Connected clients receive updates over the event stream."
+          },
+          {
+            "id": "dual_modes",
+            "text": "The demo supports both signed-in and guided demo interaction modes."
+          }
+        ]
+      },
+      "action": {
+        "label": "Open chat flow",
+        "href": "#chat-demo"
+      }
+    },
+    {
+      "id": "runtime_visibility",
+      "label": {
+        "primary": "Runtime",
+        "secondary": "Visibility"
+      },
+      "icon": {
+        "key": "candlestick-chart"
+      },
+      "preview": {
+        "image": {
+          "asset_ref": "images/runtime-visibility-surface",
+          "alt": "Operational log panels preview"
+        },
+        "badge": {
+          "text": "Anchor target: Operational view"
+        }
+      },
+      "body": {
+        "title": "Operational Panels for Request and Network Signals",
+        "subtitle": "Backend events and network telemetry are visible side by side during interaction.",
+        "features": [
+          {
+            "id": "live_panel",
+            "text": "The live panel streams backend events as they happen."
+          },
+          {
+            "id": "network_table",
+            "text": "Network output includes method, path, status, and timing context."
+          },
+          {
+            "id": "action_correlation",
+            "text": "UI actions can be correlated with transport behavior immediately."
+          },
+          {
+            "id": "debug_speed",
+            "text": "This setup shortens the cycle for reproducing and isolating issues."
+          }
+        ]
+      },
+      "action": {
+        "label": "Open operations panels",
+        "href": "#operations-surface"
+      }
+    },
+    {
+      "id": "command_sse",
+      "label": {
+        "primary": "Command",
+        "secondary": "SSE Model"
+      },
+      "icon": {
+        "key": "refresh-double"
+      },
+      "preview": {
+        "image": {
+          "asset_ref": "images/command-sse-surface",
+          "alt": "Command and SSE model preview"
+        },
+        "badge": {
+          "text": "Anchor target: Operational view"
+        }
+      },
+      "body": {
+        "title": "Command Endpoints With SSE State Convergence",
+        "subtitle": "Mutations travel through commands, while authoritative state converges from the event stream.",
+        "features": [
+          {
+            "id": "command_contract",
+            "text": "Client actions invoke commands without returning JSON state payloads."
+          },
+          {
+            "id": "patch_stream",
+            "text": "Server updates are published as Datastar signal patches on the stream."
+          },
+          {
+            "id": "single_channel",
+            "text": "State convergence uses one global event channel instead of mixed update paths."
+          },
+          {
+            "id": "consistency",
+            "text": "The model reduces drift between immediate UI writes and backend truth."
+          }
+        ]
+      },
+      "action": {
+        "label": "Inspect convergence model",
+        "href": "#operations-surface"
+      }
+    },
+    {
+      "id": "engineering_quality",
+      "label": {
+        "primary": "Engineering",
+        "secondary": "Quality"
+      },
+      "icon": {
+        "key": "globe"
+      },
+      "preview": {
+        "image": {
+          "asset_ref": "images/engineering-quality-surface",
+          "alt": "Engineering quality checklist preview"
+        },
+        "badge": {
+          "text": "Anchor target: Engineering quality"
+        }
+      },
+      "body": {
+        "title": "Codebase Quality Signals Built Into Delivery",
+        "subtitle": "Typed contracts, reusable composition, and CI rules keep the system maintainable as it evolves.",
+        "features": [
+          {
+            "id": "cms_contract",
+            "text": "Component content is delivered through explicit CMS-shaped fixtures."
+          },
+          {
+            "id": "render_composition",
+            "text": "Reusable primitives keep view composition predictable and reviewable."
+          },
+          {
+            "id": "ci_guardrails",
+            "text": "CI checks enforce architecture, naming, and interaction conventions."
+          },
+          {
+            "id": "evolution",
+            "text": "The code can evolve with fewer cross-layer regressions."
+          }
+        ]
+      },
+      "action": {
+        "label": "Review quality signals",
+        "href": "#engineering-quality"
+      }
+    }
+  ]
+}

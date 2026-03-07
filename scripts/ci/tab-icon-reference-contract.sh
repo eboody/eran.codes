@@ -18,6 +18,7 @@ tab_set_content_module="crates/http/src/views/partials/components/composed/tab_s
 tab_set_showcase="crates/http/src/views/partials/demo/layout/tab_set_showcase.rs"
 tab_component="crates/http/src/views/partials/components/primitives/tab.rs"
 fixture="tests/fixtures/cms/tab_set_showcase.json"
+runtime_fixture="crates/http/src/views/partials/demo/layout/content/tab_set_showcase.json"
 
 if ! rg --no-heading --line-number '^//\s*ci:\s*descriptive-module-import\s+crate::views::partials::components::tab_set$' "$tab_set_component" >/dev/null; then
   echo "${tab_set_component}: expected descriptive-module-import marker for tab_set namespace."
@@ -109,6 +110,14 @@ else
     echo "${fixture}: icon.key values must be lowercase dash tokens."
     status=1
   fi
+fi
+
+if [[ ! -f "$runtime_fixture" ]]; then
+  echo "${runtime_fixture}: missing runtime CMS fixture for tab_set showcase."
+  status=1
+elif ! cmp -s "$fixture" "$runtime_fixture"; then
+  echo "${runtime_fixture}: runtime fixture must stay in sync with ${fixture}."
+  status=1
 fi
 
 for spec in tests/fixtures/tab_set.component_spec.json generated/tab_set/resolved.component_spec.json; do
