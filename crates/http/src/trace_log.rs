@@ -119,19 +119,11 @@ impl TraceLogStore {
     }
 
     fn emit_session_log_panels(&self, session_id: &SessionId, entries: &[TraceEntry]) {
-        let live_log = views::partials::EventStreamLog::builder()
-            .entries(entries)
-            .build()
-            .render()
-            .into_string();
         let network_log = views::partials::TransportLogSet::builder()
             .entries(entries)
             .build()
             .render()
             .into_string();
-        let _ = self
-            .sse
-            .send_by_id(session_id, sse::Event::patch_elements(live_log));
         let _ = self
             .sse
             .send_by_id(session_id, sse::Event::patch_elements(network_log));
@@ -149,10 +141,6 @@ impl TraceLogStore {
             .get(session_id)
             .map(|queue| queue.iter().cloned().collect())
             .unwrap_or_default()
-    }
-
-    pub fn clear_session(&self, session_id: &SessionId) {
-        self.sessions.remove(session_id);
     }
 
     pub fn snapshot_global(&self) -> Vec<TraceEntry> {
@@ -211,6 +199,7 @@ where
 
         let mut visitor = FieldVisitor::default();
         event.record(&mut visitor);
+        append_context_fields(&mut visitor.fields, context.as_ref(), &request_id);
 
         let level = *event.metadata().level();
         let target = event.metadata().target();
@@ -269,6 +258,7 @@ where
 
         let mut visitor = FieldVisitor::default();
         event.record(&mut visitor);
+        append_context_fields(&mut visitor.fields, context.as_ref(), &request_id);
 
         let level = *event.metadata().level();
         let target = event.metadata().target();
@@ -414,6 +404,43 @@ impl tracing::field::Visit for FieldVisitor {
             }
         }
     }
+}
+
+fn append_context_fields(
+    fields: &mut Vec<(LogFieldName, LogFieldValue)>,
+    context: Option<&request::Context>,
+    request_id: &RequestId,
+) {
+    upsert_context_field(fields, LogFieldKey::RequestId, Some(request_id.to_string()));
+    upsert_context_field(
+        fields,
+        LogFieldKey::SessionId,
+        context
+            .and_then(|value| value.session_id.as_ref())
+            .map(ToString::to_string),
+    );
+    upsert_context_field(
+        fields,
+        LogFieldKey::UserId,
+        context
+            .and_then(|value| value.user_id.as_ref())
+            .map(ToString::to_string),
+    );
+}
+
+fn upsert_context_field(
+    fields: &mut Vec<(LogFieldName, LogFieldValue)>,
+    key: LogFieldKey,
+    value: Option<String>,
+) {
+    let name = LogFieldName::from(key);
+    if fields.iter().any(|(field_name, _)| field_name == &name) {
+        return;
+    }
+    let value = value
+        .map(LogFieldValue::new)
+        .unwrap_or_else(LogFieldValue::missing);
+    fields.push((name, value));
 }
 
 pub async fn audit_middleware(
@@ -579,4 +606,57 @@ fn format_timestamp(raw: TimestampText) -> TimestampText {
     let time = time.trim_end_matches('Z');
     let time = time.split('.').next().unwrap_or(time);
     TimestampText::new(format!("{date} {time}"))
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use crate::types::UserIdText;
+
+    #[test]
+    fn append_context_fields_adds_request_session_user() {
+        let mut fields = Vec::new();
+        let request_id = RequestId::new("req-123");
+        let context = request::Context {
+            request_id: Some(request_id.clone()),
+            session_id: Some(SessionId::new("session-abc")),
+            user_id: Some(UserIdText::new("user-xyz")),
+            client_ip: None,
+            user_agent: None,
+            kind: request::Kind::Datastar,
+        };
+
+        append_context_fields(&mut fields, Some(&context), &request_id);
+
+        assert!(fields.iter().any(|(name, value)| {
+            name == &LogFieldName::from(LogFieldKey::RequestId)
+                && value.to_string() == "req-123"
+        }));
+        assert!(fields.iter().any(|(name, value)| {
+            name == &LogFieldName::from(LogFieldKey::SessionId)
+                && value.to_string() == "session-abc"
+        }));
+        assert!(fields.iter().any(|(name, value)| {
+            name == &LogFieldName::from(LogFieldKey::UserId)
+                && value.to_string() == "user-xyz"
+        }));
+    }
+
+    #[test]
+    fn append_context_fields_does_not_duplicate_existing_request_id() {
+        let mut fields = vec![(
+            LogFieldName::from(LogFieldKey::RequestId),
+            LogFieldValue::new("req-preexisting"),
+        )];
+        let request_id = RequestId::new("req-123");
+
+        append_context_fields(&mut fields, None, &request_id);
+
+        let request_id_fields = fields
+            .iter()
+            .filter(|(name, _)| name == &LogFieldName::from(LogFieldKey::RequestId))
+            .count();
+        assert_eq!(request_id_fields, 1);
+        assert_eq!(fields[0].1.to_string(), "req-preexisting");
+    }
 }

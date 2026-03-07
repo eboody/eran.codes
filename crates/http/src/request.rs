@@ -6,7 +6,7 @@ use axum::{
     response::Response,
 };
 
-use crate::sse::SESSION_COOKIE;
+use crate::sse::{Handle as SseHandle, SESSION_COOKIE};
 use crate::types::{ClientIp, RequestId, SessionId, UserAgent, UserIdText};
 use std::cell::RefCell;
 use tower_cookies::{Cookies, Key};
@@ -80,12 +80,19 @@ fn context_from_request(req: &Request<Body>, key: &Key) -> Context {
     let cookies = req.extensions().get::<Cookies>();
     Context {
         request_id: request_id_from_headers(headers),
-        session_id: cookies.and_then(|cookies| session_id_from_cookies(cookies, key)),
+        session_id: cookies.map(|cookies| ensure_session_id(cookies, key)),
         user_id: None,
         client_ip: client_ip_from_headers(headers),
         user_agent: user_agent_from_headers(headers),
         kind: kind_from_headers(headers),
     }
+}
+
+fn ensure_session_id(cookies: &Cookies, key: &Key) -> SessionId {
+    if let Some(session_id) = session_id_from_cookies(cookies, key) {
+        return session_id;
+    }
+    SseHandle::from_cookies(cookies, key).id()
 }
 
 fn kind_from_headers(headers: &HeaderMap) -> Kind {
@@ -196,6 +203,23 @@ mod tests {
         assert_eq!(
             context.session_id.map(|value| value.to_string()).as_deref(),
             Some("signed123")
+        );
+    }
+
+    #[test]
+    fn context_creates_session_cookie_when_missing() {
+        let key = Key::generate();
+        let cookies = Cookies::default();
+        let mut req = Request::builder().uri("/").body(Body::empty()).unwrap();
+        req.extensions_mut().insert(cookies.clone());
+
+        let context = context_from_request(&req, &key);
+        let from_cookie = session_id_from_cookies(&cookies, &key);
+
+        assert!(context.session_id.is_some());
+        assert_eq!(
+            context.session_id.map(|value| value.to_string()),
+            from_cookie.map(|value| value.to_string())
         );
     }
 

@@ -6,12 +6,13 @@ use axum::{
 };
 use core::convert::Infallible;
 use datastar::axum::ReadSignals;
+use maud::Render;
 use serde::Deserialize;
 use tokio::sync::broadcast::error::RecvError;
 use tokio::time::{sleep, Duration};
 use tower_cookies::Cookies;
 
-use crate::types::{SessionId, SseTabId, Text};
+use crate::types::{SseTabId, Text};
 
 #[derive(Debug, Deserialize)]
 #[serde(rename_all = "camelCase")]
@@ -203,9 +204,6 @@ pub async fn events(
     let stream_key = session.stream_key().clone();
     let (mut receiver, guard) = state.sse.subscribe(&session);
     let cleanup_guard = ConnectionCleanupGuard::new(
-        state.trace_log.clone(),
-        state.sse.clone(),
-        session_id.clone(),
         stream_key,
         state.demo.surreal.guard.clone(),
         state.demo.surreal.cancel.clone(),
@@ -218,6 +216,15 @@ pub async fn events(
             "sseConnected": true
         })),
     );
+    let session_entries = state.trace_log.snapshot_session(&session_id);
+    let transport_log = crate::views::partials::TransportLogSet::builder()
+        .entries(&session_entries)
+        .build()
+        .render()
+        .into_string();
+    let _ = state
+        .sse
+        .send(&session, crate::sse::Event::patch_elements(transport_log));
 
     let stream = stream! {
         let _cleanup_guard = cleanup_guard;
@@ -258,9 +265,6 @@ pub async fn events(
 }
 
 struct ConnectionCleanupGuard {
-    trace_log: crate::trace_log::TraceLogStore,
-    sse: crate::sse::Registry,
-    session_id: SessionId,
     stream_key: crate::sse::StreamKey,
     surreal_guard: std::sync::Arc<
         dashmap::DashMap<crate::sse::StreamKey, std::sync::Arc<tokio::sync::Mutex<()>>>,
@@ -271,11 +275,7 @@ struct ConnectionCleanupGuard {
 }
 
 impl ConnectionCleanupGuard {
-    #[allow(clippy::too_many_arguments)]
     fn new(
-        trace_log: crate::trace_log::TraceLogStore,
-        sse: crate::sse::Registry,
-        session_id: SessionId,
         stream_key: crate::sse::StreamKey,
         surreal_guard: std::sync::Arc<
             dashmap::DashMap<crate::sse::StreamKey, std::sync::Arc<tokio::sync::Mutex<()>>>,
@@ -285,9 +285,6 @@ impl ConnectionCleanupGuard {
         >,
     ) -> Self {
         Self {
-            trace_log,
-            sse,
-            session_id,
             stream_key,
             surreal_guard,
             surreal_cancel,
@@ -301,10 +298,6 @@ impl Drop for ConnectionCleanupGuard {
             token.cancel();
         }
         self.surreal_guard.remove(&self.stream_key);
-
-        if !self.sse.has_streams_for_session(&self.session_id) {
-            self.trace_log.clear_session(&self.session_id);
-        }
     }
 }
 
@@ -313,7 +306,8 @@ mod tests {
     use super::*;
     use crate::trace_log::TraceEntry;
     use crate::types::{
-        LogLevelText, LogMessageText, LogTargetText, RequestId, TimestampText,
+        LogLevelText, LogMessageText, LogTargetText, RequestId, SessionId,
+        TimestampText,
     };
     use dashmap::DashMap;
 
@@ -328,7 +322,7 @@ mod tests {
     }
 
     #[test]
-    fn cleanup_keeps_trace_entries_until_last_tab_disconnects() {
+    fn cleanup_preserves_trace_entries_across_disconnects() {
         let registry = crate::sse::Registry::new();
         let trace_log = crate::trace_log::TraceLogStore::builder()
             .with_sse(registry.clone())
@@ -368,17 +362,11 @@ mod tests {
         );
 
         let cleanup_a = ConnectionCleanupGuard::new(
-            trace_log.clone(),
-            registry.clone(),
-            session_id.clone(),
             tab_a.stream_key().clone(),
             surreal_guard.clone(),
             surreal_cancel.clone(),
         );
         let cleanup_b = ConnectionCleanupGuard::new(
-            trace_log.clone(),
-            registry.clone(),
-            session_id.clone(),
             tab_b.stream_key().clone(),
             surreal_guard.clone(),
             surreal_cancel.clone(),
@@ -400,7 +388,7 @@ mod tests {
 
         drop(guard_b);
         drop(cleanup_b);
-        assert!(trace_log.snapshot_session(&session_id).is_empty());
+        assert!(!trace_log.snapshot_session(&session_id).is_empty());
         assert!(surreal_guard.get(tab_b.stream_key()).is_none());
         assert!(surreal_cancel.get(tab_b.stream_key()).is_none());
     }
