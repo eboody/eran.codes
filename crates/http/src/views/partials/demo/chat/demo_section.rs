@@ -63,18 +63,10 @@ impl Render for DemoSection {
                 (chat::Connection::builder()
                     .connected_signal(Text::from("$sseConnected"))
                     .build())
-                div data-chat-columns {
-                    (chat::Panel::builder()
-                        .role(chat::Role::You)
-                        .messages(self.messages.clone())
-                        .interactivity(self.interactivity)
-                        .build())
-                    (chat::Panel::builder()
-                        .role(chat::Role::Demo)
-                        .messages(self.messages.clone())
-                        .interactivity(self.interactivity)
-                        .build())
-                }
+                (chat::PanelSet::builder()
+                    .messages(self.messages.clone())
+                    .interactivity(self.interactivity)
+                    .build())
                 script src="/static/chat-demo.js" {}
             }
         }

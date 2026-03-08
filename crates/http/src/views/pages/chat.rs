@@ -39,20 +39,9 @@ impl Render for Chat {
                             .connected_signal(Text::from("$sseConnected"))
                             .build()
                     })
-                    div data-chat-columns {
-                        ({
-                            chat::Panel::builder()
-                                .role(chat::Role::You)
-                                .messages(self.messages.clone())
-                                .build()
-                        })
-                        ({
-                            chat::Panel::builder()
-                                .role(chat::Role::Demo)
-                                .messages(self.messages.clone())
-                            .build()
-                        })
-                    }
+                    (chat::PanelSet::builder()
+                        .messages(self.messages.clone())
+                        .build())
                     script src="/static/chat-demo.js" {}
                 }
             }
