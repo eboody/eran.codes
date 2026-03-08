@@ -1,0 +1,21 @@
+# Database connections
+
+Source: `book/using_queries/db_connections.md` from cornucopia-rs/website.
+
+Depending on your choice of driver (sync or async) and pooling, your generated queries will accept different types of connections.
+
+The following list details supported connections for each configuration.
+
+## Sync
+* `postgres::Client`
+* `postgres::Transaction`
+
+## Async
+* `tokio_postgres::Client`
+* `tokio_postgres::Transaction`
+
+## Async + Deadpool
+* `tokio_postgres::Client`
+* `tokio_postgres::Transaction`
+* `deadpool_postgres::Client`
+* `deadpool_postgres::Transaction`

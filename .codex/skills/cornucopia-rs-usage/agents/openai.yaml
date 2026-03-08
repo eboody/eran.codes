@@ -1,0 +1,4 @@
+interface:
+  display_name: "Cornucopia Usage"
+  short_description: "Use Cornucopia correctly in Rust/PostgreSQL projects."
+  default_prompt: "Follow Cornucopia best practices for setup, SQL annotations, code generation, and runtime query execution."
