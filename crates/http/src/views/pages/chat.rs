@@ -34,7 +34,6 @@ impl Render for Chat {
                 })
 
                 section data-chat-surface {
-                    (chat::Styles.render())
                     ({
                         chat::Connection::builder()
                             .connected_signal(Text::from("$sseConnected"))
@@ -51,9 +50,10 @@ impl Render for Chat {
                             chat::Panel::builder()
                                 .role(chat::Role::Demo)
                                 .messages(self.messages.clone())
-                                .build()
+                            .build()
                         })
                     }
+                    script src="/static/chat-demo.js" {}
                 }
             }
         };

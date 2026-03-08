@@ -150,7 +150,6 @@ impl Render for Layout<'_> {
                         href="https://cdn.jsdelivr.net/gh/iconoir-icons/iconoir@main/css/iconoir.css";
                     script type="module" src="/static/datastar.js" {}
                     script src="/static/surreal.js" {}
-                    script src="/static/css-scope-inline.js" {}
                 }
                 @match self.sse_mode {
                     SseMode::Enabled => {

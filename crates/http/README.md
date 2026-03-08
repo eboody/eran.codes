@@ -43,23 +43,7 @@ Included scripts:
 - `css-scope-inline` via `/static/css-scope-inline.js`
 - `surreal` via `/static/surreal.js`
 
-## Inline CSS/JS
-Use macros from `maud_extensions` inside Maud views:
-
-```rust
-use maud_extensions::{css, js};
-
-maud::html! {
-    div class="card" {
-        (css! {
-            me { border: 1px solid var(--accent); }
-        })
-        button { "Click" }
-        (js! {
-            me('-').on('click', () => { me('-').textContent = 'Clicked.' })
-        })
-    }
-}
-```
-
-Inline `<style>` tags are scoped by css-scope-inline. Inline `<script>` tags can use Surreal helpers.
+## Styling and behavior
+Use shared static assets for reusable styling/behavior:
+- `/static/app.css` for styles
+- `/static/*.js` for component behavior hooks

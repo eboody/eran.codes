@@ -1,6 +1,5 @@
 use bon::Builder;
 use maud::Render;
-use maud_extensions::inline_css;
 
 use crate::paths::Route;
 use crate::types::Text;
@@ -111,7 +110,6 @@ impl Render for Panel {
         let submit_action = format!("@post('{}'); ${} = ''", action, input_signal);
         maud::html! {
             div data-chat-panel data-chat-panel-role=(self.role.key()) {
-                (css())
                 ({
                     chat::Window::builder()
                         .title(Text::from(self.role.title()))
@@ -151,67 +149,5 @@ impl Render for Panel {
                 }
             }
         }
-    }
-}
-
-inline_css! {
-    me {
-      display: grid;
-      grid-template-rows: minmax(0, 1fr) auto;
-      gap: var(--chat-space-2);
-      min-height: 0;
-    }
-    me > [data-chat-compose] {
-      display: grid;
-      gap: var(--chat-space-1);
-      border: 1px solid var(--chat-compose-border);
-      border-radius: var(--chat-radius-compose);
-      background: var(--chat-compose-surface);
-      padding: var(--chat-space-2);
-    }
-    me > [data-chat-compose] > label {
-      margin: 0;
-    }
-    me > [data-chat-compose] > label > [data-chat-compose-label] {
-      display: block;
-      margin: 0;
-      font-size: var(--chat-font-label);
-      font-weight: 700;
-      letter-spacing: 0.05rem;
-      text-transform: uppercase;
-      color: color-mix(in srgb, var(--ui-text-muted) 92%, var(--ui-text) 8%);
-    }
-    me > [data-chat-compose] > [data-chat-compose-row] {
-      display: grid;
-      grid-template-columns: minmax(0, 1fr) auto;
-      gap: var(--chat-space-1);
-    }
-    me > [data-chat-compose] > [data-chat-compose-row] > input[type="text"] {
-      margin: 0;
-      min-width: 0;
-    }
-    me > [data-chat-compose] > [data-chat-compose-row] > button {
-      margin: 0;
-      min-width: var(--chat-send-min-width);
-    }
-    me > [data-chat-compose] > [data-chat-compose-row] > [data-chat-send="demo"] {
-      background: color-mix(in srgb, var(--ui-surface-card) 82%, transparent);
-      border-color: var(--ui-border-soft);
-      color: var(--ui-text);
-    }
-    me > [data-chat-readonly] {
-      border: 1px dashed var(--ui-border-muted);
-      border-radius: var(--chat-radius-compose);
-      padding: var(--chat-space-2) var(--chat-readonly-pad-inline);
-      font-size: var(--chat-font-body-sm);
-    }
-    @media (max-width: 520px) {
-      me > [data-chat-compose] > [data-chat-compose-row] {
-        grid-template-columns: 1fr;
-      }
-      me > [data-chat-compose] > [data-chat-compose-row] > button {
-        width: 100%;
-        min-width: 0;
-      }
     }
 }

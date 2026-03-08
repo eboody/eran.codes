@@ -1,5 +1,4 @@
 use maud::Render;
-use maud_extensions::inline_css;
 use serde::{Deserialize, Deserializer};
 
 use crate::types::Text;
@@ -55,13 +54,11 @@ impl Render for Icon {
 
         maud::html! {
             @if let Some(color) = &self.color {
-                span aria-hidden="true" style={ "--icon-color: " (color) ";" } {
-                    (css())
+                span class="ui-icon" aria-hidden="true" style={ "--icon-color: " (color) ";" } {
                     i class=(icon_class) {}
                 }
             } @else {
-                span aria-hidden="true" {
-                    (css())
+                span class="ui-icon" aria-hidden="true" {
                     i class=(icon_class) {}
                 }
             }
@@ -83,13 +80,4 @@ fn is_valid_icon_token(token: &str) -> bool {
         && token
             .bytes()
             .all(|byte| byte.is_ascii_lowercase() || byte.is_ascii_digit() || byte == b'-')
-}
-
-inline_css! {
-    me {
-      display: var(--control-inline-display);
-      align-items: var(--control-inline-align-items);
-      font-size: var(--control-icon-size);
-      color: var(--icon-color, currentColor);
-    }
 }

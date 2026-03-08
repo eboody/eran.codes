@@ -4,7 +4,6 @@ mod demo_section;
 mod hero;
 pub mod message;
 mod panel;
-mod styles;
 mod window;
 
 pub use connection::Connection;
@@ -12,5 +11,4 @@ pub use demo_section::DemoSection;
 pub use hero::Hero;
 pub use message::Message;
 pub use panel::{Mode, Panel, Role};
-pub use styles::Styles;
 pub use window::Window;

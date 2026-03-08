@@ -1,6 +1,5 @@
 use bon::Builder;
 use maud::Render;
-use maud_extensions::inline_js;
 use serde_json::json;
 
 use crate::paths::Route;
@@ -16,27 +15,6 @@ pub struct DemoSection {
     pub messages: Vec<chat::Message>,
     #[builder(default)]
     pub interactivity: chat::Mode,
-}
-
-inline_js! {
-    (() => {
-      const root = document.getElementById("chat-demo");
-      if (!root) return;
-
-      const windows = root.querySelectorAll("[data-chat-window]");
-      windows.forEach((windowElement) => {
-        const list = windowElement.querySelector("[data-chat-messages]");
-        if (!list) return;
-
-        const scrollToLatest = () => {
-          list.scrollTop = 0;
-        };
-
-        requestAnimationFrame(scrollToLatest);
-        const observer = new MutationObserver(scrollToLatest);
-        observer.observe(list, { childList: true });
-      });
-    })();
 }
 
 impl DemoSection {
@@ -97,8 +75,7 @@ impl Render for DemoSection {
                         .interactivity(self.interactivity)
                         .build())
                 }
-                (js())
-                (chat::Styles.render())
+                script src="/static/chat-demo.js" {}
             }
         }
     }
