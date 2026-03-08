@@ -5,8 +5,9 @@ pub(super) mod misc;
 mod support;
 
 pub use layout::{
-    DemoResultPlaceholder, EngineeringQuality, HomeHero, RequestBurstDemo,
-    SectionHeader, SectionHeaderActionLink, SectionHeaderMetaText, TabSetShowcase,
+    DemoResultPlaceholder, EngineeringQuality, HomeHero, OperationalRequestFilter,
+    RequestBurstDemo, SectionHeader, SectionHeaderActionLink, SectionHeaderMetaText,
+    TabSetShowcase,
 };
 pub use log::{RequestTraceLog, TransportLogSet};
 pub use misc::{ModerationAction, Ping};

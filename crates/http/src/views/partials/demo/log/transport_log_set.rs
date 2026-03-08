@@ -10,11 +10,24 @@ use super::vm;
 #[derive(Builder)]
 pub struct TransportLogSet<'a> {
     pub entries: &'a [TraceEntry],
+    #[builder(default)]
+    pub excluded_terms: Vec<Text>,
 }
 
 impl Render for TransportLogSet<'_> {
     fn render(&self) -> maud::Markup {
-        let request_flows = vm::request_flows(self.entries, 20);
+        let mut request_flows = vm::request_flows(self.entries, 20);
+        let excluded_terms: Vec<String> = self
+            .excluded_terms
+            .iter()
+            .map(|value| value.to_string().trim().to_lowercase())
+            .filter(|value| !value.is_empty())
+            .collect();
+        if !excluded_terms.is_empty() {
+            request_flows.retain(|flow| {
+                !logs::composed::flow_matches_any_search_term(flow, &excluded_terms)
+            });
+        }
         let flow_body = logs::composed::FlowTimeline::builder()
             .flows(request_flows)
             .build()
@@ -129,9 +142,48 @@ mod tests {
 
         assert!(markup.contains("ui-log-flow-shell"));
         assert!(markup.contains("network-flow-req-aaa-111"));
+        assert!(markup.contains("data-flow-search="));
         assert!(markup.contains("SSE broadcast"));
         assert!(!markup.contains("HTTP requests"));
         assert!(!markup.contains("SSE pushes"));
         assert!(!markup.contains("Chat message flow"));
+    }
+
+    #[test]
+    fn excludes_matching_request_flows_from_render() {
+        let entries = vec![
+            entry(
+                "12:00:01",
+                "demo.request",
+                "request.end",
+                vec![
+                    ("request_id", "req-hide-111"),
+                    ("method", "GET"),
+                    ("path", "/events"),
+                    ("status", "200"),
+                ],
+            ),
+            entry(
+                "12:00:02",
+                "demo.request",
+                "request.end",
+                vec![
+                    ("request_id", "req-show-222"),
+                    ("method", "POST"),
+                    ("path", "/demo/chat/messages"),
+                    ("status", "202"),
+                ],
+            ),
+        ];
+
+        let markup = TransportLogSet::builder()
+            .entries(&entries)
+            .excluded_terms(vec![Text::from("/events")])
+            .build()
+            .render()
+            .into_string();
+
+        assert!(!markup.contains("GET /events"));
+        assert!(markup.contains("POST /demo/chat/messages"));
     }
 }

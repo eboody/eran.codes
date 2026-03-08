@@ -5,7 +5,7 @@ use crate::types::Text;
 use crate::views::page::{SseMode, UserNav};
 use crate::views::partials::{
     DemoResultPlaceholder, EngineeringQuality, HomeHero, RequestBurstDemo, SectionHeader,
-    SectionHeaderActionLink, TabSetShowcase, chat,
+    SectionHeaderActionLink, TabSetShowcase, chat, OperationalRequestFilter,
 };
 
 #[derive(Builder)]
@@ -55,6 +55,11 @@ impl maud::Render for Home {
                                     "Run a demo interaction, then follow request, backend, and SSE behavior in one timeline.",
                                 ),
                             )
+                            .build()
+                    })
+                    ({
+                        OperationalRequestFilter::builder()
+                            .target_id("network-log-target")
                             .build()
                     })
                     ({

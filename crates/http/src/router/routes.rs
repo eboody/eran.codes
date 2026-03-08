@@ -1,6 +1,6 @@
+use axum::Router;
 use axum::middleware::from_fn;
 use axum::routing::{get, post};
-use axum::Router;
 use tower_http::services::ServeDir;
 
 pub struct Routes {
@@ -80,6 +80,10 @@ fn base_routes() -> Router {
         .route(Route::Events.as_str(), get(crate::handlers::events))
         .route(Route::Health.as_str(), get(crate::handlers::health))
         .route("/api/counter/sync", post(crate::handlers::counter_sync))
+        .route(
+            "/api/operations/filter",
+            post(crate::handlers::operations_filter_update),
+        )
         .nest_service(
             "/static",
             ServeDir::new(concat!(env!("CARGO_MANIFEST_DIR"), "/static")),

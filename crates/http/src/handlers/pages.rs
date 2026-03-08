@@ -58,6 +58,11 @@ pub struct CounterRequestSignals {
     pub delta: Option<i64>,
 }
 
+#[derive(Debug, Deserialize, Default)]
+pub struct OperationsFilterSignals {
+    pub operations_filter_query: Option<Text>,
+}
+
 // ci: datastar-command counter_sync
 pub async fn counter_sync(
     Extension(state): Extension<crate::State>,
@@ -97,4 +102,21 @@ pub async fn counter_sync(
             Err(observed) => current = observed,
         }
     }
+}
+
+// ci: datastar-command operations_filter_update
+pub async fn operations_filter_update(
+    Extension(state): Extension<crate::State>,
+    Extension(cookies): Extension<Cookies>,
+    ReadSignals(signals): ReadSignals<OperationsFilterSignals>,
+) -> axum::http::StatusCode {
+    let session = crate::sse::Handle::from_cookies(&cookies, &state.cookie_key);
+    let query = signals
+        .operations_filter_query
+        .map(|value| value.to_string());
+    state
+        .trace_log
+        .set_session_flow_filter(&session.id(), query.as_deref());
+    state.trace_log.refresh_session_log_panels(&session.id());
+    axum::http::StatusCode::NO_CONTENT
 }

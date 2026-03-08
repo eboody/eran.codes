@@ -19,7 +19,7 @@ use tracing_subscriber::{Layer, registry::LookupSpan};
 use crate::paths::Route;
 use crate::types::{
     LogFieldKey, LogFieldName, LogFieldValue, LogLevelText, LogMessageText, LogTargetText,
-    RequestId, SessionId, TimestampText,
+    RequestId, SessionId, Text, TimestampText,
 };
 use crate::{request, sse, views};
 use bon::{Builder, bon};
@@ -39,6 +39,7 @@ pub struct TraceEntry {
 pub struct TraceLogStore {
     requests: Arc<DashMap<RequestId, VecDeque<TraceEntry>>>,
     sessions: Arc<DashMap<SessionId, VecDeque<TraceEntry>>>,
+    flow_filters: Arc<DashMap<SessionId, Text>>,
     global: Arc<Mutex<VecDeque<TraceEntry>>>,
     max_entries: usize,
     sse: sse::Registry,
@@ -50,6 +51,7 @@ impl TraceLogStore {
         Self {
             requests: Arc::new(DashMap::new()),
             sessions: Arc::new(DashMap::new()),
+            flow_filters: Arc::new(DashMap::new()),
             global: Arc::new(Mutex::new(VecDeque::new())),
             max_entries,
             sse,
@@ -119,14 +121,37 @@ impl TraceLogStore {
     }
 
     fn emit_session_log_panels(&self, session_id: &SessionId, entries: &[TraceEntry]) {
+        let excluded_terms = self.filter_terms_for_session(session_id);
         let network_log = views::partials::TransportLogSet::builder()
             .entries(entries)
+            .excluded_terms(excluded_terms)
             .build()
             .render()
             .into_string();
         let _ = self
             .sse
             .send_by_id(session_id, sse::Event::patch_elements(network_log));
+    }
+
+    pub fn set_session_flow_filter(
+        &self,
+        session_id: &SessionId,
+        filter_query: Option<&str>,
+    ) {
+        let normalized = filter_query
+            .map(str::trim)
+            .filter(|value| !value.is_empty());
+        if let Some(value) = normalized {
+            self.flow_filters
+                .insert(session_id.clone(), Text::from(value.to_string()));
+        } else {
+            self.flow_filters.remove(session_id);
+        }
+    }
+
+    pub fn refresh_session_log_panels(&self, session_id: &SessionId) {
+        let entries = self.snapshot_session(session_id);
+        self.emit_session_log_panels(session_id, &entries);
     }
 
     pub fn snapshot_request(&self, request_id: &RequestId) -> Vec<TraceEntry> {
@@ -149,6 +174,22 @@ impl TraceLogStore {
             .map(|value| value.iter().cloned().collect())
             .unwrap_or_default()
     }
+
+    fn filter_terms_for_session(&self, session_id: &SessionId) -> Vec<Text> {
+        let Some(query) = self.flow_filters.get(session_id) else {
+            return Vec::new();
+        };
+        parse_filter_terms(&query.to_string())
+    }
+}
+
+fn parse_filter_terms(query: &str) -> Vec<Text> {
+    query
+        .split(',')
+        .map(str::trim)
+        .filter(|value| !value.is_empty())
+        .map(|value| Text::from(value.to_lowercase()))
+        .collect()
 }
 
 #[bon]
@@ -451,21 +492,27 @@ pub async fn audit_middleware(
     let started_at = Instant::now();
     let method = req.method().to_string();
     let path = req.uri().path().to_string();
+    let skip_operational_trace = should_skip_operational_path(path.as_str());
     let request_id = request::current_context()
         .and_then(|value| value.request_id)
         .unwrap_or_else(RequestId::unknown);
     let session_id = request::current_context().and_then(|value| value.session_id);
     let user_id = request::current_context().and_then(|value| value.user_id);
 
-    tracing::info!(
-        target: LogTargetKnown::DemoRequestDiagnostic.as_str(),
-        message = LogMessageKnown::RequestStart.as_str(),
-        method = %method,
-        path = %path,
-        request_id = %request_id
-    );
+    if !skip_operational_trace {
+        tracing::info!(
+            target: LogTargetKnown::DemoRequestDiagnostic.as_str(),
+            message = LogMessageKnown::RequestStart.as_str(),
+            method = %method,
+            path = %path,
+            request_id = %request_id
+        );
+    }
 
     let response = next.run(req).await;
+    if skip_operational_trace {
+        return response;
+    }
     let latency_ms = started_at.elapsed().as_millis().to_string();
     let sender = match Route::from_path(path.as_str()) {
         Some(Route::ChatMessages) => ChatSender::You,
@@ -534,6 +581,13 @@ pub async fn audit_middleware(
     }
 
     response
+}
+
+fn should_skip_operational_path(path: &str) -> bool {
+    if path == "/api/operations/filter" {
+        return true;
+    }
+    path.contains("livereload")
 }
 
 #[derive(Clone, Copy, Debug)]
@@ -658,5 +712,22 @@ mod tests {
             .count();
         assert_eq!(request_id_fields, 1);
         assert_eq!(fields[0].1.to_string(), "req-preexisting");
+    }
+
+    #[test]
+    fn parse_filter_terms_trims_commas_and_normalizes_case() {
+        let terms = parse_filter_terms(" /events,  POST , , /HEALTH ");
+        let values: Vec<String> =
+            terms.into_iter().map(|value| value.to_string()).collect();
+        assert_eq!(values, vec!["/events", "post", "/health"]);
+    }
+
+    #[test]
+    fn operational_path_skip_rejects_filter_and_livereload_routes() {
+        assert!(should_skip_operational_path("/api/operations/filter"));
+        assert!(should_skip_operational_path("/__livereload"));
+        assert!(should_skip_operational_path("/foo/livereload/socket"));
+        assert!(!should_skip_operational_path("/events"));
+        assert!(!should_skip_operational_path("/demo/chat/messages"));
     }
 }

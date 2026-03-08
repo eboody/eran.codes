@@ -1,7 +1,7 @@
 use async_stream::stream;
 use axum::{
     extract::Extension,
-    http::header::{HeaderName, HeaderValue, CACHE_CONTROL},
+    http::header::{CACHE_CONTROL, HeaderName, HeaderValue},
     response::Sse,
 };
 use core::convert::Infallible;
@@ -9,7 +9,7 @@ use datastar::axum::ReadSignals;
 use maud::Render;
 use serde::Deserialize;
 use tokio::sync::broadcast::error::RecvError;
-use tokio::time::{sleep, Duration};
+use tokio::time::{Duration, sleep};
 use tower_cookies::Cookies;
 
 use crate::types::{SseTabId, Text};
@@ -27,6 +27,7 @@ pub(crate) struct SurrealSignals {
 #[serde(rename_all = "camelCase")]
 pub(crate) struct EventSignals {
     sse_tab_id: Option<SseTabId>,
+    operations_filter_query: Option<Text>,
 }
 
 fn surreal_payload(message: &Text, status: &Text) -> crate::sse::Event {
@@ -201,6 +202,13 @@ pub async fn events(
         signals.sse_tab_id.clone(),
     );
     let session_id = session.id();
+    let filter_query = signals
+        .operations_filter_query
+        .as_ref()
+        .map(ToString::to_string);
+    state
+        .trace_log
+        .set_session_flow_filter(&session_id, filter_query.as_deref());
     let stream_key = session.stream_key().clone();
     let (mut receiver, guard) = state.sse.subscribe(&session);
     let cleanup_guard = ConnectionCleanupGuard::new(
@@ -306,8 +314,7 @@ mod tests {
     use super::*;
     use crate::trace_log::TraceEntry;
     use crate::types::{
-        LogLevelText, LogMessageText, LogTargetText, RequestId, SessionId,
-        TimestampText,
+        LogLevelText, LogMessageText, LogTargetText, RequestId, SessionId, TimestampText,
     };
     use dashmap::DashMap;
 

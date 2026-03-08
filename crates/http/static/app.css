@@ -317,6 +317,46 @@ button.secondary,
   color: color-mix(in srgb, var(--ui-text-muted) 94%, var(--ui-text) 6%);
 }
 
+.ui-op-filter {
+  display: grid;
+  gap: var(--size-2);
+  margin-top: var(--size-2);
+  padding: var(--size-3);
+  border-radius: var(--ui-radius-sm);
+  border: 1px solid var(--ui-border-soft);
+  background: var(--ui-surface-soft);
+}
+
+.ui-op-filter-label {
+  margin: 0;
+  font-size: 0.78rem;
+  font-weight: 700;
+  letter-spacing: 0.04rem;
+  text-transform: uppercase;
+  color: var(--ui-text-muted);
+}
+
+.ui-op-filter-row {
+  display: grid;
+  gap: var(--size-2);
+  grid-template-columns: minmax(0, 1fr) auto;
+}
+
+.ui-op-filter-row > input[type="text"] {
+  margin: 0;
+  min-width: 0;
+}
+
+.ui-op-filter-row > button {
+  margin: 0;
+}
+
+.ui-op-filter-meta {
+  margin: 0;
+  font-size: 0.8rem;
+  color: var(--ui-text-muted);
+}
+
 .ui-status-card > p {
   margin: 0;
 }
@@ -853,7 +893,7 @@ button.secondary,
   background: color-mix(in srgb, var(--portfolio-accent-a) 14%, transparent);
 }
 
-.ui-log-flow-item.is-default {
+.ui-log-flow-item.is-selected {
   border-color: color-mix(in srgb, var(--portfolio-accent-a) 42%, transparent);
 }
 
@@ -891,17 +931,8 @@ button.secondary,
   gap: var(--size-2);
 }
 
-.ui-log-flow-detail.is-default {
+.ui-log-flow-detail.is-active {
   display: flex;
-}
-
-.ui-log-flow-detail:target {
-  display: flex;
-}
-
-.ui-log-flow-details:has(.ui-log-flow-detail:target)
-  .ui-log-flow-detail.is-default:not(:target) {
-  display: none;
 }
 
 .ui-log-flow-detail-header {
@@ -972,6 +1003,14 @@ button.secondary,
     max-height: none;
     overflow: visible;
     padding-right: 0;
+  }
+
+  .ui-op-filter-row {
+    grid-template-columns: 1fr;
+  }
+
+  .ui-op-filter-row > button {
+    width: 100%;
   }
 }
 
