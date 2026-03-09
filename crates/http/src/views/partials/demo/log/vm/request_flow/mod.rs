@@ -1,7 +1,7 @@
-use std::collections::HashMap;
+use std::collections::{HashMap, HashSet};
 
 use crate::trace_log::TraceEntry;
-use crate::types::{LogFieldKey, Text};
+use crate::types::{LogFieldKey, SseTabId, Text};
 use crate::views::partials::components::logs;
 
 use super::{field_text, short_request_id};
@@ -15,7 +15,11 @@ mod tests;
 use event_builder::build_flow_event;
 use kind::{flow_event_kind, FlowEventKind};
 
-pub fn request_flows(entries: &[TraceEntry], max_flows: usize) -> Vec<logs::composed::Flow> {
+pub fn request_flows(
+    entries: &[TraceEntry],
+    max_flows: usize,
+    active_tab_id: Option<&SseTabId>,
+) -> Vec<logs::composed::Flow> {
     let mut order: Vec<String> = Vec::new();
     let mut flow_map: HashMap<String, FlowAggregate> = HashMap::new();
 
@@ -40,9 +44,12 @@ pub fn request_flows(entries: &[TraceEntry], max_flows: usize) -> Vec<logs::comp
                     display_id,
                     latest_timestamp: Text::from(entry.timestamp.clone()),
                     latest_index: index,
+                    has_request_id: field_text(entry, LogFieldKey::RequestId).is_some(),
+                    has_request_envelope: false,
                     method: None,
                     path: None,
                     status: None,
+                    tab_ids: HashSet::new(),
                     events: Vec::new(),
                 },
             );
@@ -53,6 +60,9 @@ pub fn request_flows(entries: &[TraceEntry], max_flows: usize) -> Vec<logs::comp
             aggregate.latest_index = index;
             aggregate.events.push(build_flow_event(kind, entry));
             hydrate_request_fields(aggregate, entry, kind);
+            if let Some(tab_id) = field_text(entry, LogFieldKey::SseTabId) {
+                aggregate.tab_ids.insert(tab_id.to_string());
+            }
         }
     }
 
@@ -60,7 +70,13 @@ pub fn request_flows(entries: &[TraceEntry], max_flows: usize) -> Vec<logs::comp
         .into_iter()
         .filter_map(|key| flow_map.remove(&key))
         .collect();
+    flows.retain(|flow| !flow.has_request_id || flow.has_request_envelope);
     flows.sort_by(|left, right| right.latest_index.cmp(&left.latest_index));
+    if let Some(active_tab_id) = active_tab_id.map(ToString::to_string) {
+        flows.retain(|flow| {
+            flow.tab_ids.is_empty() || flow.tab_ids.contains(&active_tab_id)
+        });
+    }
 
     flows
         .into_iter()
@@ -86,9 +102,12 @@ struct FlowAggregate {
     display_id: Text,
     latest_timestamp: Text,
     latest_index: usize,
+    has_request_id: bool,
+    has_request_envelope: bool,
     method: Option<Text>,
     path: Option<Text>,
     status: Option<Text>,
+    tab_ids: HashSet<String>,
     events: Vec<logs::composed::FlowEvent>,
 }
 
@@ -98,6 +117,7 @@ fn hydrate_request_fields(
     kind: FlowEventKind,
 ) {
     if matches!(kind, FlowEventKind::RequestEnd | FlowEventKind::RequestStart) {
+        aggregate.has_request_envelope = true;
         if aggregate.method.is_none() {
             aggregate.method = field_text(entry, LogFieldKey::Method);
         }
@@ -115,7 +135,8 @@ fn flow_title(flow: &FlowAggregate) -> Text {
     match (&flow.method, &flow.path) {
         (Some(method), Some(path)) => Text::from(format!("{method} {path}")),
         (Some(method), None) => Text::from(format!("{method} request")),
-        _ => Text::from(format!("Flow {}", flow.display_id)),
+        _ if flow.has_request_id => Text::from(format!("Request {}", flow.display_id)),
+        _ => Text::from("Request (orphan)"),
     }
 }
 

@@ -210,7 +210,7 @@ impl Registry {
         }
     }
 
-    fn stream_keys_for_session(&self, session_id: &SessionId) -> Vec<StreamKey> {
+    pub fn stream_keys_for_session(&self, session_id: &SessionId) -> Vec<StreamKey> {
         self.sessions
             .iter()
             .filter(|entry| entry.key().session_id() == session_id)

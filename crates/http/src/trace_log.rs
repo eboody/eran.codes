@@ -19,7 +19,7 @@ use tracing_subscriber::{Layer, registry::LookupSpan};
 use crate::paths::Route;
 use crate::types::{
     LogFieldKey, LogFieldName, LogFieldValue, LogLevelText, LogMessageText, LogTargetText,
-    RequestId, SessionId, Text, TimestampText,
+    RequestId, SessionId, SseTabId, Text, TimestampText,
 };
 use crate::{request, sse, views};
 use bon::{Builder, bon};
@@ -39,7 +39,7 @@ pub struct TraceEntry {
 pub struct TraceLogStore {
     requests: Arc<DashMap<RequestId, VecDeque<TraceEntry>>>,
     sessions: Arc<DashMap<SessionId, VecDeque<TraceEntry>>>,
-    flow_filters: Arc<DashMap<SessionId, Text>>,
+    flow_filters: Arc<DashMap<sse::StreamKey, Text>>,
     global: Arc<Mutex<VecDeque<TraceEntry>>>,
     max_entries: usize,
     sse: sse::Registry,
@@ -92,7 +92,7 @@ impl TraceLogStore {
             && let Some(session_id) = session_id
         {
             let entries = self.snapshot_session(session_id);
-            self.emit_session_log_panels(session_id, &entries);
+            self.emit_session_log_panels(session_id, &entries, None);
         }
     }
 
@@ -116,42 +116,67 @@ impl TraceLogStore {
             && let Some(session_id) = session_id
         {
             let entries = self.snapshot_session(session_id);
-            self.emit_session_log_panels(session_id, &entries);
+            self.emit_session_log_panels(session_id, &entries, None);
         }
     }
 
-    fn emit_session_log_panels(&self, session_id: &SessionId, entries: &[TraceEntry]) {
-        let excluded_terms = self.filter_terms_for_session(session_id);
-        let network_log = views::partials::TransportLogSet::builder()
-            .entries(entries)
-            .excluded_terms(excluded_terms)
-            .build()
-            .render()
-            .into_string();
-        let _ = self
-            .sse
-            .send_by_id(session_id, sse::Event::patch_elements(network_log));
-    }
-
-    pub fn set_session_flow_filter(
+    fn emit_session_log_panels(
         &self,
         session_id: &SessionId,
+        entries: &[TraceEntry],
+        target_tab: Option<&SseTabId>,
+    ) {
+        for stream_key in self.sse.stream_keys_for_session(session_id) {
+            if let Some(target_tab) = target_tab
+                && stream_key.tab_id() != Some(target_tab)
+            {
+                continue;
+            }
+            let active_tab_id = stream_key.tab_id().cloned();
+            let excluded_terms = self.filter_terms_for_stream(&stream_key);
+            let network_log = views::partials::TransportLogSet::builder()
+                .entries(entries)
+                .maybe_active_tab_id(active_tab_id.clone())
+                .excluded_terms(excluded_terms)
+                .build()
+                .render()
+                .into_string();
+            let handle = sse::Handle::with_tab(session_id.clone(), active_tab_id);
+            let _ = self
+                .sse
+                .send(&handle, sse::Event::patch_elements(network_log));
+        }
+    }
+
+    pub fn set_stream_flow_filter(
+        &self,
+        session_id: &SessionId,
+        tab_id: Option<&SseTabId>,
         filter_query: Option<&str>,
     ) {
+        let stream_key = sse::StreamKey::new(session_id.clone(), tab_id.cloned());
         let normalized = filter_query
             .map(str::trim)
             .filter(|value| !value.is_empty());
         if let Some(value) = normalized {
             self.flow_filters
-                .insert(session_id.clone(), Text::from(value.to_string()));
+                .insert(stream_key, Text::from(value.to_string()));
         } else {
-            self.flow_filters.remove(session_id);
+            self.flow_filters.remove(&stream_key);
         }
     }
 
-    pub fn refresh_session_log_panels(&self, session_id: &SessionId) {
+    pub fn refresh_stream_log_panels(
+        &self,
+        session_id: &SessionId,
+        tab_id: Option<&SseTabId>,
+    ) {
         let entries = self.snapshot_session(session_id);
-        self.emit_session_log_panels(session_id, &entries);
+        self.emit_session_log_panels(session_id, &entries, tab_id);
+    }
+
+    pub fn clear_stream_flow_filter(&self, stream_key: &sse::StreamKey) {
+        self.flow_filters.remove(stream_key);
     }
 
     pub fn snapshot_request(&self, request_id: &RequestId) -> Vec<TraceEntry> {
@@ -175,8 +200,8 @@ impl TraceLogStore {
             .unwrap_or_default()
     }
 
-    fn filter_terms_for_session(&self, session_id: &SessionId) -> Vec<Text> {
-        let Some(query) = self.flow_filters.get(session_id) else {
+    fn filter_terms_for_stream(&self, stream_key: &sse::StreamKey) -> Vec<Text> {
+        let Some(query) = self.flow_filters.get(stream_key) else {
             return Vec::new();
         };
         parse_filter_terms(&query.to_string())
@@ -419,6 +444,13 @@ fn should_skip_event(target: &LogTargetKind, message: &LogMessageKind) -> bool {
             LogTargetKind::Known(LogTargetKnown::HttpRouterLayers),
             LogMessageKind::Known(LogMessageKnown::RequestCompleted)
         )
+    ) || matches!(
+        (target, message),
+        (
+            LogTargetKind::Other(target),
+            LogMessageKind::Other(message)
+        ) if target.to_string() == "http::handlers::sse"
+            && matches!(message.to_string().as_str(), "sse connected" | "sse disconnected")
     )
 }
 
@@ -467,6 +499,13 @@ fn append_context_fields(
             .and_then(|value| value.user_id.as_ref())
             .map(ToString::to_string),
     );
+    upsert_context_field(
+        fields,
+        LogFieldKey::SseTabId,
+        context
+            .and_then(|value| value.sse_tab_id.as_ref())
+            .map(ToString::to_string),
+    );
 }
 
 fn upsert_context_field(
@@ -496,8 +535,6 @@ pub async fn audit_middleware(
     let request_id = request::current_context()
         .and_then(|value| value.request_id)
         .unwrap_or_else(RequestId::unknown);
-    let session_id = request::current_context().and_then(|value| value.session_id);
-    let user_id = request::current_context().and_then(|value| value.user_id);
 
     if !skip_operational_trace {
         tracing::info!(
@@ -513,6 +550,10 @@ pub async fn audit_middleware(
     if skip_operational_trace {
         return response;
     }
+    let context = request::current_context();
+    let session_id = context.as_ref().and_then(|value| value.session_id.clone());
+    let user_id = context.as_ref().and_then(|value| value.user_id.clone());
+    let sse_tab_id = context.as_ref().and_then(|value| value.sse_tab_id.clone());
     let latency_ms = started_at.elapsed().as_millis().to_string();
     let sender = match Route::from_path(path.as_str()) {
         Some(Route::ChatMessages) => ChatSender::You,
@@ -565,6 +606,13 @@ pub async fn audit_middleware(
                         .unwrap_or_else(LogFieldValue::missing),
                 ),
                 (
+                    LogFieldName::from(LogFieldKey::SseTabId),
+                    sse_tab_id
+                        .clone()
+                        .map(|value| LogFieldValue::new(value.to_string()))
+                        .unwrap_or_else(LogFieldValue::missing),
+                ),
+                (
                     LogFieldName::from(LogFieldKey::Sender),
                     LogFieldValue::new(sender.as_str()),
                 ),
@@ -584,7 +632,10 @@ pub async fn audit_middleware(
 }
 
 fn should_skip_operational_path(path: &str) -> bool {
-    if path == "/api/operations/filter" {
+    if path == "/" || path == "/api/operations/filter" || path == "/events" {
+        return true;
+    }
+    if path == "/static" || path.starts_with("/static/") {
         return true;
     }
     path.contains("livereload")
@@ -665,7 +716,7 @@ fn format_timestamp(raw: TimestampText) -> TimestampText {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::types::UserIdText;
+    use crate::types::{SseTabId, UserIdText};
 
     #[test]
     fn append_context_fields_adds_request_session_user() {
@@ -674,6 +725,7 @@ mod tests {
         let context = request::Context {
             request_id: Some(request_id.clone()),
             session_id: Some(SessionId::new("session-abc")),
+            sse_tab_id: Some(SseTabId::new("tab-1")),
             user_id: Some(UserIdText::new("user-xyz")),
             client_ip: None,
             user_agent: None,
@@ -693,6 +745,10 @@ mod tests {
         assert!(fields.iter().any(|(name, value)| {
             name == &LogFieldName::from(LogFieldKey::UserId)
                 && value.to_string() == "user-xyz"
+        }));
+        assert!(fields.iter().any(|(name, value)| {
+            name == &LogFieldName::from(LogFieldKey::SseTabId)
+                && value.to_string() == "tab-1"
         }));
     }
 
@@ -723,11 +779,30 @@ mod tests {
     }
 
     #[test]
-    fn operational_path_skip_rejects_filter_and_livereload_routes() {
+    fn operational_path_skip_rejects_internal_and_static_routes() {
+        assert!(should_skip_operational_path("/"));
         assert!(should_skip_operational_path("/api/operations/filter"));
+        assert!(should_skip_operational_path("/events"));
+        assert!(should_skip_operational_path("/static"));
+        assert!(should_skip_operational_path("/static/app.css"));
         assert!(should_skip_operational_path("/__livereload"));
         assert!(should_skip_operational_path("/foo/livereload/socket"));
-        assert!(!should_skip_operational_path("/events"));
         assert!(!should_skip_operational_path("/demo/chat/messages"));
+    }
+
+    #[test]
+    fn skip_rules_reject_sse_connection_lifecycle_events() {
+        assert!(should_skip_event(
+            &LogTargetKind::parse("http::handlers::sse"),
+            &LogMessageKind::parse("sse connected")
+        ));
+        assert!(should_skip_event(
+            &LogTargetKind::parse("http::handlers::sse"),
+            &LogMessageKind::parse("sse disconnected")
+        ));
+        assert!(!should_skip_event(
+            &LogTargetKind::parse("http::handlers::sse"),
+            &LogMessageKind::parse("other event")
+        ));
     }
 }

@@ -1,0 +1,76 @@
+{
+  "page_title": "Case Studies | Eran Boodnero",
+  "eyebrow": "Case Studies",
+  "title": "Systems work with measurable operational and business impact.",
+  "summary": "These cases focus on measurable outcomes: queue elimination, realtime data visibility, custom platform integrations, and compliance-conscious delivery.",
+  "cases": [
+    {
+      "slug": "chat_realtime",
+      "category": "Automation & Operations",
+      "title": "Automated Fundraiser Acknowledgment at Scale",
+      "summary": "Replaced manual outsourced thank-you workflows with automated browser execution for high-volume fundraiser pages.",
+      "outcome": "Achieved roughly 12x per-operator throughput and ran 72 concurrent automation instances to eliminate persistent backlog.",
+      "highlights": [
+        "Removed recurring backlog despite large monthly fundraiser volume",
+        "Reduced human-error-prone template handling",
+        "Improved response-time enough to increase fundraiser chat engagement"
+      ],
+      "stack_tags": ["playwright", "typescript", "node.js", "automation"],
+      "cta_label": "Open automation case",
+      "preview": {
+        "asset_ref": "images/work/chat-realtime",
+        "alt": "Automation at scale case preview"
+      }
+    },
+    {
+      "slug": "command_sse",
+      "category": "Realtime Product Systems",
+      "title": "Realtime Fundraiser Creation + Donation Signal Pipeline",
+      "summary": "Built an app workflow that captured fundraiser lifecycle and donation events without waiting for delayed batch files.",
+      "outcome": "Removed a 48-hour reporting lag and enabled immediate context for teams supporting fundraisers in realtime.",
+      "highlights": [
+        "One-click fundraiser creation path integrated with Meta APIs",
+        "Immediate donation visibility instead of delayed CSV ingestion",
+        "Supported operations at millions-of-users scale"
+      ],
+      "stack_tags": ["express", "svelte", "mongodb", "meta api"],
+      "cta_label": "Open realtime data case",
+      "preview": {
+        "asset_ref": "images/work/command-sse",
+        "alt": "Realtime fundraising pipeline case preview"
+      }
+    },
+    {
+      "slug": "operational_visibility",
+      "category": "Platform Architecture",
+      "title": "Custom Substack Publishing Pipeline in Rust",
+      "summary": "Built a Rust monorepo platform that connected CMS events, queued workers, and publishing automation for Substack-oriented content operations.",
+      "outcome": "Shipped a deterministic automation chain from Directus webhooks through queued workers to publishing actions.",
+      "highlights": [
+        "13-crate workspace split across libs/services/tools",
+        "Webhook event typing with collection/operation routing",
+        "Queue-driven processing and custom Substack integration"
+      ],
+      "stack_tags": ["rust", "axum", "directus", "event queue", "substack"],
+      "cta_label": "Open publishing platform case",
+      "preview": {
+        "asset_ref": "images/work/operational-visibility",
+        "alt": "Custom Substack publishing platform case preview"
+      }
+    }
+  ],
+  "actions": [
+    {
+      "label": "Back to home",
+      "href": "/",
+      "kind": "internal",
+      "tone": "secondary"
+    },
+    {
+      "label": "Open live lab",
+      "href": "/lab",
+      "kind": "internal",
+      "tone": "primary"
+    }
+  ]
+}

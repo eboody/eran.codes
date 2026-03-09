@@ -4,15 +4,48 @@ use serde::Deserialize;
 use std::sync::atomic::Ordering;
 use tower_cookies::Cookies;
 
-use crate::types::Text;
+use crate::types::{SseTabId, Text};
 use crate::views::partials::chat;
+use crate::views::partials::components::portfolio::content::WorkCaseSlug;
 use crate::views::{self, pages};
 
 pub async fn health(Extension(_state): Extension<crate::State>) -> &'static str {
     "OK"
 }
 
-pub async fn home(
+pub async fn home() -> crate::Result<axum::response::Html<String>> {
+    Ok(views::render(pages::Home))
+}
+
+pub async fn work() -> crate::Result<axum::response::Html<String>> {
+    Ok(views::render(pages::Work))
+}
+
+pub async fn work_chat_realtime() -> crate::Result<axum::response::Html<String>> {
+    Ok(views::render(
+        pages::WorkCase::builder()
+            .slug(WorkCaseSlug::ChatRealtime)
+            .build(),
+    ))
+}
+
+pub async fn work_command_sse() -> crate::Result<axum::response::Html<String>> {
+    Ok(views::render(
+        pages::WorkCase::builder()
+            .slug(WorkCaseSlug::CommandSse)
+            .build(),
+    ))
+}
+
+pub async fn work_operational_visibility() -> crate::Result<axum::response::Html<String>> {
+    Ok(views::render(
+        pages::WorkCase::builder()
+            .slug(WorkCaseSlug::OperationalVisibility)
+            .build(),
+    ))
+}
+
+pub async fn lab(
     Extension(state): Extension<crate::State>,
     auth_session: crate::auth::Session,
 ) -> crate::Result<axum::response::Html<String>> {
@@ -41,7 +74,7 @@ pub async fn home(
     );
 
     Ok(views::render(
-        pages::Home::builder()
+        pages::Lab::builder()
             .maybe_user(user)
             .maybe_chat_demo(chat_demo)
             .build(),
@@ -56,11 +89,14 @@ pub async fn error_test() -> crate::Result<axum::response::Html<String>> {
 #[serde(rename_all = "camelCase")]
 pub struct CounterRequestSignals {
     pub delta: Option<i64>,
+    pub sse_tab_id: Option<SseTabId>,
 }
 
 #[derive(Debug, Deserialize, Default)]
+#[serde(rename_all = "camelCase")]
 pub struct OperationsFilterSignals {
     pub operations_filter_query: Option<Text>,
+    pub sse_tab_id: Option<SseTabId>,
 }
 
 // ci: datastar-command counter_sync
@@ -69,8 +105,15 @@ pub async fn counter_sync(
     Extension(cookies): Extension<Cookies>,
     ReadSignals(signals): ReadSignals<CounterRequestSignals>,
 ) -> axum::http::StatusCode {
+    if let Some(tab_id) = signals.sse_tab_id.clone() {
+        crate::request::set_sse_tab_id(tab_id);
+    }
     let delta = signals.delta.unwrap_or_default();
-    let session = crate::sse::Handle::from_cookies(&cookies, &state.cookie_key);
+    let session = crate::sse::Handle::from_cookies_with_tab(
+        &cookies,
+        &state.cookie_key,
+        signals.sse_tab_id.clone(),
+    );
     if !state.sse.has_streams_for_session(&session.id()) {
         return axum::http::StatusCode::PRECONDITION_REQUIRED;
     }
@@ -89,7 +132,7 @@ pub async fn counter_sync(
                     "server_count": next,
                     "server_connected": true
                 }));
-                return match state.sse.send_by_id(&session.id(), event) {
+                return match state.sse.send(&session, event) {
                     Ok(_) => axum::http::StatusCode::NO_CONTENT,
                     Err(crate::sse::SendError::SessionMissing) => {
                         axum::http::StatusCode::PRECONDITION_REQUIRED
@@ -110,13 +153,24 @@ pub async fn operations_filter_update(
     Extension(cookies): Extension<Cookies>,
     ReadSignals(signals): ReadSignals<OperationsFilterSignals>,
 ) -> axum::http::StatusCode {
-    let session = crate::sse::Handle::from_cookies(&cookies, &state.cookie_key);
+    if let Some(tab_id) = signals.sse_tab_id.clone() {
+        crate::request::set_sse_tab_id(tab_id);
+    }
+    let session = crate::sse::Handle::from_cookies_with_tab(
+        &cookies,
+        &state.cookie_key,
+        signals.sse_tab_id.clone(),
+    );
     let query = signals
         .operations_filter_query
         .map(|value| value.to_string());
+    state.trace_log.set_stream_flow_filter(
+        &session.id(),
+        signals.sse_tab_id.as_ref(),
+        query.as_deref(),
+    );
     state
         .trace_log
-        .set_session_flow_filter(&session.id(), query.as_deref());
-    state.trace_log.refresh_session_log_panels(&session.id());
+        .refresh_stream_log_panels(&session.id(), signals.sse_tab_id.as_ref());
     axum::http::StatusCode::NO_CONTENT
 }

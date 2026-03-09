@@ -1,4 +1,4 @@
-mod layers;
+pub(crate) mod layers;
 mod routes;
 
 use axum::Router;

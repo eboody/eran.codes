@@ -1,12 +1,14 @@
-use axum::Extension;
-use axum::Router;
+use std::sync::Arc;
+
 use axum::extract::MatchedPath;
 use axum::middleware::from_fn;
+use axum::Extension;
+use axum::Router;
 use axum_login::AuthManagerLayerBuilder;
-use bon::Builder;
+use statum::{machine, state, transition};
 use time::Duration as SessionDuration;
-use tower_cookies::CookieManagerLayer;
 use tower_cookies::cookie::SameSite;
+use tower_cookies::CookieManagerLayer;
 use tower_http::classify::ServerErrorsFailureClass;
 use tower_http::request_id::{MakeRequestUuid, PropagateRequestIdLayer, SetRequestIdLayer};
 use tower_http::trace::TraceLayer;
@@ -14,6 +16,8 @@ use tower_sessions::{Expiry, SessionManagerLayer, SessionStore};
 use tracing::field;
 
 use crate::State;
+
+type AuthLayerApplier = Arc<dyn Fn(Router, &State) -> Router + Send + Sync>;
 
 pub fn apply_request_layers<Store>(
     state: State,
@@ -23,43 +27,66 @@ pub fn apply_request_layers<Store>(
 where
     Store: SessionStore + Clone + Send + Sync + 'static,
 {
-    RequestLayers::builder()
-        .with_router(router)
-        .with_state(state)
-        .with_session_store(session_store)
+    let auth_layer_applier: AuthLayerApplier =
+        Arc::new(move |router: Router, state: &State| {
+            let session_key = state.cookie_key.clone();
+            let session_layer = SessionManagerLayer::new(session_store.clone())
+                .with_name("eran.sid")
+                .with_secure(!cfg!(debug_assertions))
+                .with_same_site(SameSite::Lax)
+                .with_expiry(Expiry::OnInactivity(SessionDuration::days(7)))
+                .with_private(session_key);
+
+            let auth_layer = AuthManagerLayerBuilder::new(
+                crate::auth::Backend::new(state.auth.clone()),
+                session_layer,
+            )
+            .build();
+
+            router.layer(auth_layer)
+        });
+
+    RequestLayerPipeline::<CoreReady>::builder()
+        .router(router)
+        .state(state)
+        .auth_layer_applier(auth_layer_applier)
         .build()
-        .with_trace_layer()
-        .with_audit_layer()
-        .with_user_context_layer()
-        .with_request_context_layer()
-        .with_request_id_propagation()
-        .with_cookie_manager()
-        .with_request_id_assignment()
-        .with_auth_layer()
-        .with_state_extension()
+        .add_trace()
+        .add_audit()
+        .add_user_context()
+        .add_request_context()
+        .add_request_id_propagation()
+        .add_cookie_manager()
+        .add_request_id_assignment()
+        .add_auth()
+        .add_state_extension()
         .finish()
 }
 
-#[derive(Builder)]
-pub struct RequestLayers<Store> {
-    #[builder(setters(name = with_router))]
-    router: Router,
-    #[builder(setters(name = with_state))]
-    state: State,
-    #[builder(setters(name = with_session_store))]
-    session_store: Store,
+#[state]
+pub enum RequestLayerFlow {
+    CoreReady,
+    TraceAdded,
+    AuditAdded,
+    UserContextAdded,
+    RequestContextAdded,
+    RequestIdPropagationAdded,
+    CookieManagerAdded,
+    RequestIdAssignmentAdded,
+    AuthAdded,
+    StateExtensionAdded,
 }
 
-impl<Store> RequestLayers<Store>
-where
-    Store: SessionStore + Clone + Send + Sync + 'static,
-{
-    fn with_state_extension(mut self) -> Self {
-        self.router = self.router.layer(Extension(self.state.clone()));
-        self
-    }
+#[machine]
+pub struct RequestLayerPipeline<RequestLayerFlow> {
+    router: Router,
+    state: State,
+    auth_layer_applier: AuthLayerApplier,
+}
 
-    fn with_trace_layer(mut self) -> Self {
+#[transition]
+impl RequestLayerPipeline<CoreReady> {
+    pub fn add_trace(mut self) -> RequestLayerPipeline<TraceAdded> {
         self.router = self.router.layer(
             TraceLayer::new_for_http()
                 .make_span_with(|request: &axum::http::Request<axum::body::Body>| {
@@ -132,70 +159,91 @@ where
                     },
                 ),
         );
-        self
+        self.transition()
     }
+}
 
-    fn with_audit_layer(mut self) -> Self {
+#[transition]
+impl RequestLayerPipeline<TraceAdded> {
+    pub fn add_audit(mut self) -> RequestLayerPipeline<AuditAdded> {
         self.router = self
             .router
             .layer(from_fn(crate::trace_log::audit_middleware));
-        self
+        self.transition()
     }
+}
 
-    fn with_user_context_layer(mut self) -> Self {
+#[transition]
+impl RequestLayerPipeline<AuditAdded> {
+    pub fn add_user_context(mut self) -> RequestLayerPipeline<UserContextAdded> {
         self.router = self
             .router
             .layer(from_fn(crate::auth::set_user_context_middleware));
-        self
+        self.transition()
     }
+}
 
-    fn with_request_context_layer(mut self) -> Self {
+#[transition]
+impl RequestLayerPipeline<UserContextAdded> {
+    pub fn add_request_context(mut self) -> RequestLayerPipeline<RequestContextAdded> {
         self.router = self
             .router
             .layer(from_fn(crate::request::set_context_middleware));
-        self
+        self.transition()
     }
+}
 
-    fn with_request_id_propagation(mut self) -> Self {
+#[transition]
+impl RequestLayerPipeline<RequestContextAdded> {
+    pub fn add_request_id_propagation(
+        mut self,
+    ) -> RequestLayerPipeline<RequestIdPropagationAdded> {
         self.router = self.router.layer(PropagateRequestIdLayer::new(
             axum::http::HeaderName::from_static("x-request-id"),
         ));
-        self
+        self.transition()
     }
+}
 
-    fn with_cookie_manager(mut self) -> Self {
+#[transition]
+impl RequestLayerPipeline<RequestIdPropagationAdded> {
+    pub fn add_cookie_manager(mut self) -> RequestLayerPipeline<CookieManagerAdded> {
         self.router = self.router.layer(CookieManagerLayer::new());
-        self
+        self.transition()
     }
+}
 
-    fn with_request_id_assignment(mut self) -> Self {
+#[transition]
+impl RequestLayerPipeline<CookieManagerAdded> {
+    pub fn add_request_id_assignment(
+        mut self,
+    ) -> RequestLayerPipeline<RequestIdAssignmentAdded> {
         self.router = self.router.layer(SetRequestIdLayer::new(
             axum::http::HeaderName::from_static("x-request-id"),
             MakeRequestUuid,
         ));
-        self
+        self.transition()
     }
+}
 
-    fn with_auth_layer(mut self) -> Self {
-        let session_key = self.state.cookie_key.clone();
-        let session_layer = SessionManagerLayer::new(self.session_store.clone())
-            .with_name("eran.sid")
-            .with_secure(!cfg!(debug_assertions))
-            .with_same_site(SameSite::Lax)
-            .with_expiry(Expiry::OnInactivity(SessionDuration::days(7)))
-            .with_private(session_key);
-
-        let auth_layer = AuthManagerLayerBuilder::new(
-            crate::auth::Backend::new(self.state.auth.clone()),
-            session_layer,
-        )
-        .build();
-
-        self.router = self.router.layer(auth_layer);
-        self
+#[transition]
+impl RequestLayerPipeline<RequestIdAssignmentAdded> {
+    pub fn add_auth(mut self) -> RequestLayerPipeline<AuthAdded> {
+        self.router = (self.auth_layer_applier)(self.router, &self.state);
+        self.transition()
     }
+}
 
-    fn finish(self) -> Router {
+#[transition]
+impl RequestLayerPipeline<AuthAdded> {
+    pub fn add_state_extension(mut self) -> RequestLayerPipeline<StateExtensionAdded> {
+        self.router = self.router.layer(Extension(self.state.clone()));
+        self.transition()
+    }
+}
+
+impl RequestLayerPipeline<StateExtensionAdded> {
+    pub fn finish(self) -> Router {
         self.router
     }
 }

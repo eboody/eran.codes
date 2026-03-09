@@ -1,0 +1,54 @@
+{
+  "page_title": "Case Study | Automation at Fundraising Scale",
+  "eyebrow": "Case Study · Automation & Operations",
+  "title": "Automated fundraiser acknowledgments to remove high-volume backlog",
+  "summary": "At GoodUnited, outsourced teams manually processed fundraiser thank-you workflows. This case covers replacing manual workflow with browser automation that increased throughput and consistency.",
+  "challenge": {
+    "title": "Challenge",
+    "items": [
+      "Manual thank-you workflows were time-consuming, error-prone, and perpetually behind demand.",
+      "Teams depended on queue dashboards and manual triage but still accumulated backlog.",
+      "Large nonprofit clients generated very high monthly fundraiser volume, making manual scaling expensive."
+    ]
+  },
+  "implementation": {
+    "title": "Implementation",
+    "items": [
+      "Built a Playwright + TypeScript automation worker to emulate the existing browser workflow end to end.",
+      "Encoded template selection and variable substitution logic to reduce operator variance and mistakes.",
+      "Scaled execution to 72 concurrent instances to keep pace with continuously arriving fundraiser pages."
+    ]
+  },
+  "outcomes": {
+    "title": "Outcomes",
+    "items": [
+      "Delivered roughly 12x speed compared to a single manual operator for the same task shape.",
+      "Eliminated persistent backlog and reduced error rates in outbound fundraiser communication.",
+      "Faster response windows increased fundraiser engagement and improved downstream support effectiveness."
+    ]
+  },
+  "stack": {
+    "title": "Stack and ownership",
+    "items": [
+      "TypeScript",
+      "Node.js",
+      "Playwright",
+      "Browser workflow automation",
+      "Operational queue optimization"
+    ]
+  },
+  "actions": [
+    {
+      "label": "Open live lab operations view",
+      "href": "/lab#operations-surface",
+      "kind": "internal",
+      "tone": "primary"
+    },
+    {
+      "label": "Back to all case studies",
+      "href": "/work",
+      "kind": "internal",
+      "tone": "secondary"
+    }
+  ]
+}

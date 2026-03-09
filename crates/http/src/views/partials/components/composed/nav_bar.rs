@@ -78,6 +78,7 @@ impl Render for NavSignedIn {
 
 #[derive(Clone, Debug)]
 pub enum NavAuth {
+    Hidden,
     Guest(NavLinkList),
     SignedIn(NavSignedIn),
 }
@@ -85,6 +86,7 @@ pub enum NavAuth {
 impl Render for NavAuth {
     fn render(&self) -> maud::Markup {
         match self {
+            Self::Hidden => maud::html! {},
             Self::Guest(links) => links.render(),
             Self::SignedIn(signed_in) => signed_in.render(),
         }

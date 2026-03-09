@@ -6,7 +6,6 @@ use axum::{
 };
 use core::convert::Infallible;
 use datastar::axum::ReadSignals;
-use maud::Render;
 use serde::Deserialize;
 use tokio::sync::broadcast::error::RecvError;
 use tokio::time::{Duration, sleep};
@@ -64,6 +63,9 @@ pub async fn surreal_message_guarded(
     Extension(cookies): Extension<Cookies>,
     ReadSignals(signals): ReadSignals<SurrealSignals>,
 ) -> impl axum::response::IntoResponse {
+    if let Some(tab_id) = signals.sse_tab_id.clone() {
+        crate::request::set_sse_tab_id(tab_id);
+    }
     let session = crate::sse::Handle::from_cookies_with_tab(
         &cookies,
         &state.cookie_key,
@@ -139,6 +141,9 @@ pub async fn surreal_message_cancel(
     Extension(cookies): Extension<Cookies>,
     ReadSignals(signals): ReadSignals<SurrealSignals>,
 ) -> impl axum::response::IntoResponse {
+    if let Some(tab_id) = signals.sse_tab_id.clone() {
+        crate::request::set_sse_tab_id(tab_id);
+    }
     let session = crate::sse::Handle::from_cookies_with_tab(
         &cookies,
         &state.cookie_key,
@@ -196,6 +201,9 @@ pub async fn events(
     Extension(cookies): Extension<Cookies>,
     ReadSignals(signals): ReadSignals<EventSignals>,
 ) -> impl axum::response::IntoResponse {
+    if let Some(tab_id) = signals.sse_tab_id.clone() {
+        crate::request::set_sse_tab_id(tab_id);
+    }
     let session = crate::sse::Handle::from_cookies_with_tab(
         &cookies,
         &state.cookie_key,
@@ -206,15 +214,18 @@ pub async fn events(
         .operations_filter_query
         .as_ref()
         .map(ToString::to_string);
-    state
-        .trace_log
-        .set_session_flow_filter(&session_id, filter_query.as_deref());
+    state.trace_log.set_stream_flow_filter(
+        &session_id,
+        signals.sse_tab_id.as_ref(),
+        filter_query.as_deref(),
+    );
     let stream_key = session.stream_key().clone();
     let (mut receiver, guard) = state.sse.subscribe(&session);
     let cleanup_guard = ConnectionCleanupGuard::new(
         stream_key,
         state.demo.surreal.guard.clone(),
         state.demo.surreal.cancel.clone(),
+        state.trace_log.clone(),
     );
 
     tracing::info!(session_id = %session_id, "sse connected");
@@ -224,15 +235,9 @@ pub async fn events(
             "sseConnected": true
         })),
     );
-    let session_entries = state.trace_log.snapshot_session(&session_id);
-    let transport_log = crate::views::partials::TransportLogSet::builder()
-        .entries(&session_entries)
-        .build()
-        .render()
-        .into_string();
-    let _ = state
-        .sse
-        .send(&session, crate::sse::Event::patch_elements(transport_log));
+    state
+        .trace_log
+        .refresh_stream_log_panels(&session_id, signals.sse_tab_id.as_ref());
 
     let stream = stream! {
         let _cleanup_guard = cleanup_guard;
@@ -280,6 +285,7 @@ struct ConnectionCleanupGuard {
     surreal_cancel: std::sync::Arc<
         dashmap::DashMap<crate::sse::StreamKey, tokio_util::sync::CancellationToken>,
     >,
+    trace_log: crate::trace_log::TraceLogStore,
 }
 
 impl ConnectionCleanupGuard {
@@ -291,11 +297,13 @@ impl ConnectionCleanupGuard {
         surreal_cancel: std::sync::Arc<
             dashmap::DashMap<crate::sse::StreamKey, tokio_util::sync::CancellationToken>,
         >,
+        trace_log: crate::trace_log::TraceLogStore,
     ) -> Self {
         Self {
             stream_key,
             surreal_guard,
             surreal_cancel,
+            trace_log,
         }
     }
 }
@@ -306,6 +314,7 @@ impl Drop for ConnectionCleanupGuard {
             token.cancel();
         }
         self.surreal_guard.remove(&self.stream_key);
+        self.trace_log.clear_stream_flow_filter(&self.stream_key);
     }
 }
 
@@ -372,11 +381,13 @@ mod tests {
             tab_a.stream_key().clone(),
             surreal_guard.clone(),
             surreal_cancel.clone(),
+            trace_log.clone(),
         );
         let cleanup_b = ConnectionCleanupGuard::new(
             tab_b.stream_key().clone(),
             surreal_guard.clone(),
             surreal_cancel.clone(),
+            trace_log.clone(),
         );
 
         trace_log.record_with_session(

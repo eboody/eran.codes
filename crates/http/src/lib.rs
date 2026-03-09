@@ -18,3 +18,13 @@ pub use router::router;
 pub use sse::Registry as SseRegistry;
 pub use state::{DemoState, State};
 pub use types::*;
+
+#[doc(hidden)]
+pub mod __typestate {
+    pub use crate::router::layers::{
+        AuditAdded, AuthAdded, CookieManagerAdded, CoreReady,
+        RequestContextAdded, RequestIdAssignmentAdded,
+        RequestIdPropagationAdded, RequestLayerFlow, RequestLayerPipeline,
+        StateExtensionAdded, TraceAdded, UserContextAdded,
+    };
+}

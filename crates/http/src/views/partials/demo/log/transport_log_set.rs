@@ -10,13 +10,15 @@ use super::vm;
 #[derive(Builder)]
 pub struct TransportLogSet<'a> {
     pub entries: &'a [TraceEntry],
+    pub active_tab_id: Option<crate::types::SseTabId>,
     #[builder(default)]
     pub excluded_terms: Vec<Text>,
 }
 
 impl Render for TransportLogSet<'_> {
     fn render(&self) -> maud::Markup {
-        let mut request_flows = vm::request_flows(self.entries, 20);
+        let mut request_flows =
+            vm::request_flows(self.entries, 20, self.active_tab_id.as_ref());
         let excluded_terms: Vec<String> = self
             .excluded_terms
             .iter()

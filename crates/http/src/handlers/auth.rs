@@ -1,7 +1,7 @@
 use axum::{
+    Form,
     extract::{Extension, Query},
     response::{IntoResponse, Redirect},
-    Form,
 };
 use bon::Builder;
 use serde::Deserialize;
@@ -188,11 +188,7 @@ impl NextPath {
 
     fn into_safe(self) -> Option<String> {
         let value = self.0.to_string();
-        if Self::is_safe(&value) {
-            Some(value)
-        } else {
-            None
-        }
+        if Self::is_safe(&value) { Some(value) } else { None }
     }
 
     fn is_safe(value: &str) -> bool {

@@ -196,6 +196,8 @@ pub enum LogFieldKey {
     RequestId,
     #[strum(serialize = "session_id")]
     SessionId,
+    #[strum(serialize = "sse_tab_id")]
+    SseTabId,
     #[strum(serialize = "user_id")]
     UserId,
     #[strum(serialize = "sender")]

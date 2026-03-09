@@ -7,9 +7,9 @@ mod body;
 mod item;
 mod preview;
 
-pub(crate) use item::Item;
 pub(crate) use action::Action;
 pub(crate) use body::Body;
+pub(crate) use item::Item;
 pub(crate) use preview::Preview;
 
 // ci: render-composition-component

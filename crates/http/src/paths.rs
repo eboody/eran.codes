@@ -6,6 +6,16 @@ use strum_macros::{AsRefStr, Display, EnumString};
 pub enum Route {
     #[strum(serialize = "/")]
     Home,
+    #[strum(serialize = "/lab")]
+    Lab,
+    #[strum(serialize = "/work")]
+    Work,
+    #[strum(serialize = "/work/chat-realtime")]
+    WorkChatRealtime,
+    #[strum(serialize = "/work/command-sse")]
+    WorkCommandSse,
+    #[strum(serialize = "/work/operational-visibility")]
+    WorkOperationalVisibility,
     #[strum(serialize = "/login")]
     Login,
     #[strum(serialize = "/register")]
@@ -50,6 +60,11 @@ impl Route {
     pub const fn as_str(self) -> &'static str {
         match self {
             Route::Home => "/",
+            Route::Lab => "/lab",
+            Route::Work => "/work",
+            Route::WorkChatRealtime => "/work/chat-realtime",
+            Route::WorkCommandSse => "/work/command-sse",
+            Route::WorkOperationalVisibility => "/work/operational-visibility",
             Route::Login => "/login",
             Route::Register => "/register",
             Route::Logout => "/logout",

@@ -3,7 +3,7 @@ use super::request_flows;
 use crate::trace_log::TraceEntry;
 use crate::types::{
     LogFieldName, LogFieldValue, LogLevelText, LogMessageText, LogTargetText,
-    TimestampText,
+    SseTabId, TimestampText,
 };
 
 fn entry(
@@ -94,7 +94,7 @@ fn builds_request_flow_with_network_and_backend_events() {
         ),
     ];
 
-    let flows = request_flows(&entries, 20);
+    let flows = request_flows(&entries, 20, None);
 
     assert_eq!(flows.len(), 2);
     assert_eq!(flows[0].id.to_string(), "req-bbb-222");
@@ -115,13 +115,13 @@ fn builds_request_flow_with_network_and_backend_events() {
 }
 
 #[test]
-fn includes_backend_entries_with_request_id_for_non_demo_targets() {
+fn skips_backend_only_entries_when_request_envelope_is_missing() {
     let entries = vec![
         entry(
             "12:00:00",
             "app::auth::service",
             "session refreshed",
-            vec![("request_id", "req-xyz-999"), ("status", "200")],
+            vec![("request_id", "2e44a2af"), ("status", "200")],
         ),
         entry(
             "12:00:01",
@@ -131,17 +131,9 @@ fn includes_backend_entries_with_request_id_for_non_demo_targets() {
         ),
     ];
 
-    let flows = request_flows(&entries, 20);
+    let flows = request_flows(&entries, 20, None);
 
-    assert_eq!(flows.len(), 1);
-    assert_eq!(flows[0].id.to_string(), "req-xyz-999");
-    assert_eq!(flows[0].events.len(), 1);
-    assert!(
-        flows[0].events[0]
-            .summary
-            .to_string()
-            .contains("session refreshed")
-    );
+    assert!(flows.is_empty());
 }
 
 #[test]
@@ -161,7 +153,7 @@ fn orphan_events_get_stable_non_colliding_flow_ids() {
         ),
     ];
 
-    let flows = request_flows(&entries, 20);
+    let flows = request_flows(&entries, 20, None);
 
     assert_eq!(flows.len(), 2);
     assert_ne!(flows[0].id.to_string(), flows[1].id.to_string());
@@ -170,4 +162,44 @@ fn orphan_events_get_stable_non_colliding_flow_ids() {
             .iter()
             .all(|flow| flow.id.to_string().starts_with("orphan-"))
     );
+    assert!(
+        flows
+            .iter()
+            .all(|flow| flow.title.to_string() == "Request (orphan)")
+    );
+}
+
+#[test]
+fn filters_request_flows_to_active_tab_id() {
+    let entries = vec![
+        entry(
+            "12:00:00",
+            "demo.request",
+            "request.end",
+            vec![
+                ("request_id", "req-tab-a"),
+                ("method", "POST"),
+                ("path", "/demo/chat/messages"),
+                ("status", "202"),
+                ("sse_tab_id", "tab-a"),
+            ],
+        ),
+        entry(
+            "12:00:01",
+            "demo.request",
+            "request.end",
+            vec![
+                ("request_id", "req-tab-b"),
+                ("method", "POST"),
+                ("path", "/demo/chat/messages/demo"),
+                ("status", "202"),
+                ("sse_tab_id", "tab-b"),
+            ],
+        ),
+    ];
+
+    let flows = request_flows(&entries, 20, Some(&SseTabId::new("tab-a")));
+
+    assert_eq!(flows.len(), 1);
+    assert_eq!(flows[0].id.to_string(), "req-tab-a");
 }

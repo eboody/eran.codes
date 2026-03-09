@@ -1,6 +1,6 @@
-use axum::Router;
 use axum::middleware::from_fn;
 use axum::routing::{get, post};
+use axum::Router;
 use tower_http::services::ServeDir;
 
 pub struct Routes {
@@ -109,6 +109,20 @@ fn pages_routes() -> Router {
 
     Router::new()
         .route(Route::Home.as_str(), get(crate::handlers::home))
+        .route(Route::Lab.as_str(), get(crate::handlers::lab))
+        .route(Route::Work.as_str(), get(crate::handlers::work))
+        .route(
+            Route::WorkChatRealtime.as_str(),
+            get(crate::handlers::work_chat_realtime),
+        )
+        .route(
+            Route::WorkCommandSse.as_str(),
+            get(crate::handlers::work_command_sse),
+        )
+        .route(
+            Route::WorkOperationalVisibility.as_str(),
+            get(crate::handlers::work_operational_visibility),
+        )
         .route(
             Route::Login.as_str(),
             get(crate::handlers::login_form).post(crate::handlers::login),

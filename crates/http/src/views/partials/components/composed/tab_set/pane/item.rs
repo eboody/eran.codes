@@ -1,8 +1,8 @@
 use maud::Render;
 
 use crate::types::Text;
-use crate::views::partials::components::Tab;
 use crate::views::partials::components::tab_set;
+use crate::views::partials::components::Tab;
 
 #[derive(Clone, Debug)]
 // ci: style-system-component

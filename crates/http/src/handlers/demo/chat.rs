@@ -5,7 +5,7 @@ use maud::Render;
 use serde::Deserialize;
 
 use crate::trace_log::{LogMessageKnown, LogTargetKnown};
-use crate::types::{LogFieldKey, Text};
+use crate::types::{LogFieldKey, SseTabId, Text};
 use crate::views::partials::chat;
 use crate::{paths::Route, request, views};
 
@@ -14,6 +14,7 @@ use crate::{paths::Route, request, views};
 pub struct ChatSignals {
     pub room_id: Text,
     pub body: Text,
+    pub sse_tab_id: Option<SseTabId>,
 }
 
 #[derive(Deserialize)]
@@ -21,6 +22,7 @@ pub struct ChatSignals {
 pub struct DemoChatSignals {
     pub room_id: Text,
     pub bot_body: Text,
+    pub sse_tab_id: Option<SseTabId>,
 }
 
 #[derive(Deserialize)]
@@ -85,6 +87,9 @@ pub async fn post_chat_message(
     auth_session: crate::auth::Session,
     ReadSignals(signals): ReadSignals<ChatSignals>,
 ) -> Result<axum::response::Response, crate::error::Error> {
+    if let Some(tab_id) = signals.sse_tab_id.clone() {
+        request::set_sse_tab_id(tab_id);
+    }
     let user = auth_session
         .user
         .as_ref()
@@ -121,6 +126,9 @@ pub async fn post_demo_chat_message(
     Extension(state): Extension<crate::State>,
     ReadSignals(signals): ReadSignals<DemoChatSignals>,
 ) -> Result<axum::response::Response, crate::error::Error> {
+    if let Some(tab_id) = signals.sse_tab_id.clone() {
+        request::set_sse_tab_id(tab_id);
+    }
     let demo_user = crate::chat_demo::ensure_demo_user(&state).await?;
     let room_id = parse_room_id(&signals.room_id.to_string())?;
     state
@@ -191,6 +199,7 @@ fn record_incoming_chat_event(
     request_id: &Text,
     payload_bytes: usize,
 ) {
+    let sse_tab_id = request::current_context().and_then(|value| value.sse_tab_id);
     state.trace_log.record_sse_event(
         request::current_context()
             .and_then(|value| value.session_id)
@@ -226,6 +235,13 @@ fn record_incoming_chat_event(
                 (
                     crate::types::LogFieldName::from(LogFieldKey::RequestId),
                     crate::types::LogFieldValue::new(request_id.to_string()),
+                ),
+                (
+                    crate::types::LogFieldName::from(LogFieldKey::SseTabId),
+                    sse_tab_id
+                        .clone()
+                        .map(|value| crate::types::LogFieldValue::new(value.to_string()))
+                        .unwrap_or_else(crate::types::LogFieldValue::missing),
                 ),
             ])
             .build(),
@@ -263,7 +279,9 @@ fn broadcast_message(
     );
     let _ = state.sse.broadcast(crate::sse::Event::from_event(event));
 
-    let session_id = request::current_context().and_then(|value| value.session_id);
+    let context = request::current_context();
+    let session_id = context.as_ref().and_then(|value| value.session_id.clone());
+    let sse_tab_id = context.and_then(|value| value.sse_tab_id);
     state.trace_log.record_sse_event(
         session_id.as_ref(),
         crate::trace_log::TraceEntry::builder()
@@ -305,6 +323,13 @@ fn broadcast_message(
                 (
                     crate::types::LogFieldName::from(LogFieldKey::RequestId),
                     crate::types::LogFieldValue::new(request_id.to_string()),
+                ),
+                (
+                    crate::types::LogFieldName::from(LogFieldKey::SseTabId),
+                    sse_tab_id
+                        .clone()
+                        .map(|value| crate::types::LogFieldValue::new(value.to_string()))
+                        .unwrap_or_else(crate::types::LogFieldValue::missing),
                 ),
             ])
             .build(),

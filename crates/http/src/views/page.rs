@@ -46,6 +46,13 @@ pub enum SseMode {
     Enabled,
 }
 
+#[derive(Clone, Copy, Debug, Default)]
+pub enum NavMode {
+    #[default]
+    App,
+    Portfolio,
+}
+
 #[derive(Builder)]
 pub struct Layout<'a> {
     pub title: &'a str,
@@ -54,6 +61,8 @@ pub struct Layout<'a> {
     pub user: Option<UserNav>,
     #[builder(default)]
     pub sse_mode: SseMode,
+    #[builder(default)]
+    pub nav_mode: NavMode,
 }
 
 impl Render for Layout<'_> {
@@ -61,16 +70,22 @@ impl Render for Layout<'_> {
         let sse_tab_id = crate::types::SseTabId::new(uuid::Uuid::new_v4().to_string());
         let brand_links = NavLinkList::builder()
             .class_name(Text::from("ui-nav-list ui-nav-brand"))
-            .children(vec![
-                NavLink::builder()
-                    .label(Text::from("eran.codes"))
-                    .href(Text::from(Route::Home.as_str()))
-                    .build(),
-            ])
+            .children(vec![NavLink::builder()
+                .label(Text::from("eran.codes"))
+                .href(Text::from(Route::Home.as_str()))
+                .build()])
             .build();
         let portfolio_links = NavLinkList::builder()
             .class_name(Text::from("ui-nav-list ui-nav-links"))
             .children(vec![
+                NavLink::builder()
+                    .label(Text::from("Work"))
+                    .href(Text::from(Route::Work.as_str()))
+                    .build(),
+                NavLink::builder()
+                    .label(Text::from("Live Lab"))
+                    .href(Text::from(Route::Lab.as_str()))
+                    .build(),
                 NavLink::builder()
                     .label(Text::from("Resume"))
                     .href(Text::from(PORTFOLIO_RESUME_URL))
@@ -91,29 +106,32 @@ impl Render for Layout<'_> {
                     .build(),
             ])
             .build();
-        let auth = match &self.user {
-            Some(user) => NavAuth::SignedIn(
-                NavSignedIn::builder()
-                    .username(user.username.clone())
-                    .account_href(Text::from(Route::Protected.as_str()))
-                    .logout_action(Text::from(Route::Logout.as_str()))
-                    .build(),
-            ),
-            None => NavAuth::Guest(
-                NavLinkList::builder()
-                    .class_name(Text::from("ui-nav-list ui-nav-auth"))
-                    .children(vec![
-                        NavLink::builder()
-                            .label(Text::from("Sign in"))
-                            .href(Text::from(Route::Login.as_str()))
-                            .build(),
-                        NavLink::builder()
-                            .label(Text::from("Create account"))
-                            .href(Text::from(Route::Register.as_str()))
-                            .build(),
-                    ])
-                    .build(),
-            ),
+        let auth = match self.nav_mode {
+            NavMode::Portfolio => NavAuth::Hidden,
+            NavMode::App => match &self.user {
+                Some(user) => NavAuth::SignedIn(
+                    NavSignedIn::builder()
+                        .username(user.username.clone())
+                        .account_href(Text::from(Route::Protected.as_str()))
+                        .logout_action(Text::from(Route::Logout.as_str()))
+                        .build(),
+                ),
+                None => NavAuth::Guest(
+                    NavLinkList::builder()
+                        .class_name(Text::from("ui-nav-list ui-nav-auth"))
+                        .children(vec![
+                            NavLink::builder()
+                                .label(Text::from("Sign in"))
+                                .href(Text::from(Route::Login.as_str()))
+                                .build(),
+                            NavLink::builder()
+                                .label(Text::from("Create account"))
+                                .href(Text::from(Route::Register.as_str()))
+                                .build(),
+                        ])
+                        .build(),
+                ),
+            },
         };
         let nav_bar = NavBar::builder()
             .brand(brand_links)

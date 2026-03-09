@@ -3,6 +3,7 @@ pub(crate) mod logs;
 pub(crate) mod primitives;
 
 pub(crate) use composed::tab_set;
+pub(crate) use composed::portfolio;
 pub use logs::primitives::EmptyState;
 pub use composed::{
     CtaButton, CtaButtonType, CtaItem, CtaLink, CtaRow, CtaTone,

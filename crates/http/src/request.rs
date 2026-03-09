@@ -7,7 +7,7 @@ use axum::{
 };
 
 use crate::sse::{Handle as SseHandle, SESSION_COOKIE};
-use crate::types::{ClientIp, RequestId, SessionId, UserAgent, UserIdText};
+use crate::types::{ClientIp, RequestId, SessionId, SseTabId, UserAgent, UserIdText};
 use std::cell::RefCell;
 use tower_cookies::{Cookies, Key};
 use tracing::Span;
@@ -60,6 +60,7 @@ pub async fn set_context_middleware(
 pub struct Context {
     pub request_id: Option<RequestId>,
     pub session_id: Option<SessionId>,
+    pub sse_tab_id: Option<SseTabId>,
     pub user_id: Option<UserIdText>,
     pub client_ip: Option<ClientIp>,
     pub user_agent: Option<UserAgent>,
@@ -75,12 +76,22 @@ pub fn set_user_id(user_id: impl Into<UserIdText>) {
     }
 }
 
+pub fn set_sse_tab_id(sse_tab_id: impl Into<SseTabId>) {
+    let sse_tab_id = sse_tab_id.into();
+    if let Ok(()) = REQUEST_CONTEXT.try_with(|context| {
+        context.borrow_mut().sse_tab_id = Some(sse_tab_id.clone());
+    }) {
+        Span::current().record("sse_tab_id", sse_tab_id.to_string().as_str());
+    }
+}
+
 fn context_from_request(req: &Request<Body>, key: &Key) -> Context {
     let headers = req.headers();
     let cookies = req.extensions().get::<Cookies>();
     Context {
         request_id: request_id_from_headers(headers),
         session_id: cookies.map(|cookies| ensure_session_id(cookies, key)),
+        sse_tab_id: None,
         user_id: None,
         client_ip: client_ip_from_headers(headers),
         user_agent: user_agent_from_headers(headers),
@@ -245,6 +256,7 @@ mod tests {
         let context = Context {
             request_id: None,
             session_id: None,
+            sse_tab_id: None,
             user_id: None,
             client_ip: None,
             user_agent: None,

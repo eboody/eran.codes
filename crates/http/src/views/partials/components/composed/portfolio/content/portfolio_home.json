@@ -1,0 +1,188 @@
+{
+  "page_title": "Eran Boodnero | Full-Stack Engineer (Rust + TypeScript)",
+  "hero": {
+    "eyebrow": "Los Angeles · Full-Stack Engineer · Rust + TypeScript",
+    "title": "I ship systems that remove operational bottlenecks and improve execution speed.",
+    "summary": "At GoodUnited, I delivered automation and realtime fundraising systems for major nonprofits (including St. Jude and Wounded Warrior Project) in partnership with Meta.",
+    "badges": [
+      "Rust",
+      "TypeScript",
+      "Node.js",
+      "PostgreSQL",
+      "MongoDB",
+      "Playwright",
+      "SSE",
+      "Testing Suites"
+    ],
+    "actions": [
+      {
+        "label": "View case studies",
+        "href": "/work",
+        "kind": "internal",
+        "tone": "primary"
+      },
+      {
+        "label": "Open live lab",
+        "href": "/lab",
+        "kind": "internal",
+        "tone": "secondary"
+      }
+    ]
+  },
+  "proof_strip": {
+    "title": "Verified outcomes",
+    "subtitle": "Hard metrics and execution under real production constraints",
+    "items": [
+      {
+        "kind": "outcome",
+        "title": "Eliminated high-volume response backlogs",
+        "text": "Built a TypeScript + Playwright automation tool that ran at roughly 12x per-operator speed and scaled to 72 concurrent instances, clearing persistent backlog for high-volume fundraiser programs."
+      },
+      {
+        "kind": "architecture",
+        "title": "Replaced 48-hour lag with realtime fundraiser signals",
+        "text": "Built an Express + Svelte + MongoDB app integrated with Meta APIs to capture fundraiser creation and donation events immediately, replacing delayed CSV workflows."
+      },
+      {
+        "kind": "reliability",
+        "title": "Built event-driven publishing platform in Rust",
+        "text": "Designed a 13-crate Rust workspace with Directus webhook ingestion, queue-based processing, content transformation, and custom Substack integration for automation chains where official APIs were limited."
+      }
+    ]
+  },
+  "work_section": {
+    "title": "Selected case studies",
+    "subtitle": "Three projects with measurable business and operational impact",
+    "cards": [
+      {
+        "slug": "chat_realtime",
+        "category": "Automation & Operations",
+        "title": "Automated Fundraiser Acknowledgment at Scale",
+        "summary": "Replaced a manual outsourced workflow for thanking fundraisers with browser automation that executed reliably and continuously.",
+        "outcome": "Delivered 12x per-operator throughput and ran 72 parallel workers, eliminating backlog while reducing response errors.",
+        "highlights": [
+          "Handled workloads spanning tens of thousands of monthly fundraiser pages",
+          "Improved response speed enough to increase fundraiser chat engagement",
+          "Reduced operational overhead previously spent managing manual queues"
+        ],
+        "stack_tags": [
+          "playwright",
+          "typescript",
+          "node.js",
+          "workflow automation"
+        ],
+        "cta_label": "Read automation case study",
+        "preview": {
+          "asset_ref": "images/work/chat-realtime",
+          "alt": "Automation case study preview"
+        }
+      },
+      {
+        "slug": "command_sse",
+        "category": "Realtime Product Systems",
+        "title": "Built Realtime Fundraiser Creation + Donation Visibility",
+        "summary": "Shipped a web app that enabled one-click fundraiser creation and immediate donation insight, replacing lagging batch CSV processes.",
+        "outcome": "Moved teams from delayed, donation-only reporting to realtime operational visibility across millions of users and tens of millions of donation records.",
+        "highlights": [
+          "Integrated Meta APIs to capture fundraiser creation at the source",
+          "Enabled immediate donation context for customer-facing chat teams",
+          "Improved decision quality for sales, success, and analytics teams"
+        ],
+        "stack_tags": [
+          "express",
+          "svelte",
+          "mongodb",
+          "meta api"
+        ],
+        "cta_label": "Read realtime data case study",
+        "preview": {
+          "asset_ref": "images/work/command-sse",
+          "alt": "Realtime data system case study preview"
+        }
+      },
+      {
+        "slug": "operational_visibility",
+        "category": "Platform Architecture",
+        "title": "Custom Substack Publishing Pipeline in Rust",
+        "summary": "Built a CMS-driven event pipeline that transformed and published content through a custom Substack integration when official API coverage was limited.",
+        "outcome": "Shipped a deterministic automation chain from Directus webhooks through queued workers into publishing operations.",
+        "highlights": [
+          "Directus webhook ingestion with collection/operation event routing",
+          "Queue-based worker processing for deterministic automation flow",
+          "Custom Substack integration plus content transformation tooling"
+        ],
+        "stack_tags": [
+          "rust",
+          "axum",
+          "directus",
+          "event pipeline",
+          "substack integration"
+        ],
+        "cta_label": "Read publishing platform case study",
+        "preview": {
+          "asset_ref": "images/work/operational-visibility",
+          "alt": "Custom Rust publishing platform case study preview"
+        }
+      }
+    ],
+    "actions": [
+      {
+        "label": "Browse all work",
+        "href": "/work",
+        "kind": "internal",
+        "tone": "secondary"
+      }
+    ]
+  },
+  "crate_section": {
+    "title": "Open-source crates",
+    "subtitle": "Public Rust work that reflects engineering style and component discipline",
+    "cards": [
+      {
+        "name": "statum",
+        "summary": "State-oriented Rust patterns for predictable transitions and stronger domain invariants.",
+        "repository_url": "https://github.com/eboody/statum",
+        "repository_label": "View repository",
+        "docs_url": null,
+        "docs_label": null,
+        "tags": ["rust", "state", "invariants"]
+      },
+      {
+        "name": "maud-extensions",
+        "summary": "Composable Maud utilities focused on lean rendering APIs and reusable component ergonomics.",
+        "repository_url": "https://github.com/eboody/maud-extensions",
+        "repository_label": "View repository",
+        "docs_url": null,
+        "docs_label": null,
+        "tags": ["rust", "maud", "components"]
+      },
+      {
+        "name": "eran.codes",
+        "summary": "This portfolio app: typed architecture, Datastar command+SSE flow, and operational observability surfaces.",
+        "repository_url": "https://github.com/eboody/eran.codes",
+        "repository_label": "View repository",
+        "docs_url": null,
+        "docs_label": null,
+        "tags": ["axum", "datastar", "sse"]
+      }
+    ]
+  },
+  "closing": {
+    "title": "Need deeper technical signal?",
+    "summary": "Open the live lab to inspect request flow, backend events, and SSE behavior in one place. I also publish candid architecture findings, including strengths and risk debt from external codebase reviews.",
+    "actions": [
+      {
+        "label": "Enter live lab",
+        "href": "/lab",
+        "kind": "internal",
+        "tone": "primary"
+      },
+      {
+        "label": "Contact",
+        "href": "mailto:eboodnero@gmail.com",
+        "kind": "external",
+        "tone": "secondary"
+      }
+    ]
+  }
+}

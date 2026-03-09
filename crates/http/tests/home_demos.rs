@@ -234,10 +234,10 @@ impl app::chat::IdGenerator for Ids {
 }
 
 #[tokio::test]
-async fn home_page_includes_demo_sections() {
+async fn lab_page_includes_demo_sections() {
     let app = test_app();
     let response = app
-        .oneshot(Request::get("/").body(Body::empty()).unwrap())
+        .oneshot(Request::get("/lab").body(Body::empty()).unwrap())
         .await
         .unwrap();
 
@@ -246,13 +246,13 @@ async fn home_page_includes_demo_sections() {
     let body = String::from_utf8_lossy(&body);
     assert_eq!(status, axum::http::StatusCode::OK, "home body:\n{body}");
 
-    for copy in HomeContract::all() {
+    for copy in LabContract::all() {
         assert!(body.contains(copy.as_str()));
     }
 }
 
 #[derive(Clone, Copy, Debug)]
-enum HomeContract {
+enum LabContract {
     OperationsSurface,
     NetworkLogTarget,
     RequestBurstEndpoint,
@@ -269,44 +269,96 @@ enum HomeContract {
     LoginPath,
 }
 
-impl HomeContract {
-    fn all() -> &'static [HomeContract] {
+impl LabContract {
+    fn all() -> &'static [LabContract] {
         &[
-            HomeContract::OperationsSurface,
-            HomeContract::NetworkLogTarget,
-            HomeContract::RequestBurstEndpoint,
-            HomeContract::ChatAnchor,
-            HomeContract::TablistRole,
-            HomeContract::TabRole,
-            HomeContract::TabpanelRole,
-            HomeContract::ResumeLink,
-            HomeContract::GithubLink,
-            HomeContract::LinkedInLink,
-            HomeContract::ContactLink,
-            HomeContract::SignIn,
-            HomeContract::RegisterPath,
-            HomeContract::LoginPath,
+            LabContract::OperationsSurface,
+            LabContract::NetworkLogTarget,
+            LabContract::RequestBurstEndpoint,
+            LabContract::ChatAnchor,
+            LabContract::TablistRole,
+            LabContract::TabRole,
+            LabContract::TabpanelRole,
+            LabContract::ResumeLink,
+            LabContract::GithubLink,
+            LabContract::LinkedInLink,
+            LabContract::ContactLink,
+            LabContract::SignIn,
+            LabContract::RegisterPath,
+            LabContract::LoginPath,
         ]
     }
 
     fn as_str(self) -> &'static str {
         match self {
-            HomeContract::OperationsSurface => "id=\"operations-surface\"",
-            HomeContract::NetworkLogTarget => "id=\"network-log-target\"",
-            HomeContract::RequestBurstEndpoint => "/partials/request-burst-probe",
-            HomeContract::ChatAnchor => "id=\"chat-demo\"",
-            HomeContract::TablistRole => "role=\"tablist\"",
-            HomeContract::TabRole => "role=\"tab\"",
-            HomeContract::TabpanelRole => "role=\"tabpanel\"",
-            HomeContract::ResumeLink => "/static/resume.txt",
-            HomeContract::GithubLink => "https://github.com/eboody/eran.codes",
-            HomeContract::LinkedInLink => {
+            LabContract::OperationsSurface => "id=\"operations-surface\"",
+            LabContract::NetworkLogTarget => "id=\"network-log-target\"",
+            LabContract::RequestBurstEndpoint => "/partials/request-burst-probe",
+            LabContract::ChatAnchor => "id=\"chat-demo\"",
+            LabContract::TablistRole => "role=\"tablist\"",
+            LabContract::TabRole => "role=\"tab\"",
+            LabContract::TabpanelRole => "role=\"tabpanel\"",
+            LabContract::ResumeLink => "/static/resume.txt",
+            LabContract::GithubLink => "https://github.com/eboody/eran.codes",
+            LabContract::LinkedInLink => {
                 "https://www.linkedin.com/search/results/all/?keywords=Eran%20Boodnero"
             }
-            HomeContract::ContactLink => "mailto:eboodnero@gmail.com",
-            HomeContract::SignIn => "Sign in",
-            HomeContract::RegisterPath => "/register",
-            HomeContract::LoginPath => "/login",
+            LabContract::ContactLink => "mailto:eboodnero@gmail.com",
+            LabContract::SignIn => "Sign in",
+            LabContract::RegisterPath => "/register",
+            LabContract::LoginPath => "/login",
+        }
+    }
+}
+
+#[tokio::test]
+async fn home_page_includes_portfolio_sections() {
+    let app = test_app();
+    let response = app
+        .oneshot(Request::get("/").body(Body::empty()).unwrap())
+        .await
+        .unwrap();
+
+    let status = response.status();
+    let body = to_bytes(response.into_body(), usize::MAX).await.unwrap();
+    let body = String::from_utf8_lossy(&body);
+    assert_eq!(status, axum::http::StatusCode::OK, "home body:\n{body}");
+
+    for copy in PortfolioHomeContract::all() {
+        assert!(body.contains(copy.as_str()));
+    }
+}
+
+#[derive(Clone, Copy, Debug)]
+enum PortfolioHomeContract {
+    PortfolioMain,
+    HeroSection,
+    WorkRoute,
+    LabRoute,
+    WorkCaseRoute,
+    OpenSourceTitle,
+}
+
+impl PortfolioHomeContract {
+    fn all() -> &'static [PortfolioHomeContract] {
+        &[
+            PortfolioHomeContract::PortfolioMain,
+            PortfolioHomeContract::HeroSection,
+            PortfolioHomeContract::WorkRoute,
+            PortfolioHomeContract::LabRoute,
+            PortfolioHomeContract::WorkCaseRoute,
+            PortfolioHomeContract::OpenSourceTitle,
+        ]
+    }
+
+    fn as_str(self) -> &'static str {
+        match self {
+            PortfolioHomeContract::PortfolioMain => "ui-portfolio-main",
+            PortfolioHomeContract::HeroSection => "ui-portfolio-hero",
+            PortfolioHomeContract::WorkRoute => "href=\"/work\"",
+            PortfolioHomeContract::LabRoute => "href=\"/lab\"",
+            PortfolioHomeContract::WorkCaseRoute => "href=\"/work/chat-realtime\"",
+            PortfolioHomeContract::OpenSourceTitle => "Open-source crates",
         }
     }
 }
@@ -326,4 +378,29 @@ async fn request_burst_probe_returns_no_content() {
     assert_eq!(response.status(), axum::http::StatusCode::NO_CONTENT);
     let body = to_bytes(response.into_body(), usize::MAX).await.unwrap();
     assert!(body.is_empty());
+}
+
+#[tokio::test]
+async fn work_routes_render_successfully() {
+    let app = test_app();
+    let routes = [
+        "/work",
+        "/work/chat-realtime",
+        "/work/command-sse",
+        "/work/operational-visibility",
+    ];
+
+    for route in routes {
+        let response = app
+            .clone()
+            .oneshot(Request::get(route).body(Body::empty()).unwrap())
+            .await
+            .unwrap();
+
+        assert_eq!(
+            response.status(),
+            axum::http::StatusCode::OK,
+            "route {route} should return 200",
+        );
+    }
 }
