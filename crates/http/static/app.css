@@ -966,6 +966,13 @@ button.secondary,
   line-height: 1.35;
 }
 
+.ui-log-flow-event-summary-inline {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--size-1);
+}
+
 @media (min-width: 56.25rem) {
   .ui-log-flow-shell {
     grid-template-columns: minmax(13rem, 16rem) minmax(0, 1fr);

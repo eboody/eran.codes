@@ -13,11 +13,13 @@ pub struct SqlxUserRepository {
 #[async_trait]
 impl UserRepository for SqlxUserRepository {
     async fn find_by_email(&self, email: &user::Email) -> Result<Option<user::User>> {
+        let email_value = email.to_string();
         let start = std::time::Instant::now();
         tracing::info!(
             target: "demo.db",
             message = "db query",
-            db_statement = "SELECT id, username, email FROM users WHERE email = $1"
+            db_statement = "SELECT id, username, email FROM users WHERE email = $1",
+            db_bind_1 = email_value.clone()
         );
         let record = sqlx::query(
             r#"
@@ -26,7 +28,7 @@ impl UserRepository for SqlxUserRepository {
             WHERE email = $1
             "#,
         )
-        .bind(email.to_string())
+        .bind(email_value)
         .fetch_optional(&self.pg)
         .await
         .map_err(Self::map_sqlx_error)?;
@@ -44,11 +46,18 @@ impl UserRepository for SqlxUserRepository {
         user: &user::User,
         password_hash: &PasswordHash,
     ) -> Result<()> {
+        let user_id = user.id.as_uuid().to_string();
+        let username = user.username.to_string();
+        let email = user.email.to_string();
+        let password_hash_value = password_hash.to_string();
         let start = std::time::Instant::now();
         tracing::info!(
             target: "demo.db",
             message = "db query",
-            db_statement = "INSERT INTO users (id, username, email) VALUES ($1, $2, $3)"
+            db_statement = "INSERT INTO users (id, username, email) VALUES ($1, $2, $3)",
+            db_bind_1 = user_id.clone(),
+            db_bind_2 = username.clone(),
+            db_bind_3 = email.clone()
         );
         let mut tx = self.pg.begin().await.map_err(Self::map_sqlx_error)?;
 
@@ -59,8 +68,8 @@ impl UserRepository for SqlxUserRepository {
             "#,
         )
         .bind(user.id.as_uuid())
-        .bind(user.username.to_string())
-        .bind(user.email.to_string())
+        .bind(username)
+        .bind(email)
         .execute(&mut *tx)
         .await
         .map_err(Self::map_sqlx_error)?;
@@ -73,7 +82,9 @@ impl UserRepository for SqlxUserRepository {
         tracing::info!(
             target: "demo.db",
             message = "db query",
-            db_statement = "INSERT INTO credentials (user_id, password_hash) VALUES ($1, $2)"
+            db_statement = "INSERT INTO credentials (user_id, password_hash) VALUES ($1, $2)",
+            db_bind_1 = user_id,
+            db_bind_2 = password_hash_value.clone()
         );
         let start = std::time::Instant::now();
         sqlx::query(
@@ -83,7 +94,7 @@ impl UserRepository for SqlxUserRepository {
             "#,
         )
         .bind(user.id.as_uuid())
-        .bind(password_hash.to_string())
+        .bind(password_hash_value)
         .execute(&mut *tx)
         .await
         .map_err(Self::map_sqlx_error)?;

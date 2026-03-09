@@ -1,5 +1,5 @@
 use crate::trace_log::TraceEntry;
-use crate::types::{LogFieldKey, Text};
+use crate::types::{LogFieldKey, LogFieldValue, Text};
 use crate::views::partials::components::Pill;
 use crate::views::partials::demo::log;
 
@@ -42,6 +42,7 @@ pub(super) fn field_pills(entry: &TraceEntry) -> Vec<Pill> {
             (LogFieldKey::PayloadBytes, "payload_bytes"),
         ],
     );
+    push_db_bind_pills(&mut pills, entry);
 
     if pills.is_empty() {
         pills.push(Pill::target(entry.target.clone()));
@@ -60,4 +61,30 @@ pub(super) fn push_fields_as_pills(
             pills.push(Pill::fields(format!("{name}={value}")));
         }
     }
+}
+
+fn push_db_bind_pills(pills: &mut Vec<Pill>, entry: &TraceEntry) {
+    for (index, value) in db_bind_values(entry) {
+        pills.push(Pill::fields(format!("${index}={value}")));
+    }
+}
+
+pub(super) fn db_bind_values(entry: &TraceEntry) -> Vec<(usize, Text)> {
+    let mut values: Vec<(usize, Text)> = entry
+        .fields
+        .iter()
+        .filter_map(|(name, value)| {
+            let key = name.to_string();
+            let index = key
+                .strip_prefix("db_bind_")
+                .and_then(|suffix| suffix.parse::<usize>().ok())?;
+            let value = match value {
+                LogFieldValue::Text(text) => text.clone(),
+                LogFieldValue::Missing => return None,
+            };
+            Some((index, value))
+        })
+        .collect();
+    values.sort_by_key(|(index, _)| *index);
+    values
 }

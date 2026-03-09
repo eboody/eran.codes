@@ -1,6 +1,7 @@
 use bon::Builder;
 use maud::Render;
 use serde_json::json;
+use std::collections::BTreeMap;
 
 use crate::types::Text;
 use crate::views::partials::components::{Pill, logs};
@@ -32,7 +33,10 @@ impl Render for FlowTimeline {
                 class="ui-log-flow-shell"
                 data-log-flow-shell
                 data-signals__ifmissing=(local_signals) {
-                nav class="ui-log-flow-list" aria-label="Recent request flows" {
+                nav
+                    class="ui-log-flow-list"
+                    aria-label="Recent request flows"
+                    data-log-flow-list {
                     @for (index, flow) in self.flows.iter().enumerate() {
                         @let selected_expr = selected_expr(&flow.id);
                         @let click_expr = click_expr(&flow.id);
@@ -77,15 +81,19 @@ impl Render for FlowTimeline {
 
                             ol class="ui-log-entries" data-log-flow-events {
                                 @for event in &flow.events {
+                                    @let summary_markup = event_summary_markup(event);
+                                    @let visible_pills = visible_event_pills(event);
                                     li class="ui-log-flow-event" data-log-flow-event {
                                         div class="ui-log-flow-event-head" {
                                             span data-log-timestamp { (&event.timestamp) }
                                             (Pill::fields(format!("stage={}", event.stage_label)).render())
                                         }
-                                        p class="ui-log-flow-event-summary" { (&event.summary) }
-                                        @if !event.pills.is_empty() {
+                                        p class=(event_summary_class(event)) {
+                                            (summary_markup)
+                                        }
+                                        @if !visible_pills.is_empty() {
                                             div class="log-fields" {
-                                                @for pill in &event.pills {
+                                                @for pill in visible_pills {
                                                     (pill)
                                                 }
                                             }
@@ -174,6 +182,118 @@ fn flow_search_text(flow: &Flow) -> String {
     tokens.join(" ").to_lowercase()
 }
 
+fn event_summary_class(event: &FlowEvent) -> &'static str {
+    if is_db_query_summary(&event.summary) {
+        "ui-log-flow-event-summary ui-log-flow-event-summary-inline"
+    } else {
+        "ui-log-flow-event-summary"
+    }
+}
+
+fn event_summary_markup(event: &FlowEvent) -> maud::Markup {
+    if !is_db_query_summary(&event.summary) {
+        return maud::html! { (&event.summary) };
+    }
+
+    let bind_pills = bind_pills_by_index(&event.pills);
+    if bind_pills.is_empty() {
+        return maud::html! { (&event.summary) };
+    }
+
+    let summary = event.summary.to_string();
+    let parts = summary_parts_with_inline_bind_pills(summary.as_str(), &bind_pills);
+
+    maud::html! {
+        @for part in parts {
+            @match part {
+                SummaryPart::Text(text) => {
+                    (text)
+                }
+                SummaryPart::Pill(pill) => {
+                    (pill)
+                }
+            }
+        }
+    }
+}
+
+fn visible_event_pills(event: &FlowEvent) -> Vec<&Pill> {
+    if !is_db_query_summary(&event.summary) {
+        return event.pills.iter().collect();
+    }
+    event.pills.iter().filter(|pill| bind_index(pill).is_none()).collect()
+}
+
+fn is_db_query_summary(summary: &Text) -> bool {
+    let summary = summary.to_string();
+    summary.starts_with("DB query:") || summary.starts_with("DB query complete:")
+}
+
+fn bind_pills_by_index(pills: &[Pill]) -> BTreeMap<usize, &Pill> {
+    let mut binds = BTreeMap::new();
+    for pill in pills {
+        if let Some(index) = bind_index(pill) {
+            binds.entry(index).or_insert(pill);
+        }
+    }
+    binds
+}
+
+fn bind_index(pill: &Pill) -> Option<usize> {
+    let text = pill.text.to_string();
+    let rest = text.strip_prefix('$')?;
+    let (index, _) = rest.split_once('=')?;
+    index.parse::<usize>().ok()
+}
+
+enum SummaryPart<'a> {
+    Text(String),
+    Pill(&'a Pill),
+}
+
+fn summary_parts_with_inline_bind_pills<'a>(
+    summary: &str,
+    bind_pills: &'a BTreeMap<usize, &'a Pill>,
+) -> Vec<SummaryPart<'a>> {
+    let mut parts = Vec::new();
+    let bytes = summary.as_bytes();
+    let mut cursor = 0usize;
+    let mut segment_start = 0usize;
+
+    while cursor < bytes.len() {
+        if bytes[cursor] == b'$' {
+            let mut end = cursor + 1;
+            while end < bytes.len() && bytes[end].is_ascii_digit() {
+                end += 1;
+            }
+            if end > cursor + 1
+                && let Ok(index) = summary[cursor + 1..end].parse::<usize>()
+                && let Some(pill) = bind_pills.get(&index)
+            {
+                if segment_start < cursor {
+                    parts.push(SummaryPart::Text(
+                        summary[segment_start..cursor].to_string(),
+                    ));
+                }
+                parts.push(SummaryPart::Pill(*pill));
+                segment_start = end;
+                cursor = end;
+                continue;
+            }
+        }
+        cursor += 1;
+    }
+
+    if segment_start < summary.len() {
+        parts.push(SummaryPart::Text(summary[segment_start..].to_string()));
+    }
+
+    if parts.is_empty() {
+        parts.push(SummaryPart::Text(summary.to_string()));
+    }
+    parts
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -201,5 +321,30 @@ mod tests {
         assert!(search.contains("/events"));
         assert!(search.contains("get"));
         assert!(search.contains("202"));
+    }
+
+    #[test]
+    fn db_summary_inlines_bind_pills_and_hides_them_from_extra_row() {
+        let event = FlowEvent {
+            timestamp: Text::from("12:00:00"),
+            stage_label: Text::from("backend"),
+            summary: Text::from(
+                "DB query: SELECT id FROM chat_rooms WHERE id = $1 AND created_by = $2",
+            ),
+            pills: vec![
+                Pill::fields("$1=room-1"),
+                Pill::fields("$2=owner-1"),
+                Pill::fields("sender=demo"),
+            ],
+        };
+
+        let summary = event_summary_markup(&event).into_string();
+        let visible_pills = visible_event_pills(&event);
+
+        assert!(summary.contains("DB query: SELECT id FROM chat_rooms WHERE id = "));
+        assert!(summary.contains("$1=room-1"));
+        assert!(summary.contains("$2=owner-1"));
+        assert_eq!(visible_pills.len(), 1);
+        assert_eq!(visible_pills[0].text.to_string(), "sender=demo");
     }
 }

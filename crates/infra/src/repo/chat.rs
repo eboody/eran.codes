@@ -109,7 +109,8 @@ impl app::chat::Repository for SqlxChatRepository {
         tracing::info!(
             target: "demo.db",
             message = "db query",
-            db_statement = "SELECT id, name, created_by FROM chat_rooms WHERE id = $1"
+            db_statement = "SELECT id, name, created_by FROM chat_rooms WHERE id = $1",
+            db_bind_1 = %room_id.as_uuid()
         );
         let record = sqlx::query(
             r#"
@@ -200,10 +201,24 @@ impl app::chat::Repository for SqlxChatRepository {
     }
 
     async fn insert_message(&self, message: &chat::Message) -> Result<()> {
+        let status = Self::status_to_db(message.status);
+        let client_id = message
+            .client_id
+            .as_ref()
+            .map(|value| value.to_string())
+            .unwrap_or_else(|| "NULL".to_string());
+        let created_at = time::OffsetDateTime::from(message.created_at).to_string();
         tracing::info!(
             target: "demo.db",
             message = "db query",
-            db_statement = "INSERT INTO chat_messages (id, room_id, user_id, body, status, client_id, created_at) VALUES ($1, $2, $3, $4, $5, $6, $7)"
+            db_statement = "INSERT INTO chat_messages (id, room_id, user_id, body, status, client_id, created_at) VALUES ($1, $2, $3, $4, $5, $6, $7)",
+            db_bind_1 = %message.id.as_uuid(),
+            db_bind_2 = %message.room_id.as_uuid(),
+            db_bind_3 = %message.user_id.as_uuid(),
+            db_bind_4 = %message.body,
+            db_bind_5 = status,
+            db_bind_6 = client_id,
+            db_bind_7 = created_at
         );
         sqlx::query(
             r#"
@@ -215,7 +230,7 @@ impl app::chat::Repository for SqlxChatRepository {
         .bind(message.room_id.as_uuid())
         .bind(message.user_id.as_uuid())
         .bind(message.body.to_string())
-        .bind(Self::status_to_db(message.status))
+        .bind(status)
         .bind(message.client_id.as_ref().map(|value| value.to_string()))
         .bind(time::OffsetDateTime::from(message.created_at))
         .execute(&self.pg)
@@ -234,7 +249,10 @@ impl app::chat::Repository for SqlxChatRepository {
         tracing::info!(
             target: "demo.db",
             message = "db query",
-            db_statement = "INSERT INTO chat_room_memberships (room_id, user_id, role) VALUES ($1, $2, $3)"
+            db_statement = "INSERT INTO chat_room_memberships (room_id, user_id, role) VALUES ($1, $2, $3)",
+            db_bind_1 = %room_id.as_uuid(),
+            db_bind_2 = %user_id.as_uuid(),
+            db_bind_3 = %role
         );
         sqlx::query(
             r#"
@@ -261,7 +279,9 @@ impl app::chat::Repository for SqlxChatRepository {
         tracing::info!(
             target: "demo.db",
             message = "db query",
-            db_statement = "SELECT 1 FROM chat_room_memberships WHERE room_id = $1 AND user_id = $2"
+            db_statement = "SELECT 1 FROM chat_room_memberships WHERE room_id = $1 AND user_id = $2",
+            db_bind_1 = %room_id.as_uuid(),
+            db_bind_2 = %user_id.as_uuid()
         );
         let row = sqlx::query(
             r#"
@@ -483,7 +503,11 @@ impl app::chat::RateLimiter for SqlxChatRateLimiter {
         tracing::info!(
             target: "demo.db",
             message = "db query",
-            db_statement = "UPSERT chat_rate_limits"
+            db_statement = "UPSERT chat_rate_limits",
+            db_bind_1 = %room_id.as_uuid(),
+            db_bind_2 = %user_id.as_uuid(),
+            db_bind_3 = RATE_LIMIT_WINDOW_SECS,
+            db_bind_4 = RATE_LIMIT_MAX
         );
         let row = sqlx::query(
             r#"
@@ -534,6 +558,9 @@ impl SqlxChatAuditLog {
 #[async_trait]
 impl app::chat::AuditLog for SqlxChatAuditLog {
     async fn record(&self, entry: AuditEntry) -> Result<()> {
+        let room_id = entry.room_id.as_uuid().to_string();
+        let actor_id = entry.actor_id.as_uuid().to_string();
+        let action = entry.action.to_string();
         let metadata = entry
             .metadata
             .into_iter()
@@ -549,7 +576,11 @@ impl app::chat::AuditLog for SqlxChatAuditLog {
         tracing::info!(
             target: "demo.db",
             message = "db query",
-            db_statement = "INSERT INTO chat_audit_log (room_id, actor_user_id, action, metadata_json) VALUES ($1, $2, $3, $4)"
+            db_statement = "INSERT INTO chat_audit_log (room_id, actor_user_id, action, metadata_json) VALUES ($1, $2, $3, $4)",
+            db_bind_1 = room_id,
+            db_bind_2 = actor_id,
+            db_bind_3 = action,
+            db_bind_4 = %metadata
         );
         sqlx::query(
             r#"
