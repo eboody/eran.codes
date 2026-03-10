@@ -39,12 +39,14 @@ This repository uses a project-local multi-agent system for generating Rust Maud
   - Backend contracts
   - SSE transport behavior
   - Axum routing decisions
+  - Bon builder API decisions (setter choice, optional/default/into semantics)
 - Required skills for docs lookup:
   - `.codex/skills/mds-repo-docs-index/SKILL.md`
   - `.codex/skills/mds-maud-patterns/SKILL.md`
   - `.codex/skills/mds-datastar-architecture/SKILL.md`
   - `.codex/skills/mds-datastar-patterns/SKILL.md`
   - `.codex/skills/mds-axum-integration/SKILL.md`
+  - `.codex/skills/mds-bon-patterns/SKILL.md`
   - `.codex/skills/mds-css-conventions/SKILL.md`
 - Docs under `/docs` are evergreen source of truth and override agent priors.
 

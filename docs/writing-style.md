@@ -87,6 +87,11 @@ Use `bon` when:
 - named setters improve readability,
 - typestate modeling is unnecessary overhead.
 
+Optional-member setter rule:
+- If you have a concrete value `T`, call the direct setter (`.field(value)`).
+- Use `maybe_` setters only when the input is already `Option<T>` or when you intentionally pass `None` to express omission/default semantics.
+- Avoid `.maybe_field(Some(value))`; it is noisier than `.field(value)` and weakens readability.
+
 Default for this repo:
 - If a component/view needs a builder, use `bon` (typestate or regular as appropriate), not hand-rolled builder code.
 

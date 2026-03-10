@@ -1006,9 +1006,8 @@ Example::builder()
     // We can pass `&str` because the setters accept `impl Into<String>`      // [!code highlight]
     .name("Bon")                                                              // [!code highlight]
     .description("Awesome crate 🐱. Consider giving it a star on Github ⭐") // [!code highlight]
-    // We can pass `Option<&str>` to `maybe_` methods because they accept     // [!code highlight]
-    // `Option<impl Into<String>>`                                            // [!code highlight]
-    .maybe_group(Some("Favourites"))                                          // [!code highlight]
+    // Prefer direct setters for concrete values.                              // [!code highlight]
+    .group("Favourites")                                          // [!code highlight]
     .build();
 ```
 
@@ -1032,9 +1031,8 @@ example()
     // We can pass `&str` because the setters accept `impl Into<String>`      // [!code highlight]
     .name("Bon")                                                              // [!code highlight]
     .description("Awesome crate 🐱. Consider giving it a star on Github ⭐") // [!code highlight]
-    // We can pass `Option<&str>` to `maybe_` methods because they accept     // [!code highlight]
-    // `Option<impl Into<String>>`                                            // [!code highlight]
-    .maybe_group(Some("Favourites"))                                          // [!code highlight]
+    // Prefer direct setters for concrete values.                              // [!code highlight]
+    .group("Favourites")                                          // [!code highlight]
     .call();
 ```
 
@@ -1063,9 +1061,8 @@ Example::example()
     // We can pass `&str` because the setters accept `impl Into<String>`      // [!code highlight]
     .name("Bon")                                                              // [!code highlight]
     .description("Awesome crate 🐱. Consider giving it a star on Github ⭐") // [!code highlight]
-    // We can pass `Option<&str>` to `maybe_` methods because they accept     // [!code highlight]
-    // `Option<impl Into<String>>`                                            // [!code highlight]
-    .maybe_group(Some("Favourites"))                                          // [!code highlight]
+    // Prefer direct setters for concrete values.                              // [!code highlight]
+    .group("Favourites")                                          // [!code highlight]
     .call();
 ```
 

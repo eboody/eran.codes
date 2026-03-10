@@ -179,8 +179,8 @@ Projection::builder().build();
 Projection::builder()
     // Pass the value without wrapping it with `Some()`
     .x(10)
-    // Or use a `maybe_`-prefixed setter that accepts `Option`
-    .maybe_y(Some(20))
+    // Prefer the direct setter when you already have a concrete value.
+    .y(20)
     // The APIs generated for `#[builder(default)]` and `Option<T>` are equivalent.
     // `z` will be set to `0` when `build()` is called.
     .maybe_z(None)

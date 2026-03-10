@@ -73,11 +73,10 @@ example()
     .level("Accepts `impl Into<String>`, which allows for passing `&str`")
     .call();
 
-example()
-    .maybe_level(Some(
-        "Accepts `Option<impl Into<String>>`, \
-        which allows for passing `Option<&str>`"
-    ))
-    .call();
+let maybe_level = Some(
+    "Accepts `Option<impl Into<String>>`, \
+    which allows for passing `Option<&str>`"
+);
+example().maybe_level(maybe_level).call();
 
 ```

@@ -28,6 +28,8 @@ Apply repo-approved Maud composition, escaping, and structure patterns when buil
 - Prefer `bon` builders for component construction APIs:
   - Use typestate builder/state-machine style when required construction order matters.
   - Use regular `#[derive(Builder)]` when named setters improve clarity and typestate would add noise.
+  - For optional members, use direct setters for concrete values (`.field(value)`), not `.maybe_field(Some(value))`.
+  - Reserve `.maybe_field(...)` for values already shaped as `Option<T>` or explicit `None`/default behavior.
 - Prefer module-scoped render APIs and qualified calls (`tab_set::pane::Body`) over flat prefixed type names.
 - For log surfaces, split reusable render pieces by tier:
   - primitive building blocks under `views/partials/components/logs/primitives`

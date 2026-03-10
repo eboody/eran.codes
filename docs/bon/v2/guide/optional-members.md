@@ -95,8 +95,8 @@ let result = example()
 assert_eq!(result, 8);
 
 let result = example()
-    .maybe_a(Some(3))
-    .maybe_b(Some(5))
+    .a(3)
+    .b(5)
     .call();
 assert_eq!(result, 8);
 ```

@@ -97,6 +97,8 @@ For component/view models generated from the spec:
 Use `bon` for component construction APIs:
 - Prefer typestate-style builder/state-machine APIs when valid construction order is part of correctness.
 - Prefer regular `#[derive(Builder)]` when staged named construction improves readability and typestate is unnecessary.
+- For optional members, use `.field(value)` when the value is known; do not use `.maybe_field(Some(value))`.
+- Use `.maybe_field(option_value)` only when the source is already `Option<T>` or when passing explicit `None` is semantically required.
 - Avoid ad-hoc manual builder patterns when `bon` can encode the same intent.
 
 ## Styling Contract (Required)

@@ -8,7 +8,7 @@ scope: project
 # mds-repo-docs-index
 
 ## Purpose
-Define a single docs-first retrieval policy for the repo. Treat `/docs` as evergreen source of truth for Maud, Datastar, Axum, CSS conventions, writing style, visual signoff, and code-audit practices.
+Define a single docs-first retrieval policy for the repo. Treat `/docs` as evergreen source of truth for Maud, Datastar, Axum, Bon usage, CSS conventions, writing style, visual signoff, and code-audit practices.
 
 ## Source Of Truth
 - Primary corpus: `/docs` (read-only)
@@ -20,6 +20,7 @@ Only these roots are authoritative for the Maud + Datastar component system:
 - `/docs/maud/`
 - `/docs/datastar/`
 - `/docs/axum/`
+- `/docs/bon/`
 - `/docs/css-scope-inline/`
 - `/docs/code-audit/`
 - `/docs/visual-signoff/latest/`
@@ -51,6 +52,12 @@ If a path is in this denylist, treat it as informational history only, not as po
   - `/docs/axum/routing/index.md`
   - `/docs/axum/response/sse/index.md`
   - `/docs/axum/extract/index.md`
+- `bon`
+  - `/docs/bon/guide/basics.md`
+  - `/docs/bon/guide/basics/optional-members.md`
+  - `/docs/bon/guide/patterns/conditional-building.md`
+  - `/docs/bon/reference/builder/member/default.md`
+  - `/docs/bon/reference/builder/member/into.md`
 - `css-scope-inline`
   - `/docs/css-scope-inline/index.md`
   - `/docs/css-scope-inline/03-how-it-works.md`

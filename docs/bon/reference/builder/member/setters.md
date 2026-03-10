@@ -61,7 +61,8 @@ struct Example {
 Example::builder().bar(2).build();
 
 // Name of `option_fn` was derived from the root-level `setters(name)`
-Example::builder().maybe_foo(Some(2)).build();
+let maybe_member = Some(2);
+Example::builder().maybe_foo(maybe_member).build();
 ```
 
 ## `name`

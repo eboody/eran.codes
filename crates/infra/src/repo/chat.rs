@@ -4,7 +4,8 @@ pub use SqlxChatRateLimiter as RateLimiter;
 pub use SqlxChatRepository as Repository;
 
 use app::chat::{
-    AuditEntry, Error, ModerationQueueStatus, ModerationReason, Result, RoomRole,
+    AuditEntry, Error, ModerationQueueStatus, ModerationReason, PendingMutationResult,
+    Result, RoomRole,
 };
 use async_trait::async_trait;
 use domain::chat;
@@ -303,17 +304,18 @@ impl app::chat::Repository for SqlxChatRepository {
         &self,
         message_id: &chat::MessageId,
         status: chat::MessageStatus,
-    ) -> Result<()> {
+    ) -> Result<PendingMutationResult> {
         tracing::info!(
             target: "demo.db",
             message = "db query",
-            db_statement = "UPDATE chat_messages SET status = $2 WHERE id = $1"
+            db_statement = "UPDATE chat_messages SET status = $2 WHERE id = $1 AND status = 'pending'"
         );
-        sqlx::query(
+        let result = sqlx::query(
             r#"
             UPDATE chat_messages
             SET status = $2
             WHERE id = $1
+              AND status = 'pending'
             "#,
         )
         .bind(message_id.as_uuid())
@@ -322,7 +324,11 @@ impl app::chat::Repository for SqlxChatRepository {
         .await
         .map_err(|error| Error::Repo(error.to_string().into()))?;
 
-        Ok(())
+        Ok(if result.rows_affected() == 1 {
+            PendingMutationResult::Applied
+        } else {
+            PendingMutationResult::NotPendingOrMissing
+        })
     }
 }
 
@@ -434,13 +440,13 @@ impl app::chat::ModerationQueue for SqlxChatModerationQueue {
         Ok(items)
     }
 
-    async fn complete(
+    async fn complete_if_pending(
         &self,
         message_id: &chat::MessageId,
         reviewer_id: &chat::UserId,
         decision: app::chat::ModerationDecision,
         reason: Option<ModerationReason>,
-    ) -> Result<()> {
+    ) -> Result<PendingMutationResult> {
         let status = match decision {
             app::chat::ModerationDecision::Approve => ModerationQueueStatus::Approved,
             app::chat::ModerationDecision::Remove => ModerationQueueStatus::Removed,
@@ -449,9 +455,9 @@ impl app::chat::ModerationQueue for SqlxChatModerationQueue {
         tracing::info!(
             target: "demo.db",
             message = "db query",
-            db_statement = "UPDATE chat_moderation_queue"
+            db_statement = "UPDATE chat_moderation_queue (pending only)"
         );
-        sqlx::query(
+        let result = sqlx::query(
             r#"
             UPDATE chat_moderation_queue
             SET status = $2,
@@ -459,6 +465,7 @@ impl app::chat::ModerationQueue for SqlxChatModerationQueue {
                 reviewed_at = now(),
                 reason = COALESCE($4, reason)
             WHERE message_id = $1
+              AND status = 'pending'
             "#,
         )
         .bind(message_id.as_uuid())
@@ -469,7 +476,11 @@ impl app::chat::ModerationQueue for SqlxChatModerationQueue {
         .await
         .map_err(|error| Error::Repo(error.to_string().into()))?;
 
-        Ok(())
+        Ok(if result.rows_affected() == 1 {
+            PendingMutationResult::Applied
+        } else {
+            PendingMutationResult::NotPendingOrMissing
+        })
     }
 }
 

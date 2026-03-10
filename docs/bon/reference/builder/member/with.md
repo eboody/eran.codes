@@ -234,8 +234,8 @@ struct Example {
 }
 
 let value = Example::builder()
-    .maybe_x1(Some(2))      // [!code highlight]
-    .maybe_x2(Some((2, 3))) // [!code highlight]
+    .x1(2)      // [!code highlight]
+    .x2((2, 3)) // [!code highlight]
     .build();
 
 assert_eq!(value.x1, Some(4));

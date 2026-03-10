@@ -43,8 +43,9 @@ assert_eq!(page, "Secret knowledge");
 
 // Now this code can also pass `Option<T>`, including `None` to the function
 // using the new `maybe_password` method.
+let password = Some("password");
 get_page()
-    .maybe_password(Some("password"))
+    .maybe_password(password)
     .call();
 ```
 
@@ -60,7 +61,7 @@ use bon::builder;
 #[builder]
 fn example(filter: Option<String>) {}
 
-example().maybe_filter(Some("filter".to_owned())).call();
+example().filter("filter".to_owned()).call();
 ```
 
 This code can be changed to use `#[builder(default)]` and the call site will still compile:
@@ -75,7 +76,7 @@ fn example(
     filter: String         // [!code ++]
 ) {}
 
-example.maybe_filter(Some("filter".to_owned())).call();
+example.filter("filter".to_owned()).call();
 ```
 
 ## Marking member as unused with a leading `_`

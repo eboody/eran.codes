@@ -55,7 +55,7 @@ assert_eq!(value.x3, "bon");
 let value = Example::builder()
     .x1(99)
     .maybe_x2(None) // None means the default will be used
-    .maybe_x3(Some("lyra"))
+    .x3("lyra")
     .build();
 
 assert_eq!(value.x1, 99);
@@ -90,7 +90,7 @@ assert_eq!(value.2, "bon");
 let value = example()
     .x1(99)
     .maybe_x2(None) // None means the default will be used
-    .maybe_x3(Some("lyra"))
+    .x3("lyra")
     .call();
 
 assert_eq!(value.0, 99);
@@ -134,7 +134,7 @@ assert_eq!(value.x3, "bon");
 let value = Example::builder()
     .x1(99)
     .maybe_x2(None) // None means the default will be used
-    .maybe_x3(Some("lyra"))
+    .x3("lyra")
     .build();
 
 assert_eq!(value.x1, 99);

@@ -56,7 +56,8 @@ This is how setters look in the generated code for the example above (simplified
 ```rust ignore
 impl<S> ExampleBuilder<S> {
     fn level(self, value: u32) -> ExampleBuilder<SetLevel<S>> {
-        self.maybe_level(Some(value)) // Yes, it's this simple!
+        // Equivalent to calling `maybe_level` with a present value.
+        /* */
     }
 
     fn maybe_level(self, value: Option<u32>) -> ExampleBuilder<SetLevel<S>> {
