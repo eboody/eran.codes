@@ -1,14 +1,14 @@
 use std::sync::Arc;
 
-use axum::extract::MatchedPath;
-use axum::middleware::from_fn;
 use axum::Extension;
 use axum::Router;
+use axum::extract::MatchedPath;
+use axum::middleware::from_fn;
 use axum_login::AuthManagerLayerBuilder;
 use statum::{machine, state, transition};
 use time::Duration as SessionDuration;
-use tower_cookies::cookie::SameSite;
 use tower_cookies::CookieManagerLayer;
+use tower_cookies::cookie::SameSite;
 use tower_http::classify::ServerErrorsFailureClass;
 use tower_http::request_id::{MakeRequestUuid, PropagateRequestIdLayer, SetRequestIdLayer};
 use tower_http::trace::TraceLayer;

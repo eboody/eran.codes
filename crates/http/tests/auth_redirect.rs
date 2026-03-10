@@ -184,8 +184,8 @@ impl app::chat::Repository for ChatRepo {
         &self,
         _message_id: &domain_chat::MessageId,
         _status: domain_chat::MessageStatus,
-    ) -> app::chat::Result<()> {
-        Ok(())
+    ) -> app::chat::Result<app::chat::PendingMutationResult> {
+        Ok(app::chat::PendingMutationResult::Applied)
     }
 }
 
@@ -208,14 +208,14 @@ impl app::chat::ModerationQueue for ModerationQueue {
         Ok(Vec::new())
     }
 
-    async fn complete(
+    async fn complete_if_pending(
         &self,
         _message_id: &domain_chat::MessageId,
         _reviewer_id: &domain_chat::UserId,
         _decision: app::chat::ModerationDecision,
         _reason: Option<app::chat::ModerationReason>,
-    ) -> app::chat::Result<()> {
-        Ok(())
+    ) -> app::chat::Result<app::chat::PendingMutationResult> {
+        Ok(app::chat::PendingMutationResult::Applied)
     }
 }
 

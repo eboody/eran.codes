@@ -7,19 +7,20 @@ use axum::{
 use core::convert::Infallible;
 use datastar::axum::ReadSignals;
 use serde::Deserialize;
+use statum::{machine, state, transition};
 use tokio::sync::broadcast::error::RecvError;
-use tokio::time::{Duration, sleep};
+use tokio::time::Duration;
 use tower_cookies::Cookies;
 
-use crate::types::{SseTabId, Text};
+use crate::types::{SessionId, SseTabId, Text};
 
 #[derive(Debug, Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub(crate) struct SurrealSignals {
-    surreal_message: Option<Text>,
-    original_surreal_message: Option<Text>,
-    sse_tab_id: Option<SseTabId>,
-    _surreal_status: Option<Text>,
+    pub(crate) surreal_message: Option<Text>,
+    pub(crate) original_surreal_message: Option<Text>,
+    pub(crate) sse_tab_id: Option<SseTabId>,
+    pub(crate) _surreal_status: Option<Text>,
 }
 
 #[derive(Debug, Deserialize, Default)]
@@ -29,6 +30,148 @@ pub(crate) struct EventSignals {
     operations_filter_query: Option<Text>,
 }
 
+#[state]
+enum EventsConnectionState {
+    Incoming,
+    FilterApplied,
+    Ready(ReadyData),
+}
+
+struct ReadyData {
+    receiver: tokio::sync::broadcast::Receiver<crate::sse::Event>,
+    session_guard: crate::sse::SessionGuard,
+    cleanup_guard: ConnectionCleanupGuard,
+}
+
+#[machine]
+struct EventsConnectionFlow<EventsConnectionState> {
+    state: crate::State,
+    session: crate::sse::Handle,
+    session_id: SessionId,
+    tab_id: Option<SseTabId>,
+    filter_query: Option<Text>,
+}
+
+impl EventsConnectionFlow<Incoming> {
+    fn from_request(state: crate::State, cookies: Cookies, signals: EventSignals) -> Self {
+        let tab_id = signals.sse_tab_id.clone();
+        if let Some(tab_id) = tab_id.clone() {
+            crate::request::set_sse_tab_id(tab_id);
+        }
+        let session = crate::sse::Handle::from_cookies_with_tab(
+            &cookies,
+            &state.cookie_key,
+            tab_id.clone(),
+        );
+        let session_id = session.id();
+
+        EventsConnectionFlow::<Incoming>::builder()
+            .state(state)
+            .session(session)
+            .session_id(session_id)
+            .maybe_tab_id(tab_id)
+            .maybe_filter_query(signals.operations_filter_query)
+            .build()
+    }
+}
+
+impl<S: EventsConnectionStateTrait> EventsConnectionFlow<S> {
+    fn session_id(&self) -> &SessionId {
+        &self.session_id
+    }
+}
+
+#[transition]
+impl EventsConnectionFlow<Incoming> {
+    fn apply_flow_filter(self) -> EventsConnectionFlow<FilterApplied> {
+        let query = self.filter_query.as_ref().map(ToString::to_string);
+        self.state.trace_log.set_stream_flow_filter(
+            self.session_id(),
+            self.tab_id.as_ref(),
+            query.as_deref(),
+        );
+        self.transition()
+    }
+}
+
+#[transition]
+impl EventsConnectionFlow<FilterApplied> {
+    fn prepare_stream(self) -> EventsConnectionFlow<Ready> {
+        let stream_key = self.session.stream_key().clone();
+        let (receiver, session_guard) = self.state.sse.subscribe(&self.session);
+        let cleanup_guard = ConnectionCleanupGuard::new(
+            stream_key,
+            self.state.demo.surreal.guard.clone(),
+            self.state.demo.surreal.cancel.clone(),
+            self.state.trace_log.clone(),
+        );
+        let session_id = self.session_id().clone();
+        tracing::info!(session_id = %session_id, "sse connected");
+        let _ = self.state.sse.send(
+            &self.session,
+            crate::sse::Event::patch_signals(serde_json::json!({
+                "sseConnected": true
+            })),
+        );
+        self.state
+            .trace_log
+            .refresh_stream_log_panels(&session_id, self.tab_id.as_ref());
+        self.transition_with(ReadyData {
+            receiver,
+            session_guard,
+            cleanup_guard,
+        })
+    }
+}
+
+impl EventsConnectionFlow<Ready> {
+    fn into_response(self) -> impl axum::response::IntoResponse {
+        let ReadyData {
+            mut receiver,
+            session_guard,
+            cleanup_guard,
+        } = self.state_data;
+        let session_id = self.session_id;
+
+        let stream = stream! {
+            let _cleanup_guard = cleanup_guard;
+            let _session_guard = session_guard;
+            loop {
+                match receiver.recv().await {
+                    Ok(event) => {
+                        let sse_event = event.as_datastar_event().write_as_axum_sse_event();
+                        yield Ok::<_, Infallible>(sse_event);
+                    }
+                    Err(RecvError::Lagged(_)) => continue,
+                    Err(RecvError::Closed) => {
+                        tracing::info!(session_id = %session_id, "sse disconnected");
+                        break;
+                    }
+                }
+            }
+        };
+
+        let sse = Sse::new(stream).keep_alive(
+            axum::response::sse::KeepAlive::new()
+                .interval(Duration::from_secs(15))
+                .text("keepalive"),
+        );
+        (
+            [
+                (
+                    CACHE_CONTROL,
+                    HeaderValue::from_static("no-cache, no-transform"),
+                ),
+                (
+                    HeaderName::from_static("x-accel-buffering"),
+                    HeaderValue::from_static("no"),
+                ),
+            ],
+            sse,
+        )
+    }
+}
+
 fn surreal_payload(message: &Text, status: &Text) -> crate::sse::Event {
     crate::sse::Event::patch_signals(serde_json::json!({
         "surrealMessage": message.to_string(),
@@ -36,7 +179,7 @@ fn surreal_payload(message: &Text, status: &Text) -> crate::sse::Event {
     }))
 }
 
-fn surreal_send(
+pub(super) fn surreal_send(
     state: &crate::State,
     session: &crate::sse::Handle,
     message: Text,
@@ -51,7 +194,7 @@ fn surreal_send(
     }
 }
 
-fn surreal_original(signals: SurrealSignals) -> Text {
+pub(super) fn surreal_original(signals: SurrealSignals) -> Text {
     signals
         .original_surreal_message
         .or(signals.surreal_message)
@@ -63,77 +206,10 @@ pub async fn surreal_message_guarded(
     Extension(cookies): Extension<Cookies>,
     ReadSignals(signals): ReadSignals<SurrealSignals>,
 ) -> impl axum::response::IntoResponse {
-    if let Some(tab_id) = signals.sse_tab_id.clone() {
-        crate::request::set_sse_tab_id(tab_id);
-    }
-    let session = crate::sse::Handle::from_cookies_with_tab(
-        &cookies,
-        &state.cookie_key,
-        signals.sse_tab_id.clone(),
-    );
-    let stream_key = session.stream_key().clone();
-    let sequence = state
-        .demo
-        .surreal
-        .seq
-        .fetch_add(1, std::sync::atomic::Ordering::Relaxed)
-        + 1;
-    let original = surreal_original(signals);
-
-    let lock = state
-        .demo
-        .surreal
-        .guard
-        .entry(stream_key)
-        .or_insert_with(|| std::sync::Arc::new(tokio::sync::Mutex::new(())))
-        .clone();
-
-    tokio::spawn(async move {
-        let guard = match lock.try_lock() {
-            Ok(guard) => {
-                if !surreal_send(
-                    &state,
-                    &session,
-                    Text::from(format!("Guarded says hi! #{sequence}")),
-                    Text::from(format!("guarded running #{sequence}")),
-                ) {
-                    return;
-                }
-                guard
-            }
-            Err(_) => {
-                if !surreal_send(
-                    &state,
-                    &session,
-                    Text::from(format!("Guarded queued #{sequence}")),
-                    Text::from(format!("guarded queued #{sequence}")),
-                ) {
-                    return;
-                }
-                let guard = lock.lock().await;
-                if !surreal_send(
-                    &state,
-                    &session,
-                    Text::from(format!("Guarded says hi! #{sequence}")),
-                    Text::from(format!("guarded running #{sequence}")),
-                ) {
-                    return;
-                }
-                guard
-            }
-        };
-
-        sleep(Duration::from_secs(1)).await;
-        drop(guard);
-        surreal_send(
-            &state,
-            &session,
-            original,
-            Text::from(format!("guarded done #{sequence}")),
-        );
-    });
-
-    axum::http::StatusCode::ACCEPTED
+    super::sse_surreal_guarded_flow::IncomingFlow::from_request(state, cookies, signals)
+        .prepare_lock()
+        .spawn()
+        .status_code()
 }
 
 pub async fn surreal_message_cancel(
@@ -141,59 +217,10 @@ pub async fn surreal_message_cancel(
     Extension(cookies): Extension<Cookies>,
     ReadSignals(signals): ReadSignals<SurrealSignals>,
 ) -> impl axum::response::IntoResponse {
-    if let Some(tab_id) = signals.sse_tab_id.clone() {
-        crate::request::set_sse_tab_id(tab_id);
-    }
-    let session = crate::sse::Handle::from_cookies_with_tab(
-        &cookies,
-        &state.cookie_key,
-        signals.sse_tab_id.clone(),
-    );
-    let stream_key = session.stream_key().clone();
-    let sequence = state
-        .demo
-        .surreal
-        .seq
-        .fetch_add(1, std::sync::atomic::Ordering::Relaxed)
-        + 1;
-    let original = surreal_original(signals);
-
-    let token = tokio_util::sync::CancellationToken::new();
-    if let Some(previous) = state.demo.surreal.cancel.insert(stream_key, token.clone()) {
-        previous.cancel();
-    }
-
-    tokio::spawn(async move {
-        if !surreal_send(
-            &state,
-            &session,
-            Text::from(format!("Cancelled says hi! #{sequence}")),
-            Text::from(format!("cancel running #{sequence}")),
-        ) {
-            return;
-        }
-
-        tokio::select! {
-            _ = sleep(Duration::from_secs(1)) => {
-                surreal_send(
-                    &state,
-                    &session,
-                    original,
-                    Text::from(format!("cancel done #{sequence}")),
-                );
-            }
-            _ = token.cancelled() => {
-                surreal_send(
-                    &state,
-                    &session,
-                    Text::from(format!("Cancelled #{sequence}")),
-                    Text::from(format!("cancelled #{sequence}")),
-                );
-            }
-        }
-    });
-
-    axum::http::StatusCode::ACCEPTED
+    super::sse_surreal_cancel_flow::IncomingFlow::from_request(state, cookies, signals)
+        .prepare_token()
+        .spawn()
+        .status_code()
 }
 
 pub async fn events(
@@ -201,80 +228,10 @@ pub async fn events(
     Extension(cookies): Extension<Cookies>,
     ReadSignals(signals): ReadSignals<EventSignals>,
 ) -> impl axum::response::IntoResponse {
-    if let Some(tab_id) = signals.sse_tab_id.clone() {
-        crate::request::set_sse_tab_id(tab_id);
-    }
-    let session = crate::sse::Handle::from_cookies_with_tab(
-        &cookies,
-        &state.cookie_key,
-        signals.sse_tab_id.clone(),
-    );
-    let session_id = session.id();
-    let filter_query = signals
-        .operations_filter_query
-        .as_ref()
-        .map(ToString::to_string);
-    state.trace_log.set_stream_flow_filter(
-        &session_id,
-        signals.sse_tab_id.as_ref(),
-        filter_query.as_deref(),
-    );
-    let stream_key = session.stream_key().clone();
-    let (mut receiver, guard) = state.sse.subscribe(&session);
-    let cleanup_guard = ConnectionCleanupGuard::new(
-        stream_key,
-        state.demo.surreal.guard.clone(),
-        state.demo.surreal.cancel.clone(),
-        state.trace_log.clone(),
-    );
-
-    tracing::info!(session_id = %session_id, "sse connected");
-    let _ = state.sse.send(
-        &session,
-        crate::sse::Event::patch_signals(serde_json::json!({
-            "sseConnected": true
-        })),
-    );
-    state
-        .trace_log
-        .refresh_stream_log_panels(&session_id, signals.sse_tab_id.as_ref());
-
-    let stream = stream! {
-        let _cleanup_guard = cleanup_guard;
-        let _guard = guard;
-        loop {
-            match receiver.recv().await {
-                Ok(event) => {
-                    let sse_event = event.as_datastar_event().write_as_axum_sse_event();
-                    yield Ok::<_, Infallible>(sse_event);
-                }
-                Err(RecvError::Lagged(_)) => continue,
-                Err(RecvError::Closed) => {
-                    tracing::info!(session_id = %session_id, "sse disconnected");
-                    break;
-                }
-            }
-        }
-    };
-
-    let sse = Sse::new(stream).keep_alive(
-        axum::response::sse::KeepAlive::new()
-            .interval(Duration::from_secs(15))
-            .text("keepalive"),
-    );
-    (
-        [
-            (
-                CACHE_CONTROL,
-                HeaderValue::from_static("no-cache, no-transform"),
-            ),
-            (
-                HeaderName::from_static("x-accel-buffering"),
-                HeaderValue::from_static("no"),
-            ),
-        ],
-        sse,
-    )
+    EventsConnectionFlow::<Incoming>::from_request(state, cookies, signals)
+        .apply_flow_filter()
+        .prepare_stream()
+        .into_response()
 }
 
 struct ConnectionCleanupGuard {

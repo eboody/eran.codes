@@ -1,4 +1,9 @@
+mod create_room_flow;
 mod error;
+mod join_room_flow;
+mod list_messages_flow;
+mod moderate_message_flow;
+mod post_message_flow;
 
 use std::sync::Arc;
 use std::time::UNIX_EPOCH;
@@ -61,10 +66,18 @@ pub struct ModerationItem {
     pub created_at: TimestampText,
 }
 
-#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+#[derive(Clone, Copy, Debug, PartialEq, Eq, Display, EnumString)]
 pub enum ModerationDecision {
+    #[strum(serialize = "approve")]
     Approve,
+    #[strum(serialize = "remove")]
     Remove,
+}
+
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+pub enum PendingMutationResult {
+    Applied,
+    NotPendingOrMissing,
 }
 
 #[derive(Clone, Debug, Builder)]
@@ -99,6 +112,12 @@ pub enum ModerationQueueStatus {
     derive(Clone, Debug, PartialEq, Display)
 )]
 pub struct ModerationReason(String);
+
+impl ModerationReason {
+    pub fn auto() -> Self {
+        Self::try_new("auto").expect("valid static moderation reason")
+    }
+}
 
 #[nutype(
     sanitize(trim),
@@ -170,7 +189,7 @@ pub trait Repository: Send + Sync {
         &self,
         message_id: &chat::MessageId,
         status: chat::MessageStatus,
-    ) -> Result<()>;
+    ) -> Result<PendingMutationResult>;
 }
 
 #[async_trait]
@@ -181,13 +200,13 @@ pub trait ModerationQueue: Send + Sync {
         reason: &ModerationReason,
     ) -> Result<()>;
     async fn list_pending(&self, limit: usize) -> Result<Vec<ModerationItem>>;
-    async fn complete(
+    async fn complete_if_pending(
         &self,
         message_id: &chat::MessageId,
         reviewer_id: &chat::UserId,
         decision: ModerationDecision,
         reason: Option<ModerationReason>,
-    ) -> Result<()>;
+    ) -> Result<PendingMutationResult>;
 }
 
 #[async_trait]
@@ -240,16 +259,21 @@ impl Service {
 
     #[tracing::instrument(skip(self))]
     pub async fn create_room(&self, command: CreateRoom) -> Result<chat::Room> {
-        let room = chat::Room {
-            id: self.ids.new_room_id(),
-            name: command.name,
-            created_by: command.created_by,
-        };
+        let incoming = create_room_flow::IncomingFlow::from_command(command);
+        let materialized = incoming.materialize_room(self.ids.new_room_id());
 
-        self.repo.create_room(&room).await?;
+        self.repo.create_room(materialized.room()).await?;
+        let persisted = materialized.mark_room_persisted();
         self.repo
-            .add_membership(&room.id, &room.created_by, RoomRole::Owner)
+            .add_membership(
+                &persisted.room_id(),
+                &persisted.owner_id(),
+                persisted.owner_role(),
+            )
             .await?;
+        let owner_added = persisted.mark_owner_membership_added();
+
+        let room = owner_added.room();
         self.audit
             .record(self.audit_entry(
                 room.id,
@@ -261,48 +285,63 @@ impl Service {
                 )],
             ))
             .await?;
+        let audited = owner_added.mark_audited();
 
-        Ok(room)
+        Ok(audited.into_room())
     }
 
     #[tracing::instrument(skip(self))]
     pub async fn join_room(&self, command: JoinRoom) -> Result<()> {
-        let Some(_) = self.repo.find_room(&command.room_id).await? else {
-            return Err(Error::RoomNotFound);
-        };
+        let incoming = join_room_flow::IncomingFlow::from_command(command);
+        let room_exists = self.repo.find_room(&incoming.room_id()).await?.is_some();
+        let room_verified = incoming.classify_room_lookup(room_exists).require_room()?;
 
         self.repo
-            .add_membership(&command.room_id, &command.user_id, command.role)
+            .add_membership(
+                &room_verified.room_id(),
+                &room_verified.user_id(),
+                room_verified.role(),
+            )
             .await?;
+        let membership_added = room_verified.mark_membership_added();
+
         self.audit
             .record(self.audit_entry(
-                command.room_id,
-                command.user_id,
+                membership_added.room_id(),
+                membership_added.user_id(),
                 AuditAction::RoomJoin,
-                vec![(AuditKey::Role, AuditValue::new(command.role.to_string()))],
+                vec![(
+                    AuditKey::Role,
+                    AuditValue::new(membership_added.role().to_string()),
+                )],
             ))
             .await?;
+        let _ = membership_added.mark_audited();
 
         Ok(())
     }
 
     #[tracing::instrument(skip(self))]
     pub async fn list_messages(&self, command: ListMessages) -> Result<Vec<chat::Message>> {
-        let Some(_) = self.repo.find_room(&command.room_id).await? else {
-            return Err(Error::RoomNotFound);
-        };
+        let incoming = list_messages_flow::IncomingFlow::from_command(command);
+        let room_exists = self.repo.find_room(incoming.room_id()).await?.is_some();
+        let room_verified = incoming.classify_room_lookup(room_exists).require_room()?;
 
         let is_member = self
             .repo
-            .is_member(&command.room_id, &command.user_id)
+            .is_member(room_verified.room_id(), room_verified.user_id())
             .await?;
-        if !is_member {
-            return Err(Error::NotMember);
-        }
+        let membership_verified = room_verified
+            .classify_membership(is_member)
+            .require_member()?;
 
-        self.repo
-            .list_messages(&command.room_id, command.limit)
-            .await
+        let messages = self
+            .repo
+            .list_messages(membership_verified.room_id(), membership_verified.limit())
+            .await?;
+        let loaded = membership_verified.attach_messages(messages);
+
+        Ok(loaded.into_messages())
     }
 
     #[tracing::instrument(skip(self))]
@@ -320,124 +359,82 @@ impl Service {
 
     #[tracing::instrument(skip(self))]
     pub async fn post_message(&self, command: PostMessage) -> Result<chat::Message> {
-        let Some(_) = self.repo.find_room(&command.room_id).await? else {
-            return Err(Error::RoomNotFound);
-        };
+        let flow = post_message_flow::IncomingFlow::from_command(command);
+        let requires_moderation = should_moderate(flow.body());
+
+        let room_exists = self.repo.find_room(flow.room_id()).await?.is_some();
+        let room_verified = flow.classify_room_lookup(room_exists).require_room()?;
 
         let is_member = self
             .repo
-            .is_member(&command.room_id, &command.user_id)
+            .is_member(room_verified.room_id(), room_verified.user_id())
             .await?;
-        if !is_member {
-            return Err(Error::NotMember);
-        }
+        let membership_verified = room_verified
+            .classify_membership(is_member)
+            .require_member()?;
 
         self.rate_limiter
-            .check(&command.room_id, &command.user_id)
+            .check(membership_verified.room_id(), membership_verified.user_id())
+            .await?;
+        let rate_limited = membership_verified.rate_limit_passed();
+
+        let built = rate_limited.build(
+            self.ids.new_message_id(),
+            self.clock.now(),
+            requires_moderation,
+        );
+        let ready_for_audit = built
+            .persist(self.repo.as_ref())
+            .await?
+            .enqueue_if_pending(self.moderation.as_ref())
             .await?;
 
-        let requires_moderation = should_moderate(&command.body);
-        let status = if requires_moderation {
-            chat::MessageStatus::Pending
-        } else {
-            chat::MessageStatus::Visible
-        };
-
-        let message = chat::Message {
-            id: self.ids.new_message_id(),
-            room_id: command.room_id,
-            user_id: command.user_id,
-            body: command.body,
-            status,
-            client_id: command.client_id,
-            created_at: self.clock.now(),
-        };
-
-        self.repo.insert_message(&message).await?;
-
-        if requires_moderation {
-            self.moderation
-                .enqueue(
-                    &message.id,
-                    &ModerationReason::try_new("auto").expect("moderation reason"),
-                )
-                .await?;
-        }
-
-        self.audit
-            .record(self.audit_entry(
-                message.room_id,
-                message.user_id,
-                AuditAction::MessagePost,
-                vec![
-                    (
-                        AuditKey::MessageId,
-                        AuditValue::new(message.id.as_uuid().to_string()),
-                    ),
-                    (AuditKey::Status, AuditValue::new(format!("{:?}", status))),
-                ],
-            ))
+        self.record_message_post_audit(ready_for_audit.message())
             .await?;
-
-        Ok(message)
+        let audited = ready_for_audit.mark_audited();
+        Ok(audited.into_message())
     }
 
     #[tracing::instrument(skip(self))]
     pub async fn moderate_message(&self, command: ModerateMessage) -> Result<()> {
-        let Some(message) = self.repo.find_message(&command.message_id).await? else {
-            return Err(Error::MessageNotFound);
-        };
+        let incoming = moderate_message_flow::IncomingFlow::from_command(command);
+        let message_lookup = self.repo.find_message(&incoming.message_id()).await?;
+        let loaded = incoming.load_lookup(message_lookup)?;
+        let pending = loaded.classify_pending().require_pending()?;
+        let resolved = pending.resolve();
 
-        let status = match command.decision {
-            ModerationDecision::Approve => chat::MessageStatus::Visible,
-            ModerationDecision::Remove => chat::MessageStatus::Removed,
-        };
-
-        self.repo
-            .update_message_status(&command.message_id, status)
+        let message_update = self
+            .repo
+            .update_message_status(&resolved.message_id(), resolved.message_status())
             .await?;
+        let message_status_applied = resolved
+            .classify_message_status_update(message_update)
+            .require_applied()?;
 
-        self.moderation
-            .complete(
-                &command.message_id,
-                &command.reviewer_id,
-                command.decision,
-                command.reason.clone(),
+        let queue_update = self
+            .moderation
+            .complete_if_pending(
+                &message_status_applied.message_id(),
+                &message_status_applied.reviewer_id(),
+                message_status_applied.decision(),
+                message_status_applied.reason().cloned(),
             )
             .await?;
+        let queue_completion_applied = message_status_applied
+            .classify_queue_completion_update(queue_update)
+            .require_applied()?;
+        let audit_prepared = queue_completion_applied.prepare_audit();
 
         self.audit
             .record(self.audit_entry(
-                message.room_id,
-                command.reviewer_id,
+                audit_prepared.room_id(),
+                audit_prepared.reviewer_id(),
                 AuditAction::MessageModerate,
-                vec![
-                    (
-                        AuditKey::MessageId,
-                        AuditValue::new(
-                            message.id.as_uuid().to_string(),
-                        )
-                        ,
-                    ),
-                    (
-                        AuditKey::Decision,
-                        AuditValue::new(format!(
-                            "{:?}",
-                            command.decision
-                        )),
-                    ),
-                    (
-                        AuditKey::Reason,
-                        command
-                            .reason
-                            .clone()
-                            .map(|reason| AuditValue::new(reason.to_string()))
-                            .unwrap_or_else(|| AuditValue::new("")),
-                    ),
-                ],
+                audit_prepared.audit_metadata(),
             ))
             .await?;
 
+        let _ = audit_prepared.mark_audited();
         Ok(())
     }
 }
@@ -469,6 +466,26 @@ impl LinkPrefix {
 }
 
 impl Service {
+    async fn record_message_post_audit(&self, message: &chat::Message) -> Result<()> {
+        self.audit
+            .record(self.audit_entry(
+                message.room_id,
+                message.user_id,
+                AuditAction::MessagePost,
+                vec![
+                    (
+                        AuditKey::MessageId,
+                        AuditValue::new(message.id.as_uuid().to_string()),
+                    ),
+                    (
+                        AuditKey::Status,
+                        AuditValue::new(message.status.to_string()),
+                    ),
+                ],
+            ))
+            .await
+    }
+
     fn audit_entry(
         &self,
         room_id: chat::RoomId,

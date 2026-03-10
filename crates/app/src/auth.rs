@@ -1,9 +1,12 @@
+mod authenticate_flow;
+mod get_user_flow;
+
 use std::sync::Arc;
 
 use async_trait::async_trait;
 use bon::Builder;
 use nutype::nutype;
-use secrecy::{ExposeSecret, SecretString};
+use secrecy::SecretString;
 
 use domain::user;
 
@@ -128,43 +131,17 @@ impl Provider for ProviderImpl {
         &self,
         credentials: Credentials,
     ) -> Result<Option<AuthenticatedUser>> {
-        let record = match self.repo.find_by_email(&credentials.email).await? {
-            Some(record) => record,
-            None => return Ok(None),
-        };
-
-        let verified = self
-            .hasher
-            .verify(credentials.password.expose_secret(), &record.password_hash)?;
-
-        if !verified {
-            return Ok(None);
-        }
-
-        Ok(Some(
-            AuthenticatedUser::builder()
-                .id(record.id)
-                .username(record.username)
-                .email(record.email)
-                .session_hash(record.session_hash)
-                .build(),
-        ))
+        let incoming = authenticate_flow::IncomingFlow::from_credentials(credentials);
+        let record = self.repo.find_by_email(incoming.email()).await?;
+        incoming
+            .classify_lookup(record)
+            .authenticate(self.hasher.as_ref())
     }
 
     async fn get_user(&self, user_id: &user::Id) -> Result<Option<AuthenticatedUser>> {
-        let record = match self.repo.find_by_id(user_id).await? {
-            Some(record) => record,
-            None => return Ok(None),
-        };
-
-        Ok(Some(
-            AuthenticatedUser::builder()
-                .id(record.id)
-                .username(record.username)
-                .email(record.email)
-                .session_hash(record.session_hash)
-                .build(),
-        ))
+        let incoming = get_user_flow::IncomingFlow::new();
+        let record = self.repo.find_by_id(user_id).await?;
+        Ok(incoming.classify_lookup(record).into_user_option())
     }
 }
 

@@ -6,6 +6,7 @@ pub enum Error {
     Repo(RepoErrorText),
     InvalidId(InvalidIdText),
     InvalidInput(InvalidInputText),
+    ModerationStateConflict,
     RateLimited,
     RoomNotFound,
     MessageNotFound,

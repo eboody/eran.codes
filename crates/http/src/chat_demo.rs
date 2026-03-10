@@ -14,91 +14,49 @@ pub async fn load_chat_context(
     state: &crate::State,
     user_id: Option<domain::user::Id>,
 ) -> Result<ChatContext, crate::error::Error> {
-    let viewer = match user_id {
+    let incoming = crate::chat_demo_load_flow::IncomingFlow::from_viewer(user_id);
+    let viewer = match incoming.maybe_viewer_user_id() {
         Some(user_id) => user_id,
         None => ensure_demo_user(state).await?.id,
     };
-    let chat_user_id = domain_chat::UserId::from_uuid(*viewer.as_uuid());
-    let room = ensure_room(state, chat_user_id).await?;
+    let viewer_resolved = incoming.resolve_viewer(viewer);
+    let room = ensure_room(state, viewer_resolved.chat_user_id()).await?;
+    let room_ensured = viewer_resolved.attach_room(room);
     let messages = state
         .chat
         .list_messages(
             app::chat::ListMessages::builder()
-                .room_id(room.id)
-                .user_id(chat_user_id)
+                .room_id(room_ensured.room().id)
+                .user_id(room_ensured.chat_user_id())
                 .build(),
         )
         .await?;
-    let message_views = to_message_views(state, &messages).await;
+    let messages_loaded = room_ensured.attach_messages(messages);
+    let message_views = to_message_views(state, messages_loaded.messages()).await;
+    let view_mapped = messages_loaded.map_message_views(message_views);
 
-    Ok(ChatContext {
-        room,
-        messages: message_views,
-    })
+    Ok(view_mapped.into_context())
 }
 
 pub async fn ensure_demo_user(
     state: &crate::State,
 ) -> Result<domain::user::User, crate::error::Error> {
-    let demo_email = domain::user::Email::try_new(DEMO_USER_EMAIL)
-        .map_err(|_| crate::error::Error::Internal)?;
-    let demo_username = domain::user::Username::try_new(DEMO_USER_NAME)
-        .map_err(|_| crate::error::Error::Internal)?;
-    if let Some(user) = state.user.find_by_email(demo_email.clone()).await? {
-        return Ok(user);
-    }
-
-    let password = secrecy::SecretString::new(uuid::Uuid::new_v4().to_string().into());
-    match state
-        .user
-        .register_user(
-            app::user::RegisterUser::builder()
-                .username(demo_username)
-                .email(demo_email.clone())
-                .password(password)
-                .build(),
-        )
+    let identity = crate::chat_demo_demo_user_flow::IncomingFlow::new()
+        .prepare_identity(DEMO_USER_EMAIL, DEMO_USER_NAME)?;
+    let existing = state.user.find_by_email(identity.email().clone()).await?;
+    identity
+        .classify_existing(existing)
+        .resolve_user(state)
         .await
-    {
-        Ok(_) | Err(app::user::Error::EmailTaken) => {}
-        Err(error) => return Err(error.into()),
-    }
-
-    state
-        .user
-        .find_by_email(demo_email)
-        .await?
-        .ok_or(crate::error::Error::Internal)
 }
 
 async fn ensure_room(
     state: &crate::State,
     user_id: domain_chat::UserId,
 ) -> Result<domain::chat::Room, crate::error::Error> {
-    let room_name = domain_chat::RoomName::Lobby;
-    if let Some(room) = state.chat.find_room_by_name(room_name).await? {
-        state
-            .chat
-            .join_room(
-                app::chat::JoinRoom::builder()
-                    .room_id(room.id)
-                    .user_id(user_id)
-                    .build(),
-            )
-            .await?;
-        return Ok(room);
-    }
-
-    let room = state
-        .chat
-        .create_room(
-            app::chat::CreateRoom::builder()
-                .name(room_name)
-                .created_by(user_id)
-                .build(),
-        )
-        .await?;
-    Ok(room)
+    let incoming = crate::chat_demo_room_ensure_flow::IncomingFlow::from_user_id(user_id);
+    let room = state.chat.find_room_by_name(incoming.room_name()).await?;
+    incoming.classify_lookup(room).resolve_room(state).await
 }
 
 async fn to_message_views(
@@ -112,7 +70,7 @@ async fn to_message_views(
             continue;
         }
         if let Ok(Some(user)) = state.auth.get_user(&user_id).await {
-            names.insert(user_id, user.username);
+            names.insert(user_id, user.username.to_string());
         }
     }
 
@@ -120,18 +78,13 @@ async fn to_message_views(
         .iter()
         .map(|message| {
             let user_id = domain::user::Id::from_uuid(*message.user_id.as_uuid());
-            let author = names.get(&user_id).cloned().unwrap_or_else(|| {
-                domain::user::Username::try_new(format!(
-                    "user-{}",
-                    &user_id.as_uuid().to_string()[..8]
-                ))
-                .unwrap_or_else(|_| {
-                    domain::user::Username::try_new("user").expect("username")
-                })
-            });
+            let author = names
+                .get(&user_id)
+                .cloned()
+                .unwrap_or_else(|| fallback_author_label(&user_id));
             chat::Message::builder()
                 .message_id(crate::types::Text::from(message.id.as_uuid().to_string()))
-                .author(crate::types::Text::from(author.to_string()))
+                .author(crate::types::Text::from(author))
                 .timestamp(crate::types::Text::from(format_message_time(
                     message.created_at,
                 )))
@@ -140,6 +93,10 @@ async fn to_message_views(
                 .build()
         })
         .collect()
+}
+
+fn fallback_author_label(user_id: &domain::user::Id) -> String {
+    format!("user-{}", &user_id.as_uuid().to_string()[..8])
 }
 
 fn to_chat_message_status(value: domain::chat::MessageStatus) -> chat::message::Status {

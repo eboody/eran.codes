@@ -1,7 +1,16 @@
 mod auth;
+mod auth_login_flow;
+mod auth_page_gate_flow;
+mod auth_protected_flow;
+mod auth_register_flow;
 mod demo;
 mod pages;
+mod pages_counter_sync_flow;
+mod pages_lab_flow;
+mod pages_operations_filter_flow;
 mod sse;
+mod sse_surreal_cancel_flow;
+mod sse_surreal_guarded_flow;
 
 pub use auth::{login, login_form, logout, protected, register, register_form};
 pub use demo::{

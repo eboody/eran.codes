@@ -86,17 +86,13 @@ pub fn set_sse_tab_id(sse_tab_id: impl Into<SseTabId>) {
 }
 
 fn context_from_request(req: &Request<Body>, key: &Key) -> Context {
-    let headers = req.headers();
     let cookies = req.extensions().get::<Cookies>();
-    Context {
-        request_id: request_id_from_headers(headers),
-        session_id: cookies.map(|cookies| ensure_session_id(cookies, key)),
-        sse_tab_id: None,
-        user_id: None,
-        client_ip: client_ip_from_headers(headers),
-        user_agent: user_agent_from_headers(headers),
-        kind: kind_from_headers(headers),
-    }
+    let session_id = cookies.map(|cookies| ensure_session_id(cookies, key));
+
+    crate::request_context_flow::IncomingFlow::new(req.headers().clone(), session_id)
+        .resolve_headers()
+        .build_context()
+        .into_context()
 }
 
 fn ensure_session_id(cookies: &Cookies, key: &Key) -> SessionId {
@@ -106,7 +102,7 @@ fn ensure_session_id(cookies: &Cookies, key: &Key) -> SessionId {
     SseHandle::from_cookies(cookies, key).id()
 }
 
-fn kind_from_headers(headers: &HeaderMap) -> Kind {
+pub(crate) fn kind_from_headers(headers: &HeaderMap) -> Kind {
     if headers.contains_key("datastar-request") {
         Kind::Datastar
     } else {
@@ -121,16 +117,16 @@ fn session_id_from_cookies(cookies: &Cookies, key: &Key) -> Option<SessionId> {
         .map(|cookie| SessionId::new(cookie.value()))
 }
 
-fn request_id_from_headers(headers: &HeaderMap) -> Option<RequestId> {
+pub(crate) fn request_id_from_headers(headers: &HeaderMap) -> Option<RequestId> {
     header_value(headers, header::HeaderName::from_static("x-request-id"))
         .map(RequestId::new)
 }
 
-fn user_agent_from_headers(headers: &HeaderMap) -> Option<UserAgent> {
+pub(crate) fn user_agent_from_headers(headers: &HeaderMap) -> Option<UserAgent> {
     header_value(headers, header::USER_AGENT).map(UserAgent::new)
 }
 
-fn client_ip_from_headers(headers: &HeaderMap) -> Option<ClientIp> {
+pub(crate) fn client_ip_from_headers(headers: &HeaderMap) -> Option<ClientIp> {
     let forwarded =
         header_value(headers, header::HeaderName::from_static("x-forwarded-for"))
             .and_then(|value| value.split(',').next().map(str::trim))

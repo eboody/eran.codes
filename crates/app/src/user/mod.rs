@@ -1,4 +1,5 @@
 mod error;
+mod register_user_flow;
 
 use std::sync::Arc;
 
@@ -42,26 +43,25 @@ impl Service {
 
     #[tracing::instrument(skip(self))]
     pub async fn register_user(&self, command: RegisterUser) -> Result<user::Id> {
-        if self.users.find_by_email(&command.email).await?.is_some() {
-            return Err(Error::EmailTaken);
-        }
-
-        let new_user = user::User {
-            id: user::Id::new_v4(),
-            username: command.username,
-            email: command.email,
-        };
+        let incoming = register_user_flow::IncomingFlow::from_command(command);
+        let existing = self.users.find_by_email(incoming.email()).await?;
+        let email_available = incoming
+            .classify_email_availability(existing)
+            .require_available()?;
+        let materialized = email_available.materialize_user(user::Id::new_v4());
 
         let password_hash = self
             .hasher
-            .hash(command.password.expose_secret())
+            .hash(materialized.password().expose_secret())
             .map_err(Error::Hashing)?;
+        let hashed = materialized.attach_password_hash(password_hash);
 
         self.users
-            .create_with_credentials(&new_user, &password_hash)
+            .create_with_credentials(hashed.user(), hashed.password_hash())
             .await?;
+        let persisted = hashed.mark_persisted();
 
-        Ok(new_user.id)
+        Ok(persisted.user_id())
     }
 
     pub async fn find_by_email(&self, email: user::Email) -> Result<Option<user::User>> {

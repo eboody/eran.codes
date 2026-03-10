@@ -1,11 +1,9 @@
 use axum::extract::Extension;
 use datastar::axum::ReadSignals;
 use serde::Deserialize;
-use std::sync::atomic::Ordering;
 use tower_cookies::Cookies;
 
 use crate::types::{SseTabId, Text};
-use crate::views::partials::chat;
 use crate::views::partials::components::portfolio::content::WorkCaseSlug;
 use crate::views::{self, pages};
 
@@ -49,36 +47,12 @@ pub async fn lab(
     Extension(state): Extension<crate::State>,
     auth_session: crate::auth::Session,
 ) -> crate::Result<axum::response::Html<String>> {
-    let is_authenticated = auth_session.user.is_some();
-    let user = auth_session.user.as_ref().map(|user| {
-        crate::views::page::UserNav::builder()
-            .username(Text::from(user.username.to_string()))
-            .email(Text::from(user.email.to_string()))
-            .build()
-    });
-    let viewer_id = auth_session
-        .user
-        .as_ref()
-        .map(|user| user.id.to_domain())
-        .transpose()?;
-    let context = crate::chat_demo::load_chat_context(&state, viewer_id).await?;
-    let chat_demo = Some(
-        chat::DemoSection::builder()
-            .room_id(crate::types::Text::from(
-                context.room.id.as_uuid().to_string(),
-            ))
-            .room_name(crate::types::Text::from(context.room.name.to_string()))
-            .messages(context.messages)
-            .interactivity(chat::Mode::from(is_authenticated))
-            .build(),
-    );
+    let incoming =
+        super::pages_lab_flow::IncomingFlow::from_auth_user(auth_session.user.clone());
+    let viewer_resolved = incoming.resolve_viewer()?;
+    let chat_loaded = viewer_resolved.load_chat_context(&state).await?;
 
-    Ok(views::render(
-        pages::Lab::builder()
-            .maybe_user(user)
-            .maybe_chat_demo(chat_demo)
-            .build(),
-    ))
+    Ok(views::render(chat_loaded.into_page()))
 }
 
 pub async fn error_test() -> crate::Result<axum::response::Html<String>> {
@@ -108,43 +82,18 @@ pub async fn counter_sync(
     if let Some(tab_id) = signals.sse_tab_id.clone() {
         crate::request::set_sse_tab_id(tab_id);
     }
-    let delta = signals.delta.unwrap_or_default();
-    let session = crate::sse::Handle::from_cookies_with_tab(
-        &cookies,
-        &state.cookie_key,
+    let incoming = super::pages_counter_sync_flow::IncomingFlow::new(
+        signals.delta.unwrap_or_default(),
         signals.sse_tab_id.clone(),
     );
-    if !state.sse.has_streams_for_session(&session.id()) {
-        return axum::http::StatusCode::PRECONDITION_REQUIRED;
-    }
-
-    let mut current = state.demo.counter.server_count.load(Ordering::Relaxed);
-    loop {
-        let next = (current + delta).max(0);
-        match state.demo.counter.server_count.compare_exchange(
-            current,
-            next,
-            Ordering::Relaxed,
-            Ordering::Relaxed,
-        ) {
-            Ok(_) => {
-                let event = crate::sse::Event::patch_signals(serde_json::json!({
-                    "server_count": next,
-                    "server_connected": true
-                }));
-                return match state.sse.send(&session, event) {
-                    Ok(_) => axum::http::StatusCode::NO_CONTENT,
-                    Err(crate::sse::SendError::SessionMissing) => {
-                        axum::http::StatusCode::PRECONDITION_REQUIRED
-                    }
-                    Err(crate::sse::SendError::SendFailed) => {
-                        axum::http::StatusCode::SERVICE_UNAVAILABLE
-                    }
-                };
-            }
-            Err(observed) => current = observed,
-        }
-    }
+    let session_bound = incoming.bind_session(&cookies, &state.cookie_key);
+    let has_streams = state
+        .sse
+        .has_streams_for_session(&session_bound.session_id());
+    session_bound
+        .verify_streams(has_streams)
+        .dispatch(state.demo.counter.server_count.as_ref(), &state.sse)
+        .status_code()
 }
 
 // ci: datastar-command operations_filter_update
@@ -156,21 +105,12 @@ pub async fn operations_filter_update(
     if let Some(tab_id) = signals.sse_tab_id.clone() {
         crate::request::set_sse_tab_id(tab_id);
     }
-    let session = crate::sse::Handle::from_cookies_with_tab(
-        &cookies,
-        &state.cookie_key,
+    let incoming = super::pages_operations_filter_flow::IncomingFlow::new(
+        signals.operations_filter_query,
         signals.sse_tab_id.clone(),
     );
-    let query = signals
-        .operations_filter_query
-        .map(|value| value.to_string());
-    state.trace_log.set_stream_flow_filter(
-        &session.id(),
-        signals.sse_tab_id.as_ref(),
-        query.as_deref(),
-    );
-    state
-        .trace_log
-        .refresh_stream_log_panels(&session.id(), signals.sse_tab_id.as_ref());
-    axum::http::StatusCode::NO_CONTENT
+    let session_bound = incoming.bind_session(&cookies, &state.cookie_key);
+    let filter_applied = session_bound.apply_filter(&state.trace_log);
+    let refreshed = filter_applied.refresh_panels(&state.trace_log);
+    refreshed.status_code()
 }

@@ -8,6 +8,7 @@ use crate::types::{SessionId, SseTabId};
 
 const SESSION_CHANNEL_SIZE: usize = 32;
 
+#[derive(Clone)]
 pub struct Handle {
     key: StreamKey,
 }

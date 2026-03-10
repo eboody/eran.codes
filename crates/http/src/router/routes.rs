@@ -1,37 +1,56 @@
+use axum::Router;
 use axum::middleware::from_fn;
 use axum::routing::{get, post};
-use axum::Router;
+use statum::{machine, state, transition};
 use tower_http::services::ServeDir;
 
-pub struct Routes {
+#[state]
+pub enum RoutesFlow {
+    Incoming,
+    BaseRoutesAdded,
+    PageRoutesAdded,
+    RouteTracingAdded,
+}
+
+#[machine]
+pub struct Routes<RoutesFlow> {
     router: Router,
 }
 
-impl Routes {
+impl Routes<Incoming> {
     pub fn new() -> Self {
-        Self {
-            router: Router::new(),
-        }
+        Routes::<Incoming>::builder().router(Router::new()).build()
     }
+}
 
-    pub fn with_base_routes(mut self) -> Self {
+#[transition]
+impl Routes<Incoming> {
+    pub fn with_base_routes(mut self) -> Routes<BaseRoutesAdded> {
         self.router = self.router.merge(base_routes());
-        self
+        self.transition()
     }
+}
 
-    pub fn with_page_routes(mut self) -> Self {
+#[transition]
+impl Routes<BaseRoutesAdded> {
+    pub fn with_page_routes(mut self) -> Routes<PageRoutesAdded> {
         let pages = maybe_live_reload(pages_routes());
         self.router = self.router.merge(pages);
-        self
+        self.transition()
     }
+}
 
-    pub fn with_route_tracing(mut self) -> Self {
+#[transition]
+impl Routes<PageRoutesAdded> {
+    pub fn with_route_tracing(mut self) -> Routes<RouteTracingAdded> {
         self.router = self
             .router
             .route_layer(from_fn(crate::trace::record_route_middleware));
-        self
+        self.transition()
     }
+}
 
+impl Routes<RouteTracingAdded> {
     pub fn finish(self) -> Router {
         self.router
     }

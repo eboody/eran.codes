@@ -1,13 +1,10 @@
-use axum::{extract::Extension, http::StatusCode, response::IntoResponse};
+use axum::extract::Extension;
 use datastar::axum::ReadSignals;
-use datastar::prelude::{ElementPatchMode, PatchElements};
-use maud::Render;
 use serde::Deserialize;
 
-use crate::trace_log::{LogMessageKnown, LogTargetKnown};
-use crate::types::{LogFieldKey, SseTabId, Text};
-use crate::views::partials::chat;
-use crate::{paths::Route, request, views};
+use super::chat_post_flow::{ChatSender, IncomingFlow as ChatPostIncomingFlow};
+use crate::types::{SseTabId, Text, UserIdText};
+use crate::{request, views};
 
 #[derive(Deserialize)]
 #[serde(rename_all = "camelCase")]
@@ -65,19 +62,10 @@ pub async fn moderate_message(
         .as_ref()
         .ok_or(crate::error::Error::Internal)?;
 
-    let decision = parse_moderation_decision(&form.decision.to_string())?;
-
-    state
-        .chat
-        .moderate_message(
-            app::chat::ModerateMessage::builder()
-                .message_id(parse_message_id(&form.message_id.to_string())?)
-                .reviewer_id(chat_user_id_from_user_id(user.id.to_domain()?))
-                .decision(decision)
-                .maybe_reason(parse_reason(form.reason)?)
-                .build(),
-        )
-        .await?;
+    let reviewer_id = chat_user_id_from_user_id(user.id.to_domain()?);
+    let incoming = super::chat_moderate_flow::IncomingFlow::from_form(form, reviewer_id);
+    let parsed = incoming.parse()?;
+    let _applied = parsed.apply(&state).await?;
 
     moderation_page(Extension(state), auth_session).await
 }
@@ -95,31 +83,19 @@ pub async fn post_chat_message(
         .as_ref()
         .ok_or(crate::error::Error::Internal)?;
 
+    let room_id = parse_room_id(&signals.room_id.to_string())?;
     let body_text = signals.body.to_string();
-    let message = state
-        .chat
-        .post_message(
-            app::chat::PostMessage::builder()
-                .room_id(parse_room_id(&signals.room_id.to_string())?)
-                .user_id(chat_user_id_from_user_id(user.id.to_domain()?))
-                .body(parse_message_body(&body_text)?)
-                .build(),
-        )
-        .await?;
-
-    let request_id = current_request_id_text();
-    let user_id = crate::types::UserIdText::new(user.id.to_string());
-    record_incoming_chat_event(
-        &state,
+    let incoming = ChatPostIncomingFlow::new(
+        room_id,
+        chat_user_id_from_user_id(user.id.to_domain()?),
+        parse_message_body(&body_text)?,
+        body_text,
         ChatSender::You,
-        &user_id,
-        &request_id,
-        body_text.len(),
+        user.username.to_string(),
+        UserIdText::new(user.id.to_string()),
+        current_request_id_text(),
     );
-    let message_html = render_chat_message_html(&message, &user.username.to_string());
-    broadcast_message(&state, &message_html, ChatSender::You, user_id, &request_id);
-
-    Ok(chat_post_response())
+    execute_chat_post(&state, incoming).await
 }
 
 pub async fn post_demo_chat_message(
@@ -142,198 +118,27 @@ pub async fn post_demo_chat_message(
         .await?;
 
     let body_text = signals.bot_body.to_string();
-    let message = state
-        .chat
-        .post_message(
-            app::chat::PostMessage::builder()
-                .room_id(room_id)
-                .user_id(chat_user_id_from_user_id(demo_user.id))
-                .body(parse_message_body(&body_text)?)
-                .build(),
-        )
-        .await?;
-
-    let request_id = current_request_id_text();
-    let demo_user_id = crate::types::UserIdText::new(demo_user.id.as_uuid().to_string());
-    record_incoming_chat_event(
-        &state,
+    let incoming = ChatPostIncomingFlow::new(
+        room_id,
+        chat_user_id_from_user_id(demo_user.id),
+        parse_message_body(&body_text)?,
+        body_text,
         ChatSender::Demo,
-        &demo_user_id,
-        &request_id,
-        body_text.len(),
+        demo_user.username.to_string(),
+        UserIdText::new(demo_user.id.as_uuid().to_string()),
+        current_request_id_text(),
     );
-    let message_html = render_chat_message_html(&message, &demo_user.username.to_string());
-    broadcast_message(
-        &state,
-        &message_html,
-        ChatSender::Demo,
-        demo_user_id,
-        &request_id,
-    );
-
-    Ok(chat_post_response())
+    execute_chat_post(&state, incoming).await
 }
 
-fn render_chat_message_html(message: &domain::chat::Message, author: &str) -> String {
-    chat::Message::builder()
-        .message_id(crate::types::Text::from(message.id.as_uuid().to_string()))
-        .author(crate::types::Text::from(author.to_owned()))
-        .timestamp(crate::types::Text::from(
-            crate::chat_demo::format_message_time(message.created_at),
-        ))
-        .body(crate::types::Text::from(message.body.to_string()))
-        .status(match message.status {
-            domain::chat::MessageStatus::Visible => chat::message::Status::Visible,
-            domain::chat::MessageStatus::Pending => chat::message::Status::Pending,
-            domain::chat::MessageStatus::Removed => chat::message::Status::Removed,
-        })
-        .build()
-        .render()
-        .into_string()
-}
-
-fn record_incoming_chat_event(
+async fn execute_chat_post(
     state: &crate::State,
-    sender: ChatSender,
-    user_id: &crate::types::UserIdText,
-    request_id: &Text,
-    payload_bytes: usize,
-) {
-    let sse_tab_id = request::current_context().and_then(|value| value.sse_tab_id);
-    state.trace_log.record_sse_event(
-        request::current_context()
-            .and_then(|value| value.session_id)
-            .as_ref(),
-        crate::trace_log::TraceEntry::builder()
-            .timestamp(crate::trace_log::now_timestamp_short())
-            .level(crate::types::LogLevelText::new("INFO"))
-            .target(crate::types::LogTargetText::from(LogTargetKnown::DemoChat))
-            .message(crate::types::LogMessageText::from(
-                LogMessageKnown::ChatMessageIncoming,
-            ))
-            .fields(vec![
-                (
-                    crate::types::LogFieldName::from(LogFieldKey::Direction),
-                    crate::types::LogFieldValue::new("incoming"),
-                ),
-                (
-                    crate::types::LogFieldName::from(LogFieldKey::Sender),
-                    crate::types::LogFieldValue::new(sender.as_str()),
-                ),
-                (
-                    crate::types::LogFieldName::from(LogFieldKey::Receiver),
-                    crate::types::LogFieldValue::new("server"),
-                ),
-                (
-                    crate::types::LogFieldName::from(LogFieldKey::UserId),
-                    crate::types::LogFieldValue::new(user_id.to_string()),
-                ),
-                (
-                    crate::types::LogFieldName::from(LogFieldKey::PayloadBytes),
-                    crate::types::LogFieldValue::new(payload_bytes.to_string()),
-                ),
-                (
-                    crate::types::LogFieldName::from(LogFieldKey::RequestId),
-                    crate::types::LogFieldValue::new(request_id.to_string()),
-                ),
-                (
-                    crate::types::LogFieldName::from(LogFieldKey::SseTabId),
-                    sse_tab_id
-                        .clone()
-                        .map(|value| crate::types::LogFieldValue::new(value.to_string()))
-                        .unwrap_or_else(crate::types::LogFieldValue::missing),
-                ),
-            ])
-            .build(),
-    );
-}
-
-fn chat_post_response() -> axum::response::Response {
-    match crate::request::current_kind() {
-        crate::request::Kind::Datastar => StatusCode::ACCEPTED.into_response(),
-        crate::request::Kind::Page => {
-            let target =
-                format!("{}#{}", Route::Home.as_str(), chat::DemoSection::ANCHOR_ID);
-            axum::response::Redirect::to(target.as_str()).into_response()
-        }
-    }
-}
-
-fn broadcast_message(
-    state: &crate::State,
-    message_html: &str,
-    sender: ChatSender,
-    user_id: crate::types::UserIdText,
-    request_id: &Text,
-) {
-    let event = PatchElements::new(message_html)
-        .selector("[data-chat-messages]")
-        .mode(ElementPatchMode::Prepend)
-        .into_datastar_event();
-    tracing::info!(
-        target: LogTargetKnown::DemoSse.as_str(),
-        message = LogMessageKnown::ChatMessageBroadcast.as_str(),
-        selector = "[data-chat-messages]",
-        mode = "prepend",
-        payload_bytes = message_html.len() as u64
-    );
-    let _ = state.sse.broadcast(crate::sse::Event::from_event(event));
-
-    let context = request::current_context();
-    let session_id = context.as_ref().and_then(|value| value.session_id.clone());
-    let sse_tab_id = context.and_then(|value| value.sse_tab_id);
-    state.trace_log.record_sse_event(
-        session_id.as_ref(),
-        crate::trace_log::TraceEntry::builder()
-            .timestamp(crate::trace_log::now_timestamp_short())
-            .level(crate::types::LogLevelText::new("INFO"))
-            .target(crate::types::LogTargetText::from(LogTargetKnown::DemoSse))
-            .message(crate::types::LogMessageText::from(
-                LogMessageKnown::ChatMessageBroadcast,
-            ))
-            .fields(vec![
-                (
-                    crate::types::LogFieldName::from(LogFieldKey::Selector),
-                    crate::types::LogFieldValue::new("[data-chat-messages]"),
-                ),
-                (
-                    crate::types::LogFieldName::from(LogFieldKey::Mode),
-                    crate::types::LogFieldValue::new("prepend"),
-                ),
-                (
-                    crate::types::LogFieldName::from(LogFieldKey::PayloadBytes),
-                    crate::types::LogFieldValue::new(message_html.len().to_string()),
-                ),
-                (
-                    crate::types::LogFieldName::from(LogFieldKey::Direction),
-                    crate::types::LogFieldValue::new("outgoing"),
-                ),
-                (
-                    crate::types::LogFieldName::from(LogFieldKey::Sender),
-                    crate::types::LogFieldValue::new(sender.as_str()),
-                ),
-                (
-                    crate::types::LogFieldName::from(LogFieldKey::Receiver),
-                    crate::types::LogFieldValue::new("clients"),
-                ),
-                (
-                    crate::types::LogFieldName::from(LogFieldKey::UserId),
-                    crate::types::LogFieldValue::new(user_id.to_string()),
-                ),
-                (
-                    crate::types::LogFieldName::from(LogFieldKey::RequestId),
-                    crate::types::LogFieldValue::new(request_id.to_string()),
-                ),
-                (
-                    crate::types::LogFieldName::from(LogFieldKey::SseTabId),
-                    sse_tab_id
-                        .clone()
-                        .map(|value| crate::types::LogFieldValue::new(value.to_string()))
-                        .unwrap_or_else(crate::types::LogFieldValue::missing),
-                ),
-            ])
-            .build(),
-    );
+    incoming: ChatPostIncomingFlow,
+) -> Result<axum::response::Response, crate::error::Error> {
+    let posted = incoming.mark_command_built().post_message(state).await?;
+    let rendered = posted.record_incoming(state).render_message_html();
+    let broadcasted = rendered.broadcast(state);
+    Ok(broadcasted.into_response())
 }
 
 fn current_request_id_text() -> Text {
@@ -341,21 +146,6 @@ fn current_request_id_text() -> Text {
         .and_then(|context| context.request_id)
         .map(|request_id| Text::from(request_id.to_string()))
         .unwrap_or_else(|| Text::from(format!("fallback-{}", uuid::Uuid::new_v4())))
-}
-
-#[derive(Clone, Copy, Debug)]
-enum ChatSender {
-    You,
-    Demo,
-}
-
-impl ChatSender {
-    fn as_str(self) -> &'static str {
-        match self {
-            ChatSender::You => "you",
-            ChatSender::Demo => "demo",
-        }
-    }
 }
 
 fn parse_room_id(value: &str) -> Result<domain::chat::RoomId, crate::error::Error> {
@@ -367,7 +157,9 @@ fn parse_room_id(value: &str) -> Result<domain::chat::RoomId, crate::error::Erro
     Ok(domain::chat::RoomId::from_uuid(id))
 }
 
-fn parse_message_id(value: &str) -> Result<domain::chat::MessageId, crate::error::Error> {
+pub(super) fn parse_message_id(
+    value: &str,
+) -> Result<domain::chat::MessageId, crate::error::Error> {
     let id = value.parse::<uuid::Uuid>().map_err(|error| {
         crate::error::Error::Chat(app::chat::Error::InvalidId(
             app::chat::InvalidIdText::new(error.to_string()),
@@ -385,7 +177,7 @@ fn parse_message_body(
         .map_err(crate::error::Error::from)
 }
 
-fn parse_reason(
+pub(super) fn parse_reason(
     value: Option<Text>,
 ) -> Result<Option<app::chat::ModerationReason>, crate::error::Error> {
     value
@@ -403,7 +195,7 @@ fn chat_user_id_from_user_id(value: domain::user::Id) -> domain::chat::UserId {
     domain::chat::UserId::from_uuid(*value.as_uuid())
 }
 
-fn parse_moderation_decision(
+pub(super) fn parse_moderation_decision(
     value: &str,
 ) -> Result<app::chat::ModerationDecision, crate::error::Error> {
     match crate::views::partials::ModerationAction::parse(value) {

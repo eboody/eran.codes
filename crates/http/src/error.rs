@@ -104,6 +104,11 @@ impl Error {
                 "Access denied",
                 "You are not a member of this room.",
             ),
+            Error::Chat(app::chat::Error::ModerationStateConflict) => (
+                axum::http::StatusCode::CONFLICT,
+                "Moderation conflict",
+                "Message moderation state changed. Refresh and retry.",
+            ),
             Error::Chat(app::chat::Error::InvalidId(_))
             | Error::Chat(app::chat::Error::InvalidInput(_))
             | Error::Chat(app::chat::Error::Domain(_)) => (
