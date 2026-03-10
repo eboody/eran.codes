@@ -5,7 +5,7 @@ use serde_json::json;
 use crate::paths::Route;
 use crate::types::Text;
 use crate::views::partials::{
-    SectionHeader, SectionHeaderActionLink, SectionHeaderMetaText, chat,
+    chat, SectionHeader, SectionHeaderActionLink, SectionHeaderMetaText,
 };
 
 #[derive(Clone, Debug, Builder)]
@@ -24,9 +24,9 @@ impl DemoSection {
 impl Render for DemoSection {
     fn render(&self) -> maud::Markup {
         let subtitle = match self.interactivity {
-            chat::Mode::Interactive => {
-                Text::from("Send messages as yourself or the demo user and watch SSE fanout.")
-            }
+            chat::Mode::Interactive => Text::from(
+                "Send messages as yourself or the demo user and watch SSE fanout.",
+            ),
             chat::Mode::DemoOnly => {
                 Text::from("Try live posts as the demo user. Sign in to send as yourself.")
             }
@@ -34,6 +34,7 @@ impl Render for DemoSection {
         maud::html! {
             section
                 id=(Self::ANCHOR_ID)
+                class="ui-lab-chat-surface"
                 data-chat-surface
                 data-signals=(json!({
                     "roomId": self.room_id.to_string(),

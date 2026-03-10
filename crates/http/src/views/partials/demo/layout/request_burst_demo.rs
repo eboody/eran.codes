@@ -25,7 +25,7 @@ impl Render for RequestBurstDemo {
         maud::html! {
             section
                 id="request-burst-demo"
-                class="ui-surface-card"
+                class="ui-surface-card ui-lab-burst"
                 data-request-burst-root
                 data-endpoint=(&self.endpoint)
                 data-concurrency=(self.concurrency)

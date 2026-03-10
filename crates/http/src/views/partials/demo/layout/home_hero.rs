@@ -16,7 +16,8 @@ impl Render for HomeHero {
     fn render(&self) -> maud::Markup {
         maud::html! {
             header id="home-hero" class="ui-home-hero" {
-                div {
+                div class="ui-home-hero-copy" {
+                    p class="ui-home-hero-kicker" { "Live Lab" }
                     h1 { "Production Rust Systems, Demonstrated Live" }
                     p {
                         "I build secure, observable backend systems with typed boundaries. This portfolio runs on the same real auth, Postgres, and SSE stack I ship in production-style projects."

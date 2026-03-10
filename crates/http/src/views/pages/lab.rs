@@ -17,7 +17,7 @@ pub struct Lab {
 impl maud::Render for Lab {
     fn render(&self) -> maud::Markup {
         let content = maud::html! {
-            main class="container" {
+            main class="container ui-lab-main" {
                 (HomeHero::builder().maybe_user(self.user.clone()).build())
 
                 (TabSetShowcase::builder().build())
@@ -27,7 +27,10 @@ impl maud::Render for Lab {
                     .build())
 
                 @if let Some(chat_demo) = &self.chat_demo { (chat_demo.render()) } @else {
-                    section id=(chat::DemoSection::ANCHOR_ID) class="ui-surface-card" {
+                    section
+                        id=(chat::DemoSection::ANCHOR_ID)
+                        class="ui-surface-card ui-lab-chat-surface"
+                    {
                         ({
                             SectionHeader::builder()
                                 .title(Text::from("Live chat room"))
@@ -46,7 +49,11 @@ impl maud::Render for Lab {
                     }
                 }
 
-                section id="operations-surface" class="ui-surface-card" data-operations-surface {
+                section
+                    id="operations-surface"
+                    class="ui-surface-card ui-lab-operations"
+                    data-operations-surface
+                {
                     ({
                         SectionHeader::builder()
                             .title(Text::from("Operational View"))

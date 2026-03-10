@@ -49,7 +49,7 @@ impl Render for TabSetShowcase {
         maud::html! {
             (tab_set::Component::builder()
                 .id("tab-set-showcase")
-                .class("tab-set ui-surface-card")
+                .class("tab-set ui-surface-card ui-lab-tab-set")
                 .active_tab_id(active_tab_id)
                 .tabs(tab_set::tab::Set {
                     aria_label: Text::from("Solutions"),
@@ -70,6 +70,5 @@ fn load_content() -> tab_set::content::TabSetContent {
         env!("CARGO_MANIFEST_DIR"),
         "/src/views/partials/demo/layout/content/tab_set_showcase.json"
     ));
-    serde_json::from_str(raw)
-        .expect("tab_set_showcase fixture must be valid JSON")
+    serde_json::from_str(raw).expect("tab_set_showcase fixture must be valid JSON")
 }
