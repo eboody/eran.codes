@@ -22,7 +22,7 @@ impl user::Repository for TestUserRepo {
         email: &domain_user::Email,
     ) -> user::Result<Option<domain_user::User>> {
         Ok(Some(domain_user::User {
-            id: domain_user::Id::from_uuid(uuid::Uuid::nil()),
+            id: domain_user::UserId::from_uuid(uuid::Uuid::nil()),
             username: domain_user::Username::try_new("demo_bot").unwrap(),
             email: email.clone(),
         }))
@@ -115,10 +115,25 @@ impl app::chat::Repository for ChatRepo {
 
     async fn list_messages(
         &self,
-        _room_id: &domain_chat::RoomId,
+        room_id: &domain_chat::RoomId,
         _limit: usize,
     ) -> app::chat::Result<Vec<domain_chat::Message>> {
-        Ok(Vec::new())
+        Ok(vec![
+            domain_chat::Message::builder()
+                .id(domain_chat::MessageId::from_uuid(uuid::Uuid::from_u128(
+                    0xaaaa,
+                )))
+                .room_id(*room_id)
+                .user_id(domain_chat::UserId::from_uuid(uuid::Uuid::nil()))
+                .body(
+                    domain_chat::MessageBody::try_new("hello from test")
+                        .expect("valid body"),
+                )
+                .status(domain_chat::MessageStatus::Visible)
+                .maybe_client_id(None)
+                .created_at(std::time::SystemTime::UNIX_EPOCH)
+                .build(),
+        ])
     }
 
     async fn find_message(
@@ -257,6 +272,8 @@ enum LabContract {
     NetworkLogTarget,
     RequestBurstEndpoint,
     ChatAnchor,
+    ChatMessageBody,
+    ChatRoomName,
     TablistRole,
     TabRole,
     TabpanelRole,
@@ -276,6 +293,8 @@ impl LabContract {
             LabContract::NetworkLogTarget,
             LabContract::RequestBurstEndpoint,
             LabContract::ChatAnchor,
+            LabContract::ChatMessageBody,
+            LabContract::ChatRoomName,
             LabContract::TablistRole,
             LabContract::TabRole,
             LabContract::TabpanelRole,
@@ -295,6 +314,8 @@ impl LabContract {
             LabContract::NetworkLogTarget => "id=\"network-log-target\"",
             LabContract::RequestBurstEndpoint => "/partials/request-burst-probe",
             LabContract::ChatAnchor => "id=\"chat-demo\"",
+            LabContract::ChatMessageBody => "hello from test",
+            LabContract::ChatRoomName => "Room: Lobby",
             LabContract::TablistRole => "role=\"tablist\"",
             LabContract::TabRole => "role=\"tab\"",
             LabContract::TabpanelRole => "role=\"tabpanel\"",
@@ -337,6 +358,13 @@ enum PortfolioHomeContract {
     LabRoute,
     WorkCaseRoute,
     OpenSourceTitle,
+    BrandMarkWrap,
+    LightBrandLogo,
+    DarkBrandLogo,
+    SvgLightFavicon,
+    SvgDarkFavicon,
+    PngFavicon,
+    AppleTouchIcon,
 }
 
 impl PortfolioHomeContract {
@@ -348,6 +376,13 @@ impl PortfolioHomeContract {
             PortfolioHomeContract::LabRoute,
             PortfolioHomeContract::WorkCaseRoute,
             PortfolioHomeContract::OpenSourceTitle,
+            PortfolioHomeContract::BrandMarkWrap,
+            PortfolioHomeContract::LightBrandLogo,
+            PortfolioHomeContract::DarkBrandLogo,
+            PortfolioHomeContract::SvgLightFavicon,
+            PortfolioHomeContract::SvgDarkFavicon,
+            PortfolioHomeContract::PngFavicon,
+            PortfolioHomeContract::AppleTouchIcon,
         ]
     }
 
@@ -359,6 +394,19 @@ impl PortfolioHomeContract {
             PortfolioHomeContract::LabRoute => "href=\"/lab\"",
             PortfolioHomeContract::WorkCaseRoute => "href=\"/work/chat-realtime\"",
             PortfolioHomeContract::OpenSourceTitle => "Open-source crates",
+            PortfolioHomeContract::BrandMarkWrap => "ui-nav-brand-mark-wrap",
+            PortfolioHomeContract::LightBrandLogo => "/static/eran.codes-light.svg",
+            PortfolioHomeContract::DarkBrandLogo => "/static/eran.codes-dark.svg",
+            PortfolioHomeContract::SvgLightFavicon => {
+                "media=\"(prefers-color-scheme: light)\""
+            }
+            PortfolioHomeContract::SvgDarkFavicon => {
+                "media=\"(prefers-color-scheme: dark)\""
+            }
+            PortfolioHomeContract::PngFavicon => "/static/eran.codes-favicon.png",
+            PortfolioHomeContract::AppleTouchIcon => {
+                "rel=\"apple-touch-icon\" sizes=\"1024x1024\" href=\"/static/eran.codes.png\""
+            }
         }
     }
 }

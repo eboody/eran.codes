@@ -1,6 +1,6 @@
 use maud::Render;
 
-use super::{render_actions, SectionCopy};
+use super::{SectionCopy, render_actions};
 use crate::views::partials::components::portfolio::content::{
     WorkCardContent, WorkIndexContent, WorkSectionContent,
 };

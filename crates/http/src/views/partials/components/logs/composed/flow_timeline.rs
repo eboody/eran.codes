@@ -221,7 +221,11 @@ fn visible_event_pills(event: &FlowEvent) -> Vec<&Pill> {
     if !is_db_query_summary(&event.summary) {
         return event.pills.iter().collect();
     }
-    event.pills.iter().filter(|pill| bind_index(pill).is_none()).collect()
+    event
+        .pills
+        .iter()
+        .filter(|pill| bind_index(pill).is_none())
+        .collect()
 }
 
 fn is_db_query_summary(summary: &Text) -> bool {

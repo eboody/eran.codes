@@ -48,6 +48,40 @@ impl Render for NavLinkList {
 }
 
 #[derive(Clone, Debug, Builder)]
+pub struct NavBrand {
+    pub label: Text,
+    pub href: Text,
+    pub light_logo_src: Text,
+    pub dark_logo_src: Text,
+}
+
+impl Render for NavBrand {
+    fn render(&self) -> maud::Markup {
+        maud::html! {
+            div class="ui-nav-brand" {
+                a class="ui-nav-brand-link" href=(&self.href) {
+                    span class="ui-nav-brand-mark-wrap" {
+                        picture class="ui-nav-brand-picture" {
+                            source
+                                media="(prefers-color-scheme: dark)"
+                                srcset=(&self.dark_logo_src);
+                            img
+                                class="ui-nav-brand-mark"
+                                src=(&self.light_logo_src)
+                                width="40"
+                                height="40"
+                                alt=""
+                                aria-hidden="true";
+                        }
+                    }
+                    span class="ui-nav-brand-text" { (&self.label) }
+                }
+            }
+        }
+    }
+}
+
+#[derive(Clone, Debug, Builder)]
 pub struct NavSignedIn {
     pub username: Text,
     pub account_href: Text,
@@ -97,7 +131,7 @@ impl Render for NavAuth {
 // ci: render-composition-component
 #[derive(Clone, Debug, Builder)]
 pub struct NavBar {
-    pub brand: NavLinkList,
+    pub brand: NavBrand,
     pub links: NavLinkList,
     pub auth: NavAuth,
 }

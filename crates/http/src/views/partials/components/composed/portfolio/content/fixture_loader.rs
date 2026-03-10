@@ -1,11 +1,7 @@
 use std::sync::OnceLock;
 
-use super::types::{
-    PortfolioHomeContent, WorkCaseContent, WorkCaseSlug, WorkIndexContent,
-};
-use super::validation::{
-    validate_portfolio_home, validate_work_case, validate_work_index,
-};
+use super::types::{PortfolioHomeContent, WorkCaseContent, WorkCaseSlug, WorkIndexContent};
+use super::validation::{validate_portfolio_home, validate_work_case, validate_work_index};
 
 pub fn portfolio_home_content() -> &'static PortfolioHomeContent {
     static CONTENT: OnceLock<PortfolioHomeContent> = OnceLock::new();
@@ -43,14 +39,9 @@ pub fn work_case_content(slug: WorkCaseSlug) -> &'static WorkCaseContent {
         WorkCaseSlug::CommandSse => COMMAND_SSE.get_or_init(|| {
             load_work_case_fixture(slug, include_str!("work_command_sse.json"))
         }),
-        WorkCaseSlug::OperationalVisibility => {
-            OPERATIONAL_VISIBILITY.get_or_init(|| {
-                load_work_case_fixture(
-                    slug,
-                    include_str!("work_operational_visibility.json"),
-                )
-            })
-        }
+        WorkCaseSlug::OperationalVisibility => OPERATIONAL_VISIBILITY.get_or_init(|| {
+            load_work_case_fixture(slug, include_str!("work_operational_visibility.json"))
+        }),
     }
 }
 

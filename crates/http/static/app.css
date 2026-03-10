@@ -924,8 +924,8 @@ input[type="password"] {
   content: "";
   position: absolute;
   inset: auto;
-  inline-size: 3.6rem;
-  block-size: 3.6rem;
+  inline-size: 2.6rem;
+  block-size: 2.6rem;
   top: 50%;
   left: 50%;
   z-index: 0;
@@ -942,8 +942,8 @@ input[type="password"] {
 
 .ui-nav-brand-mark {
   display: block;
-  inline-size: 2.6rem;
-  block-size: 2.6rem;
+  inline-size: 2.1rem;
+  block-size: 2.1rem;
   flex: none;
   filter: drop-shadow(0.18rem 0.24rem 0.8rem color-mix(in srgb, black 18%, transparent));
 }

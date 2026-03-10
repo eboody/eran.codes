@@ -1,6 +1,6 @@
 use maud::Render;
 
-use super::{proof_kind_attr, SectionCopy};
+use super::{SectionCopy, proof_kind_attr};
 use crate::views::partials::components::portfolio::content::ProofStripContent;
 
 pub struct ProofStrip<'a> {

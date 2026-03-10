@@ -1,10 +1,9 @@
 use crate::types::Text;
 
 use super::types::{
-    CaseListSection, ClosingContent, CmsActionLink, CmsImageAsset,
-    CrateCardContent, CrateSectionContent, PortfolioHeroContent,
-    PortfolioHomeContent, ProofPointContent, ProofStripContent,
-    WorkCardContent, WorkCaseContent, WorkCaseSlug, WorkIndexContent,
+    CaseListSection, ClosingContent, CmsActionLink, CmsImageAsset, CrateCardContent,
+    CrateSectionContent, PortfolioHeroContent, PortfolioHomeContent, ProofPointContent,
+    ProofStripContent, WorkCardContent, WorkCaseContent, WorkCaseSlug, WorkIndexContent,
     WorkSectionContent,
 };
 
@@ -145,7 +144,10 @@ fn validate_crate_card(content: &CrateCardContent, path: &str) {
     assert_non_empty(&format!("{path}.name"), &content.name);
     assert_non_empty(&format!("{path}.summary"), &content.summary);
     assert_non_empty(&format!("{path}.repository_url"), &content.repository_url);
-    assert_non_empty(&format!("{path}.repository_label"), &content.repository_label);
+    assert_non_empty(
+        &format!("{path}.repository_label"),
+        &content.repository_label,
+    );
     if content.docs_url.is_some() {
         assert!(
             content.docs_label.is_some(),

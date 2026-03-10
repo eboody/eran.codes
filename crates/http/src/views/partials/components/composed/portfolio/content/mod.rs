@@ -4,9 +4,9 @@ mod validation;
 
 pub use fixture_loader::{portfolio_home_content, work_case_content, work_index_content};
 pub use types::{
-    CmsActionLink, CrateSectionContent, CtaKind, PortfolioHeroContent,
-    ProofKind, ProofStripContent, WorkCardContent, WorkCaseContent,
-    WorkCaseSlug, WorkIndexContent, WorkSectionContent,
+    CmsActionLink, CrateSectionContent, CtaKind, PortfolioHeroContent, ProofKind,
+    ProofStripContent, WorkCardContent, WorkCaseContent, WorkCaseSlug, WorkIndexContent,
+    WorkSectionContent,
 };
 
 #[cfg(test)]

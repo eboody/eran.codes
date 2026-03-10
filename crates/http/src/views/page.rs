@@ -4,7 +4,7 @@ use maud::{Markup, Render};
 use crate::paths::Route;
 use crate::types::Text;
 use crate::views::partials::components::{
-    NavAuth, NavBar, NavLink, NavLinkList, NavSignedIn,
+    NavAuth, NavBar, NavBrand, NavLink, NavLinkList, NavSignedIn,
 };
 
 pub(crate) const PORTFOLIO_RESUME_URL: &str = "/static/resume.txt";
@@ -68,12 +68,11 @@ pub struct Layout<'a> {
 impl Render for Layout<'_> {
     fn render(&self) -> Markup {
         let sse_tab_id = crate::types::SseTabId::new(uuid::Uuid::new_v4().to_string());
-        let brand_links = NavLinkList::builder()
-            .class_name(Text::from("ui-nav-list ui-nav-brand"))
-            .children(vec![NavLink::builder()
-                .label(Text::from("eran.codes"))
-                .href(Text::from(Route::Home.as_str()))
-                .build()])
+        let brand = NavBrand::builder()
+            .label(Text::from("eran.codes"))
+            .href(Text::from(Route::Home.as_str()))
+            .light_logo_src(Text::from("/static/eran.codes-light.svg"))
+            .dark_logo_src(Text::from("/static/eran.codes-dark.svg"))
             .build();
         let portfolio_links = NavLinkList::builder()
             .class_name(Text::from("ui-nav-list ui-nav-links"))
@@ -134,7 +133,7 @@ impl Render for Layout<'_> {
             },
         };
         let nav_bar = NavBar::builder()
-            .brand(brand_links)
+            .brand(brand)
             .links(portfolio_links)
             .auth(auth)
             .build();
@@ -152,9 +151,19 @@ impl Render for Layout<'_> {
                     title { (self.title) }
                     link
                         rel="icon"
+                        type="image/svg+xml"
+                        media="(prefers-color-scheme: light)"
+                        href="/static/eran.codes-light.svg";
+                    link
+                        rel="icon"
+                        type="image/svg+xml"
+                        media="(prefers-color-scheme: dark)"
+                        href="/static/eran.codes-dark.svg";
+                    link
+                        rel="icon"
                         type="image/png"
                         sizes="1024x1024"
-                        href="/static/eran.codes.png";
+                        href="/static/eran.codes-favicon.png";
                     link rel="apple-touch-icon" sizes="1024x1024" href="/static/eran.codes.png";
                     link rel="preconnect" href="https://fonts.googleapis.com";
                     link rel="preconnect" href="https://fonts.gstatic.com" crossorigin;

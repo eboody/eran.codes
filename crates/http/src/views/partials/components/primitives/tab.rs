@@ -94,10 +94,7 @@ mod tests {
         let selected_expr = format!("$active_tab_id == {}", json_literal(&value));
         let click_expr = format!("$active_tab_id = {}", json_literal(&value));
 
-        assert_eq!(
-            selected_expr,
-            "$active_tab_id == \"sso'and\\\"quotes\""
-        );
+        assert_eq!(selected_expr, "$active_tab_id == \"sso'and\\\"quotes\"");
         assert_eq!(click_expr, "$active_tab_id = \"sso'and\\\"quotes\"");
     }
 }
