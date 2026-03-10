@@ -70,6 +70,29 @@ impl ModerateMessageFlow<Incoming> {
         self.classify_lookup(message).require_message()
     }
 
+    pub(super) async fn moderate(
+        self,
+        service: &super::Service,
+    ) -> Result<ModerateMessageFlow<Audited>, Error> {
+        let loaded = self.load_from_repo(service).await?;
+        let pending = loaded.classify_pending().require_pending()?;
+        let resolved = pending.resolve();
+        let message_status_applied = resolved.apply_message_status(service).await?;
+        let queue_completion_applied =
+            message_status_applied.complete_queue(service).await?;
+        let audit_prepared = queue_completion_applied.prepare_audit();
+
+        audit_prepared.record_audit(service).await
+    }
+
+    async fn load_from_repo(
+        self,
+        service: &super::Service,
+    ) -> Result<ModerateMessageFlow<MessageLoaded>, Error> {
+        let message_lookup = service.repo.find_message(&self.message_id()).await?;
+        self.load_lookup(message_lookup)
+    }
+
     pub(super) fn classify_lookup(
         self,
         message: Option<chat::Message>,
@@ -205,6 +228,37 @@ impl ModerateMessageFlow<Resolved> {
     pub(super) fn message_status(&self) -> chat::MessageStatus {
         self.state_data.message_status
     }
+
+    async fn apply_message_status(
+        self,
+        service: &super::Service,
+    ) -> Result<ModerateMessageFlow<MessageStatusApplied>, Error> {
+        let message_update = service
+            .repo
+            .update_message_status(&self.message_id(), self.message_status())
+            .await?;
+        self.classify_message_status_update(message_update)
+            .require_applied()
+    }
+}
+
+impl ModerateMessageFlow<MessageStatusApplied> {
+    async fn complete_queue(
+        self,
+        service: &super::Service,
+    ) -> Result<ModerateMessageFlow<QueueCompletionApplied>, Error> {
+        let queue_update = service
+            .moderation
+            .complete_if_pending(
+                &self.message_id(),
+                &self.reviewer_id(),
+                self.decision(),
+                self.reason().cloned(),
+            )
+            .await?;
+        self.classify_queue_completion_update(queue_update)
+            .require_applied()
+    }
 }
 
 impl ModerateMessageFlow<AuditPrepared> {
@@ -214,6 +268,22 @@ impl ModerateMessageFlow<AuditPrepared> {
 
     pub(super) fn audit_metadata(&self) -> Vec<(AuditKey, AuditValue)> {
         self.state_data.metadata.clone()
+    }
+
+    async fn record_audit(
+        self,
+        service: &super::Service,
+    ) -> Result<ModerateMessageFlow<Audited>, Error> {
+        service
+            .audit
+            .record(service.audit_entry(
+                self.room_id(),
+                self.reviewer_id(),
+                super::AuditAction::MessageModerate,
+                self.audit_metadata(),
+            ))
+            .await?;
+        Ok(self.mark_audited())
     }
 }
 
@@ -311,6 +381,9 @@ pub(super) type IncomingFlow = ModerateMessageFlow<Incoming>;
 
 #[cfg(test)]
 mod tests {
+    use async_trait::async_trait;
+    use std::sync::{Arc, Mutex};
+
     use super::*;
 
     fn build_message(status: chat::MessageStatus) -> chat::Message {
@@ -334,6 +407,204 @@ mod tests {
             .reviewer_id(chat::UserId::new_v4())
             .decision(decision)
             .maybe_reason(None)
+            .build()
+    }
+
+    struct TestRepository {
+        message: Mutex<Option<chat::Message>>,
+        updated: Mutex<Vec<(chat::MessageId, chat::MessageStatus)>>,
+        update_result: PendingMutationResult,
+    }
+
+    impl TestRepository {
+        fn updated(&self) -> Vec<(chat::MessageId, chat::MessageStatus)> {
+            self.updated.lock().expect("updated lock").clone()
+        }
+    }
+
+    #[async_trait]
+    impl super::super::Repository for TestRepository {
+        async fn create_room(&self, _room: &chat::Room) -> super::super::Result<()> {
+            unimplemented!("not used in this test")
+        }
+
+        async fn find_room(
+            &self,
+            _room_id: &chat::RoomId,
+        ) -> super::super::Result<Option<chat::Room>> {
+            unimplemented!("not used in this test")
+        }
+
+        async fn find_room_by_name(
+            &self,
+            _name: &chat::RoomName,
+        ) -> super::super::Result<Option<chat::Room>> {
+            unimplemented!("not used in this test")
+        }
+
+        async fn list_messages(
+            &self,
+            _room_id: &chat::RoomId,
+            _limit: usize,
+        ) -> super::super::Result<Vec<chat::Message>> {
+            unimplemented!("not used in this test")
+        }
+
+        async fn find_message(
+            &self,
+            _message_id: &chat::MessageId,
+        ) -> super::super::Result<Option<chat::Message>> {
+            Ok(self.message.lock().expect("message lock").clone())
+        }
+
+        async fn insert_message(
+            &self,
+            _message: &chat::Message,
+        ) -> super::super::Result<()> {
+            unimplemented!("not used in this test")
+        }
+
+        async fn add_membership(
+            &self,
+            _room_id: &chat::RoomId,
+            _user_id: &chat::UserId,
+            _role: super::super::RoomRole,
+        ) -> super::super::Result<()> {
+            unimplemented!("not used in this test")
+        }
+
+        async fn is_member(
+            &self,
+            _room_id: &chat::RoomId,
+            _user_id: &chat::UserId,
+        ) -> super::super::Result<bool> {
+            unimplemented!("not used in this test")
+        }
+
+        async fn update_message_status(
+            &self,
+            message_id: &chat::MessageId,
+            status: chat::MessageStatus,
+        ) -> super::super::Result<PendingMutationResult> {
+            self.updated
+                .lock()
+                .expect("updated lock")
+                .push((*message_id, status));
+            Ok(self.update_result)
+        }
+    }
+
+    #[derive(Default)]
+    struct TestModerationQueue {
+        completions: Mutex<Vec<(chat::MessageId, chat::UserId, ModerationDecision)>>,
+    }
+
+    impl TestModerationQueue {
+        fn completions(&self) -> Vec<(chat::MessageId, chat::UserId, ModerationDecision)> {
+            self.completions.lock().expect("completions lock").clone()
+        }
+    }
+
+    #[async_trait]
+    impl super::super::ModerationQueue for TestModerationQueue {
+        async fn enqueue(
+            &self,
+            _message_id: &chat::MessageId,
+            _reason: &super::super::ModerationReason,
+        ) -> super::super::Result<()> {
+            unimplemented!("not used in this test")
+        }
+
+        async fn list_pending(
+            &self,
+            _limit: usize,
+        ) -> super::super::Result<Vec<super::super::ModerationItem>> {
+            unimplemented!("not used in this test")
+        }
+
+        async fn complete_if_pending(
+            &self,
+            message_id: &chat::MessageId,
+            reviewer_id: &chat::UserId,
+            decision: ModerationDecision,
+            _reason: Option<super::super::ModerationReason>,
+        ) -> super::super::Result<PendingMutationResult> {
+            self.completions.lock().expect("completions lock").push((
+                *message_id,
+                *reviewer_id,
+                decision,
+            ));
+            Ok(PendingMutationResult::Applied)
+        }
+    }
+
+    #[derive(Default)]
+    struct TestAuditLog {
+        entries: Mutex<Vec<super::super::AuditEntry>>,
+    }
+
+    impl TestAuditLog {
+        fn entries(&self) -> Vec<super::super::AuditEntry> {
+            self.entries.lock().expect("entries lock").clone()
+        }
+    }
+
+    #[async_trait]
+    impl super::super::AuditLog for TestAuditLog {
+        async fn record(
+            &self,
+            entry: super::super::AuditEntry,
+        ) -> super::super::Result<()> {
+            self.entries.lock().expect("entries lock").push(entry);
+            Ok(())
+        }
+    }
+
+    struct FixedClock;
+
+    impl super::super::Clock for FixedClock {
+        fn now(&self) -> std::time::SystemTime {
+            std::time::SystemTime::UNIX_EPOCH
+        }
+    }
+
+    struct NoopRateLimiter;
+
+    #[async_trait]
+    impl super::super::RateLimiter for NoopRateLimiter {
+        async fn check(
+            &self,
+            _room_id: &chat::RoomId,
+            _user_id: &chat::UserId,
+        ) -> super::super::Result<()> {
+            Ok(())
+        }
+    }
+
+    struct FixedIds;
+
+    impl super::super::IdGenerator for FixedIds {
+        fn new_room_id(&self) -> chat::RoomId {
+            chat::RoomId::new_v4()
+        }
+
+        fn new_message_id(&self) -> chat::MessageId {
+            chat::MessageId::new_v4()
+        }
+    }
+
+    fn test_service(
+        repo: Arc<TestRepository>,
+        moderation: Arc<TestModerationQueue>,
+        audit: Arc<TestAuditLog>,
+    ) -> super::super::Service {
+        super::super::Service::builder()
+            .with_repo(repo)
+            .with_moderation_queue(moderation)
+            .with_rate_limiter(Arc::new(NoopRateLimiter))
+            .with_audit_log(audit)
+            .with_clock(Arc::new(FixedClock))
+            .with_id_generator(Arc::new(FixedIds))
             .build()
     }
 
@@ -418,6 +689,38 @@ mod tests {
                 .audit_metadata()
                 .iter()
                 .any(|(key, _)| *key == AuditKey::MessageId)
+        );
+    }
+
+    #[tokio::test]
+    async fn moderate_runs_full_pending_path_through_audit() {
+        let message = build_message(chat::MessageStatus::Pending);
+        let repo = Arc::new(TestRepository {
+            message: Mutex::new(Some(message.clone())),
+            updated: Mutex::new(Vec::new()),
+            update_result: PendingMutationResult::Applied,
+        });
+        let moderation = Arc::new(TestModerationQueue::default());
+        let audit = Arc::new(TestAuditLog::default());
+        let service = test_service(repo.clone(), moderation.clone(), audit.clone());
+
+        let result = ModerateMessageFlow::<Incoming>::from_command(build_command(
+            message.id,
+            ModerationDecision::Approve,
+        ))
+        .moderate(&service)
+        .await;
+
+        assert!(result.is_ok());
+        assert_eq!(
+            repo.updated(),
+            vec![(message.id, chat::MessageStatus::Visible)]
+        );
+        assert_eq!(moderation.completions().len(), 1);
+        assert_eq!(audit.entries().len(), 1);
+        assert_eq!(
+            audit.entries()[0].action,
+            super::super::AuditAction::MessageModerate
         );
     }
 }

@@ -1,9 +1,9 @@
 use crate::{error::Result, user};
 
-pub trait Repository: Send + Sync {
+pub trait UserRepository: Send + Sync {
     fn get_by_id(
         &self,
-        id: &user::Id,
+        id: &user::UserId,
     ) -> Result<Option<user::User>>;
     fn get_by_email(
         &self,

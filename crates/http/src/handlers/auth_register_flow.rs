@@ -3,6 +3,7 @@ use secrecy::SecretString;
 use statum::{machine, state, transition};
 
 use super::auth::RegisterForm;
+use crate::paths::Route;
 
 #[derive(Clone, Debug)]
 pub struct AuthenticatedData {
@@ -26,10 +27,8 @@ pub(super) struct RegisterFlow<RegisterFlowState> {
 }
 
 impl RegisterFlow<Incoming> {
-    pub(super) fn from_form(
-        form: RegisterForm,
-        next: Option<String>,
-    ) -> crate::Result<Self> {
+    pub(super) fn from_form(form: RegisterForm) -> crate::Result<Self> {
+        let next = super::auth::NextPath::sanitize(form.next.clone());
         let email = domain::user::Email::try_new(form.email.to_string())
             .map_err(domain::user::Error::from)
             .map_err(app::user::Error::from)
@@ -67,7 +66,7 @@ impl RegisterFlow<Incoming> {
 
     pub(super) fn apply_registration_result(
         self,
-        result: app::user::Result<domain::user::Id>,
+        result: app::user::Result<domain::user::UserId>,
     ) -> crate::Result<RegistrationOutcome> {
         match result {
             Ok(_) => Ok(RegistrationOutcome::Succeeded(
@@ -153,10 +152,10 @@ impl RegistrationOutcome {
             Self::Succeeded(succeeded) => {
                 let authenticated = succeeded.authenticate(auth_session).await?;
                 auth_session.login(authenticated.user()).await?;
-                Ok(
-                    super::auth::redirect_to_next(authenticated.into_next())
-                        .into_response(),
-                )
+                let target = authenticated
+                    .into_next()
+                    .unwrap_or_else(|| Route::Protected.as_str().to_string());
+                Ok(axum::response::Redirect::to(&target).into_response())
             }
             Self::EmailTaken(duplicate) => {
                 let next = duplicate.into_next();
@@ -200,11 +199,8 @@ mod tests {
 
     #[test]
     fn registration_result_routes_email_taken_branch() {
-        let incoming = RegisterFlow::<Incoming>::from_form(
-            register_form(),
-            Some("/protected".to_string()),
-        )
-        .expect("incoming");
+        let incoming =
+            RegisterFlow::<Incoming>::from_form(register_form()).expect("incoming");
 
         let outcome = incoming
             .apply_registration_result(Err(app::user::Error::EmailTaken))
@@ -214,11 +210,8 @@ mod tests {
 
     #[test]
     fn registration_result_routes_invalid_input_branch() {
-        let incoming = RegisterFlow::<Incoming>::from_form(
-            register_form(),
-            Some("/protected".to_string()),
-        )
-        .expect("incoming");
+        let incoming =
+            RegisterFlow::<Incoming>::from_form(register_form()).expect("incoming");
 
         let outcome = incoming
             .apply_registration_result(Err(app::user::Error::Domain(
@@ -229,5 +222,19 @@ mod tests {
             )))
             .expect("classified");
         assert!(matches!(outcome, RegistrationOutcome::InvalidInput(_)));
+    }
+
+    #[test]
+    fn from_form_drops_unsafe_next() {
+        let form = RegisterForm::builder()
+            .username(Text::from("person"))
+            .email(Text::from("person@example.com"))
+            .password(Text::from("pw"))
+            .next(Text::from("//evil.example"))
+            .build();
+
+        let incoming = RegisterFlow::<Incoming>::from_form(form).expect("incoming");
+
+        assert!(incoming.into_next().is_none());
     }
 }

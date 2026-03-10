@@ -36,6 +36,24 @@ impl ListMessagesFlow<Incoming> {
             .limit(limit)
             .build()
     }
+
+    pub(super) async fn list(
+        self,
+        service: &super::Service,
+    ) -> Result<ListMessagesFlow<Loaded>, Error> {
+        let room_verified = self.verify_room(service).await?;
+        let membership_verified = room_verified.verify_membership(service).await?;
+
+        membership_verified.load_messages(service).await
+    }
+
+    async fn verify_room(
+        self,
+        service: &super::Service,
+    ) -> Result<ListMessagesFlow<RoomVerified>, Error> {
+        let room_exists = service.repo.find_room(self.room_id()).await?.is_some();
+        self.classify_room_lookup(room_exists).require_room()
+    }
 }
 
 impl<S: ListMessagesStateTrait> ListMessagesFlow<S> {
@@ -84,6 +102,17 @@ impl ListMessagesFlow<RoomVerified> {
             MembershipOutcome::NotMember
         }
     }
+
+    async fn verify_membership(
+        self,
+        service: &super::Service,
+    ) -> Result<ListMessagesFlow<MembershipVerified>, Error> {
+        let is_member = service
+            .repo
+            .is_member(self.room_id(), self.user_id())
+            .await?;
+        self.classify_membership(is_member).require_member()
+    }
 }
 
 #[transition]
@@ -99,6 +128,19 @@ impl ListMessagesFlow<MembershipVerified> {
 impl ListMessagesFlow<Loaded> {
     pub(super) fn into_messages(self) -> Vec<chat::Message> {
         self.state_data.messages
+    }
+}
+
+impl ListMessagesFlow<MembershipVerified> {
+    async fn load_messages(
+        self,
+        service: &super::Service,
+    ) -> Result<ListMessagesFlow<Loaded>, Error> {
+        let messages = service
+            .repo
+            .list_messages(self.room_id(), self.limit())
+            .await?;
+        Ok(self.attach_messages(messages))
     }
 }
 

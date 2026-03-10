@@ -1,9 +1,9 @@
-moddef::moddef!(mod { error, repo, user });
+moddef::moddef!(mod { entity, error, repository });
 
+pub use entity::User;
 pub use error::{Error, Result};
 use nutype::nutype;
-pub use repo::Repository;
-pub use user::User;
+pub use repository::{UserRepository, UserRepository as Repository};
 
 #[nutype(
     sanitize(trim, lowercase),
@@ -40,9 +40,9 @@ fn is_valid_email(value: &str) -> bool {
 }
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
-pub struct Id(uuid::Uuid);
+pub struct UserId(uuid::Uuid);
 
-impl Id {
+impl UserId {
     pub fn new_v4() -> Self {
         Self(uuid::Uuid::new_v4())
     }
@@ -55,6 +55,8 @@ impl Id {
         &self.0
     }
 }
+
+pub type Id = UserId;
 
 #[cfg(test)]
 mod tests {

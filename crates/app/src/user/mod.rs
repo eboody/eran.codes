@@ -5,7 +5,7 @@ use std::sync::Arc;
 
 use async_trait::async_trait;
 use bon::Builder;
-use secrecy::{ExposeSecret, SecretString};
+use secrecy::SecretString;
 
 use domain::user;
 pub use error::{Error, Result};
@@ -42,25 +42,10 @@ impl Service {
     }
 
     #[tracing::instrument(skip(self))]
-    pub async fn register_user(&self, command: RegisterUser) -> Result<user::Id> {
-        let incoming = register_user_flow::IncomingFlow::from_command(command);
-        let existing = self.users.find_by_email(incoming.email()).await?;
-        let email_available = incoming
-            .classify_email_availability(existing)
-            .require_available()?;
-        let materialized = email_available.materialize_user(user::Id::new_v4());
-
-        let password_hash = self
-            .hasher
-            .hash(materialized.password().expose_secret())
-            .map_err(Error::Hashing)?;
-        let hashed = materialized.attach_password_hash(password_hash);
-
-        self.users
-            .create_with_credentials(hashed.user(), hashed.password_hash())
+    pub async fn register_user(&self, command: RegisterUser) -> Result<user::UserId> {
+        let persisted = register_user_flow::IncomingFlow::from_command(command)
+            .register(self)
             .await?;
-        let persisted = hashed.mark_persisted();
-
         Ok(persisted.user_id())
     }
 

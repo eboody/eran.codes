@@ -43,7 +43,7 @@ impl AuthRepository {
             row.get::<time::OffsetDateTime, _>("credential_updated_at");
 
         Ok(AuthRecord::builder()
-            .id(user::Id::from_uuid(user_id))
+            .id(user::UserId::from_uuid(user_id))
             .username(username)
             .email(email)
             .password_hash(password_hash)
@@ -85,7 +85,7 @@ impl Repository for AuthRepository {
         record.map(Self::auth_record_from_row).transpose()
     }
 
-    async fn find_by_id(&self, user_id: &user::Id) -> Result<Option<AuthRecord>> {
+    async fn find_by_id(&self, user_id: &user::UserId) -> Result<Option<AuthRecord>> {
         let start = std::time::Instant::now();
         tracing::info!(
             target: "demo.db",

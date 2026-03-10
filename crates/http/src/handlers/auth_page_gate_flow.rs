@@ -44,7 +44,7 @@ impl AuthPageGateFlow<Incoming> {
 #[transition]
 impl AuthPageGateFlow<Incoming> {
     pub(super) fn sanitize_next(mut self) -> AuthPageGateFlow<NextSanitized> {
-        self.next_sanitized = super::auth::sanitize_next(self.next_raw.take());
+        self.next_sanitized = super::auth::NextPath::sanitize(self.next_raw.take());
         self.transition()
     }
 }
@@ -72,7 +72,10 @@ impl AuthPageGateFlow<NextSanitized> {
 
 impl AuthPageGateFlow<RedirectReady> {
     pub(super) fn into_response(self) -> axum::response::Response {
-        super::auth::redirect_to_next(self.next_sanitized).into_response()
+        let target = self
+            .next_sanitized
+            .unwrap_or_else(|| crate::paths::Route::Protected.as_str().to_string());
+        axum::response::Redirect::to(&target).into_response()
     }
 }
 
@@ -143,5 +146,17 @@ mod tests {
             sanitized.classify(),
             AuthPageGateOutcome::Render(_)
         ));
+    }
+
+    #[test]
+    fn sanitize_next_drops_unsafe_redirects() {
+        let incoming = IncomingFlow::from_query(
+            AuthPageKind::Login,
+            Some(Text::from("//evil.example")),
+            false,
+        );
+        let sanitized = incoming.sanitize_next();
+
+        assert!(sanitized.next_sanitized.is_none());
     }
 }

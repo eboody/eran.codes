@@ -96,7 +96,7 @@ impl DemoUserEnsureFlow<Missing> {
 
     pub(super) fn apply_registration_result(
         self,
-        result: app::user::Result<domain::user::Id>,
+        result: app::user::Result<domain::user::UserId>,
     ) -> crate::Result<DemoUserEnsureFlow<RegistrationAccepted>> {
         match result {
             Ok(_) | Err(app::user::Error::EmailTaken) => Ok(self.accept_registration()),

@@ -2,7 +2,7 @@ use std::time::SystemTime;
 
 use statum::{machine, state, transition};
 
-use super::{Error, ModerationReason, PostMessage};
+use super::{AuditAction, AuditKey, AuditValue, Error, ModerationReason, PostMessage};
 use domain::chat;
 
 #[derive(Clone, Debug, PartialEq)]
@@ -188,6 +188,31 @@ impl PostMessageFlow<Incoming> {
             .maybe_client_id(client_id)
             .build()
     }
+
+    pub(super) async fn post(
+        self,
+        service: &super::Service,
+    ) -> Result<PostMessageFlow<Audited>, Error> {
+        let room_verified = self.verify_room(service).await?;
+        let membership_verified = room_verified.verify_membership(service).await?;
+        let rate_limited = membership_verified.check_rate_limit(service).await?;
+        let ready_for_audit = rate_limited
+            .build_for_delivery(service)
+            .persist(service.repo.as_ref())
+            .await?
+            .enqueue_if_pending(service.moderation.as_ref())
+            .await?;
+
+        ready_for_audit.record_audit(service).await
+    }
+
+    async fn verify_room(
+        self,
+        service: &super::Service,
+    ) -> Result<PostMessageFlow<RoomVerified>, Error> {
+        let room_exists = service.repo.find_room(self.room_id()).await?.is_some();
+        self.classify_room_lookup(room_exists).require_room()
+    }
 }
 
 impl PostMessageFlow<Incoming> {
@@ -208,6 +233,30 @@ impl PostMessageFlow<RoomVerified> {
             MembershipOutcome::NotMember
         }
     }
+
+    async fn verify_membership(
+        self,
+        service: &super::Service,
+    ) -> Result<PostMessageFlow<MembershipVerified>, Error> {
+        let is_member = service
+            .repo
+            .is_member(self.room_id(), self.user_id())
+            .await?;
+        self.classify_membership(is_member).require_member()
+    }
+}
+
+impl PostMessageFlow<MembershipVerified> {
+    async fn check_rate_limit(
+        self,
+        service: &super::Service,
+    ) -> Result<PostMessageFlow<RateLimitPassed>, Error> {
+        service
+            .rate_limiter
+            .check(self.room_id(), self.user_id())
+            .await?;
+        Ok(self.rate_limit_passed())
+    }
 }
 
 impl PostMessageFlow<RateLimitPassed> {
@@ -223,6 +272,15 @@ impl PostMessageFlow<RateLimitPassed> {
         } else {
             BuiltPostMessage::Visible(self.build_visible(message_id, created_at))
         }
+    }
+
+    fn build_for_delivery(self, service: &super::Service) -> BuiltPostMessage {
+        let requires_moderation = requires_moderation(self.body());
+        self.build(
+            service.ids.new_message_id(),
+            service.clock.now(),
+            requires_moderation,
+        )
     }
 
     fn build_message(
@@ -371,14 +429,66 @@ impl ReadyForAudit {
             Self::Pending(pending) => pending.mark_audited(),
         }
     }
+
+    async fn record_audit(
+        self,
+        service: &super::Service,
+    ) -> Result<PostMessageFlow<Audited>, Error> {
+        let (room_id, user_id, message_id, status) = {
+            let message = self.message();
+            (message.room_id, message.user_id, message.id, message.status)
+        };
+        service
+            .audit
+            .record(service.audit_entry(
+                room_id,
+                user_id,
+                AuditAction::MessagePost,
+                vec![
+                    (
+                        AuditKey::MessageId,
+                        AuditValue::new(message_id.as_uuid().to_string()),
+                    ),
+                    (AuditKey::Status, AuditValue::new(status.to_string())),
+                ],
+            ))
+            .await?;
+        Ok(self.mark_audited())
+    }
 }
 
 pub(super) type IncomingFlow = PostMessageFlow<Incoming>;
 
+fn requires_moderation(body: &chat::MessageBody) -> bool {
+    let value = body.to_string();
+    value.len() > 300 || LinkPrefix::is_present(&value)
+}
+
+#[derive(Clone, Copy, Debug)]
+enum LinkPrefix {
+    Http,
+    Https,
+}
+
+impl LinkPrefix {
+    fn as_str(self) -> &'static str {
+        match self {
+            LinkPrefix::Http => "http://",
+            LinkPrefix::Https => "https://",
+        }
+    }
+
+    fn is_present(value: &str) -> bool {
+        [Self::Http, Self::Https]
+            .iter()
+            .any(|prefix| value.contains(prefix.as_str()))
+    }
+}
+
 #[cfg(test)]
 mod tests {
     use async_trait::async_trait;
-    use std::sync::Mutex;
+    use std::sync::{Arc, Mutex};
 
     use super::*;
 
@@ -445,10 +555,20 @@ mod tests {
     }
 
     struct TestRepository {
+        room_exists: bool,
+        is_member: bool,
         inserted: Mutex<Vec<chat::MessageId>>,
     }
 
     impl TestRepository {
+        fn available() -> Self {
+            Self {
+                room_exists: true,
+                is_member: true,
+                inserted: Mutex::new(Vec::new()),
+            }
+        }
+
         fn inserted(&self) -> Vec<chat::MessageId> {
             self.inserted.lock().expect("inserted lock").clone()
         }
@@ -462,9 +582,13 @@ mod tests {
 
         async fn find_room(
             &self,
-            _room_id: &chat::RoomId,
+            room_id: &chat::RoomId,
         ) -> super::super::Result<Option<chat::Room>> {
-            unimplemented!("not used in this test")
+            Ok(self.room_exists.then_some(chat::Room {
+                id: *room_id,
+                name: chat::RoomName::Lobby,
+                created_by: chat::UserId::new_v4(),
+            }))
         }
 
         async fn find_room_by_name(
@@ -514,7 +638,7 @@ mod tests {
             _room_id: &chat::RoomId,
             _user_id: &chat::UserId,
         ) -> super::super::Result<bool> {
-            unimplemented!("not used in this test")
+            Ok(self.is_member)
         }
 
         async fn update_message_status(
@@ -568,14 +692,99 @@ mod tests {
         }
     }
 
+    #[derive(Default)]
+    struct TestRateLimiter {
+        checks: Mutex<Vec<(chat::RoomId, chat::UserId)>>,
+    }
+
+    impl TestRateLimiter {
+        fn checks(&self) -> Vec<(chat::RoomId, chat::UserId)> {
+            self.checks.lock().expect("checks lock").clone()
+        }
+    }
+
+    #[async_trait]
+    impl super::super::RateLimiter for TestRateLimiter {
+        async fn check(
+            &self,
+            room_id: &chat::RoomId,
+            user_id: &chat::UserId,
+        ) -> super::super::Result<()> {
+            self.checks
+                .lock()
+                .expect("checks lock")
+                .push((*room_id, *user_id));
+            Ok(())
+        }
+    }
+
+    #[derive(Default)]
+    struct TestAuditLog {
+        entries: Mutex<Vec<super::super::AuditEntry>>,
+    }
+
+    impl TestAuditLog {
+        fn entries(&self) -> Vec<super::super::AuditEntry> {
+            self.entries.lock().expect("entries lock").clone()
+        }
+    }
+
+    #[async_trait]
+    impl super::super::AuditLog for TestAuditLog {
+        async fn record(
+            &self,
+            entry: super::super::AuditEntry,
+        ) -> super::super::Result<()> {
+            self.entries.lock().expect("entries lock").push(entry);
+            Ok(())
+        }
+    }
+
+    struct FixedClock;
+
+    impl super::super::Clock for FixedClock {
+        fn now(&self) -> SystemTime {
+            SystemTime::UNIX_EPOCH
+        }
+    }
+
+    struct FixedIds {
+        message_id: chat::MessageId,
+    }
+
+    impl super::super::IdGenerator for FixedIds {
+        fn new_room_id(&self) -> chat::RoomId {
+            chat::RoomId::new_v4()
+        }
+
+        fn new_message_id(&self) -> chat::MessageId {
+            self.message_id
+        }
+    }
+
+    fn test_service(
+        repo: Arc<TestRepository>,
+        moderation: Arc<TestModerationQueue>,
+        rate_limiter: Arc<TestRateLimiter>,
+        audit: Arc<TestAuditLog>,
+        ids: Arc<FixedIds>,
+    ) -> super::super::Service {
+        super::super::Service::builder()
+            .with_repo(repo)
+            .with_moderation_queue(moderation)
+            .with_rate_limiter(rate_limiter)
+            .with_audit_log(audit)
+            .with_clock(Arc::new(FixedClock))
+            .with_id_generator(ids)
+            .build()
+    }
+
     #[tokio::test]
     async fn persist_visible_branch_inserts_message_and_keeps_visible_path() {
         let rate_limited = to_rate_limited(build_command("hello"));
         let built =
             rate_limited.build(chat::MessageId::new_v4(), SystemTime::UNIX_EPOCH, false);
-        let repo = TestRepository {
-            inserted: Mutex::new(Vec::new()),
-        };
+        let repo = TestRepository::available();
 
         let persisted = built.persist(&repo).await.expect("persisted");
 
@@ -588,9 +797,7 @@ mod tests {
         let rate_limited = to_rate_limited(build_command("contains a link"));
         let built =
             rate_limited.build(chat::MessageId::new_v4(), SystemTime::UNIX_EPOCH, true);
-        let repo = TestRepository {
-            inserted: Mutex::new(Vec::new()),
-        };
+        let repo = TestRepository::available();
         let moderation = TestModerationQueue {
             enqueued: Mutex::new(Vec::new()),
         };
@@ -606,5 +813,64 @@ mod tests {
         assert!(matches!(ready, ReadyForAudit::Pending(_)));
         assert_eq!(repo.inserted().len(), 1);
         assert_eq!(moderation.enqueued().len(), 1);
+    }
+
+    #[tokio::test]
+    async fn post_runs_visible_path_through_audit() {
+        let repo = Arc::new(TestRepository::available());
+        let moderation = Arc::new(TestModerationQueue {
+            enqueued: Mutex::new(Vec::new()),
+        });
+        let rate_limiter = Arc::new(TestRateLimiter::default());
+        let audit = Arc::new(TestAuditLog::default());
+        let message_id = chat::MessageId::new_v4();
+        let service = test_service(
+            repo.clone(),
+            moderation.clone(),
+            rate_limiter.clone(),
+            audit.clone(),
+            Arc::new(FixedIds { message_id }),
+        );
+
+        let audited = PostMessageFlow::<Incoming>::from_command(build_command("hello"))
+            .post(&service)
+            .await
+            .expect("posted");
+
+        assert_eq!(audited.into_message().id, message_id);
+        assert_eq!(repo.inserted(), vec![message_id]);
+        assert_eq!(rate_limiter.checks().len(), 1);
+        assert!(moderation.enqueued().is_empty());
+        assert_eq!(audit.entries().len(), 1);
+        assert_eq!(audit.entries()[0].action, AuditAction::MessagePost);
+    }
+
+    #[tokio::test]
+    async fn post_auto_moderates_links_before_audit() {
+        let repo = Arc::new(TestRepository::available());
+        let moderation = Arc::new(TestModerationQueue {
+            enqueued: Mutex::new(Vec::new()),
+        });
+        let rate_limiter = Arc::new(TestRateLimiter::default());
+        let audit = Arc::new(TestAuditLog::default());
+        let message_id = chat::MessageId::new_v4();
+        let service = test_service(
+            repo.clone(),
+            moderation.clone(),
+            rate_limiter,
+            audit,
+            Arc::new(FixedIds { message_id }),
+        );
+
+        let audited = PostMessageFlow::<Incoming>::from_command(build_command(
+            "visit https://example.com",
+        ))
+        .post(&service)
+        .await
+        .expect("posted");
+
+        assert_eq!(audited.into_message().status, chat::MessageStatus::Pending);
+        assert_eq!(repo.inserted(), vec![message_id]);
+        assert_eq!(moderation.enqueued(), vec![message_id]);
     }
 }

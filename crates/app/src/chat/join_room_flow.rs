@@ -1,6 +1,6 @@
 use statum::{machine, state, transition};
 
-use super::{Error, JoinRoom, RoomRole};
+use super::{AuditAction, AuditKey, AuditValue, Error, JoinRoom, RoomRole};
 use domain::chat;
 
 #[state]
@@ -30,6 +30,26 @@ impl JoinRoomFlow<Incoming> {
             .user_id(user_id)
             .role(role)
             .build()
+    }
+
+    pub(super) async fn join(
+        self,
+        service: &super::Service,
+    ) -> Result<JoinRoomFlow<Audited>, Error> {
+        let room_exists = service.repo.find_room(&self.room_id()).await?.is_some();
+        let room_verified = self.classify_room_lookup(room_exists).require_room()?;
+
+        service
+            .repo
+            .add_membership(
+                &room_verified.room_id(),
+                &room_verified.user_id(),
+                room_verified.role(),
+            )
+            .await?;
+        let membership_added = room_verified.mark_membership_added();
+
+        membership_added.record_audit(service).await
     }
 }
 
@@ -75,6 +95,24 @@ impl JoinRoomFlow<RoomVerified> {
 impl JoinRoomFlow<MembershipAdded> {
     pub(super) fn mark_audited(self) -> JoinRoomFlow<Audited> {
         self.transition()
+    }
+}
+
+impl JoinRoomFlow<MembershipAdded> {
+    async fn record_audit(
+        self,
+        service: &super::Service,
+    ) -> Result<JoinRoomFlow<Audited>, Error> {
+        service
+            .audit
+            .record(service.audit_entry(
+                self.room_id(),
+                self.user_id(),
+                AuditAction::RoomJoin,
+                vec![(AuditKey::Role, AuditValue::new(self.role().to_string()))],
+            ))
+            .await?;
+        Ok(self.mark_audited())
     }
 }
 

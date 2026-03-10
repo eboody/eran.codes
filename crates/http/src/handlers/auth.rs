@@ -54,8 +54,7 @@ pub async fn login(
     mut auth_session: crate::auth::Session,
     Form(form): Form<LoginForm>,
 ) -> crate::Result<axum::response::Response> {
-    let next = sanitize_next(form.next.clone());
-    let incoming = super::auth_login_flow::IncomingFlow::from_form(form, next)?;
+    let incoming = super::auth_login_flow::IncomingFlow::from_form(form)?;
     incoming
         .authenticate(&mut auth_session)
         .await?
@@ -68,8 +67,7 @@ pub async fn register(
     mut auth_session: crate::auth::Session,
     Form(form): Form<RegisterForm>,
 ) -> crate::Result<axum::response::Response> {
-    let next = sanitize_next(form.next.clone());
-    let incoming = super::auth_register_flow::IncomingFlow::from_form(form, next)?;
+    let incoming = super::auth_register_flow::IncomingFlow::from_form(form)?;
     incoming
         .register(&state)
         .await?
@@ -96,17 +94,8 @@ pub struct NextQuery {
     pub next: Option<Text>,
 }
 
-pub(super) fn sanitize_next(next: Option<Text>) -> Option<String> {
-    next.and_then(|value| NextPath::from(value).into_safe())
-}
-
-pub(super) fn redirect_to_next(next: Option<String>) -> Redirect {
-    let target = next.unwrap_or_else(|| Route::Protected.as_str().to_string());
-    Redirect::to(&target)
-}
-
 #[derive(Clone, Debug)]
-struct NextPath(Text);
+pub(super) struct NextPath(Text);
 
 impl NextPath {
     fn from(value: Text) -> Self {
@@ -116,6 +105,10 @@ impl NextPath {
     fn into_safe(self) -> Option<String> {
         let value = self.0.to_string();
         if Self::is_safe(&value) { Some(value) } else { None }
+    }
+
+    pub(super) fn sanitize(next: Option<Text>) -> Option<String> {
+        next.and_then(|value| Self::from(value).into_safe())
     }
 
     fn is_safe(value: &str) -> bool {

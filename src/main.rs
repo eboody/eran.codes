@@ -5,7 +5,7 @@ use std::sync::Arc;
 
 use app::user;
 use error::{Error, Result};
-use infra::user::Repository as UserRepo;
+use infra::user::UserRepository as UserRepo;
 use tower_cookies::Key;
 use tower_sessions::session_store::ExpiredDeletion;
 use tower_sessions_sqlx_store::PostgresStore;

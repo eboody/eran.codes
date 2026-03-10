@@ -1,6 +1,6 @@
 use statum::{machine, state, transition};
 
-use super::{CreateRoom, RoomRole};
+use super::{AuditAction, AuditKey, AuditValue, CreateRoom, RoomRole};
 use domain::chat;
 
 #[derive(Clone, Debug, PartialEq)]
@@ -30,6 +30,27 @@ impl CreateRoomFlow<Incoming> {
             .room_name(name)
             .created_by(created_by)
             .build()
+    }
+
+    pub(super) async fn create(
+        self,
+        service: &super::Service,
+    ) -> super::Result<CreateRoomFlow<Audited>> {
+        let materialized = self.materialize_room(service.ids.new_room_id());
+
+        service.repo.create_room(materialized.room()).await?;
+        let persisted = materialized.mark_room_persisted();
+        service
+            .repo
+            .add_membership(
+                &persisted.room_id(),
+                &persisted.owner_id(),
+                persisted.owner_role(),
+            )
+            .await?;
+        let owner_added = persisted.mark_owner_membership_added();
+
+        owner_added.record_audit(service).await
     }
 }
 
@@ -90,8 +111,26 @@ impl CreateRoomFlow<RoomPersisted> {
 }
 
 impl CreateRoomFlow<OwnerMembershipAdded> {
-    pub(super) fn room(&self) -> &chat::Room {
-        &self.state_data.room
+    async fn record_audit(
+        self,
+        service: &super::Service,
+    ) -> super::Result<CreateRoomFlow<Audited>> {
+        let room_id = self.state_data.room.id;
+        let created_by = self.state_data.room.created_by;
+
+        service
+            .audit
+            .record(service.audit_entry(
+                room_id,
+                created_by,
+                AuditAction::RoomCreate,
+                vec![(
+                    AuditKey::RoomId,
+                    AuditValue::new(room_id.as_uuid().to_string()),
+                )],
+            ))
+            .await?;
+        Ok(self.mark_audited())
     }
 }
 

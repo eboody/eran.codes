@@ -1,7 +1,8 @@
 pub use SqlxUserRepository as Repository;
+pub use SqlxUserRepository as UserRepository;
 
 use app::auth::PasswordHash;
-use app::user::{Error, Repository as UserRepository, Result};
+use app::user::{Error, Repository as AppUserRepository, Result};
 use async_trait::async_trait;
 use domain::user;
 use sqlx::{Row, postgres::PgRow};
@@ -11,7 +12,7 @@ pub struct SqlxUserRepository {
 }
 
 #[async_trait]
-impl UserRepository for SqlxUserRepository {
+impl AppUserRepository for SqlxUserRepository {
     async fn find_by_email(&self, email: &user::Email) -> Result<Option<user::User>> {
         let email_value = email.to_string();
         let start = std::time::Instant::now();
@@ -134,7 +135,7 @@ impl SqlxUserRepository {
             .map_err(|error| Error::Repo(error.to_string().into()))?;
 
         Ok(user::User {
-            id: user::Id::from_uuid(row.get::<uuid::Uuid, _>("id")),
+            id: user::UserId::from_uuid(row.get::<uuid::Uuid, _>("id")),
             username,
             email,
         })

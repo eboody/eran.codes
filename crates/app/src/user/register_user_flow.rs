@@ -1,4 +1,4 @@
-use secrecy::SecretString;
+use secrecy::{ExposeSecret, SecretString};
 use statum::{machine, state, transition};
 
 use super::{Error, RegisterUser};
@@ -17,7 +17,7 @@ pub struct PasswordHashedData {
 
 #[derive(Clone, Debug, PartialEq)]
 pub struct PersistedData {
-    user_id: user::Id,
+    user_id: user::UserId,
 }
 
 #[state]
@@ -58,13 +58,33 @@ impl RegisterUserFlow<Incoming> {
             None => EmailAvailabilityOutcome::Available(self.mark_email_available()),
         }
     }
+
+    pub(super) async fn register(
+        self,
+        service: &super::Service,
+    ) -> Result<RegisterUserFlow<Persisted>, Error> {
+        let email_available = self.verify_email_availability(service).await?;
+        let materialized = email_available.materialize_user(user::UserId::new_v4());
+        let hashed = materialized.hash_password(service.hasher.as_ref())?;
+
+        hashed.persist(service.users.as_ref()).await
+    }
+
+    async fn verify_email_availability(
+        self,
+        service: &super::Service,
+    ) -> Result<RegisterUserFlow<EmailAvailable>, Error> {
+        let existing_user = service.users.find_by_email(self.email()).await?;
+        self.classify_email_availability(existing_user)
+            .require_available()
+    }
 }
 
 #[transition]
 impl RegisterUserFlow<EmailAvailable> {
     pub(super) fn materialize_user(
         self,
-        user_id: user::Id,
+        user_id: user::UserId,
     ) -> RegisterUserFlow<UserMaterialized> {
         let data = UserMaterializedData {
             user: user::User {
@@ -135,11 +155,32 @@ impl RegisterUserFlow<PasswordHashed> {
     pub(super) fn password_hash(&self) -> &crate::auth::PasswordHash {
         &self.state_data.password_hash
     }
+
+    async fn persist(
+        self,
+        repo: &dyn super::Repository,
+    ) -> Result<RegisterUserFlow<Persisted>, Error> {
+        repo.create_with_credentials(self.user(), self.password_hash())
+            .await?;
+        Ok(self.mark_persisted())
+    }
 }
 
 impl RegisterUserFlow<Persisted> {
-    pub(super) fn user_id(&self) -> user::Id {
+    pub(super) fn user_id(&self) -> user::UserId {
         self.state_data.user_id
+    }
+}
+
+impl RegisterUserFlow<UserMaterialized> {
+    fn hash_password(
+        self,
+        hasher: &dyn crate::auth::PasswordHasher,
+    ) -> Result<RegisterUserFlow<PasswordHashed>, Error> {
+        let password_hash = hasher
+            .hash(self.password().expose_secret())
+            .map_err(Error::Hashing)?;
+        Ok(self.attach_password_hash(password_hash))
     }
 }
 
@@ -166,6 +207,10 @@ pub(super) type IncomingFlow = RegisterUserFlow<Incoming>;
 
 #[cfg(test)]
 mod tests {
+    use std::sync::{Arc, Mutex};
+
+    use async_trait::async_trait;
+
     use super::*;
 
     fn build_command() -> RegisterUser {
@@ -178,7 +223,7 @@ mod tests {
 
     fn build_existing_user() -> user::User {
         user::User::builder()
-            .id(user::Id::new_v4())
+            .id(user::UserId::new_v4())
             .username(user::Username::try_new("person").expect("valid username"))
             .email(user::Email::try_new("person@example.com").expect("valid email"))
             .build()
@@ -200,7 +245,7 @@ mod tests {
             .classify_email_availability(None)
             .require_available()
             .expect("email available");
-        let materialized = available.materialize_user(user::Id::new_v4());
+        let materialized = available.materialize_user(user::UserId::new_v4());
         let expected_user_id = materialized.state_data.user.id;
 
         let hashed =
@@ -211,5 +256,150 @@ mod tests {
 
         let persisted = hashed.mark_persisted();
         assert_eq!(persisted.user_id(), expected_user_id);
+    }
+
+    struct TestRepository {
+        existing_user: Option<user::User>,
+        created_users: Mutex<Vec<user::UserId>>,
+        create_outcome: CreateOutcome,
+    }
+
+    impl TestRepository {
+        fn created_users(&self) -> Vec<user::UserId> {
+            self.created_users
+                .lock()
+                .expect("created_users lock")
+                .clone()
+        }
+    }
+
+    #[async_trait]
+    impl super::super::Repository for TestRepository {
+        async fn find_by_email(
+            &self,
+            _email: &user::Email,
+        ) -> super::super::Result<Option<user::User>> {
+            Ok(self.existing_user.clone())
+        }
+
+        async fn create_with_credentials(
+            &self,
+            user: &user::User,
+            _password_hash: &crate::auth::PasswordHash,
+        ) -> super::super::Result<()> {
+            self.created_users
+                .lock()
+                .expect("created_users lock")
+                .push(user.id);
+            match self.create_outcome {
+                CreateOutcome::Ok => Ok(()),
+                CreateOutcome::EmailTaken => Err(super::super::Error::EmailTaken),
+            }
+        }
+    }
+
+    #[derive(Clone, Copy)]
+    enum CreateOutcome {
+        Ok,
+        EmailTaken,
+    }
+
+    struct TestHasher {
+        hash_outcome: HashOutcome,
+    }
+
+    impl crate::auth::PasswordHasher for TestHasher {
+        fn hash(&self, _password: &str) -> crate::auth::Result<crate::auth::PasswordHash> {
+            match self.hash_outcome {
+                HashOutcome::Ok => Ok(crate::auth::PasswordHash::new("hash")),
+                HashOutcome::Fail => Err(crate::auth::Error::Hash(
+                    crate::auth::HashErrorText::new("hash failed"),
+                )),
+            }
+        }
+
+        fn verify(
+            &self,
+            _password: &str,
+            _password_hash: &crate::auth::PasswordHash,
+        ) -> crate::auth::Result<bool> {
+            unimplemented!("not used in this test")
+        }
+    }
+
+    #[derive(Clone, Copy)]
+    enum HashOutcome {
+        Ok,
+        Fail,
+    }
+
+    fn test_service(
+        repo: Arc<TestRepository>,
+        hasher: Arc<TestHasher>,
+    ) -> super::super::Service {
+        super::super::Service::new(repo, hasher)
+    }
+
+    #[tokio::test]
+    async fn register_runs_full_path_to_persisted_user() {
+        let repo = Arc::new(TestRepository {
+            existing_user: None,
+            created_users: Mutex::new(Vec::new()),
+            create_outcome: CreateOutcome::Ok,
+        });
+        let hasher = Arc::new(TestHasher {
+            hash_outcome: HashOutcome::Ok,
+        });
+        let service = test_service(repo.clone(), hasher);
+
+        let persisted = RegisterUserFlow::<Incoming>::from_command(build_command())
+            .register(&service)
+            .await
+            .expect("persisted");
+
+        assert_eq!(repo.created_users(), vec![persisted.user_id()]);
+    }
+
+    #[tokio::test]
+    async fn register_surfaces_persistence_error_after_hash() {
+        let repo = Arc::new(TestRepository {
+            existing_user: None,
+            created_users: Mutex::new(Vec::new()),
+            create_outcome: CreateOutcome::EmailTaken,
+        });
+        let hasher = Arc::new(TestHasher {
+            hash_outcome: HashOutcome::Ok,
+        });
+        let service = test_service(repo.clone(), hasher);
+
+        let result = RegisterUserFlow::<Incoming>::from_command(build_command())
+            .register(&service)
+            .await;
+
+        assert!(matches!(result, Err(Error::EmailTaken)));
+        assert_eq!(repo.created_users().len(), 1);
+    }
+
+    #[tokio::test]
+    async fn register_surfaces_hashing_error_before_persist() {
+        let repo = Arc::new(TestRepository {
+            existing_user: None,
+            created_users: Mutex::new(Vec::new()),
+            create_outcome: CreateOutcome::Ok,
+        });
+        let hasher = Arc::new(TestHasher {
+            hash_outcome: HashOutcome::Fail,
+        });
+        let service = test_service(repo.clone(), hasher);
+
+        let result = RegisterUserFlow::<Incoming>::from_command(build_command())
+            .register(&service)
+            .await;
+
+        assert!(matches!(
+            result,
+            Err(Error::Hashing(crate::auth::Error::Hash(_)))
+        ));
+        assert!(repo.created_users().is_empty());
     }
 }

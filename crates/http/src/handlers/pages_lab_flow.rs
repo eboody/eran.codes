@@ -6,7 +6,7 @@ use crate::views::partials::chat;
 #[derive(Clone, Debug)]
 pub struct ViewerData {
     maybe_user: Option<crate::views::page::UserNav>,
-    viewer_id: Option<domain::user::Id>,
+    viewer_id: Option<domain::user::UserId>,
     interactivity: chat::Mode,
 }
 

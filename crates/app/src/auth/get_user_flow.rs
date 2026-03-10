@@ -93,7 +93,7 @@ mod tests {
 
     fn test_record() -> AuthRecord {
         AuthRecord::builder()
-            .id(user::Id::new_v4())
+            .id(user::UserId::new_v4())
             .username(user::Username::try_new("person").expect("valid username"))
             .email(user::Email::try_new("person@example.com").expect("valid email"))
             .password_hash(super::super::PasswordHash::new("hash"))

@@ -173,7 +173,7 @@ mod tests {
 
     fn test_record() -> AuthRecord {
         AuthRecord::builder()
-            .id(user::Id::new_v4())
+            .id(user::UserId::new_v4())
             .username(test_username())
             .email(test_email())
             .password_hash(PasswordHash::new("hash"))

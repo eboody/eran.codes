@@ -91,18 +91,18 @@ impl From<app::auth::AuthenticatedUser> for User {
 pub struct UserId(String);
 
 impl UserId {
-    pub fn to_domain(&self) -> Result<domain::user::Id, app::auth::Error> {
+    pub fn to_domain(&self) -> Result<domain::user::UserId, app::auth::Error> {
         let parsed = self.to_string().parse::<uuid::Uuid>().map_err(|error| {
             app::auth::Error::Repository(app::auth::RepositoryErrorText::new(
                 error.to_string(),
             ))
         })?;
-        Ok(domain::user::Id::from_uuid(parsed))
+        Ok(domain::user::UserId::from_uuid(parsed))
     }
 }
 
-impl From<domain::user::Id> for UserId {
-    fn from(value: domain::user::Id) -> Self {
+impl From<domain::user::UserId> for UserId {
+    fn from(value: domain::user::UserId) -> Self {
         UserId::new(value.as_uuid().to_string())
     }
 }
