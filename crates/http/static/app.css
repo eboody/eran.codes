@@ -10,6 +10,26 @@
   --surface-raised: hsl(34 35% 98%);
   --surface-field: hsl(36 28% 96%);
   --surface-inset: hsl(210 22% 92%);
+  --surface-fill-shell:
+    linear-gradient(180deg, color-mix(in srgb, white 38%, transparent), transparent 42%),
+    color-mix(in srgb, var(--surface-shell) 88%, transparent);
+  --surface-fill-panel:
+    linear-gradient(180deg, color-mix(in srgb, white 38%, transparent), transparent 28%),
+    var(--surface-panel);
+  --surface-fill-field:
+    linear-gradient(180deg, color-mix(in srgb, white 26%, transparent), transparent),
+    var(--surface-field);
+  --control-fill-secondary:
+    linear-gradient(180deg, color-mix(in srgb, white 32%, transparent), transparent),
+    var(--surface-field);
+  --control-fill-input:
+    linear-gradient(180deg, color-mix(in srgb, white 42%, transparent), transparent),
+    var(--surface-field);
+  --control-edge-accent: color-mix(in srgb, white 24%, transparent);
+  --control-edge-accent-hover: color-mix(in srgb, white 26%, transparent);
+  --surface-edge-soft: color-mix(in srgb, white 48%, transparent);
+  --surface-edge-default: color-mix(in srgb, white 54%, transparent);
+  --surface-edge-strong: color-mix(in srgb, white 62%, transparent);
 
   --text-strong: hsl(222 24% 15%);
   --text-body: hsl(220 18% 24%);
@@ -83,36 +103,58 @@
 
 @media (prefers-color-scheme: dark) {
   :root {
-    --surface-page: hsl(222 19% 13%);
-    --surface-page-alt: hsl(223 18% 11%);
-    --surface-shell: hsl(223 16% 18% / 0.92);
-    --surface-panel: hsl(223 14% 19% / 0.94);
-    --surface-raised: hsl(222 13% 22%);
-    --surface-field: hsl(221 13% 18%);
-    --surface-inset: hsl(221 13% 15%);
+    --surface-page: hsl(228 12% 5%);
+    --surface-page-alt: hsl(228 11% 4%);
+    --surface-shell: hsl(228 11% 9% / 0.96);
+    --surface-panel: hsl(228 10% 11% / 0.98);
+    --surface-raised: hsl(228 10% 14%);
+    --surface-field: hsl(228 10% 9%);
+    --surface-inset: hsl(228 10% 6%);
+    --surface-wash-top: color-mix(in srgb, var(--surface-raised) 86%, black 14%);
+    --surface-wash-top-soft: color-mix(in srgb, var(--surface-panel) 82%, black 18%);
+    --surface-fill-shell:
+      linear-gradient(180deg, var(--surface-wash-top), transparent 34%),
+      color-mix(in srgb, var(--surface-shell) 94%, black 6%);
+    --surface-fill-panel:
+      linear-gradient(180deg, var(--surface-wash-top-soft), transparent 28%),
+      color-mix(in srgb, var(--surface-panel) 92%, black 8%);
+    --surface-fill-field:
+      linear-gradient(180deg, var(--surface-wash-top-soft), transparent 28%),
+      color-mix(in srgb, var(--surface-field) 92%, black 8%);
+    --control-fill-secondary:
+      linear-gradient(180deg, var(--surface-wash-top-soft), transparent),
+      color-mix(in srgb, var(--surface-raised) 94%, black 6%);
+    --control-fill-input:
+      linear-gradient(180deg, var(--surface-wash-top-soft), transparent),
+      color-mix(in srgb, var(--surface-field) 92%, black 8%);
+    --control-edge-accent: color-mix(in srgb, white 16%, transparent);
+    --control-edge-accent-hover: color-mix(in srgb, white 18%, transparent);
+    --surface-edge-soft: color-mix(in srgb, white 8%, transparent);
+    --surface-edge-default: color-mix(in srgb, white 10%, transparent);
+    --surface-edge-strong: color-mix(in srgb, white 12%, transparent);
 
     --text-strong: hsl(38 32% 95%);
-    --text-body: hsl(218 22% 86%);
-    --text-muted: hsl(218 16% 72%);
-    --text-subtle: hsl(219 12% 60%);
+    --text-body: hsl(218 24% 91%);
+    --text-muted: hsl(218 16% 79%);
+    --text-subtle: hsl(219 12% 68%);
     --text-on-accent: hsl(220 24% 11%);
 
-    --border-subtle: hsl(214 22% 52% / 0.44);
-    --border-default: hsl(214 20% 46% / 0.82);
-    --border-strong: hsl(203 44% 76% / 0.9);
+    --border-subtle: hsl(214 18% 68% / 0.24);
+    --border-default: hsl(214 18% 62% / 0.5);
+    --border-strong: hsl(203 42% 78% / 0.76);
 
-    --accent-signal: hsl(198 96% 72%);
-    --accent-signal-soft: color-mix(in srgb, var(--accent-signal) 18%, transparent);
-    --accent-warm: hsl(26 78% 72%);
-    --accent-warm-soft: color-mix(in srgb, var(--accent-warm) 16%, transparent);
+    --accent-signal: hsl(212 88% 68%);
+    --accent-signal-soft: color-mix(in srgb, var(--accent-signal) 16%, transparent);
+    --accent-warm: hsl(6 78% 66%);
+    --accent-warm-soft: color-mix(in srgb, var(--accent-warm) 14%, transparent);
     --status-success: hsl(145 66% 62%);
     --status-warn: hsl(39 92% 64%);
     --status-danger: hsl(8 90% 68%);
 
-    --shadow-shell: 0 22px 54px color-mix(in srgb, black 34%, transparent);
+    --shadow-shell: 0 18px 34px color-mix(in srgb, black 30%, transparent);
     --shadow-panel:
       0 1px 0 color-mix(in srgb, white 14%, transparent),
-      0 16px 34px color-mix(in srgb, black 22%, transparent);
+      0 12px 22px color-mix(in srgb, black 24%, transparent);
 
     --ui-surface-card: var(--surface-panel);
     --ui-text: var(--text-body);
@@ -132,8 +174,8 @@
     --portfolio-surface-border: var(--border-default);
 
     --ui-border-soft: var(--border-subtle);
-    --ui-surface-soft: color-mix(in srgb, var(--surface-panel) 84%, var(--surface-field));
-    --ui-surface-soft-alt: color-mix(in srgb, var(--surface-field) 74%, var(--surface-inset));
+    --ui-surface-soft: color-mix(in srgb, var(--surface-panel) 86%, var(--surface-field));
+    --ui-surface-soft-alt: color-mix(in srgb, var(--surface-field) 76%, var(--surface-inset));
   }
 }
 
@@ -141,27 +183,23 @@
   body {
     background:
       radial-gradient(
-        circle at 0% 0%,
-        color-mix(in srgb, var(--accent-signal) 18%, transparent),
-        transparent 38%
+        circle at 10% 0%,
+        color-mix(in srgb, var(--accent-signal) 22%, transparent),
+        transparent 44%
       ),
       radial-gradient(
-        circle at 100% 10%,
-        color-mix(in srgb, var(--accent-warm) 14%, transparent),
-        transparent 44%
+        circle at 100% 0%,
+        color-mix(in srgb, var(--accent-warm) 18%, transparent),
+        transparent 48%
       ),
       linear-gradient(180deg, var(--surface-page), var(--surface-page-alt));
   }
 
-  .ui-nav {
-    background:
-      linear-gradient(180deg, color-mix(in srgb, white 10%, transparent), transparent 40%),
-      color-mix(in srgb, var(--surface-shell) 94%, black 6%);
-  }
-
   button.secondary,
   .button.secondary {
-    background: color-mix(in srgb, var(--surface-raised) 92%, transparent);
+    color: var(--text-body);
+    background: var(--control-fill-secondary);
+    border-color: color-mix(in srgb, var(--border-default) 96%, transparent);
   }
 }
 
@@ -220,7 +258,7 @@ button,
   color: var(--ui-text-on-accent);
   background: var(--ui-accent-primary);
   box-shadow:
-    inset 0 1px 0 color-mix(in srgb, white 24%, transparent),
+    inset 0 1px 0 var(--control-edge-accent),
     0 10px 24px color-mix(in srgb, var(--ui-accent-primary) 18%, transparent);
   transition:
     background-color var(--motion-fast),
@@ -237,11 +275,9 @@ button {
 button.secondary,
 .button.secondary {
   color: var(--text-strong);
-  background:
-    linear-gradient(180deg, color-mix(in srgb, white 32%, transparent), transparent),
-    var(--surface-field);
+  background: var(--control-fill-secondary);
   border-color: var(--border-default);
-  box-shadow: inset 0 1px 0 color-mix(in srgb, white 54%, transparent);
+  box-shadow: inset 0 1px 0 var(--surface-edge-default);
 }
 
 button:focus-visible,
@@ -251,7 +287,7 @@ input:focus-visible {
   border-color: color-mix(in srgb, var(--ui-accent-primary) 54%, var(--border-default));
   box-shadow:
     0 0 0 0.22rem color-mix(in srgb, var(--ui-accent-primary) 18%, transparent),
-    inset 0 1px 0 color-mix(in srgb, white 54%, transparent);
+    inset 0 1px 0 var(--surface-edge-default);
 }
 
 input[type="text"],
@@ -263,12 +299,10 @@ input[type="password"] {
   padding-inline: 0.9rem;
   border: 1px solid var(--border-default);
   border-radius: var(--radius-control);
-  background:
-    linear-gradient(180deg, color-mix(in srgb, white 42%, transparent), transparent),
-    var(--surface-field);
+  background: var(--control-fill-input);
   color: var(--text-body);
   font: inherit;
-  box-shadow: inset 0 1px 0 color-mix(in srgb, white 62%, transparent);
+  box-shadow: inset 0 1px 0 var(--surface-edge-strong);
   transition:
     border-color var(--motion-fast),
     box-shadow var(--motion-fast),
@@ -466,10 +500,8 @@ input[type="password"] {
   padding: 1rem 1.15rem;
   border-radius: var(--ui-radius-md);
   border: 1px solid var(--border-default);
-  background:
-    linear-gradient(180deg, color-mix(in srgb, white 26%, transparent), transparent),
-    var(--surface-field);
-  box-shadow: inset 0 1px 0 color-mix(in srgb, white 48%, transparent);
+  background: var(--surface-fill-field);
+  box-shadow: inset 0 1px 0 var(--surface-edge-soft);
 }
 
 .ui-demo-result[data-muted] {
@@ -483,10 +515,8 @@ input[type="password"] {
   padding: var(--space-card);
   border-radius: var(--ui-radius-md);
   border: 1px solid var(--border-default);
-  background:
-    linear-gradient(180deg, color-mix(in srgb, white 24%, transparent), transparent),
-    var(--surface-field);
-  box-shadow: inset 0 1px 0 color-mix(in srgb, white 50%, transparent);
+  background: var(--surface-fill-field);
+  box-shadow: inset 0 1px 0 var(--surface-edge-soft);
 }
 
 .ui-op-filter-label {
@@ -613,14 +643,14 @@ input[type="password"] {
   button:hover {
     transform: translateY(-1px);
     box-shadow:
-      inset 0 1px 0 color-mix(in srgb, white 26%, transparent),
+      inset 0 1px 0 var(--control-edge-accent-hover),
       0 14px 28px color-mix(in srgb, var(--ui-accent-primary) 18%, transparent);
   }
 
   button.secondary:hover,
   .button.secondary:hover {
     box-shadow:
-      inset 0 1px 0 color-mix(in srgb, white 58%, transparent),
+      inset 0 1px 0 var(--surface-edge-strong),
       0 10px 18px color-mix(in srgb, #142033 8%, transparent);
   }
 }
@@ -633,9 +663,7 @@ input[type="password"] {
   padding: clamp(1.2rem, 0.95rem + 0.8vw, 1.9rem);
   border: 1px solid var(--border-default);
   border-radius: var(--radius-card);
-  background:
-    linear-gradient(180deg, color-mix(in srgb, white 38%, transparent), transparent 28%),
-    var(--surface-panel);
+  background: var(--surface-fill-panel);
   box-shadow: var(--shadow-panel);
 }
 
@@ -689,7 +717,7 @@ input[type="password"] {
     var(--surface-panel)
   );
   box-shadow:
-    inset 0 1px 0 color-mix(in srgb, white 50%, transparent),
+    inset 0 1px 0 var(--surface-edge-soft),
     0 0 0 1px color-mix(in srgb, var(--tab-accent, var(--ui-accent-primary)) 22%, transparent);
 }
 
@@ -727,7 +755,7 @@ input[type="password"] {
   display: grid;
   gap: var(--size-2);
   align-content: start;
-  box-shadow: inset 0 1px 0 color-mix(in srgb, white 54%, transparent);
+  box-shadow: inset 0 1px 0 var(--surface-edge-default);
 }
 
 .ui-feature-list {
@@ -758,10 +786,8 @@ input[type="password"] {
   border: 1px solid var(--border-default);
   border-radius: calc(var(--radius-card) - 2px);
   padding: var(--space-card);
-  background:
-    linear-gradient(180deg, color-mix(in srgb, white 28%, transparent), transparent),
-    var(--surface-field);
-  box-shadow: inset 0 1px 0 color-mix(in srgb, white 48%, transparent);
+  background: var(--surface-fill-field);
+  box-shadow: inset 0 1px 0 var(--surface-edge-soft);
 }
 
 .ui-info-card h3 {
@@ -813,9 +839,7 @@ input[type="password"] {
   padding: 0.8rem 1rem;
   border-radius: var(--radius-shell);
   border: 1px solid color-mix(in srgb, var(--border-strong) 24%, transparent);
-  background:
-    linear-gradient(180deg, color-mix(in srgb, white 38%, transparent), transparent 42%),
-    color-mix(in srgb, var(--surface-shell) 88%, transparent);
+  background: var(--surface-fill-shell);
   backdrop-filter: blur(16px);
   box-shadow: var(--shadow-shell);
 }
@@ -853,20 +877,83 @@ input[type="password"] {
   background: var(--accent-signal-soft);
 }
 
-.ui-nav-brand .ui-nav-link {
-  padding-inline: 0;
+.ui-nav-brand {
+  display: flex;
+  align-items: center;
+  flex-shrink: 0;
+}
+
+.ui-nav-brand-link {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.72rem;
+  color: var(--text-strong);
+  text-decoration: none;
+  transition:
+    opacity var(--motion-fast),
+    transform var(--motion-fast);
+}
+
+.ui-nav-brand-link:hover {
+  opacity: 0.9;
+}
+
+.ui-nav-brand-link:focus-visible {
+  outline: 2px solid color-mix(in srgb, var(--accent-signal) 64%, white);
+  outline-offset: 0.35rem;
+  border-radius: calc(var(--radius-control) - 2px);
+}
+
+.ui-nav-brand-picture {
+  display: flex;
+  position: relative;
+  z-index: 1;
+}
+
+.ui-nav-brand-mark-wrap {
+  --_logo-glow-red: rgb(218 89 85 / 0.88);
+  --_logo-glow-blue: rgb(38 125 255 / 0.88);
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  isolation: isolate;
+}
+
+.ui-nav-brand-mark-wrap::before {
+  content: "";
+  position: absolute;
+  inset: auto;
+  inline-size: 3.6rem;
+  block-size: 3.6rem;
+  top: 50%;
+  left: 50%;
+  z-index: 0;
+  border-radius: 0.85rem;
+  background-image: linear-gradient(
+    -45deg,
+    var(--_logo-glow-red) 50%,
+    var(--_logo-glow-blue) 50%
+  );
+  filter: blur(1.55rem);
+  opacity: 0.92;
+  transform: translate(-50%, -50%);
+}
+
+.ui-nav-brand-mark {
+  display: block;
+  inline-size: 2.6rem;
+  block-size: 2.6rem;
+  flex: none;
+  filter: drop-shadow(0.18rem 0.24rem 0.8rem color-mix(in srgb, black 18%, transparent));
+}
+
+.ui-nav-brand-text {
   font-family: var(--font-display);
   font-size: 1.08rem;
   font-weight: 600;
   letter-spacing: -0.02em;
-  text-transform: none;
-  color: var(--text-strong);
-  background: transparent;
-}
-
-.ui-nav-brand .ui-nav-link:hover,
-.ui-nav-brand .ui-nav-link:focus-visible {
-  background: transparent;
+  line-height: 1;
 }
 
 .ui-nav-links {
@@ -921,7 +1008,12 @@ input[type="password"] {
     scrollbar-width: thin;
   }
 
-  .ui-nav-brand .ui-nav-link {
+  .ui-nav-brand-mark {
+    inline-size: 1.85rem;
+    block-size: 1.85rem;
+  }
+
+  .ui-nav-brand-text {
     font-size: 0.96rem;
   }
 
@@ -1563,7 +1655,7 @@ input[type="password"] {
       transparent 56%
     ),
     var(--surface-raised);
-  box-shadow: inset 0 1px 0 color-mix(in srgb, white 54%, transparent);
+  box-shadow: inset 0 1px 0 var(--surface-edge-default);
 }
 
 .ui-home-hero-card h3 {
@@ -1714,10 +1806,8 @@ input[type="password"] {
   padding: var(--space-card);
   border: 1px solid var(--border-default);
   border-radius: calc(var(--radius-card) - 2px);
-  background:
-    linear-gradient(180deg, color-mix(in srgb, white 24%, transparent), transparent),
-    var(--surface-field);
-  box-shadow: inset 0 1px 0 color-mix(in srgb, white 55%, transparent);
+  background: var(--surface-fill-field);
+  box-shadow: inset 0 1px 0 var(--surface-edge-default);
 }
 
 .ui-lab-main .ui-log-flow-shell {
@@ -1740,7 +1830,7 @@ input[type="password"] {
 .ui-lab-main .ui-log-flow-item.is-selected {
   border-color: color-mix(in srgb, var(--accent-signal) 30%, var(--border-default));
   background: color-mix(in srgb, var(--accent-signal) 9%, var(--surface-panel));
-  box-shadow: inset 0 1px 0 color-mix(in srgb, white 58%, transparent);
+  box-shadow: inset 0 1px 0 var(--surface-edge-strong);
 }
 
 .ui-lab-main .ui-log-flow-details {
@@ -1754,7 +1844,7 @@ input[type="password"] {
       transparent 42%
     ),
     var(--surface-raised);
-  box-shadow: inset 0 1px 0 color-mix(in srgb, white 55%, transparent);
+  box-shadow: inset 0 1px 0 var(--surface-edge-default);
 }
 
 .ui-lab-main .ui-log-flow-detail-header {
@@ -1780,9 +1870,7 @@ input[type="password"] {
 .ui-lab-main [data-chat-surface] {
   margin-top: 0;
   border-color: var(--border-default);
-  background:
-    linear-gradient(180deg, color-mix(in srgb, white 24%, transparent), transparent),
-    var(--surface-panel);
+  background: var(--surface-fill-panel);
   box-shadow: var(--shadow-panel);
 }
 
@@ -1801,46 +1889,59 @@ input[type="password"] {
     border-color: color-mix(in srgb, var(--accent-signal) 18%, var(--border-default));
     background:
       radial-gradient(
-        circle at 18% 0%,
+        circle at 16% 0%,
         color-mix(in srgb, var(--accent-signal) 18%, transparent),
-        transparent 34%
+        transparent 44%
       ),
-      linear-gradient(180deg, color-mix(in srgb, white 8%, transparent), transparent 36%),
-      color-mix(in srgb, var(--surface-shell) 92%, black 8%);
+      linear-gradient(180deg, var(--surface-wash-top), transparent 38%),
+      color-mix(in srgb, var(--surface-shell) 94%, black 6%);
   }
 
   .ui-home-hero-card {
     border-color: color-mix(in srgb, var(--accent-warm) 22%, var(--border-default));
     background:
-      linear-gradient(
-        180deg,
-        color-mix(in srgb, var(--accent-warm) 10%, transparent),
-        transparent 54%
+      linear-gradient(180deg, var(--surface-wash-top-soft), transparent 36%),
+      radial-gradient(
+        circle at 100% 0%,
+        color-mix(in srgb, var(--accent-warm) 14%, transparent),
+        transparent 62%
       ),
-      color-mix(in srgb, var(--surface-raised) 94%, black 6%);
+      color-mix(in srgb, var(--surface-raised) 92%, black 8%);
+    box-shadow:
+      inset 0 1px 0 var(--surface-edge-default),
+      0 12px 20px color-mix(in srgb, black 24%, transparent);
   }
 
   .ui-lab-tab-set,
   .ui-lab-main [data-chat-surface],
   .ui-lab-main .ui-lab-chat-surface:not([data-chat-surface]) {
     background:
-      linear-gradient(180deg, color-mix(in srgb, white 8%, transparent), transparent 30%),
-      color-mix(in srgb, var(--surface-panel) 94%, black 6%);
+      linear-gradient(
+        180deg,
+        var(--surface-wash-top-soft),
+        transparent 34%
+      ),
+      color-mix(in srgb, var(--surface-panel) 92%, black 8%);
   }
 
-  .ui-op-filter,
-  .ui-demo-result,
-  .ui-info-card,
   .ui-preview-frame,
-  .ui-burst-result,
-  .ui-lab-main .ui-log-scroll,
   .ui-lab-main .ui-log-flow-details {
     background:
-      linear-gradient(180deg, color-mix(in srgb, white 7%, transparent), transparent 28%),
-      color-mix(in srgb, var(--surface-field) 94%, black 6%);
+      linear-gradient(180deg, var(--surface-wash-top-soft), transparent 28%),
+      color-mix(in srgb, var(--surface-field) 92%, black 8%);
   }
 
-  .ui-home-hero-card,
+  .ui-burst-result,
+  .ui-lab-main .ui-log-flow-item.is-selected {
+    background:
+      linear-gradient(
+        180deg,
+        color-mix(in srgb, var(--accent-signal) 10%, var(--surface-wash-top-soft)),
+        transparent 30%
+      ),
+      color-mix(in srgb, var(--accent-signal) 14%, var(--surface-field));
+  }
+
   .ui-op-filter,
   .ui-demo-result,
   .ui-info-card,
@@ -1848,24 +1949,27 @@ input[type="password"] {
   .ui-burst-result,
   .ui-lab-main .ui-log-scroll,
   .ui-lab-main .ui-log-flow-details,
-  .ui-lab-main [data-chat-surface] {
-    box-shadow: inset 0 1px 0 color-mix(in srgb, white 16%, transparent);
+  .ui-lab-main [data-chat-surface],
+  .ui-lab-main .ui-lab-chat-surface:not([data-chat-surface]) {
+    box-shadow: inset 0 1px 0 var(--surface-edge-soft);
   }
 
   .ui-tab {
     background: color-mix(in srgb, var(--surface-field) 90%, black 10%);
+    border-color: color-mix(in srgb, var(--border-default) 90%, transparent);
+  }
+
+  .ui-tab.is-selected {
+    background: color-mix(in srgb, var(--accent-signal) 14%, var(--surface-raised));
+    border-color: color-mix(in srgb, var(--accent-signal) 38%, var(--border-default));
   }
 
   .tab-set .tab-set__badge {
-    background: color-mix(in srgb, var(--accent-signal) 18%, var(--surface-field));
+    background: color-mix(in srgb, var(--accent-signal) 16%, var(--surface-field));
   }
 
   .ui-lab-main .ui-log-flow-item {
     background: color-mix(in srgb, var(--surface-field) 90%, black 10%);
-  }
-
-  .ui-lab-main .ui-log-flow-item.is-selected {
-    background: color-mix(in srgb, var(--accent-signal) 14%, var(--surface-panel));
   }
 }
 
