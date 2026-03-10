@@ -1,9 +1,9 @@
 use bon::Builder;
 use maud::Render;
 
-use crate::views::page::UserNav;
 use crate::paths::Route;
 use crate::types::Text;
+use crate::views::page::UserNav;
 
 #[derive(Builder)]
 pub struct Protected {
@@ -15,14 +15,14 @@ pub struct Protected {
 impl Render for Protected {
     fn render(&self) -> maud::Markup {
         let content = maud::html! {
-            main class="container" {
-                article {
-                    header {
+            main class="container ui-auth-main ui-account-main" {
+                article class="ui-surface-card ui-auth-card ui-account-card" {
+                    header class="ui-auth-header ui-account-header" {
                         h1 { "Welcome, " (&self.username) }
                     }
-                    p { "Signed in as " (&self.email) "." }
-                    form method="post" action=(Route::Logout) {
-                        button type="submit" { "Sign out" }
+                    p class="ui-auth-summary ui-account-summary" { "Signed in as " (&self.email) "." }
+                    form class="ui-account-actions" method="post" action=(Route::Logout) {
+                        button class="secondary ui-auth-submit" type="submit" { "Sign out" }
                     }
                 }
             }

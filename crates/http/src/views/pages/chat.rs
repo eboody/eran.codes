@@ -18,7 +18,7 @@ impl Render for Chat {
     fn render(&self) -> maud::Markup {
         let content = maud::html! {
             main
-                class="container"
+                class="container ui-chat-page"
                 data-signals=({
                     format!(
                         "{{roomId: '{}', body: '', botBody: '', sseConnected: false}}",
@@ -33,7 +33,7 @@ impl Render for Chat {
                         .build()
                 })
 
-                section data-chat-surface {
+                section class="ui-chat-page-surface" data-chat-surface {
                     ({
                         chat::Connection::builder()
                             .connected_signal(Text::from("$sseConnected"))

@@ -14,35 +14,36 @@ pub struct Login<'a> {
 
 impl Render for Login<'_> {
     fn render(&self) -> maud::Markup {
-        let next_query =
-            self.next.map(|value| urlencoding::encode(value).to_string());
+        let next_query = self
+            .next
+            .map(|value| urlencoding::encode(value).to_string());
         let content = maud::html! {
-            main class="container" {
-                article {
-                    header {
+            main class="container ui-auth-main" {
+                article class="ui-surface-card ui-auth-card" {
+                    header class="ui-auth-header" {
                         h1 { "Sign in" }
+                        p class="ui-auth-summary" { "Use your email address to continue." }
                     }
-                    p { "Use your email address to continue." }
 
                     @if let Some(message) = self.message {
-                        p role="alert" { (message) }
+                        p class="ui-demo-result ui-error-alert" role="alert" { (message) }
                     }
 
-                    form method="post" action=(Route::Login) {
+                    form class="ui-auth-form" method="post" action=(Route::Login) {
                         @if let Some(next) = self.next {
                             input type="hidden" name="next" value=(next);
                         }
-                        label {
-                            "Email"
+                        label class="ui-auth-field" {
+                            span { "Email" }
                             input type="email" name="email" required;
                         }
-                        label {
-                            "Password"
+                        label class="ui-auth-field" {
+                            span { "Password" }
                             input type="password" name="password" required;
                         }
-                        button type="submit" { "Sign in" }
+                        button class="ui-auth-submit" type="submit" { "Sign in" }
                     }
-                    p {
+                    p class="ui-auth-note" {
                         "Need an account? "
                         @if let Some(next) = next_query {
                             a href=(format!("{}?next={}", Route::Register, next)) { "Create one" }

@@ -1,12 +1,12 @@
 use bon::Builder;
 use maud::Render;
 
+use crate::paths::Route;
 use crate::types::Text;
+use crate::views::page::{Layout, UserNav};
 use crate::views::partials::{
     CtaButton, CtaButtonType, CtaItem, CtaRow, CtaTone, ModerationAction,
 };
-use crate::views::page::{Layout, UserNav};
-use crate::paths::Route;
 
 #[derive(Builder)]
 pub struct ChatModeration {
@@ -18,7 +18,7 @@ pub struct ChatModeration {
 impl Render for ChatModeration {
     fn render(&self) -> maud::Markup {
         let content = maud::html! {
-            main class="container" {
+            main class="container ui-chat-page ui-chat-moderation-main" {
                 header class="ui-chat-moderation-hero" data-chat-moderation-hero {
                     div {
                         h1 { "Chat moderation queue" }

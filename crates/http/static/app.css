@@ -61,6 +61,12 @@
     0 18px 38px color-mix(in srgb, #142033 10%, transparent);
   --motion-fast: 140ms var(--ease-3);
   --motion-standard: 220ms var(--ease-3);
+  --shell-max-inline: 1180px;
+  --shell-gutter: clamp(1rem, 2.5vw, 2rem);
+  --shell-gutter-tight: clamp(0.85rem, 2vw, 1.15rem);
+  --nav-sticky-offset: clamp(0.35rem, 0.1rem + 0.9vw, 0.85rem);
+  --nav-scroll-offset: 7.25rem;
+  --interactive-bleed: 0.3rem;
 
   --ui-surface-card: var(--surface-panel);
   --ui-text: var(--text-body);
@@ -204,6 +210,7 @@
 }
 
 body {
+  margin: 0;
   font-family: var(--font-ui);
   font-size: 17px;
   line-height: 1.58;
@@ -213,15 +220,22 @@ body {
     radial-gradient(circle at 100% 10%, var(--portfolio-accent-b), transparent 48%),
     linear-gradient(180deg, var(--portfolio-bg), var(--portfolio-bg-alt));
   min-height: 100vh;
+  overflow-x: clip;
   text-rendering: optimizeLegibility;
 }
 
 .container {
-  max-width: min(1180px, 94vw);
+  inline-size: min(var(--shell-max-inline), calc(100% - (var(--shell-gutter) * 2)));
+  margin-inline: auto;
 }
 
 main.container {
-  padding-block: 0.6rem 3.5rem;
+  padding-block: clamp(0.55rem, 0.35rem + 0.6vw, 0.9rem) clamp(2.8rem, 2.3rem + 1.6vw, 4rem);
+}
+
+img {
+  max-inline-size: 100%;
+  block-size: auto;
 }
 
 h1,
@@ -255,6 +269,8 @@ button,
   line-height: 1.1;
   letter-spacing: 0.01em;
   text-decoration: none;
+  position: relative;
+  z-index: 0;
   color: var(--ui-text-on-accent);
   background: var(--ui-accent-primary);
   box-shadow:
@@ -492,7 +508,12 @@ input[type="password"] {
   display: flex;
   flex-wrap: wrap;
   gap: 0.75rem;
-  margin-top: 1.1rem;
+  position: relative;
+  isolation: isolate;
+  padding: var(--interactive-bleed);
+  margin-inline: calc(var(--interactive-bleed) * -1);
+  margin-block: calc(1.1rem - var(--interactive-bleed)) calc(var(--interactive-bleed) * -1);
+  overflow: visible;
 }
 
 .ui-demo-result {
@@ -635,7 +656,7 @@ input[type="password"] {
 }
 
 .ui-chat-moderation-flow .ui-cta-row {
-  margin-top: 0.75rem;
+  margin-top: calc(0.75rem - var(--interactive-bleed));
 }
 
 @media (hover: hover) {
@@ -653,6 +674,13 @@ input[type="password"] {
       inset 0 1px 0 var(--surface-edge-strong),
       0 10px 18px color-mix(in srgb, #142033 8%, transparent);
   }
+
+  a.button:hover,
+  button:hover,
+  .ui-tab:hover,
+  .ui-log-flow-item:hover {
+    z-index: 1;
+  }
 }
 
 /* Hybrid style-system packages: reusable ui-* classes */
@@ -665,14 +693,24 @@ input[type="password"] {
   border-radius: var(--radius-card);
   background: var(--surface-fill-panel);
   box-shadow: var(--shadow-panel);
+  overflow: visible;
 }
 
 .ui-tabs {
   display: flex;
   gap: var(--size-2);
+  position: relative;
+  isolation: isolate;
+  padding:
+    var(--interactive-bleed)
+    var(--interactive-bleed)
+    calc(var(--size-3) + var(--interactive-bleed));
+  margin: calc(var(--interactive-bleed) * -1);
   overflow-x: auto;
-  padding-bottom: var(--size-3);
   border-bottom: var(--border-size-1) solid var(--border-default);
+  scrollbar-width: thin;
+  scroll-snap-type: x proximity;
+  overflow-y: visible;
 }
 
 .ui-icon {
@@ -696,6 +734,9 @@ input[type="password"] {
   font-weight: 600;
   letter-spacing: 0.02em;
   white-space: nowrap;
+  position: relative;
+  z-index: 0;
+  scroll-snap-align: start;
   transition:
     border-color var(--motion-fast),
     background-color var(--motion-fast),
@@ -733,11 +774,16 @@ input[type="password"] {
   gap: clamp(1rem, 0.85rem + 0.8vw, 1.75rem);
   align-items: start;
   grid-template-columns: 1.05fr 1fr;
+  min-width: 0;
   padding: var(--size-2) 0 0;
 }
 
 .ui-panel[hidden] {
   display: none;
+}
+
+.ui-panel > * {
+  min-width: 0;
 }
 
 .ui-preview-frame {
@@ -824,24 +870,25 @@ input[type="password"] {
 
 .ui-nav-shell {
   position: sticky;
-  top: var(--size-3);
+  top: var(--nav-sticky-offset);
   z-index: 20;
-  margin-top: var(--size-3);
+  margin-top: var(--nav-sticky-offset);
   view-transition-name: app-nav;
 }
 
 .ui-nav {
-  display: flex;
-  flex-wrap: wrap;
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr) auto;
   align-items: center;
-  justify-content: space-between;
+  position: relative;
+  isolation: isolate;
   gap: var(--size-2) var(--size-4);
   padding: 0.8rem 1rem;
-  border-radius: var(--radius-shell);
-  border: 1px solid color-mix(in srgb, var(--border-strong) 24%, transparent);
-  background: var(--surface-fill-shell);
-  backdrop-filter: blur(16px);
-  box-shadow: var(--shadow-shell);
+  border-radius: var(--radius-card);
+  border: 1px solid var(--border-default);
+  background: var(--surface-fill-panel);
+  box-shadow: var(--shadow-panel);
+  overflow: visible;
 }
 
 .ui-nav-list {
@@ -858,6 +905,8 @@ input[type="password"] {
   padding: 0.45rem 0.7rem;
   border-radius: calc(var(--radius-control) - 2px);
   font-size: 0.84rem;
+  position: relative;
+  z-index: 0;
   color: var(--text-muted);
   text-decoration: none;
   transition:
@@ -875,18 +924,22 @@ input[type="password"] {
   outline: none;
   color: var(--text-strong);
   background: var(--accent-signal-soft);
+  z-index: 1;
 }
 
 .ui-nav-brand {
   display: flex;
   align-items: center;
   flex-shrink: 0;
+  min-width: 0;
 }
 
 .ui-nav-brand-link {
   display: inline-flex;
   align-items: center;
   gap: 0.72rem;
+  position: relative;
+  z-index: 0;
   color: var(--text-strong);
   text-decoration: none;
   transition:
@@ -902,6 +955,7 @@ input[type="password"] {
   outline: 2px solid color-mix(in srgb, var(--accent-signal) 64%, white);
   outline-offset: 0.35rem;
   border-radius: calc(var(--radius-control) - 2px);
+  z-index: 1;
 }
 
 .ui-nav-brand-picture {
@@ -935,8 +989,8 @@ input[type="password"] {
     var(--_logo-glow-red) 50%,
     var(--_logo-glow-blue) 50%
   );
-  filter: blur(1.55rem);
-  opacity: 0.92;
+  filter: blur(0.7rem);
+  opacity: 0.1;
   transform: translate(-50%, -50%);
 }
 
@@ -958,14 +1012,20 @@ input[type="password"] {
 
 .ui-nav-links {
   flex: 1;
+  min-width: 0;
   justify-content: center;
   flex-wrap: wrap;
 }
 
 .ui-nav-auth {
-  margin-left: auto;
+  min-width: 0;
   justify-content: flex-end;
   flex-wrap: wrap;
+  justify-self: end;
+}
+
+.ui-nav-auth li {
+  min-width: 0;
 }
 
 .ui-nav-auth-text {
@@ -988,24 +1048,39 @@ input[type="password"] {
 }
 
 @media (max-width: 48rem) {
+  :root {
+    --nav-scroll-offset: 9rem;
+  }
+
+  .container {
+    inline-size: min(var(--shell-max-inline), calc(100% - (var(--shell-gutter-tight) * 2)));
+  }
+
   .ui-nav-shell {
     top: 0.35rem;
   }
 
   .ui-nav {
-    border-radius: 18px;
+    grid-template-columns: minmax(0, 1fr) auto;
+    border-radius: calc(var(--radius-card) - 2px);
     padding: 0.65rem 0.8rem;
     gap: 0.45rem 0.75rem;
   }
 
   .ui-nav-links {
-    order: 3;
-    flex: 0 0 100%;
+    grid-column: 1 / -1;
     justify-content: flex-start;
     overflow-x: auto;
     flex-wrap: nowrap;
     padding-bottom: 0.15rem;
     scrollbar-width: thin;
+  }
+
+  .ui-nav-auth-text {
+    max-inline-size: min(42vw, 12rem);
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
   }
 
   .ui-nav-brand-mark {
@@ -1023,17 +1098,37 @@ input[type="password"] {
   }
 }
 
+@media (max-width: 38rem) {
+  :root {
+    --nav-scroll-offset: 10.25rem;
+  }
+
+  .ui-nav {
+    grid-template-columns: 1fr;
+  }
+
+  .ui-nav-auth {
+    justify-self: stretch;
+    justify-content: flex-start;
+  }
+
+  .ui-nav-auth-text {
+    flex-basis: 100%;
+    max-inline-size: none;
+  }
+}
+
 /* Portfolio page packages */
 .ui-portfolio-main {
   display: grid;
-  gap: var(--size-5);
+  gap: clamp(1.35rem, 1rem + 1.2vw, 2.3rem);
   margin-top: var(--size-5);
   padding-bottom: var(--size-8);
 }
 
 .ui-portfolio-main .ui-surface-card {
   display: grid;
-  gap: var(--size-3);
+  gap: clamp(1rem, 0.85rem + 0.8vw, 1.45rem);
 }
 
 .ui-portfolio-hero {
@@ -1048,6 +1143,19 @@ input[type="password"] {
     var(--portfolio-surface);
 }
 
+.ui-portfolio-hero,
+.ui-portfolio-case-hero {
+  align-content: start;
+}
+
+.ui-portfolio-hero h1,
+.ui-portfolio-case-hero h1 {
+  max-width: 14ch;
+  font-size: clamp(2.35rem, 1.75rem + 2.35vw, 3.6rem);
+  line-height: 0.95;
+  text-wrap: balance;
+}
+
 .ui-portfolio-eyebrow {
   margin: 0;
   font-size: 0.8rem;
@@ -1060,6 +1168,17 @@ input[type="password"] {
   margin: 0;
   max-width: 64ch;
   color: color-mix(in srgb, var(--ui-text) 90%, var(--ui-text-muted) 10%);
+}
+
+.ui-portfolio-section-copy {
+  display: grid;
+  gap: var(--size-2);
+}
+
+.ui-portfolio-section-copy p {
+  margin: 0;
+  max-width: 60ch;
+  color: var(--ui-text-muted);
 }
 
 .ui-portfolio-badges {
@@ -1117,15 +1236,18 @@ input[type="password"] {
 .ui-portfolio-card-grid {
   display: grid;
   gap: var(--size-3);
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 18rem), 1fr));
 }
 
 .ui-portfolio-card {
   display: grid;
   gap: var(--size-2);
+  align-content: start;
   padding: var(--size-4);
   border-radius: var(--ui-radius-md);
   border: var(--border-size-1) solid var(--ui-border-soft);
   background: var(--ui-surface-soft);
+  overflow: visible;
 }
 
 .ui-portfolio-card-kicker {
@@ -1186,19 +1308,38 @@ input[type="password"] {
   display: flex;
   flex-wrap: wrap;
   gap: var(--size-2);
+  position: relative;
+  isolation: isolate;
+  align-items: center;
+  padding: var(--interactive-bleed);
+  margin: calc(var(--interactive-bleed) * -1);
+}
+
+.ui-portfolio-card > .button,
+.ui-portfolio-card-links > .button {
+  width: fit-content;
 }
 
 .ui-portfolio-section-actions {
   margin-top: var(--size-1);
 }
 
+.ui-portfolio-section-actions .ui-cta-row,
+.ui-portfolio-hero .ui-cta-row,
+.ui-portfolio-case-hero .ui-cta-row,
+.ui-portfolio-closing .ui-cta-row {
+  margin-top: calc(var(--size-2) - var(--interactive-bleed));
+}
+
 .ui-portfolio-closing {
   justify-items: start;
+  gap: var(--size-3);
 }
 
 .ui-portfolio-case-grid {
   display: grid;
   gap: var(--size-3);
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 17rem), 1fr));
 }
 
 .ui-portfolio-case-section h2 {
@@ -1208,6 +1349,11 @@ input[type="password"] {
 @media (max-width: 48rem) {
   .ui-portfolio-hero {
     padding: var(--size-4);
+  }
+
+  .ui-portfolio-hero h1,
+  .ui-portfolio-case-hero h1 {
+    max-width: 12ch;
   }
 }
 
@@ -1241,6 +1387,15 @@ input[type="password"] {
   .ui-chat-moderation-flow {
     padding: 0.9rem;
     border-radius: 16px;
+  }
+
+  .ui-portfolio-card-links > .button,
+  .ui-portfolio-card > .button,
+  .ui-portfolio-section-actions .button,
+  .ui-portfolio-hero .button,
+  .ui-portfolio-case-hero .button,
+  .ui-portfolio-closing .button {
+    width: 100%;
   }
 }
 
@@ -1402,6 +1557,8 @@ input[type="password"] {
 .ui-log-flow-item:focus-visible {
   border-color: color-mix(in srgb, var(--portfolio-accent-a) 52%, transparent);
   background: color-mix(in srgb, var(--portfolio-accent-a) 14%, transparent);
+  position: relative;
+  z-index: 1;
 }
 
 .ui-log-flow-item.is-selected {
@@ -1556,7 +1713,7 @@ input[type="password"] {
 
 .ui-lab-main > :where(header, section) {
   margin-top: 0;
-  scroll-margin-top: 7.25rem;
+  scroll-margin-top: var(--nav-scroll-offset);
   transition:
     opacity var(--motion-standard),
     transform var(--motion-standard),
@@ -1594,9 +1751,13 @@ input[type="password"] {
   view-transition-name: lab-hero;
 }
 
-@media (min-width: 56.25rem) {
+@media (min-width: 62rem) {
   .ui-home-hero {
     grid-template-columns: minmax(0, 1.45fr) minmax(18rem, 0.8fr);
+  }
+
+  .ui-home-hero-card {
+    justify-self: end;
   }
 }
 
@@ -1604,6 +1765,7 @@ input[type="password"] {
   display: grid;
   gap: var(--size-4);
   align-content: start;
+  min-width: 0;
   padding-inline-end: clamp(0rem, 0.3rem + 0.8vw, 1rem);
 }
 
@@ -1648,6 +1810,7 @@ input[type="password"] {
   gap: var(--size-3);
   grid-template-rows: auto auto auto 1fr auto;
   align-content: start;
+  inline-size: min(100%, 22rem);
   padding: clamp(1.2rem, 0.95rem + 0.8vw, 1.75rem);
   border-radius: calc(var(--radius-card) - 2px);
   border: 1px solid color-mix(in srgb, var(--accent-warm) 14%, var(--border-default));
@@ -1811,7 +1974,12 @@ input[type="password"] {
   display: flex;
   flex-wrap: wrap;
   align-items: center;
+  position: relative;
+  isolation: isolate;
   gap: var(--size-2) var(--size-3);
+  padding: var(--interactive-bleed);
+  margin: calc(var(--interactive-bleed) * -1);
+  overflow: visible;
 }
 
 .ui-burst-actions p {
@@ -2054,13 +2222,44 @@ input[type="password"] {
     gap: var(--size-5);
   }
 
+  .ui-home-hero-copy {
+    gap: var(--size-3);
+    padding-inline-end: 0;
+  }
+
   .ui-home-hero h1 {
-    max-width: 12ch;
+    max-width: 9ch;
     font-size: clamp(2.15rem, 1.55rem + 3.4vw, 3rem);
   }
 
   .ui-home-hero p {
     font-size: 0.98rem;
+  }
+
+  .ui-home-hero-card {
+    inline-size: 100%;
+  }
+
+  .ui-home-hero .ui-cta-row {
+    width: 100%;
+    padding-top: var(--size-2);
+  }
+
+  .ui-home-hero .ui-cta-row > * {
+    flex: 1 1 12rem;
+  }
+
+  .ui-home-hero .ui-cta-row :where(a.button, button, .button) {
+    width: 100%;
+  }
+
+  .ui-panel {
+    gap: var(--size-4);
+    padding-top: 0;
+  }
+
+  .ui-preview-frame {
+    min-height: 13.5rem;
   }
 
   .ui-burst-actions {
@@ -2074,9 +2273,140 @@ input[type="password"] {
   .ui-lab-main .ui-log-scroll {
     max-height: 18rem;
   }
+
+  .ui-lab-main [data-section-header] {
+    gap: var(--size-2);
+  }
+
+  .ui-lab-main [data-section-header] .button {
+    width: 100%;
+    justify-content: center;
+  }
+}
+
+@media (max-width: 36rem) {
+  .ui-home-hero h1 {
+    max-width: 8ch;
+  }
+
+  .ui-home-hero .ui-cta-row > * {
+    flex-basis: 100%;
+  }
 }
 
 /* Chat demo package */
+[data-chat-hero],
+[data-chat-surface],
+[data-chat-hero-card],
+.ui-chat-moderation-flow,
+.ui-chat-moderation-card,
+.ui-op-filter,
+.ui-demo-result,
+.ui-info-card,
+.ui-preview-frame {
+  overflow: visible;
+}
+
+[data-chat-hero] .button,
+[data-chat-surface] .button,
+.ui-chat-moderation-card .button {
+  position: relative;
+  z-index: 0;
+}
+
+[data-chat-hero] .button:hover,
+[data-chat-hero] .button:focus-visible,
+[data-chat-surface] .button:hover,
+[data-chat-surface] .button:focus-visible,
+.ui-chat-moderation-card .button:hover,
+.ui-chat-moderation-card .button:focus-visible {
+  z-index: 1;
+}
+
+.ui-chat-page {
+  display: grid;
+  gap: var(--space-section);
+  margin-top: clamp(1.1rem, 0.9rem + 0.9vw, 1.8rem);
+  padding-bottom: calc(var(--space-section) + var(--size-6));
+}
+
+.ui-chat-page > :where(header, section) {
+  margin-top: 0;
+  scroll-margin-top: var(--nav-scroll-offset);
+}
+
+.ui-chat-page-surface {
+  margin-top: 0;
+}
+
+.ui-auth-main {
+  display: grid;
+  place-items: start center;
+  padding-top: clamp(0.8rem, 0.55rem + 1vw, 1.4rem);
+}
+
+.ui-auth-card {
+  inline-size: min(100%, 34rem);
+  margin-top: clamp(0.9rem, 0.6rem + 0.8vw, 1.35rem);
+  gap: var(--size-4);
+}
+
+.ui-auth-header {
+  display: grid;
+  gap: var(--size-2);
+}
+
+.ui-auth-summary {
+  margin: 0;
+  max-width: 46ch;
+  color: var(--text-muted);
+}
+
+.ui-auth-form {
+  display: grid;
+  gap: var(--size-3);
+}
+
+.ui-auth-field {
+  display: grid;
+  gap: 0.45rem;
+}
+
+.ui-auth-field > span {
+  font-size: 0.76rem;
+  font-weight: 700;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--text-subtle);
+}
+
+.ui-auth-submit {
+  width: 100%;
+}
+
+.ui-auth-note {
+  margin: 0;
+  color: var(--text-muted);
+}
+
+.ui-auth-note a {
+  color: var(--text-strong);
+}
+
+.ui-account-card {
+  inline-size: min(100%, 30rem);
+}
+
+.ui-account-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.75rem;
+}
+
+.ui-account-actions > * {
+  margin: 0;
+}
+
 [data-chat-surface] {
   --chat-space-1: 0.5rem;
   --chat-space-2: 0.7rem;
@@ -2488,6 +2818,7 @@ input[type="password"] {
 
 [data-chat-hero-card] {
   background: color-mix(in srgb, var(--ui-surface-card) 90%, transparent);
+  inline-size: min(100%, 21rem);
   padding: 1rem;
   border-radius: var(--ui-radius-md);
   border: 1px solid var(--ui-border-soft);
@@ -2504,6 +2835,10 @@ input[type="password"] {
 @media (min-width: 900px) {
   [data-chat-hero] {
     grid-template-columns: 1.25fr 0.75fr;
+  }
+
+  [data-chat-hero-card] {
+    justify-self: end;
   }
 }
 
@@ -2527,9 +2862,31 @@ input[type="password"] {
     border-radius: 16px;
     gap: 1rem;
   }
+
+  [data-chat-hero-card] {
+    inline-size: 100%;
+  }
+
+  [data-chat-hero-card] .button,
+  .ui-chat-moderation-card .button {
+    width: 100%;
+  }
+
+  .ui-auth-card {
+    inline-size: 100%;
+  }
 }
 
 @media (max-width: 520px) {
+  .ui-auth-card,
+  .ui-account-card {
+    gap: var(--size-3);
+  }
+
+  .ui-chat-moderation-flow .ui-cta-row > * {
+    flex-basis: 100%;
+  }
+
   [data-chat-surface] {
     --chat-window-height: clamp(13.5rem, 32vh, 15.5rem);
   }
