@@ -3,6 +3,10 @@
 ## Purpose
 Define structural UI composition for Maud output and Datastar binding points.
 
+## Quality Priority
+- Correctness is a gate.
+- Among correct options, prefer the most readable, modular, extensible, expressive, and idiomatic structure.
+
 ## Inputs It Expects
 - `component_spec.meta`
 - `component_spec.scope`
@@ -30,6 +34,7 @@ Define structural UI composition for Maud output and Datastar binding points.
 - Composition structure should model parent/child render components, not a single monolithic renderer.
 - Child component slots should be designed to accept typed component props (`Vec<TChild>`/slices) where repetition exists.
 - Prefer module-scoped type families in generated surfaces (`tab_set::pane::Body`, `application::Service`) instead of long prefixed standalone names.
+- Avoid dense node trees or slot shapes that are technically valid but harder to extend or reason about.
 
 ## Minimal Valid Output Snippet
 ```json

@@ -38,6 +38,7 @@ CI guardrails:
 - `scripts/ci/no-string-fields.sh`
 - `scripts/ci/typed-hasher-errors.sh`
 - `scripts/ci/bon-usage-contract.sh`
+- `scripts/ci/descriptive-module-imports.sh`
 - `scripts/ci/partials-render.sh`
 - `scripts/ci/visual-snapshot.sh` (requires app running at `VISUAL_URL`, defaults to `http://127.0.0.1:3000/`)
 

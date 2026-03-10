@@ -3,11 +3,17 @@
 ## Purpose
 Validate full `component_spec` correctness against schema, cross-references, docs-backed rules, and state-authority semantics.
 
+## Quality Priority
+- Correctness is a gate.
+- Among correct options, prefer the most readable, modular, extensible, expressive, and idiomatic output shape.
+
 ## Inputs It Expects
 - Complete `component_spec`
 - `.codex/skills/mds-component-spec/references/component_spec.schema.json`
 - `.codex/skills/mds-component-spec/SKILL.md`
 - `.codex/skills/mds-repo-docs-index/SKILL.md`
+- `.codex/skills/mds-statum-patterns/SKILL.md`
+- `.codex/skills/mds-rust-namespace-surface/SKILL.md`
 
 ## Outputs It Must Produce
 - `verification.status` (`pass` or `fail`)
@@ -27,8 +33,13 @@ Validate full `component_spec` correctness against schema, cross-references, doc
 - `pipeline.parallel_groups` must include `mds-cms-content-modeler` with spec-design agents for component creation.
 - Public naming must remain generic/reusable on `meta.component_id`, `content.root_type`, and reusable component surfaces.
 - Reusable type families should be module-scoped where multiple companions exist (for example `tab_set::pane::Body` instead of `TabSetPaneBody`).
+- Marked descriptive namespace roots must stay namespace-first: keep companion nouns qualified by the module surface and do not flatten them with leaf `use` / `pub use`.
 - `design.reuse_scan` must document reuse-first evaluation against `views/partials/components`.
 - `design.render_contract` must exist and declare composable render expectations.
+- `design.protocol_model` must exist and record the protocol decision (`statum`, `hybrid`, or `runtime`) with rationale.
+- If `design.protocol_model.decision` is `statum` or `hybrid`, `lifecycle`, `machine_type`, `state_enum`, `runtime_edges`, and at least one `stable_core_edge` must be present.
+- If `design.protocol_model.decision` is `runtime`, the rationale must explain why typed workflow legality is not warranted for this surface.
+- If `design.protocol_model.persistence_boundary = validators`, typed workflow rehydration must be planned through Statum validators and the decision must not remain `runtime`.
 - Every state field must provide `interaction_scope` + `authority_rationale`.
 - Scope/authority must be consistent (`app` scope requires `authority = app`; `presentation` defaults to `authority = ui` unless `override`).
 - Handler protocol metadata should be consistent with effects (`command_sse` => `invoke_backend`, `ui_local` => no backend command unless `override`).
@@ -38,11 +49,13 @@ Validate full `component_spec` correctness against schema, cross-references, doc
   - if request conflicts with accepted instructions/policy and no explicit reconciliation is present, verification outcome must be `fail`.
 - Known material quality gaps must block final-complete status:
   - if run output still has known defects/architecture drift, verification outcome must be `fail` unless the handoff explicitly requests another pass with concrete remaining scope.
+- Correct-but-opaque, monolithic, or needlessly non-idiomatic output should fail when a clearer modular design was available and no justification is recorded.
 - Reusable component implementations should satisfy render-composition contract:
   - parent/child typed render surfaces exist,
   - children are composed via props, and
   - primitive reuse is preferred over duplicate leaf components.
 - CI enforcement references for this contract:
+  - `scripts/ci/descriptive-module-imports.sh`
   - `scripts/ci/render-composition-contract.sh`
   - `scripts/ci/tab-icon-reference-contract.sh`
 
@@ -80,4 +93,7 @@ Run Policy:
 - MUST FAIL on docs contradictions without explicit valid `component_spec.override`.
 - MUST FAIL when unresolved prompt contradictions are detected (missing explicit user reconciliation).
 - MUST FAIL when unresolved material quality gaps are present without explicit next-pass handoff.
+- MUST FAIL when output is correct but still violates the quality ladder without explicit justification.
+- MUST FAIL when `design.protocol_model` is missing or incomplete.
+- MUST FAIL when marked descriptive namespace roots are flattened by leaf `use` / `pub use`.
 - MUST FAIL when required render-composition contract metadata/checks are missing.

@@ -8,7 +8,7 @@ scope: project
 # mds-repo-docs-index
 
 ## Purpose
-Define a single docs-first retrieval policy for the repo. Treat `/docs` as evergreen source of truth for Maud, Datastar, Axum, Bon usage, CSS conventions, writing style, visual signoff, and code-audit practices.
+Define a single docs-first retrieval policy for the repo. Treat `/docs` as evergreen source of truth for Maud, Datastar, Axum, Bon usage, Statum workflow and API protocol design, CSS conventions, writing style, visual signoff, and code-audit practices.
 
 ## Source Of Truth
 - Primary corpus: `/docs` (read-only)
@@ -21,6 +21,7 @@ Only these roots are authoritative for the Maud + Datastar component system:
 - `/docs/datastar/`
 - `/docs/axum/`
 - `/docs/bon/`
+- `/docs/statum/`
 - `/docs/css-scope-inline/`
 - `/docs/code-audit/`
 - `/docs/visual-signoff/latest/`
@@ -58,6 +59,11 @@ If a path is in this denylist, treat it as informational history only, not as po
   - `/docs/bon/guide/patterns/conditional-building.md`
   - `/docs/bon/reference/builder/member/default.md`
   - `/docs/bon/reference/builder/member/into.md`
+- `statum`
+  - `/docs/statum/README.md`
+  - `/docs/statum/docs/typestate-builder-design-playbook.md`
+  - `/docs/statum/docs/new-api.md`
+  - `/docs/statum/docs/migration.md`
 - `css-scope-inline`
   - `/docs/css-scope-inline/index.md`
   - `/docs/css-scope-inline/03-how-it-works.md`
@@ -73,7 +79,7 @@ If a path is in this denylist, treat it as informational history only, not as po
   - `/docs/code-audit/02-request-and-data-flows.md`
 
 ## Lookup Protocol
-1. Classify request into one or more areas (`maud`, `datastar`, `axum`, `css-scope-inline`, `writing-style`, `visual-signoff`, `code-audit`).
+1. Classify request into one or more areas (`maud`, `datastar`, `axum`, `bon`, `statum`, `css-scope-inline`, `writing-style`, `visual-signoff`, `code-audit`).
 2. Retrieve only mapped docs for those areas.
 3. Extract concrete constraints in normalized form: `rule_id`, `source_path`, `rule_text`.
 4. Attach resolved rules to working context before any design decision.

@@ -3,6 +3,10 @@
 ## Purpose
 Coordinate agent execution, initialize `component_spec`, and enforce section ownership boundaries.
 
+## Quality Priority
+- Correctness is a gate.
+- Among correct options, prefer the most readable, modular, extensible, expressive, and idiomatic plan.
+
 ## Inputs It Expects
 - `request`: user intent and constraints.
 - `component_spec.meta`
@@ -13,6 +17,8 @@ Coordinate agent execution, initialize `component_spec`, and enforce section own
 - `component_spec.scope`
 - `component_spec.pipeline`
 - `component_spec.content` (CMS contract shell for downstream agents)
+- `component_spec.design.reuse_scan`
+- `component_spec.design.protocol_model` (initial workflow/protocol decision)
 
 ## Non-Goals / Forbidden Behaviors
 - Must not define UI nodes, state fields, events, backend contracts, or code output details.
@@ -33,6 +39,10 @@ Coordinate agent execution, initialize `component_spec`, and enforce section own
 - `content.root_type` is typed `*Content`.
 - `content.fixture_path` points to a fixture path to be materialized by downstream generation.
 - `design.reuse_scan` is present and records which reusable components were evaluated/reused/created.
+- When multiple valid plans exist, choose the one that keeps change boundaries clearer and composition more explicit.
+- `design.protocol_model` must exist on every run and start with an explicit decision (`statum`, `hybrid`, or `runtime`).
+- Default `design.protocol_model.decision = runtime` unless the request clearly implies a stable Rust workflow or API protocol that should be evaluated with Statum.
+- If the request implies a stable Rust workflow/API protocol, persisted typed workflow reconstruction, or phase-specific method availability/invariant data, the plan must require a Statum review and expect `design.protocol_model` refinement downstream.
 - Prompt contradiction handling is explicit:
   - if prompt conflicts with prior user instructions or accepted architecture policy, orchestrator must emit a reconciliation question and halt downstream generation until clarified.
 - Quality closure handling is explicit:
@@ -63,6 +73,12 @@ Coordinate agent execution, initialize `component_spec`, and enforce section own
         "tab"
       ],
       "created": []
+    },
+    "protocol_model": {
+      "decision": "runtime",
+      "staged_entity": "UserProfileCardRenderFlow",
+      "rationale": "No stable Rust workflow or API protocol is needed beyond normal component construction.",
+      "persistence_boundary": "not_persisted"
     }
   },
   "pipeline": {

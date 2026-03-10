@@ -1,6 +1,6 @@
 ---
 name: mds-component-spec
-version: 0.2.0
+version: 0.4.0
 description: JSON schema and contracts for component_spec, including ui/app authority, transitions, mappings, and codegen markers.
 scope: project
 ---
@@ -9,6 +9,10 @@ scope: project
 
 ## Purpose
 Define and govern the shared `component_spec` contract used by all MDS agents.
+
+## Quality Priority
+- Correctness is a gate.
+- Among correct options, prefer the most readable, modular, extensible, expressive, and idiomatic component contract.
 
 ## Canonical Schema
 - Path: `.codex/skills/mds-component-spec/references/component_spec.schema.json`
@@ -65,6 +69,7 @@ Applies to public surfaces:
 - reusable component file/type names
 - top-level slot names and root-level UI node ids
 - module-scoped companion type names (prefer `module::Type` families like `tab_set::pane::Body` over flat `TabSetPaneBody`)
+- namespace-root module APIs (keep generic companion nouns under the module surface, for example `user::Id` / `user::Repository`, instead of flattening them into parent modules)
 
 Feature-specific naming is allowed only when explicitly justified via `override`.
 
@@ -95,11 +100,42 @@ For component/view models generated from the spec:
 
 ## Builder Contract (Required)
 Use `bon` for component construction APIs:
-- Prefer typestate-style builder/state-machine APIs when valid construction order is part of correctness.
+- Prefer plain `bon` typestate-style builders when construction order for one value is part of correctness and there is no broader workflow to encode.
 - Prefer regular `#[derive(Builder)]` when staged named construction improves readability and typestate is unnecessary.
 - For optional members, use `.field(value)` when the value is known; do not use `.maybe_field(Some(value))`.
 - Use `.maybe_field(option_value)` only when the source is already `Option<T>` or when passing explicit `None` is semantically required.
 - Avoid ad-hoc manual builder patterns when `bon` can encode the same intent.
+- Use `statum` for stable multi-step workflow legality; do not simulate protocol stages with plain-Bon builder chains.
+- Statum-generated machine constructors remain Bon-backed; treat that as part of the Statum surface, not as a competing design choice.
+
+## Protocol Model Contract (Required)
+Every generated spec must declare `design.protocol_model`.
+
+Fields:
+- `decision`: `statum` | `hybrid` | `runtime`
+- `staged_entity`: noun naming the workflow subject
+- `rationale`: explicit reason for the chosen model
+- `persistence_boundary`: `not_persisted` | `validators` | `manual`
+- `lifecycle[]`: business-phase vocabulary; required for `statum` and `hybrid`
+- `stable_core_edges[]`: legal edges that should stay stable over time; required for `statum` and `hybrid`
+- `runtime_edges[]`: dynamic branches kept in runtime validation; required for `statum` and `hybrid`
+- `machine_type`: required for `statum` and `hybrid`
+- `state_enum`: required for `statum` and `hybrid`
+
+Semantics:
+- `decision = statum`
+  - Encode the stable protocol core with `#[state]`, `#[machine]`, and concrete-state `#[transition]` impls.
+  - Keep helpers/orchestration outside `#[transition]` blocks.
+- `decision = hybrid`
+  - Encode the stable workflow spine with `statum`.
+  - Keep volatile policy or user-authored branches in runtime validation.
+- `decision = runtime`
+  - Use only when there is no meaningful stable workflow/API protocol to encode or when the surface is too dynamic for type-level encoding.
+  - `rationale` must explain why `statum` is not the right fit.
+  - Do not invent fake lifecycle phases just to satisfy the schema.
+- `persistence_boundary = validators`
+  - Rehydrate typed machines through `#[validators]` instead of trusting stored status flags directly.
+  - Requires `decision = statum` or `decision = hybrid`.
 
 ## Styling Contract (Required)
 Every generated component spec must declare a styling plan:
@@ -149,13 +185,13 @@ This declares semantic dispatch style. Projects may still use local Datastar exp
 
 ## Section Ownership
 - `mds-orchestrator`: `meta`, `scope`, `pipeline`
-- `mds-orchestrator`: `design.reuse_scan` (plan metadata)
+- `mds-orchestrator`: `design.reuse_scan`, `design.protocol_model` (plan metadata + initial default)
 - `mds-styling-system`: `styling`
 - `mds-cms-content-modeler`: `content`
 - `mds-ui-decomposer`: `ui`
 - `mds-state-modeler`: `state`
 - `mds-events-designer`: `events` (including optional handler protocol metadata)
-- `mds-backend-contracts`: `backend_contracts`
+- `mds-backend-contracts`: `backend_contracts`; may refine `design.protocol_model`
 - `mds-codegen`: `codegen`
 - `mds-verifier`: `verification`
 
@@ -173,6 +209,10 @@ This declares semantic dispatch style. Projects may still use local Datastar exp
 - If `events.handlers[].protocol_mode == "command_sse"`, `events.effects` must include matching `invoke_backend`.
 - If `events.handlers[].protocol_mode == "ui_local"`, matching `invoke_backend` effect is disallowed unless `override` is present.
 - `backend_contracts.actions[].input_type` and `output_type` must exist in `backend_contracts.types[].id`.
+- `design.protocol_model` must exist.
+- If `design.protocol_model.decision == "statum"` or `design.protocol_model.decision == "hybrid"`, `lifecycle`, `machine_type`, `state_enum`, `runtime_edges`, and at least one `stable_core_edge` must be present.
+- If `design.protocol_model.decision == "runtime"`, `rationale` must explain why typed workflow legality is not warranted.
+- If `design.protocol_model.persistence_boundary == "validators"`, the Rust workflow is expected to rehydrate through Statum validators and `decision` must not remain `runtime`.
 - `pipeline.execution_order` must include all required `mds-*` agents.
 - `pipeline.parallel_groups` must include `mds-cms-content-modeler` in the same group as other spec-design agents for component creation.
 - `pipeline.execution_order` must include `mds-styling-system` after `mds-codegen` and before `mds-verifier`.
@@ -186,7 +226,7 @@ This declares semantic dispatch style. Projects may still use local Datastar exp
 
 ## Docs Policy
 - `/docs` is evergreen source of truth.
-- Docs skills must be consulted for Datastar bindings, JS events, backend contracts, SSE, and routing decisions.
+- Docs skills must be consulted for Datastar bindings, JS events, backend contracts, SSE, routing decisions, and Statum workflow legality/Bon-composition/rehydration decisions.
 - If output contradicts docs-backed rules and `override` is absent or invalid, verifier must fail.
 
 ## Verifier Failure Policy
@@ -204,16 +244,38 @@ This declares semantic dispatch style. Projects may still use local Datastar exp
 {
   "meta": {"component_id": "example", "version": "0.1.0", "target": ["rust-maud", "datastar"]},
   "scope": {"description": "example"},
-  "pipeline": {"execution_order": ["mds-orchestrator", "mds-docs-librarian", "mds-ui-decomposer", "mds-cms-content-modeler", "mds-state-modeler", "mds-events-designer", "mds-backend-contracts", "mds-codegen", "mds-styling-system", "mds-verifier"], "required_agents": ["mds-orchestrator", "mds-docs-librarian", "mds-ui-decomposer", "mds-cms-content-modeler", "mds-state-modeler", "mds-events-designer", "mds-backend-contracts", "mds-codegen", "mds-styling-system", "mds-verifier"], "parallel_groups": [["mds-ui-decomposer", "mds-cms-content-modeler", "mds-state-modeler", "mds-events-designer", "mds-backend-contracts"]]},
+  "pipeline": {
+    "execution_order": ["mds-orchestrator", "mds-docs-librarian", "mds-ui-decomposer", "mds-cms-content-modeler", "mds-state-modeler", "mds-events-designer", "mds-backend-contracts", "mds-codegen", "mds-styling-system", "mds-verifier"],
+    "required_agents": ["mds-orchestrator", "mds-docs-librarian", "mds-ui-decomposer", "mds-cms-content-modeler", "mds-state-modeler", "mds-events-designer", "mds-backend-contracts", "mds-codegen", "mds-styling-system", "mds-verifier"],
+    "parallel_groups": [["mds-ui-decomposer", "mds-cms-content-modeler", "mds-state-modeler", "mds-events-designer", "mds-backend-contracts"]]
+  },
   "content": {"source": "cms", "root_type": "ExampleContent", "fixture_path": "tests/fixtures/cms/example.json"},
   "design": {
     "reuse_scan": {"checked_components": ["crates/http/src/views/partials/components/primitives/tab.rs"], "reused": ["tab"], "created": []},
-    "render_contract": {"composable_render": true, "children_as_props": true, "primitive_reuse": ["tab"], "interaction_mode": "ui_local_datastar"}
+    "render_contract": {"composable_render": true, "children_as_props": true, "primitive_reuse": ["tab"], "interaction_mode": "ui_local_datastar"},
+    "protocol_model": {
+      "decision": "runtime",
+      "staged_entity": "ExampleFlow",
+      "rationale": "This example has no meaningful stable Rust workflow or API protocol to encode with Statum.",
+      "persistence_boundary": "not_persisted"
+    }
   },
   "styling": {"mode": "hybrid", "global_packages": ["ui-tabs", "ui-panel"], "scoped_exceptions": [], "tokens_used": ["--ui-border-soft"]},
   "ui": {"event_dispatch": {"syntax": "@dispatch('<handler_id>')", "description": "semantic event dispatch"}, "nodes": [], "slots": [], "bindings": []},
-  "state": {"fields": [{"id": "local_count", "type": "integer", "initial": 0, "authority": "ui", "sync": "optimistic", "interaction_scope": "presentation", "authority_rationale": "local presentation control"}, {"id": "server_count", "type": "integer", "initial": 0, "authority": "app", "sync": "authoritative", "interaction_scope": "app", "authority_rationale": "canonical server value"}], "derived": [], "persistence": []},
-  "events": {"handlers": [{"id": "increment_click", "class": "ui", "source_node_id": "root", "trigger": "click", "payload": {}, "protocol_mode": "ui_local", "protocol_rationale": "presentation-only increment"}], "ui_transitions": [], "app_mappings": {"backend_responses": [], "sse_events": []}, "effects": []},
+  "state": {
+    "fields": [
+      {"id": "local_count", "type": "integer", "initial": 0, "authority": "ui", "sync": "optimistic", "interaction_scope": "presentation", "authority_rationale": "local presentation control"},
+      {"id": "server_count", "type": "integer", "initial": 0, "authority": "app", "sync": "authoritative", "interaction_scope": "app", "authority_rationale": "canonical server value"}
+    ],
+    "derived": [],
+    "persistence": []
+  },
+  "events": {
+    "handlers": [{"id": "increment_click", "class": "ui", "source_node_id": "root", "trigger": "click", "payload": {}, "protocol_mode": "ui_local", "protocol_rationale": "presentation-only increment"}],
+    "ui_transitions": [],
+    "app_mappings": {"backend_responses": [], "sse_events": []},
+    "effects": []
+  },
   "backend_contracts": {"actions": [], "types": [], "validation": []}
 }
 ```

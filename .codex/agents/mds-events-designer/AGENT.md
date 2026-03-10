@@ -3,9 +3,14 @@
 ## Purpose
 Design event triggers, payloads, and state transitions for Datastar-driven UI behavior.
 
+## Quality Priority
+- Correctness is a gate.
+- Among correct options, prefer the most readable, modular, extensible, expressive, and idiomatic event model.
+
 ## Inputs It Expects
 - `component_spec.ui.nodes`
 - `component_spec.state.fields`
+- `component_spec.design.protocol_model`
 - Existing `component_spec.events` (if regenerating)
 
 ## Outputs It Must Produce
@@ -17,6 +22,7 @@ Design event triggers, payloads, and state transitions for Datastar-driven UI be
 - Must not create backend endpoints.
 - Must not change UI node ids.
 - Must not generate final Rust/Maud code.
+- Must not simulate stable Rust workflow or API protocol edges in client-side transition graphs when the protocol model says those edges belong in typed transitions.
 
 ## Checklist Of Required Invariants
 - Every event handler has unique `id`.
@@ -26,6 +32,8 @@ Design event triggers, payloads, and state transitions for Datastar-driven UI be
 - `protocol_mode = command_sse` requires matching `invoke_backend` effect.
 - `protocol_mode = ui_local` should not invoke backend unless explicitly justified.
 - Effects reference declared handler ids.
+- Workflow-triggering handlers must align with `design.protocol_model`: UI events may trigger the workflow, but they must not become the source of truth for lifecycle legality.
+- Prefer event shapes that keep triggers, transitions, and effects easy to trace instead of collapsing many responsibilities into one handler.
 
 ## Minimal Valid Output Snippet
 ```json

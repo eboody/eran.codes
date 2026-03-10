@@ -13,6 +13,17 @@ fi
 
 status=0
 
+DOCS_DIR="docs/style-system"
+DOCS_INDEX="$DOCS_DIR/index.md"
+DOCS_CATALOG="$DOCS_DIR/package-catalog.md"
+
+for required_doc in "$DOCS_INDEX" "$DOCS_CATALOG"; do
+  if [[ ! -f "$required_doc" ]]; then
+    echo "error: expected style-system doctrine file at ${required_doc}."
+    exit 1
+  fi
+done
+
 APP_CSS="crates/http/static/app.css"
 if [[ ! -f "$APP_CSS" ]]; then
   echo "error: expected global stylesheet at ${APP_CSS}."
@@ -22,6 +33,11 @@ fi
 for cls in ".ui-surface-card" ".ui-tabs" ".ui-tab" ".ui-panel" ".ui-preview-frame" ".ui-feature-list" ".ui-cta" ".ui-nav-shell" ".ui-nav" ".ui-nav-list" ".ui-nav-links" ".ui-nav-auth"; do
   if ! rg -q "^\s*\\${cls}\b|^\s*${cls}\b" "$APP_CSS"; then
     echo "${APP_CSS}: missing reusable package class ${cls}."
+    status=1
+  fi
+
+  if ! rg -Fq "${cls}" "$DOCS_CATALOG"; then
+    echo "${DOCS_CATALOG}: missing package catalog entry for ${cls}."
     status=1
   fi
 done
@@ -43,6 +59,27 @@ while IFS= read -r spec; do
 
   if ! jq -e '(.styling.tokens_used // [] | length) > 0' "$spec" >/dev/null; then
     echo "${spec}: styling.tokens_used must declare consumed tokens."
+    status=1
+  fi
+
+  if ! jq -e 'all((.styling.global_packages // [])[]; startswith("ui-"))' "$spec" >/dev/null; then
+    echo "${spec}: styling.global_packages should use shared ui-* package names."
+    status=1
+  fi
+
+  if ! jq -e '
+    all(
+      (.styling.tokens_used // [])[];
+      test("^--(size|gray|stone|sand|red|pink|purple|indigo|blue|cyan|teal|green|lime|yellow|orange|choco|shadow|radius|font|animation|ease|duration|aspect|gradient|brand)-")
+      | not
+    )
+  ' "$spec" >/dev/null; then
+    echo "${spec}: styling.tokens_used should list semantic workspace aliases, not raw Open Props primitives."
+    status=1
+  fi
+
+  if ! jq -e 'all((.styling.scoped_exceptions // [])[]; (type == "string") and (length > 0))' "$spec" >/dev/null; then
+    echo "${spec}: styling.scoped_exceptions entries must be non-empty strings when present."
     status=1
   fi
 
@@ -81,6 +118,11 @@ for file in "${style_components[@]}"; do
 
   if ! rg --no-heading --line-number 'class="[^"]*ui-' "$file" >/dev/null; then
     echo "${file}: expected usage of reusable ui-* package classes."
+    status=1
+  fi
+
+  if rg --no-heading --line-number -- '--(size|gray|stone|sand|red|pink|purple|indigo|blue|cyan|teal|green|lime|yellow|orange|choco|shadow|radius|font|animation|ease|duration|aspect|gradient|brand)-' "$file" >/dev/null; then
+    echo "${file}: style-system components should consume semantic workspace tokens, not raw Open Props primitives."
     status=1
   fi
 done

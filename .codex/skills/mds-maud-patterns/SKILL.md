@@ -10,6 +10,10 @@ scope: project
 ## Purpose
 Apply repo-approved Maud composition, escaping, and structure patterns when building `component_spec.ui` and generated Maud templates.
 
+## Quality Priority
+- Correctness is a gate.
+- Among correct options, prefer the most readable, modular, extensible, expressive, and idiomatic render structure.
+
 ## Usage
 - Use before defining `ui.nodes`, slot strategy, and render patterns.
 - Prefer documented Maud idioms over agent priors.
@@ -26,10 +30,11 @@ Apply repo-approved Maud composition, escaping, and structure patterns when buil
 - Keep behavior variants typed (enum-driven render branches) instead of raw string flags.
 - For semantic finite sets (`*mode`, `*variant`, `*kind`, `*role`, `*type`, etc.), prefer enums/newtypes over `Text`/`String` fields.
 - Prefer `bon` builders for component construction APIs:
-  - Use typestate builder/state-machine style when required construction order matters.
+  - Use plain `bon` typestate builders when required construction order is local to assembling one value.
   - Use regular `#[derive(Builder)]` when named setters improve clarity and typestate would add noise.
   - For optional members, use direct setters for concrete values (`.field(value)`), not `.maybe_field(Some(value))`.
   - Reserve `.maybe_field(...)` for values already shaped as `Option<T>` or explicit `None`/default behavior.
+- If the challenge is an ordered Rust workflow or API protocol instead of local object construction, route it through `mds-statum-patterns` instead of encoding it as a plain-Bon builder surface.
 - Prefer module-scoped render APIs and qualified calls (`tab_set::pane::Body`) over flat prefixed type names.
 - For log surfaces, split reusable render pieces by tier:
   - primitive building blocks under `views/partials/components/logs/primitives`

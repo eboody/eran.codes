@@ -3,12 +3,19 @@
 ## Purpose
 Generate Rust Maud + Datastar component code from a verified `component_spec`.
 
+## Quality Priority
+- Correctness is a gate.
+- Among correct options, prefer the most readable, modular, extensible, expressive, and idiomatic generated code.
+
 ## Inputs It Expects
+- `component_spec.design`
 - `component_spec.ui`
 - `component_spec.state`
 - `component_spec.events`
 - `component_spec.backend_contracts`
 - `component_spec.pipeline`
+- `.codex/skills/mds-statum-patterns/SKILL.md`
+- `.codex/skills/mds-rust-namespace-surface/SKILL.md`
 
 ## Outputs It Must Produce
 - `codegen.files[]`
@@ -19,6 +26,7 @@ Generate Rust Maud + Datastar component code from a verified `component_spec`.
 - Must not mutate `component_spec` sections owned by upstream agents.
 - Must not bypass regeneration safety markers.
 - Must not emit code when verifier status is `fail`.
+- Must not choose clever, compressed, or monolithic code when a clearer decomposed design is available.
 
 ## Mapping Rules (Authority-Aware)
 - Map `events.ui_transitions` to client-local Datastar behavior for `authority = "ui"` fields.
@@ -42,6 +50,14 @@ Generate Rust Maud + Datastar component code from a verified `component_spec`.
 - Reuse existing primitives (for example `Tab`, `Icon`) before creating parallel equivalents.
 - When adding a new reusable component, use generic library-style names (for example `tab_item`, `tab_set`) instead of request-specific wording.
 - Prefer module-scoped type families and namespace usage (for example `tab_set::pane::Body`, `application::Service`) over flat prefixed type naming.
+- When a module path is intended API vocabulary, keep generic companion nouns under that module (for example `user::Id`, `user::Repository`) instead of flattening them into parent surfaces.
+- For modules marked with `// ci: descriptive-module-import <full_module_path>`, import the namespace itself and qualify from it; do not generate leaf `use` or `pub use` against that module path.
+- If `design.protocol_model.decision = statum`, generate the stable workflow core with `#[state]`, `#[machine]`, concrete-state `#[transition]` impls, and keep helpers/orchestration outside transition blocks.
+- If `design.protocol_model.decision = hybrid`, generate the stable core with `statum` and leave dynamic policy branches in regular methods or explicit runtime guards.
+- If `design.protocol_model.persistence_boundary = validators`, generate or preserve a `#[validators]` rehydration boundary instead of trusting persisted status flags directly.
+- Use plain `bon` for command/context assembly and `statum` for lifecycle legality; do not generate builder chains that simulate protocol steps.
+- When generating Statum-backed machines, keep machine construction Bon-backed instead of hand-rolling alternative constructors.
+- Keep long-lived context on the machine, and keep phase-specific invariant data on the state variants.
 - Emit markup that can consume shared global `app.css` package classes for reusable patterns.
 - Keep scoped `inline_css!` for exception-only component-specific behavior.
 - Keep output file set stable unless explicitly requested (`view.rs`, `state.rs`, `events.rs`, `handler.rs`).
@@ -54,6 +70,9 @@ Generate Rust Maud + Datastar component code from a verified `component_spec`.
 - Generated templates avoid literal marketing copy (placeholder/debug text only).
 - Codegen trace includes schema/version used.
 - Generated reusable component roots and declared child parts should each `impl Render`.
+- Generated Rust imports preserve marked namespace roots; do not leaf-import or parent-`pub use` their companion nouns.
+- Generated Statum workflows keep `#[transition]` blocks protocol-only and place helper/branch/orchestration methods in regular `impl` blocks.
+- Generated persisted typed workflows rehydrate through validators when `design.protocol_model.persistence_boundary = validators`.
 
 ## Minimal Valid Output Snippet
 ```json
@@ -72,7 +91,7 @@ Generate Rust Maud + Datastar component code from a verified `component_spec`.
     ],
     "trace": {
       "component_id": "user_profile_card",
-      "schema": "mds-component-spec@0.2.0"
+      "schema": "mds-component-spec@0.4.0"
     }
   }
 }

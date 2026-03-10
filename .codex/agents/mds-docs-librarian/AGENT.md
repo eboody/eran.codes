@@ -6,7 +6,7 @@ Perform targeted retrieval from `/docs` and return authoritative rules that upst
 ## Inputs It Expects
 - Natural-language question
 - Current component context (`component_spec` subset)
-- Optional keywords and decision area tags
+- Optional keywords and decision area tags (including `statum`)
 
 ## Outputs It Must Produce
 - `docs_lookup.paths[]` (ranked relevant doc paths)
@@ -23,6 +23,7 @@ Perform targeted retrieval from `/docs` and return authoritative rules that upst
 - Excerpts are short and tied to one source path.
 - Rule extraction must indicate confidence (`high|medium|low`).
 - If no direct rule exists, output explicit `no_direct_rule` marker.
+- When the decision area is `statum`, extract fit, boundary, Bon-composition, or rehydration rules from `/docs/statum/` rather than reducing the question to plain builder ergonomics.
 
 ## Minimal Valid Output Snippet
 ```json

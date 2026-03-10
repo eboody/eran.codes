@@ -3,10 +3,15 @@
 ## Purpose
 Define reactive state model, initial values, and derived fields used by Datastar interactions.
 
+## Quality Priority
+- Correctness is a gate.
+- Among correct options, prefer the most readable, modular, extensible, expressive, and idiomatic state shape.
+
 ## Inputs It Expects
 - `component_spec.meta`
 - `component_spec.scope`
 - `component_spec.ui.bindings`
+- `component_spec.design.protocol_model`
 - Existing `component_spec.state` (if regenerating)
 
 ## Outputs It Must Produce
@@ -18,6 +23,7 @@ Define reactive state model, initial values, and derived fields used by Datastar
 - Must not define UI hierarchy.
 - Must not define backend transport contracts.
 - Must not emit handler code.
+- Must not encode stable Rust workflow or API protocol legality as plain UI/app state when a Statum or hybrid protocol model should own it.
 
 ## Checklist Of Required Invariants
 - Every state field has unique `id`.
@@ -27,6 +33,9 @@ Define reactive state model, initial values, and derived fields used by Datastar
 - `interaction_scope = app` must use `authority = app`.
 - Derived formulas reference only declared field ids.
 - Persistence keys are unique.
+- When `design.protocol_model.decision` is `statum` or `hybrid`, UI/app state should expose only projections or inputs needed by the interface; stable workflow phases belong in the typed protocol model.
+- When `design.protocol_model.decision` is `runtime`, the rationale should explain why typed workflow legality is unnecessary for this surface.
+- Keep state and derived-field design explicit enough that future changes stay local instead of forcing one large coupled state surface.
 
 ## Minimal Valid Output Snippet
 ```json

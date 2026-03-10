@@ -3,6 +3,10 @@
 ## Purpose
 Define and validate the CMS-shaped content contract for component generation.
 
+## Quality Priority
+- Correctness is a gate.
+- Among correct options, prefer the most readable, modular, extensible, expressive, and idiomatic contract shape.
+
 ## Inputs It Expects
 - `component_spec.meta`
 - `component_spec.scope`
@@ -24,6 +28,7 @@ Define and validate the CMS-shaped content contract for component generation.
 - Content contract is decomposition-friendly: child components can consume specific slices.
 - `content.root_type` naming is generic/library-style (avoid campaign/request-specific names).
 - Must cooperate with `design.reuse_scan` so component creation records reuse-first evaluation against `views/partials/components`.
+- Favor content contracts that keep mapping, validation, and rendering boundaries explicit rather than bundling many concerns into one root shape.
 
 ## Minimal Valid Output Snippet
 ```json

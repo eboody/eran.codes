@@ -89,7 +89,7 @@
     },
     "design": {
       "type": "object",
-      "required": ["reuse_scan", "render_contract"],
+      "required": ["reuse_scan", "render_contract", "protocol_model"],
       "properties": {
         "reuse_scan": {
           "type": "object",
@@ -128,6 +128,96 @@
             },
             "interaction_mode": {"type": "string", "minLength": 1}
           },
+          "additionalProperties": true
+        },
+        "protocol_model": {
+          "type": "object",
+          "required": [
+            "decision",
+            "staged_entity",
+            "rationale",
+            "persistence_boundary"
+          ],
+          "properties": {
+            "decision": {
+              "type": "string",
+              "enum": ["statum", "hybrid", "runtime"]
+            },
+            "staged_entity": {"type": "string", "minLength": 1},
+            "rationale": {"type": "string", "minLength": 1},
+            "lifecycle": {
+              "type": "array",
+              "items": {"type": "string", "minLength": 1},
+              "minItems": 1
+            },
+            "stable_core_edges": {
+              "type": "array",
+              "items": {"type": "string", "minLength": 1}
+            },
+            "runtime_edges": {
+              "type": "array",
+              "items": {"type": "string", "minLength": 1}
+            },
+            "persistence_boundary": {
+              "type": "string",
+              "enum": ["not_persisted", "validators", "manual"]
+            },
+            "machine_type": {"type": "string", "minLength": 1},
+            "state_enum": {"type": "string", "minLength": 1}
+          },
+          "allOf": [
+            {
+              "if": {
+                "properties": {
+                  "decision": {
+                    "enum": ["statum", "hybrid"]
+                  }
+                },
+                "required": ["decision"]
+              },
+              "then": {
+                "required": [
+                  "lifecycle",
+                  "stable_core_edges",
+                  "runtime_edges",
+                  "machine_type",
+                  "state_enum"
+                ],
+                "properties": {
+                  "lifecycle": {
+                    "type": "array",
+                    "items": {"type": "string", "minLength": 1},
+                    "minItems": 1
+                  },
+                  "stable_core_edges": {
+                    "type": "array",
+                    "items": {"type": "string", "minLength": 1},
+                    "minItems": 1
+                  },
+                  "runtime_edges": {
+                    "type": "array",
+                    "items": {"type": "string", "minLength": 1}
+                  }
+                }
+              }
+            },
+            {
+              "if": {
+                "properties": {
+                  "persistence_boundary": {"const": "validators"}
+                },
+                "required": ["persistence_boundary"]
+              },
+              "then": {
+                "required": ["decision", "machine_type", "state_enum"],
+                "properties": {
+                  "decision": {
+                    "enum": ["statum", "hybrid"]
+                  }
+                }
+              }
+            }
+          ],
           "additionalProperties": true
         }
       },

@@ -46,6 +46,13 @@ If a requested fact is not present in local sources, explicitly say it is not fo
 - `docs/surreal/07-reference.md`
 
 ### CSS Scoping and Styling
+- `docs/style-system/index.md`
+- `docs/style-system/token-layers.md`
+- `docs/style-system/modern-css.md`
+- `docs/style-system/promotion-rules.md`
+- `docs/style-system/package-catalog.md`
+- `docs/style-system/component-checklist.md`
+- `docs/style-system/repo-map.md`
 - `docs/css-scope-inline/index.md`
 - `docs/css-scope-inline/03-how-it-works.md`
 - `docs/css-scope-inline/06-workflow-tips.md`

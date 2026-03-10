@@ -230,7 +230,7 @@ Expose modules when the module path is part of the intended API vocabulary.
 - At call sites, import the most descriptive module namespace and qualify from there.
 - Prefer `use crate::views::partials::chat;` then `chat::Window`.
 - Avoid leaf imports like `use crate::views::partials::chat_message::Message;` when the parent module can expose a cleaner surface.
-- In parent modules, use explicit `pub use` to curate a readable API.
+- In parent modules, use explicit `pub use` to curate a readable API, but keep generic companion nouns inside namespace roots.
 
 ### Import path shaping
 
@@ -240,7 +240,8 @@ Use `use` statements to import descriptive namespaces, not deeply nested leaves,
 - Avoid importing every leaf directly from parallel modules when they conceptually belong to one surface.
 - Avoid unnecessary fully-qualified paths in expressions/call sites (`crate::...::Type::...`) when a `use` can import the top-most descriptive module.
 - Keep deep leaf imports for narrow internal helpers, tests, or one-off local usage where module qualification harms readability.
-- For modules explicitly marked as descriptive namespaces, enforce this with `// ci: descriptive-module-import <module_path>` in the exposing module; CI will reject leaf imports from that module path.
+- For namespace-root modules, keep generic companion nouns module-qualified (`user::Id`, `user::Repository`) instead of flattening them into parent APIs.
+- For modules explicitly marked as descriptive namespaces, enforce this with `// ci: descriptive-module-import <module_path>` in the exposing module; CI will reject leaf `use` and `pub use` from that module path.
 - Within a marked descriptive module tree, consume the parent surface instead of sibling leaf modules (prefer `use super::{Message, Messages};` over `use super::message::{Message, Messages};`).
 - For descriptive namespace roots that expose builders, prefer `module::builder()` over `module::RootType::builder()` when the type repeats the module meaning.
 - For `tabbed_showcase`, import the namespace and qualify from it: `use super::tabbed_showcase;` then `tabbed_showcase::builder()`, `tabbed_showcase::Tab::builder()`, `tabbed_showcase::Icon::outline(...)`, `tabbed_showcase::Color::AMBER`.

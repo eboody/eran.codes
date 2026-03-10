@@ -36,6 +36,12 @@ Enforce repo-standard `bon` usage so builders stay readable and consistent with 
 - `#[builder]`/`#[bon]` for function or method builders (including fallible builders).
 - Avoid hand-rolled builder APIs when `bon` can express the same construction cleanly.
 
+## Boundary With Statum
+- Use plain `bon` when the problem is value assembly, defaults, optional members, or local construction order.
+- Use `mds-statum-patterns` when the problem is stable workflow legality, phase-specific method availability, or invalid protocol paths.
+- Statum-backed machines still use Bon-backed builders for machine construction; that does not make the workflow a plain-Bon design.
+- Do not model protocol stages as builder steps when typed transitions would express the lifecycle more clearly.
+
 ## Common Mistakes To Reject
 - `maybe_*` with `Some(...)` literals.
 - `maybe_*` used for non-optional source values.

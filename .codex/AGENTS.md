@@ -25,6 +25,13 @@ This repository uses a project-local multi-agent system for generating Rust Maud
 - Run `mds-state-modeler` when state, derived values, or data flow is missing or changed.
 - Run `mds-events-designer` when event triggers, payloads, or transitions are missing or changed.
 - Run `mds-backend-contracts` when server endpoints, actions, or validation constraints are missing or changed.
+- Run `.codex/skills/mds-statum-patterns/SKILL.md` before `mds-state-modeler`, `mds-events-designer`, `mds-backend-contracts`, and `mds-codegen` when a task introduces or reshapes:
+  - any stable Rust workflow or API protocol,
+  - compile-time protocol legality decisions,
+  - phase-specific method availability or invariant data,
+  - persisted typed workflow reconstruction, or
+  - transition/helper boundary decisions in typed Rust flows.
+- Run `.codex/skills/mds-rust-namespace-surface/SKILL.md` before `mds-codegen` and before any manual Rust edit that changes module layout, `use` / `pub use`, or public type surfaces.
 - Run `mds-codegen` only after `content`, `ui`, `state`, `events`, and `backend_contracts` are valid and internally linked.
 - Run `mds-styling-system` after codegen to enforce hybrid styling:
   - reusable package styles in global `app.css`
@@ -40,6 +47,7 @@ This repository uses a project-local multi-agent system for generating Rust Maud
   - SSE transport behavior
   - Axum routing decisions
   - Bon builder API decisions (setter choice, optional/default/into semantics)
+  - Statum workflow legality, typestate fit, Bon-backed machine construction, and persistence rehydration boundaries
 - Required skills for docs lookup:
   - `.codex/skills/mds-repo-docs-index/SKILL.md`
   - `.codex/skills/mds-maud-patterns/SKILL.md`
@@ -47,8 +55,31 @@ This repository uses a project-local multi-agent system for generating Rust Maud
   - `.codex/skills/mds-datastar-patterns/SKILL.md`
   - `.codex/skills/mds-axum-integration/SKILL.md`
   - `.codex/skills/mds-bon-patterns/SKILL.md`
+  - `.codex/skills/mds-statum-patterns/SKILL.md`
   - `.codex/skills/mds-css-conventions/SKILL.md`
 - Docs under `/docs` are evergreen source of truth and override agent priors.
+
+## Rust Namespace Policy
+
+- `.codex/skills/mds-rust-namespace-surface/SKILL.md` is mandatory for Rust naming, module exposure, import shaping, and companion type-family decisions.
+- When a module path is intended API vocabulary, import the namespace and qualify from it (`use crate::domain::user;` then `user::Id`).
+- Do not flatten marked namespace roots with leaf `use` or parent-level `pub use` (for example `use crate::domain::user::Id;` or `pub use crate::domain::user::Id;`).
+- CI backstop for marked namespace roots: `scripts/ci/descriptive-module-imports.sh`.
+
+## Rust Workflow Protocol Policy
+
+- Use plain `bon` for assembling commands, inputs, defaults, and other construction-heavy values when no broader protocol legality model is needed.
+- Use `statum` for stable Rust workflows or API protocols where invalid lifecycle edges should be unrepresentable.
+- Statum-backed machines still use Bon-backed builders for machine construction; treat that as part of the Statum surface, not as a separate plain-Bon design decision.
+- Keep highly dynamic, user-authored, plugin-defined, or volatile policy branches in explicit runtime validation and document that boundary.
+- Persisted typed workflows should prefer `#[validators]` rehydration over trusting stored status flags directly.
+
+## Code Quality Priority Ladder
+
+- Correctness is a gate; agents must not trade it away for speed, brevity, novelty, or aesthetic preference.
+- Among correct options, agents must prefer the most readable, modular, extensible, expressive, and idiomatic design.
+- Do not choose clever, compressed, or monolithic designs when a clearer decomposed option exists.
+- If an agent deliberately chooses a less readable or less modular design because of another constraint, it must say why explicitly.
 
 ## Prompt Contradiction Rule (Stop-The-Line)
 
@@ -69,6 +100,7 @@ This repository uses a project-local multi-agent system for generating Rust Maud
   - `.codex/skills/mds-component-spec/references/component_spec.schema.json`
   - Cross-reference invariants in `.codex/skills/mds-component-spec/SKILL.md`
 - CI stop-the-line scripts also enforce composition contracts:
+  - `scripts/ci/descriptive-module-imports.sh`
   - `scripts/ci/render-composition-contract.sh`
   - `scripts/ci/tab-icon-reference-contract.sh`
 - The run must fail if:
@@ -108,6 +140,7 @@ This policy applies by default when a user asks to create/build/add a component 
     - `presentation`/`session` interactions default to `ui_local`.
     - `app` interactions use command + SSE.
   - Tabs/selectors are presentation-state by default unless explicit app-level semantics are requested.
+  - Stable Rust workflows or API protocols should be evaluated with the Statum fit checklist before encoding lifecycle legality as runtime branching or plain-Bon builder steps.
 - Default component decomposition:
   - Split new UI into orchestrator/container, child feature components, and shared primitives.
   - Do not collapse into one monolithic component unless explicitly requested.

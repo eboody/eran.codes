@@ -10,6 +10,10 @@ scope: project
 ## Purpose
 Apply repo CSS conventions and css-scope-inline usage patterns to class design and style scoping decisions used by generated components.
 
+## Quality Priority
+- Correctness is a gate.
+- Among correct options, prefer the most readable, modular, extensible, expressive, and idiomatic CSS structure.
+
 ## Usage
 - Use before finalizing class names and style scoping assumptions.
 - Enforce local conventions from `/docs/css-scope-inline` and writing/style signoff docs.
@@ -40,3 +44,15 @@ Apply repo CSS conventions and css-scope-inline usage patterns to class design a
 - Avoid raw magic values when equivalent tokens exist.
 - Prefer OpenProps token aliases (`--size-*`, `--radius-*`, `--border-size-*`, etc.) in reusable package classes.
 - Do not leave inline `css!` blocks in reusable log components; log styling should be consumed via global `ui-log-*` classes.
+
+## Modern CSS Adoption Rule
+- Use modern CSS/HTML features when they exist and they simplify behavior otherwise requiring JS.
+- Apply progressive enhancement:
+  - Ship a stable baseline first.
+  - Layer modern behavior inside `@supports` (or equivalent capability checks).
+  - Keep accessibility and keyboard behavior intact if enhancements are unsupported.
+- Prefer these features when relevant:
+  - Popover/dialog controls: `command`/`commandfor`, `popover="hint"`, `interestfor`, dialog light-dismiss (`closedby`).
+  - Scroll/carousel primitives: `::scroll-button`, `::scroll-marker`, `scroll-target-group`, `:target-current`, scroll-state queries.
+  - Query/dynamic syntax: typed `attr`, `if`, `@function`, expanded range syntax, anchored/container queries.
+  - Presentation primitives: customizable select pseudo-elements, `text-box-*`, `corner-shape`, `shape`, `stretch`, `sibling-index`/`sibling-count`.

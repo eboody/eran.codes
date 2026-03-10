@@ -39,8 +39,9 @@ check_module_leaf_imports() {
   local module="$1"
   local parent="${module%::*}"
   local leaf="${module##*::}"
-  local direct_pattern="^\\s*use\\s+${module}::"
-  local brace_pattern="^\\s*use\\s+${parent}::\\{[^;]*([,{[:space:]])${leaf}::"
+  local use_prefix="^\\s*(pub(\\([^)]*\\))?\\s+)?use\\s+"
+  local direct_pattern="${use_prefix}${module}::"
+  local brace_pattern="${use_prefix}${parent}::\\{[^;]*([,{[:space:]])${leaf}::"
 
   if command -v rg >/dev/null 2>&1; then
     rg --no-heading --line-number -g '*.rs' \
@@ -314,7 +315,7 @@ for marker in "${markers[@]}"; do
     echo
     echo "error: '${module}' is marked as a descriptive module namespace."
     echo "Use 'use ${module};' and qualify symbols at use sites (for example '${module##*::}::Window')."
-    echo "Do not import leaf symbols via '${module}::...'."
+    echo "Do not import or re-export leaf symbols via '${module}::...'."
     echo
     fail=1
   fi
