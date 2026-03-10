@@ -1604,6 +1604,7 @@ input[type="password"] {
   display: grid;
   gap: var(--size-4);
   align-content: start;
+  padding-inline-end: clamp(0rem, 0.3rem + 0.8vw, 1rem);
 }
 
 .ui-home-hero-kicker {
@@ -1627,6 +1628,7 @@ input[type="password"] {
   max-width: 11ch;
   font-size: clamp(2.7rem, 1.9rem + 3vw, 4.2rem);
   line-height: 0.92;
+  text-wrap: balance;
 }
 
 .ui-home-hero-tags {
@@ -1644,6 +1646,7 @@ input[type="password"] {
 .ui-home-hero-card {
   display: grid;
   gap: var(--size-3);
+  grid-template-rows: auto auto auto 1fr auto;
   align-content: start;
   padding: clamp(1.2rem, 0.95rem + 0.8vw, 1.75rem);
   border-radius: calc(var(--radius-card) - 2px);
@@ -1671,9 +1674,47 @@ input[type="password"] {
   color: color-mix(in srgb, var(--text-muted) 94%, var(--text-body) 6%);
 }
 
+.ui-home-hero .ui-cta-row {
+  width: fit-content;
+  margin-top: var(--size-1);
+  padding-top: var(--size-3);
+  border-top: 1px solid color-mix(in srgb, var(--border-subtle) 82%, transparent);
+}
+
 .ui-lab-main .ui-section-header-copy {
   display: grid;
   gap: var(--size-1);
+}
+
+.ui-lab-main [data-section-header] {
+  display: grid;
+  gap: var(--size-3) var(--size-4);
+  align-items: end;
+  margin-bottom: var(--size-3);
+  padding-bottom: var(--size-3);
+  border-bottom: 1px solid color-mix(in srgb, var(--border-subtle) 76%, transparent);
+}
+
+.ui-lab-main [data-section-header] h2,
+.tab-set .tab-set__copy h2 {
+  text-wrap: balance;
+}
+
+.ui-lab-main [data-section-header] h2 {
+  max-width: 18ch;
+}
+
+.ui-lab-main [data-section-header] [data-muted] {
+  margin-top: var(--size-2);
+  max-width: 58ch;
+  font-size: 1rem;
+}
+
+.ui-lab-main [data-section-meta] {
+  margin-top: var(--size-3);
+  font-family: var(--font-mono);
+  font-size: 0.76rem;
+  letter-spacing: 0.03em;
 }
 
 .ui-lab-tab-set {
@@ -1753,6 +1794,10 @@ input[type="password"] {
 
 .ui-burst-selected {
   margin: 0;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 0.3rem;
   font-family: var(--font-display);
   font-size: clamp(1.2rem, 1.05rem + 0.45vw, 1.5rem);
   color: var(--text-body);
@@ -1772,6 +1817,28 @@ input[type="password"] {
 .ui-burst-actions p {
   margin: 0;
   font-size: 0.84rem;
+}
+
+@media (min-width: 48rem) {
+  .ui-lab-main [data-section-header] {
+    grid-template-columns: minmax(0, 1fr) auto;
+  }
+
+  .ui-lab-burst .ui-burst-controls {
+    grid-template-columns: minmax(0, 1.35fr) minmax(14rem, 0.95fr);
+    align-items: end;
+    column-gap: var(--size-5);
+  }
+
+  .ui-lab-burst .ui-burst-slider,
+  .ui-lab-burst .ui-burst-result {
+    grid-column: 1 / -1;
+  }
+
+  .ui-lab-burst .ui-burst-actions {
+    justify-content: flex-end;
+    align-self: end;
+  }
 }
 
 .ui-burst-result {
