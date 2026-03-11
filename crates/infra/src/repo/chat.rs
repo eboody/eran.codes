@@ -5,15 +5,86 @@ pub use SqlxChatRepository as Repository;
 
 use app::chat::{
     AuditEntry, Error, ModerationQueueStatus, ModerationReason, PendingMutationResult,
-    Result, RoomRole,
+    RepositoryOperation, Result, RoomRole,
 };
 use async_trait::async_trait;
 use domain::chat;
+use snafu::prelude::*;
 use sqlx::types::time;
 use sqlx::{PgPool, Row, postgres::PgRow};
 
 const RATE_LIMIT_WINDOW_SECS: i64 = 10;
 const RATE_LIMIT_MAX: i64 = 5;
+
+type PersistenceResult<T> = std::result::Result<T, ChatPersistenceError>;
+
+#[derive(Debug, Snafu)]
+enum ChatPersistenceError {
+    #[snafu(display("chat persistence query failed while {operation}"))]
+    Query {
+        operation: RepositoryOperation,
+        source: sqlx::Error,
+    },
+    #[snafu(display("failed to decode room name"))]
+    DecodeRoomName { source: chat::RoomNameError },
+    #[snafu(display("failed to decode client id"))]
+    DecodeClientId { source: chat::ClientIdError },
+    #[snafu(display("failed to decode message body"))]
+    DecodeMessageBody { source: chat::MessageBodyError },
+    #[snafu(display("invalid stored message status: {status}"))]
+    InvalidStoredMessageStatus { status: String },
+    #[snafu(display("failed to decode moderation room name"))]
+    DecodeModerationRoomName { source: chat::RoomNameError },
+    #[snafu(display("failed to decode moderation message body"))]
+    DecodeModerationMessageBody { source: chat::MessageBodyError },
+    #[snafu(display("invalid stored moderation status: {status}"))]
+    InvalidStoredModerationStatus { status: String },
+    #[snafu(display("failed to decode moderation reason"))]
+    DecodeModerationReason {
+        source: app::chat::ModerationReasonError,
+    },
+    #[snafu(display("failed to decode moderation timestamp"))]
+    DecodeModerationTimestamp {
+        source: app::chat::TimestampTextError,
+    },
+}
+
+impl From<ChatPersistenceError> for Error {
+    fn from(error: ChatPersistenceError) -> Self {
+        match error {
+            ChatPersistenceError::Query { operation, source } => {
+                Error::query(operation, source)
+            }
+            ChatPersistenceError::DecodeRoomName { source } => {
+                Error::decode_room_name(source)
+            }
+            ChatPersistenceError::DecodeClientId { source } => {
+                Error::decode_client_id(source)
+            }
+            ChatPersistenceError::DecodeMessageBody { source } => {
+                Error::decode_message_body(source)
+            }
+            ChatPersistenceError::InvalidStoredMessageStatus { status } => {
+                Error::invalid_stored_message_status(status)
+            }
+            ChatPersistenceError::DecodeModerationRoomName { source } => {
+                Error::decode_moderation_room_name(source)
+            }
+            ChatPersistenceError::DecodeModerationMessageBody { source } => {
+                Error::decode_moderation_message_body(source)
+            }
+            ChatPersistenceError::InvalidStoredModerationStatus { status } => {
+                Error::invalid_stored_moderation_status(status)
+            }
+            ChatPersistenceError::DecodeModerationReason { source } => {
+                Error::decode_moderation_reason(source)
+            }
+            ChatPersistenceError::DecodeModerationTimestamp { source } => {
+                Error::decode_moderation_timestamp(source)
+            }
+        }
+    }
+}
 
 pub struct SqlxChatRepository {
     pg: PgPool,
@@ -24,12 +95,11 @@ impl SqlxChatRepository {
         Self { pg }
     }
 
-    fn status_from_db(value: &str) -> Result<chat::MessageStatus> {
+    fn status_from_db(value: &str) -> PersistenceResult<chat::MessageStatus> {
         value.parse::<chat::MessageStatus>().map_err(|_| {
-            Error::Repo(app::chat::RepoErrorText::new(format!(
-                "unknown message status: {}",
-                value
-            )))
+            ChatPersistenceError::InvalidStoredMessageStatus {
+                status: value.to_owned(),
+            }
         })
     }
 
@@ -41,10 +111,9 @@ impl SqlxChatRepository {
         }
     }
 
-    fn room_from_row(row: &PgRow) -> Result<chat::Room> {
+    fn room_from_row(row: &PgRow) -> PersistenceResult<chat::Room> {
         let name = row.get::<String, _>("name");
-        let name = chat::RoomName::try_new(name)
-            .map_err(|error| Error::Repo(error.to_string().into()))?;
+        let name = chat::RoomName::try_new(name).context(DecodeRoomNameSnafu)?;
 
         Ok(chat::Room {
             id: chat::RoomId::from_uuid(row.get::<uuid::Uuid, _>("id")),
@@ -53,19 +122,19 @@ impl SqlxChatRepository {
         })
     }
 
-    fn client_id_from_db(value: Option<String>) -> Result<Option<chat::ClientId>> {
+    fn client_id_from_db(
+        value: Option<String>,
+    ) -> PersistenceResult<Option<chat::ClientId>> {
         value
             .map(|client_id| {
-                chat::ClientId::try_new(client_id)
-                    .map_err(|error| Error::Repo(error.to_string().into()))
+                chat::ClientId::try_new(client_id).context(DecodeClientIdSnafu)
             })
             .transpose()
     }
 
-    fn message_from_row(row: &PgRow) -> Result<chat::Message> {
+    fn message_from_row(row: &PgRow) -> PersistenceResult<chat::Message> {
         let body = row.get::<String, _>("body");
-        let body = chat::MessageBody::try_new(body)
-            .map_err(|error| Error::Repo(error.to_string().into()))?;
+        let body = chat::MessageBody::try_new(body).context(DecodeMessageBodySnafu)?;
         let status = Self::status_from_db(row.get::<String, _>("status").as_str())?;
 
         Ok(chat::Message {
@@ -101,7 +170,9 @@ impl app::chat::Repository for SqlxChatRepository {
         .bind(room.created_by.as_uuid())
         .execute(&self.pg)
         .await
-        .map_err(|error| Error::Repo(error.to_string().into()))?;
+        .context(QuerySnafu {
+            operation: RepositoryOperation::CreateRoom,
+        })?;
 
         Ok(())
     }
@@ -123,9 +194,11 @@ impl app::chat::Repository for SqlxChatRepository {
         .bind(room_id.as_uuid())
         .fetch_optional(&self.pg)
         .await
-        .map_err(|error| Error::Repo(error.to_string().into()))?;
+        .context(QuerySnafu {
+            operation: RepositoryOperation::FindRoomById,
+        })?;
 
-        record.as_ref().map(Self::room_from_row).transpose()
+        Ok(record.as_ref().map(Self::room_from_row).transpose()?)
     }
 
     async fn find_room_by_name(&self, name: &chat::RoomName) -> Result<Option<chat::Room>> {
@@ -144,9 +217,11 @@ impl app::chat::Repository for SqlxChatRepository {
         .bind(name.to_string())
         .fetch_optional(&self.pg)
         .await
-        .map_err(|error| Error::Repo(error.to_string().into()))?;
+        .context(QuerySnafu {
+            operation: RepositoryOperation::FindRoomByName,
+        })?;
 
-        record.as_ref().map(Self::room_from_row).transpose()
+        Ok(record.as_ref().map(Self::room_from_row).transpose()?)
     }
 
     async fn list_messages(
@@ -172,9 +247,14 @@ impl app::chat::Repository for SqlxChatRepository {
         .bind(limit as i64)
         .fetch_all(&self.pg)
         .await
-        .map_err(|error| Error::Repo(error.to_string().into()))?;
+        .context(QuerySnafu {
+            operation: RepositoryOperation::ListRoomMessages,
+        })?;
 
-        rows.iter().map(Self::message_from_row).collect()
+        Ok(rows
+            .iter()
+            .map(Self::message_from_row)
+            .collect::<PersistenceResult<_>>()?)
     }
 
     async fn find_message(
@@ -196,9 +276,11 @@ impl app::chat::Repository for SqlxChatRepository {
         .bind(message_id.as_uuid())
         .fetch_optional(&self.pg)
         .await
-        .map_err(|error| Error::Repo(error.to_string().into()))?;
+        .context(QuerySnafu {
+            operation: RepositoryOperation::FindMessageById,
+        })?;
 
-        row.as_ref().map(Self::message_from_row).transpose()
+        Ok(row.as_ref().map(Self::message_from_row).transpose()?)
     }
 
     async fn insert_message(&self, message: &chat::Message) -> Result<()> {
@@ -236,7 +318,9 @@ impl app::chat::Repository for SqlxChatRepository {
         .bind(time::OffsetDateTime::from(message.created_at))
         .execute(&self.pg)
         .await
-        .map_err(|error| Error::Repo(error.to_string().into()))?;
+        .context(QuerySnafu {
+            operation: RepositoryOperation::InsertMessage,
+        })?;
 
         Ok(())
     }
@@ -267,7 +351,9 @@ impl app::chat::Repository for SqlxChatRepository {
         .bind(role.to_string())
         .execute(&self.pg)
         .await
-        .map_err(|error| Error::Repo(error.to_string().into()))?;
+        .context(QuerySnafu {
+            operation: RepositoryOperation::AddRoomMembership,
+        })?;
 
         Ok(())
     }
@@ -295,7 +381,9 @@ impl app::chat::Repository for SqlxChatRepository {
         .bind(user_id.as_uuid())
         .fetch_optional(&self.pg)
         .await
-        .map_err(|error| Error::Repo(error.to_string().into()))?;
+        .context(QuerySnafu {
+            operation: RepositoryOperation::CheckRoomMembership,
+        })?;
 
         Ok(row.is_some())
     }
@@ -322,7 +410,9 @@ impl app::chat::Repository for SqlxChatRepository {
         .bind(Self::status_to_db(status))
         .execute(&self.pg)
         .await
-        .map_err(|error| Error::Repo(error.to_string().into()))?;
+        .context(QuerySnafu {
+            operation: RepositoryOperation::UpdateMessageStatus,
+        })?;
 
         Ok(if result.rows_affected() == 1 {
             PendingMutationResult::Applied
@@ -364,7 +454,9 @@ impl app::chat::ModerationQueue for SqlxChatModerationQueue {
         .bind(reason.to_string())
         .execute(&self.pg)
         .await
-        .map_err(|error| Error::Repo(error.to_string().into()))?;
+        .context(QuerySnafu {
+            operation: RepositoryOperation::EnqueueModerationItem,
+        })?;
 
         Ok(())
     }
@@ -397,29 +489,30 @@ impl app::chat::ModerationQueue for SqlxChatModerationQueue {
         .bind(limit as i64)
         .fetch_all(&self.pg)
         .await
-        .map_err(|error| Error::Repo(error.to_string().into()))?;
+        .context(QuerySnafu {
+            operation: RepositoryOperation::ListModerationQueue,
+        })?;
 
         let mut items = Vec::with_capacity(rows.len());
         for row in rows {
             let room_name = row.get::<String, _>("room_name");
             let room_name = chat::RoomName::try_new(room_name)
-                .map_err(|error| Error::Repo(error.to_string().into()))?;
+                .context(DecodeModerationRoomNameSnafu)?;
             let body = row.get::<String, _>("body");
             let body = chat::MessageBody::try_new(body)
-                .map_err(|error| Error::Repo(error.to_string().into()))?;
+                .context(DecodeModerationMessageBodySnafu)?;
             let queue_status = row.get::<String, _>("status");
             let queue_status =
                 queue_status.parse::<ModerationQueueStatus>().map_err(|_| {
-                    Error::Repo(app::chat::RepoErrorText::new(format!(
-                        "unknown moderation status: {}",
-                        queue_status
-                    )))
+                    ChatPersistenceError::InvalidStoredModerationStatus {
+                        status: queue_status.clone(),
+                    }
                 })?;
             let reason = ModerationReason::try_new(row.get::<String, _>("reason"))
-                .map_err(|error| Error::Repo(error.to_string().into()))?;
+                .context(DecodeModerationReasonSnafu)?;
             let created_at =
                 app::chat::TimestampText::try_new(row.get::<String, _>("created_at"))
-                    .map_err(|error| Error::Repo(error.to_string().into()))?;
+                    .context(DecodeModerationTimestampSnafu)?;
 
             items.push(
                 app::chat::ModerationItem::builder()
@@ -474,7 +567,9 @@ impl app::chat::ModerationQueue for SqlxChatModerationQueue {
         .bind(reason.map(|value| value.to_string()))
         .execute(&self.pg)
         .await
-        .map_err(|error| Error::Repo(error.to_string().into()))?;
+        .context(QuerySnafu {
+            operation: RepositoryOperation::CompleteModerationItem,
+        })?;
 
         Ok(if result.rows_affected() == 1 {
             PendingMutationResult::Applied
@@ -549,7 +644,9 @@ impl app::chat::RateLimiter for SqlxChatRateLimiter {
         .bind(RATE_LIMIT_MAX)
         .fetch_one(&self.pg)
         .await
-        .map_err(|error| Error::Repo(error.to_string().into()))?;
+        .context(QuerySnafu {
+            operation: RepositoryOperation::CheckChatRateLimit,
+        })?;
 
         let allowed = row.get::<bool, _>("allowed");
         if allowed { Ok(()) } else { Err(Error::RateLimited) }
@@ -605,7 +702,9 @@ impl app::chat::AuditLog for SqlxChatAuditLog {
         .bind(metadata)
         .execute(&self.pg)
         .await
-        .map_err(|error| Error::Repo(error.to_string().into()))?;
+        .context(QuerySnafu {
+            operation: RepositoryOperation::RecordChatAuditEntry,
+        })?;
 
         Ok(())
     }

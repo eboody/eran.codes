@@ -8,7 +8,7 @@ use bon::Builder;
 use secrecy::SecretString;
 
 use domain::user;
-pub use error::{Error, Result};
+pub use error::{Error, RepositoryOperation, Result};
 
 #[derive(Clone, Debug, Builder)]
 pub struct RegisterUser {
@@ -110,8 +110,9 @@ mod tests {
         fn hash(&self, _password: &str) -> crate::auth::Result<crate::auth::PasswordHash> {
             match self.hash_outcome {
                 HashOutcome::Ok => Ok(crate::auth::PasswordHash::new("hash")),
-                HashOutcome::Fail => Err(crate::auth::Error::Hash(
-                    crate::auth::HashErrorText::new("hash failed"),
+                HashOutcome::Fail => Err(crate::auth::Error::hash(
+                    crate::auth::HashOperation::HashPassword,
+                    std::io::Error::other("hash failed"),
                 )),
             }
         }
@@ -199,7 +200,9 @@ mod tests {
 
         assert!(matches!(
             result,
-            Err(Error::Hashing(crate::auth::Error::Hash(_)))
+            Err(Error::Hashing {
+                source: crate::auth::Error::Hash { .. },
+            })
         ));
     }
 }

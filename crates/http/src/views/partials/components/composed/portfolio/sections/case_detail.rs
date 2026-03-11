@@ -2,7 +2,7 @@ use maud::Render;
 
 use crate::views::partials::components::portfolio::content::WorkCaseContent;
 
-use super::render_actions;
+use super::{LeadCopy, Surface, render_actions};
 
 pub struct WorkCaseDetail<'a> {
     pub content: &'a WorkCaseContent,
@@ -21,23 +21,27 @@ impl Render for WorkCaseDetail<'_> {
         ];
 
         maud::html! {
-            section class="ui-surface-card ui-portfolio-case-hero" {
-                p class="ui-portfolio-eyebrow" { (&self.content.eyebrow) }
-                h1 { (&self.content.title) }
-                p class="ui-portfolio-summary" { (&self.content.summary) }
-                (render_actions(&self.content.actions))
-            }
+            (Surface::section(maud::html! {
+                (LeadCopy {
+                    eyebrow: &self.content.eyebrow,
+                    title: &self.content.title,
+                    summary: &self.content.summary,
+                })
+                @if !self.content.actions.is_empty() {
+                    (render_actions(&self.content.actions))
+                }
+            }).extra_class("ui-portfolio-lead-surface"))
 
             div class="ui-portfolio-case-grid" {
                 @for (title, items) in sections {
-                    article class="ui-surface-card ui-portfolio-case-section" {
+                    (Surface::article(maud::html! {
                         h2 { (title) }
                         ul class="ui-portfolio-list" {
                             @for item in items {
                                 li { (item) }
                             }
                         }
-                    }
+                    }).extra_class("ui-portfolio-case-section"))
                 }
             }
         }

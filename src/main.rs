@@ -4,8 +4,9 @@ mod error;
 use std::sync::Arc;
 
 use app::user;
-use error::{Error, Result};
+use error::Result;
 use infra::user::UserRepository as UserRepo;
+use snafu::ResultExt;
 use tower_cookies::Key;
 use tower_sessions::session_store::ExpiredDeletion;
 use tower_sessions_sqlx_store::PostgresStore;
@@ -24,11 +25,13 @@ async fn main() -> Result<()> {
         .build();
     init_tracing(trace_log.clone(), diagnostic_log.clone());
 
-    let cfg = config::Config::load()?;
+    let cfg = config::Config::load().context(error::LoadConfigSnafu)?;
 
     let addr = format!("{}:{}", &cfg.http.host, cfg.http.port);
 
-    let infra = infra::Infra::init(&cfg.infra).await.map_err(Error::Infra)?;
+    let infra = infra::Infra::init(&cfg.infra)
+        .await
+        .context(error::InitInfraSnafu)?;
 
     let user_repo = Arc::new(UserRepo::new(infra.db.clone()));
     let auth_hasher = Arc::new(infra::auth::Argon2Hasher::new());
@@ -78,10 +81,14 @@ async fn main() -> Result<()> {
 
     let app = http::router(http_state, session_store);
 
-    let listener = tokio::net::TcpListener::bind(&addr).await?;
+    let listener = tokio::net::TcpListener::bind(&addr)
+        .await
+        .context(error::BindHttpListenerSnafu { addr: addr.clone() })?;
 
     tracing::info!("listening on http://{}", addr);
-    axum::serve(listener, app).await?;
+    axum::serve(listener, app)
+        .await
+        .context(error::ServeHttpSnafu)?;
 
     Ok(())
 }

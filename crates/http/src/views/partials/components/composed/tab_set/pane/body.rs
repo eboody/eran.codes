@@ -42,7 +42,7 @@ pub(crate) struct FeatureList {
 impl Render for FeatureList {
     fn render(&self) -> maud::Markup {
         maud::html! {
-            ul class="tab-set__features ui-feature-list" {
+            ul class="tab-set__features" {
                 @for feature in &self.children {
                     (feature)
                 }

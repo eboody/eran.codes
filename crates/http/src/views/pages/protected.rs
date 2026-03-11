@@ -4,6 +4,7 @@ use maud::Render;
 use crate::paths::Route;
 use crate::types::Text;
 use crate::views::page::UserNav;
+use crate::views::partials::{button, AuthShell, AuthShellVariant};
 
 #[derive(Builder)]
 pub struct Protected {
@@ -14,18 +15,23 @@ pub struct Protected {
 
 impl Render for Protected {
     fn render(&self) -> maud::Markup {
-        let content = maud::html! {
-            main class="container ui-auth-main ui-account-main" {
-                article class="ui-surface-card ui-auth-card ui-account-card" {
-                    header class="ui-auth-header ui-account-header" {
-                        h1 { "Welcome, " (&self.username) }
-                    }
-                    p class="ui-auth-summary ui-account-summary" { "Signed in as " (&self.email) "." }
-                    form class="ui-account-actions" method="post" action=(Route::Logout) {
-                        button class="secondary ui-auth-submit" type="submit" { "Sign out" }
-                    }
-                }
+        let body = maud::html! {
+            form data-account-actions method="post" action=(Route::Logout) {
+                (button::Button::builder()
+                    .label(Text::from("Sign out"))
+                    .variant(button::Variant::Secondary)
+                    .role(button::Role::submit())
+                    .data_attrs(vec![button::DataAttr::flag("data-auth-submit")])
+                    .build())
             }
+        };
+        let content = maud::html! {
+            (AuthShell::builder()
+                .title(Text::from(format!("Welcome, {}", self.username)))
+                .summary(Text::from(format!("Signed in as {}.", self.email)))
+                .body(body)
+                .variant(AuthShellVariant::Account)
+                .build())
         };
 
         crate::views::page::Layout::builder()

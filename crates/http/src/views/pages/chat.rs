@@ -5,6 +5,26 @@ use crate::types::Text;
 use crate::views::page::{Layout, UserNav};
 use crate::views::partials::chat;
 
+crate::views::scoped::inline_css!(
+    r#"
+me {
+  display: grid;
+  gap: var(--space-section);
+  margin-top: clamp(1.1rem, 0.9rem + 0.9vw, 1.8rem);
+  padding-bottom: calc(var(--space-section) + var(--size-6));
+}
+
+me > :where(header, section) {
+  margin-top: 0;
+  scroll-margin-top: var(--nav-scroll-offset);
+}
+
+me [data-chat-surface] {
+  margin-top: 0;
+}
+"#
+);
+
 #[derive(Builder)]
 pub struct Chat {
     pub room_id: Text,
@@ -18,7 +38,8 @@ impl Render for Chat {
     fn render(&self) -> maud::Markup {
         let content = maud::html! {
             main
-                class="container ui-chat-page"
+                class="u-container"
+                data-chat-page
                 data-signals=({
                     format!(
                         "{{roomId: '{}', body: '', botBody: '', sseConnected: false}}",
@@ -26,6 +47,7 @@ impl Render for Chat {
                     )
                 })
             {
+                (css())
                 ({
                     chat::Hero::builder()
                         .room_name(self.room_name.clone())
@@ -33,13 +55,14 @@ impl Render for Chat {
                         .build()
                 })
 
-                section class="ui-chat-page-surface" data-chat-surface {
+                section data-chat-surface {
+                    (chat::surface_styles())
                     ({
                         chat::Connection::builder()
                             .connected_signal(Text::from("$sseConnected"))
                             .build()
                     })
-                    (chat::PanelSet::builder()
+                    (chat::panel::Set::builder()
                         .messages(self.messages.clone())
                         .build())
                     script src="/static/chat-demo.js" {}

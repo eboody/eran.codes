@@ -1,8 +1,8 @@
 use bon::Builder;
 use maud::Render;
 
-use crate::views::partials::{StatusCard, RequestTraceLog};
 use crate::types::Text;
+use crate::views::partials::{RequestTraceLog, StatusCard, StatusCardItem};
 
 #[derive(Clone, Copy, Debug)]
 enum AuthStatusLabel {
@@ -37,30 +37,11 @@ impl Render for AuthStatus {
             AuthStatusLabel::Anonymous
         };
         let items = vec![
-            (
-                Text::from("user_id"),
-                self.user_id.clone().unwrap_or_else(|| Text::from("none")),
-            ),
-            (
-                Text::from("username"),
-                self.username.clone().unwrap_or_else(|| Text::from("none")),
-            ),
-            (
-                Text::from("email"),
-                self.email.clone().unwrap_or_else(|| Text::from("none")),
-            ),
-            (
-                Text::from("session_id"),
-                self.session_id
-                    .clone()
-                    .unwrap_or_else(|| Text::from("none")),
-            ),
-            (
-                Text::from("expiry"),
-                self.expiry
-                    .clone()
-                    .unwrap_or_else(|| Text::from("none")),
-            ),
+            StatusCardItem::optional("user_id", self.user_id.clone()),
+            StatusCardItem::optional("username", self.username.clone()),
+            StatusCardItem::optional("email", self.email.clone()),
+            StatusCardItem::optional("session_id", self.session_id.clone()),
+            StatusCardItem::optional("expiry", self.expiry.clone()),
         ];
 
         maud::html! {

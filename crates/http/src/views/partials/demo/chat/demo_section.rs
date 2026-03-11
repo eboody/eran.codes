@@ -4,9 +4,7 @@ use serde_json::json;
 
 use crate::paths::Route;
 use crate::types::Text;
-use crate::views::partials::{
-    chat, SectionHeader, SectionHeaderActionLink, SectionHeaderMetaText,
-};
+use crate::views::partials::{SectionHeader, SectionHeaderMetaText, button, chat};
 
 #[derive(Clone, Debug, Builder)]
 pub struct DemoSection {
@@ -34,7 +32,7 @@ impl Render for DemoSection {
         maud::html! {
             section
                 id=(Self::ANCHOR_ID)
-                class="ui-lab-chat-surface"
+                data-lab-chat-surface
                 data-chat-surface
                 data-signals=(json!({
                     "roomId": self.room_id.to_string(),
@@ -42,19 +40,20 @@ impl Render for DemoSection {
                     "botBody": "",
                     "sseConnected": false
                 }).to_string()) {
+                (chat::surface_styles())
                 (SectionHeader::builder()
                     .title(Text::from("Live chat room"))
                     .subtitle(subtitle)
                     .action(match self.interactivity {
-                        chat::Mode::Interactive => SectionHeaderActionLink::builder()
+                        chat::Mode::Interactive => button::Button::builder()
                             .label(Text::from("Moderation queue"))
-                            .href(Text::from(Route::ChatModeration.as_str()))
-                            .secondary(true)
+                            .variant(button::Variant::Secondary)
+                            .role(button::Role::link(Route::ChatModeration.as_str()))
                             .build(),
-                        chat::Mode::DemoOnly => SectionHeaderActionLink::builder()
+                        chat::Mode::DemoOnly => button::Button::builder()
                             .label(Text::from("Sign in to interact"))
-                            .href(Text::from(Route::Login.as_str()))
-                            .secondary(true)
+                            .variant(button::Variant::Secondary)
+                            .role(button::Role::link(Route::Login.as_str()))
                             .build(),
                     })
                     .meta(SectionHeaderMetaText::builder()
@@ -64,7 +63,7 @@ impl Render for DemoSection {
                 (chat::Connection::builder()
                     .connected_signal(Text::from("$sseConnected"))
                     .build())
-                (chat::PanelSet::builder()
+                (chat::panel::Set::builder()
                     .messages(self.messages.clone())
                     .interactivity(self.interactivity)
                     .build())

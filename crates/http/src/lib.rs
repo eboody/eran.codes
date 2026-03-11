@@ -1,7 +1,5 @@
 mod auth;
 pub mod chat_demo;
-mod chat_demo_context_flow;
-mod chat_demo_demo_user_flow;
 mod error;
 mod handlers;
 pub mod paths;

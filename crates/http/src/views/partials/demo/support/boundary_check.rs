@@ -1,8 +1,8 @@
 use bon::Builder;
 use maud::Render;
 
-use crate::views::partials::{StatusCard, RequestTraceLog};
 use crate::types::Text;
+use crate::views::partials::{RequestTraceLog, StatusCard, StatusCardItem};
 
 #[derive(Clone, Debug, Builder)]
 pub struct BoundaryCheck {
@@ -20,9 +20,9 @@ impl Render for BoundaryCheck {
                 (StatusCard::builder()
                     .title(self.label.clone())
                     .items(vec![
-                        (Text::from("username"), self.username.clone()),
-                        (Text::from("email"), self.email.clone()),
-                        (Text::from("result"), self.result.clone()),
+                        StatusCardItem::text("username", self.username.clone()),
+                        StatusCardItem::text("email", self.email.clone()),
+                        StatusCardItem::text("result", self.result.clone()),
                     ])
                     .build())
                 (RequestTraceLog::builder().entries(&self.trace).build())

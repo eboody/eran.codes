@@ -179,7 +179,7 @@ impl RegisterUserFlow<UserMaterialized> {
     ) -> Result<RegisterUserFlow<PasswordHashed>, Error> {
         let password_hash = hasher
             .hash(self.password().expose_secret())
-            .map_err(Error::Hashing)?;
+            .map_err(|source| Error::Hashing { source })?;
         Ok(self.attach_password_hash(password_hash))
     }
 }
@@ -312,8 +312,9 @@ mod tests {
         fn hash(&self, _password: &str) -> crate::auth::Result<crate::auth::PasswordHash> {
             match self.hash_outcome {
                 HashOutcome::Ok => Ok(crate::auth::PasswordHash::new("hash")),
-                HashOutcome::Fail => Err(crate::auth::Error::Hash(
-                    crate::auth::HashErrorText::new("hash failed"),
+                HashOutcome::Fail => Err(crate::auth::Error::hash(
+                    crate::auth::HashOperation::HashPassword,
+                    std::io::Error::other("hash failed"),
                 )),
             }
         }
@@ -398,7 +399,9 @@ mod tests {
 
         assert!(matches!(
             result,
-            Err(Error::Hashing(crate::auth::Error::Hash(_)))
+            Err(Error::Hashing {
+                source: crate::auth::Error::Hash { .. },
+            })
         ));
         assert!(repo.created_users().is_empty());
     }

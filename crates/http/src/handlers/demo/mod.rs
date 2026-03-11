@@ -1,12 +1,5 @@
 mod chat;
-mod chat_moderate_flow;
-mod chat_post_flow;
 mod partials;
-mod partials_auth_status_flow;
-mod partials_boundary_check_flow;
-mod partials_db_check_flow;
-mod partials_request_meta_flow;
-mod partials_session_status_flow;
 
 pub use chat::{
     moderate_message, moderation_page, post_chat_message, post_demo_chat_message,

@@ -170,7 +170,7 @@ Do not chain `.build().render()` at call sites.
 
 Where inline CSS/JS is appropriate:
 
-- prefer `inline_css!` and `inline_js!` so style/script code lives outside template bodies and is inserted with `(css())` / `(js())`,
+- prefer `crate::inline_css!` and `inline_js!` so style/script code lives outside template bodies and is inserted with `(css())` / `(js())`,
 - reserve direct `css!` / `js!` usage in templates for very small one-off blocks,
 - scope styles with `css-scope-inline`,
 - use `surreal.js` helpers where they reduce DOM boilerplate and improve clarity.
@@ -179,7 +179,7 @@ Where inline CSS/JS is appropriate:
 
 For Maud partials/components:
 
-- Prefer component-scoped style helpers (`inline_css!` + `(css())`) with `me` selectors over global `crates/http/static/app.css` rules.
+- Prefer component-scoped style helpers (`crate::inline_css!` + `(css())`) with `me` selectors over global `crates/http/static/app.css` rules.
 - Add global `app.css` rules only when styles are intentionally shared across unrelated components/pages.
 - Use targeted hooks (`id`, semantic class, or stable `data-*`) for nested styling and keep selectors short.
 - Avoid deep selector chains; if a selector grows beyond a couple of combinators, split styling into a smaller subcomponent.
@@ -226,7 +226,7 @@ This keeps call sites readable without repeating information in every type name.
 
 Expose modules when the module path is part of the intended API vocabulary.
 
-- Prefer `chat::panel::Role::You` (or `chat::Role::You` when re-exported intentionally) over `ChatPanelRole::You`.
+- Prefer `chat::panel::Role::You` over `ChatPanelRole::You`.
 - At call sites, import the most descriptive module namespace and qualify from there.
 - Prefer `use crate::views::partials::chat;` then `chat::Window`.
 - Avoid leaf imports like `use crate::views::partials::chat_message::Message;` when the parent module can expose a cleaner surface.
@@ -236,7 +236,7 @@ Expose modules when the module path is part of the intended API vocabulary.
 
 Use `use` statements to import descriptive namespaces, not deeply nested leaves, when those leaves are part of a cohesive module API.
 
-- Prefer `use crate::views::partials::chat;` then `chat::Window`, `chat::Role`, `chat::panel::Panel`.
+- Prefer `use crate::views::partials::chat;` then `chat::Window`, `chat::panel::Role`, `chat::panel::Panel`.
 - Avoid importing every leaf directly from parallel modules when they conceptually belong to one surface.
 - Avoid unnecessary fully-qualified paths in expressions/call sites (`crate::...::Type::...`) when a `use` can import the top-most descriptive module.
 - Keep deep leaf imports for narrow internal helpers, tests, or one-off local usage where module qualification harms readability.
@@ -244,8 +244,8 @@ Use `use` statements to import descriptive namespaces, not deeply nested leaves,
 - For modules explicitly marked as descriptive namespaces, enforce this with `// ci: descriptive-module-import <module_path>` in the exposing module; CI will reject leaf `use` and `pub use` from that module path.
 - Within a marked descriptive module tree, consume the parent surface instead of sibling leaf modules (prefer `use super::{Message, Messages};` over `use super::message::{Message, Messages};`).
 - For descriptive namespace roots that expose builders, prefer `module::builder()` over `module::RootType::builder()` when the type repeats the module meaning.
-- For `tabbed_showcase`, import the namespace and qualify from it: `use super::tabbed_showcase;` then `tabbed_showcase::builder()`, `tabbed_showcase::Tab::builder()`, `tabbed_showcase::Icon::outline(...)`, `tabbed_showcase::Color::AMBER`.
-- Avoid tautological forms like `tabbed_showcase::Showcase::builder()` and `TabbedShowcaseIcon`.
+- For `tab_set`, import the namespace and qualify from it: `use crate::views::partials::components::tab_set;` then `tab_set::ContentProps::builder()`, `tab_set::Component::from_content(...)`, and `tab_set::content::TabSetContent`.
+- Avoid leaf-importing namespace companions like `ContentProps` out of `tab_set` when module qualification keeps the surface clearer.
 
 ### Avoid tautological enum/type pairs
 
@@ -362,7 +362,7 @@ pub mod chat {
 
 use crate::views::partials::chat;
 
-let role = chat::Role::You;
+let role = chat::panel::Role::You;
 ```
 
 ### Import path shaping
@@ -370,7 +370,7 @@ let role = chat::Role::You;
 Bad:
 
 ```rust
-let panel = crate::views::partials::chat::Panel::builder().build();
+let panel = crate::views::partials::chat::panel::Panel::builder().build();
 
 use crate::views::partials::chat_message::Message;
 use crate::views::partials::chat_window::Window;
@@ -382,9 +382,9 @@ Good:
 ```rust
 use crate::views::partials::chat;
 
-let role = chat::Role::You;
+let role = chat::panel::Role::You;
 let window = chat::Window::builder().build();
-let panel = chat::Panel::builder().build();
+let panel = chat::panel::Panel::builder().build();
 ```
 
 ### Namespace root builders
@@ -392,54 +392,33 @@ let panel = chat::Panel::builder().build();
 Bad:
 
 ```rust
-use super::tabbed_showcase;
-use heroicons::icon_name;
-use super::tabbed_showcase::{Tab};
+use crate::views::partials::components::tab_set::{self, ContentProps};
 
-let view = tabbed_showcase::builder()
-    .tabs(vec![
-        Tab::builder()
-            .icon(tabbed_showcase::Icon::outline(icon_name::ShieldCheck))
-            .color(tabbed_showcase::Color::AMBER)
-            .text(Text::from("Identity + Sessions"))
-            .build(),
-    ])
-    .panels(vec![
-        tabbed_showcase::Panel::builder()
-            .title(Text::from("Identity and Session Durability"))
-            .subtitle(Text::from("..."))
-            .bullets(vec![Text::from("...")])
-            .chips_label(Text::from("Built with"))
-            .chips(vec![Text::from("axum-login")])
-            .build(),
-    ])
-    .build();
+let content: tab_set::content::TabSetContent = load_content();
+let view = tab_set::Component::from_content(
+    ContentProps::builder()
+        .id("tab-set-showcase")
+        .class("u-surface-card tab-set-showcase")
+        .aria_label(Text::from("Solutions"))
+        .content(&content)
+        .build(),
+);
 ```
 
 Good:
 
 ```rust
-use super::tabbed_showcase;
-use heroicons::icon_name;
+use crate::views::partials::components::tab_set;
 
-let view = tabbed_showcase::builder()
-    .tabs(vec![
-        tabbed_showcase::Tab::builder()
-            .icon(tabbed_showcase::Icon::outline(icon_name::ShieldCheck))
-            .color(tabbed_showcase::Color::AMBER)
-            .text(Text::from("Identity + Sessions"))
-            .build(),
-    ])
-    .panels(vec![
-        tabbed_showcase::Panel::builder()
-            .title(Text::from("Identity and Session Durability"))
-            .subtitle(Text::from("..."))
-            .bullets(vec![Text::from("...")])
-            .chips_label(Text::from("Built with"))
-            .chips(vec![Text::from("axum-login")])
-            .build(),
-    ])
-    .build();
+let content: tab_set::content::TabSetContent = load_content();
+let view = tab_set::Component::from_content(
+    tab_set::ContentProps::builder()
+        .id("tab-set-showcase")
+        .class("u-surface-card tab-set-showcase")
+        .aria_label(Text::from("Solutions"))
+        .content(&content)
+        .build(),
+);
 ```
 
 ### Parent module API curation
@@ -573,7 +552,7 @@ Use this checklist for new features and substantial refactors:
 - Builder choice justified by readability and correctness?
 - Module-scoped naming preferred over compound names where practical?
 - Compound concepts represented with hierarchical modules where useful (e.g., `chat::panel`)?
-- Call sites import descriptive modules first, then qualify (`use ...::chat; chat::Role`)?
+- Call sites import descriptive modules first, then qualify (`use ...::chat; chat::panel::Role`)?
 - Enum variants read cleanly with their type names (no tautology like `Interactivity::Interactive`)?
 - Errors explicit, typed, and properly converted with derive strategy?
 - Boundaries respected (domain/app/http/infra)?

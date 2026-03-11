@@ -31,6 +31,15 @@ This repository uses a project-local multi-agent system for generating Rust Maud
   - phase-specific method availability or invariant data,
   - persisted typed workflow reconstruction, or
   - transition/helper boundary decisions in typed Rust flows.
+- Run `.codex/skills/mds-snafu-error-design/SKILL.md` before `mds-backend-contracts`, `mds-codegen`, and `mds-verifier`, and before any manual Rust edit that changes error types, propagation, or response-conversion boundaries, when a task introduces or reshapes:
+  - Rust error types or `Result` / `Option` failure surfaces,
+  - SNAFU derives, context selectors, `ensure!`, `whatever!`, or `ResultExt` / `OptionExt` usage, or
+  - library-to-application or error-to-response conversion boundaries.
+- Run `mds-linting-governor` when a task proposes or changes:
+  - repo linting or CI enforcement policy,
+  - files under `scripts/ci/`,
+  - architectural constraints intended for hard enforcement, or
+  - one-off audits that might be promoted into permanent CI.
 - Run `.codex/skills/mds-rust-namespace-surface/SKILL.md` before `mds-codegen` and before any manual Rust edit that changes module layout, `use` / `pub use`, or public type surfaces.
 - Run `mds-codegen` only after `content`, `ui`, `state`, `events`, and `backend_contracts` are valid and internally linked.
 - Run `mds-styling-system` after codegen to enforce hybrid styling:
@@ -73,6 +82,25 @@ This repository uses a project-local multi-agent system for generating Rust Maud
 - Statum-backed machines still use Bon-backed builders for machine construction; treat that as part of the Statum surface, not as a separate plain-Bon design decision.
 - Keep highly dynamic, user-authored, plugin-defined, or volatile policy branches in explicit runtime validation and document that boundary.
 - Persisted typed workflows should prefer `#[validators]` rehydration over trusting stored status flags directly.
+
+## Rust Error Design Policy
+
+- Prefer module-scoped contextual error types (`module::Error`) over one global cross-module error enum.
+- The same underlying source type may map into multiple domain-specific error cases when the context differs.
+- Library and app layers should keep different responsibilities:
+  - libraries/modules return specific contextual errors,
+  - applications and HTTP boundaries may aggregate, report, or convert them.
+- Use `Whatever` for app-edge stringly errors, prototypes, or migration paths, not as the default internal error model.
+- A shared boundary wrapper with parallel `ErrorKind` and `Backtrace` fields is acceptable when one outer error must capture a trace at conversion/construction time, but it must not replace module-local contextual error design.
+
+## Linting Policy
+
+- Prefer the cheapest correct enforcement layer first:
+  - type system, compiler, clippy, rustfmt, tests, existing scripts, review guidance, then new custom CI.
+- Encode only stable, objective, high-signal rules that have low false-positive risk and actionable failure messages.
+- Prefer extending an existing `scripts/ci/*` contract or using an opt-in marker over adding a new repo-wide script.
+- If a rule is subjective, volatile, migration-only, or likely to need frequent exceptions, keep it out of permanent mandatory CI.
+- Every new lint should have a narrow scope, a clear reason to exist, and a removal or escape-hatch story.
 
 ## Code Quality Priority Ladder
 

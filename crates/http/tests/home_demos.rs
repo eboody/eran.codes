@@ -388,13 +388,13 @@ impl PortfolioHomeContract {
 
     fn as_str(self) -> &'static str {
         match self {
-            PortfolioHomeContract::PortfolioMain => "ui-portfolio-main",
+            PortfolioHomeContract::PortfolioMain => "data-portfolio-page",
             PortfolioHomeContract::HeroSection => "ui-portfolio-hero",
             PortfolioHomeContract::WorkRoute => "href=\"/work\"",
             PortfolioHomeContract::LabRoute => "href=\"/lab\"",
             PortfolioHomeContract::WorkCaseRoute => "href=\"/work/chat-realtime\"",
             PortfolioHomeContract::OpenSourceTitle => "Open-source crates",
-            PortfolioHomeContract::BrandMarkWrap => "ui-nav-brand-mark-wrap",
+            PortfolioHomeContract::BrandMarkWrap => "data-nav-brand-mark-wrap",
             PortfolioHomeContract::LightBrandLogo => "/static/eran.codes-light.svg",
             PortfolioHomeContract::DarkBrandLogo => "/static/eran.codes-dark.svg",
             PortfolioHomeContract::SvgLightFavicon => {

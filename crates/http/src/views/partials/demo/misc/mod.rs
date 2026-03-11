@@ -1,5 +1,4 @@
-moddef::moddef!(mod { moderation_action, pill, ping });
+moddef::moddef!(mod { moderation_action, ping });
 
 pub use moderation_action::ModerationAction;
-pub use pill::{BadgeKind, Pill};
 pub use ping::Ping;

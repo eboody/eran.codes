@@ -7,24 +7,104 @@ use async_trait::async_trait;
 use bon::Builder;
 use nutype::nutype;
 use secrecy::SecretString;
+use snafu::prelude::*;
+use strum_macros::Display;
 
 use domain::user;
 
 pub type Result<T> = core::result::Result<T, Error>;
 
-#[derive(Debug)]
+type BoxError = Box<dyn std::error::Error + Send + Sync + 'static>;
+
+#[derive(Debug, Snafu)]
 pub enum Error {
-    Repository(RepositoryErrorText),
-    Hash(HashErrorText),
+    #[snafu(display("{source}"))]
+    Repository { source: RepositoryError },
+    #[snafu(display("{source}"))]
+    Hash { source: HashError },
+    #[snafu(display("invalid authenticated user id: {source}"))]
+    InvalidAuthenticatedUserId { source: uuid::Error },
 }
 
-impl core::fmt::Display for Error {
-    fn fmt(&self, f: &mut core::fmt::Formatter) -> core::fmt::Result {
-        write!(f, "{self:?}")
+#[derive(Clone, Copy, Debug, Display)]
+pub enum RepositoryOperation {
+    #[strum(serialize = "find auth record by email")]
+    FindByEmail,
+    #[strum(serialize = "find auth record by id")]
+    FindById,
+}
+
+#[derive(Debug, Snafu)]
+pub enum RepositoryError {
+    #[snafu(display("auth repository query failed while {operation}: {source}"))]
+    Query {
+        operation: RepositoryOperation,
+        source: BoxError,
+    },
+    #[snafu(display("failed to decode auth username: {source}"))]
+    DecodeUsername { source: user::UsernameError },
+    #[snafu(display("failed to decode auth email: {source}"))]
+    DecodeEmail { source: user::EmailError },
+}
+
+#[derive(Clone, Copy, Debug, Display)]
+pub enum HashOperation {
+    #[strum(serialize = "hash password")]
+    HashPassword,
+    #[strum(serialize = "parse stored password hash")]
+    ParseStoredPasswordHash,
+}
+
+#[derive(Debug, Snafu)]
+pub enum HashError {
+    #[snafu(display("auth hash operation failed while {operation}: {source}"))]
+    Operation {
+        operation: HashOperation,
+        source: BoxError,
+    },
+}
+
+fn box_error(source: impl std::error::Error + Send + Sync + 'static) -> BoxError {
+    Box::new(source)
+}
+
+impl Error {
+    pub fn query_repository(
+        operation: RepositoryOperation,
+        source: impl std::error::Error + Send + Sync + 'static,
+    ) -> Self {
+        Self::Repository {
+            source: RepositoryError::Query {
+                operation,
+                source: box_error(source),
+            },
+        }
+    }
+
+    pub fn decode_username(source: user::UsernameError) -> Self {
+        Self::Repository {
+            source: RepositoryError::DecodeUsername { source },
+        }
+    }
+
+    pub fn decode_email(source: user::EmailError) -> Self {
+        Self::Repository {
+            source: RepositoryError::DecodeEmail { source },
+        }
+    }
+
+    pub fn hash(
+        operation: HashOperation,
+        source: impl std::error::Error + Send + Sync + 'static,
+    ) -> Self {
+        Self::Hash {
+            source: HashError::Operation {
+                operation,
+                source: box_error(source),
+            },
+        }
     }
 }
-
-impl std::error::Error for Error {}
 
 #[derive(Clone, Debug, Builder)]
 pub struct Credentials {
@@ -149,24 +229,6 @@ impl Provider for ProviderImpl {
 }
 
 #[nutype(sanitize(trim), derive(Clone, Debug, PartialEq, Display))]
-pub struct RepositoryErrorText(String);
-
-impl From<String> for RepositoryErrorText {
-    fn from(value: String) -> Self {
-        RepositoryErrorText::new(value)
-    }
-}
-
-#[nutype(sanitize(trim), derive(Clone, Debug, PartialEq, Display))]
-pub struct HashErrorText(String);
-
-impl From<String> for HashErrorText {
-    fn from(value: String) -> Self {
-        HashErrorText::new(value)
-    }
-}
-
-#[nutype(sanitize(trim), derive(Clone, Debug, PartialEq, Display))]
 pub struct PasswordHash(String);
 
 #[nutype(sanitize(trim), derive(Clone, Debug, PartialEq, Display))]
@@ -175,6 +237,7 @@ pub struct SessionHash(String);
 #[cfg(test)]
 mod tests {
     use super::*;
+    use std::error::Error as _;
 
     fn test_email() -> user::Email {
         user::Email::try_new("user@example.com".to_owned()).unwrap()
@@ -182,6 +245,32 @@ mod tests {
 
     fn test_username() -> user::Username {
         user::Username::try_new("user".to_owned()).unwrap()
+    }
+
+    #[test]
+    fn repository_error_preserves_source() {
+        let error = Error::query_repository(
+            RepositoryOperation::FindByEmail,
+            std::io::Error::other("db unavailable"),
+        );
+
+        assert_eq!(
+            error
+                .source()
+                .map(std::string::ToString::to_string)
+                .as_deref(),
+            Some(
+                "auth repository query failed while find auth record by email: db unavailable"
+            ),
+        );
+        assert_eq!(
+            error
+                .source()
+                .and_then(|source| source.source())
+                .map(std::string::ToString::to_string)
+                .as_deref(),
+            Some("db unavailable"),
+        );
     }
 
     fn test_user_id() -> user::UserId {

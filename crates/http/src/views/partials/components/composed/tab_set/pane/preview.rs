@@ -22,7 +22,7 @@ impl Render for Preview {
     fn render(&self) -> maud::Markup {
         maud::html! {
             div class="tab-set__preview" {
-                div class="tab-set__preview-frame ui-preview-frame" {
+                div class="tab-set__preview-frame" {
                     p class="tab-set__preview-label" { "Preview" }
                     @if let Some(asset_ref) = &self.asset_ref {
                         p class="tab-set__preview-asset" { (asset_ref) }

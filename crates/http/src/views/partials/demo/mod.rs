@@ -5,13 +5,9 @@ pub(super) mod misc;
 mod support;
 
 pub use layout::{
-    DemoResultPlaceholder, EngineeringQuality, HomeHero, OperationalRequestFilter,
-    RequestBurstDemo, SectionHeader, SectionHeaderActionLink, SectionHeaderMetaText,
+    EngineeringQuality, HomeHero, OperationalRequestFilter, RequestBurstDemo,
     TabSetShowcase,
 };
 pub use log::{RequestTraceLog, TransportLogSet};
 pub use misc::{ModerationAction, Ping};
-pub use support::{
-    AuthStatus, BoundaryCheck, DbCheck, KeyValueList, RequestMeta, SessionStatus,
-    StatusCard,
-};
+pub use support::{AuthStatus, BoundaryCheck, DbCheck, RequestMeta, SessionStatus};

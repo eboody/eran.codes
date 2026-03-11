@@ -46,7 +46,7 @@ There is no need to track separate template files, since all relevant code is li
 
 ## Workspace conventions
 
-- In this repo, component styles should live with the Maud partial/component via `inline_css!` helpers inserted with `(css())`.
+- In this repo, component styles should live with the Maud partial/component via `crate::inline_css!` helpers inserted with `(css())`.
 - Prefer short, targeted hooks (`id`, semantic class, stable `data-*`) for nested styling.
 - Use `me` directly for quick/simple local rules; if selectors start getting long, split into smaller components.
 - Prefer reusable design tokens over scattered magic numbers; adjust tokens in responsive media blocks instead of rewriting many rules.

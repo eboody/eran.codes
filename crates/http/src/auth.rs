@@ -92,11 +92,10 @@ pub struct UserId(String);
 
 impl UserId {
     pub fn to_domain(&self) -> Result<domain::user::UserId, app::auth::Error> {
-        let parsed = self.to_string().parse::<uuid::Uuid>().map_err(|error| {
-            app::auth::Error::Repository(app::auth::RepositoryErrorText::new(
-                error.to_string(),
-            ))
-        })?;
+        let parsed = self
+            .to_string()
+            .parse::<uuid::Uuid>()
+            .map_err(|source| app::auth::Error::InvalidAuthenticatedUserId { source })?;
         Ok(domain::user::UserId::from_uuid(parsed))
     }
 }

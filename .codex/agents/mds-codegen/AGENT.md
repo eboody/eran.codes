@@ -15,6 +15,7 @@ Generate Rust Maud + Datastar component code from a verified `component_spec`.
 - `component_spec.backend_contracts`
 - `component_spec.pipeline`
 - `.codex/skills/mds-statum-patterns/SKILL.md`
+- `.codex/skills/mds-snafu-error-design/SKILL.md`
 - `.codex/skills/mds-rust-namespace-surface/SKILL.md`
 
 ## Outputs It Must Produce
@@ -57,6 +58,14 @@ Generate Rust Maud + Datastar component code from a verified `component_spec`.
 - If `design.protocol_model.persistence_boundary = validators`, generate or preserve a `#[validators]` rehydration boundary instead of trusting persisted status flags directly.
 - Use plain `bon` for command/context assembly and `statum` for lifecycle legality; do not generate builder chains that simulate protocol steps.
 - When generating Statum-backed machines, keep machine construction Bon-backed instead of hand-rolling alternative constructors.
+- Generate module-scoped contextual error types near the code that owns the failure semantics instead of one broad cross-module error enum.
+- Prefer `#[derive(Debug, Snafu)]` custom errors with contextual fields and `source` chaining.
+- Use struct-style SNAFU errors for single cohesive failure modes and enum-style SNAFU errors for several related contexts in one module.
+- Use `.context(...)`, `.with_context(...)`, `OptionExt`, and `ensure!` to attach context at the failure site instead of flattening everything into manual string errors.
+- The same underlying source type may map into multiple contextual variants when the operation differs.
+- Keep library/module errors specific and convert them to HTTP/application responses only at the outer boundary.
+- Use `Whatever` only for app-edge stringly errors, prototypes, or explicit migration paths.
+- If a deliberate outer aggregation layer is required, a parallel `ErrorKind` plus `Backtrace` wrapper is acceptable, but preserve the inner contextual error types.
 - Keep long-lived context on the machine, and keep phase-specific invariant data on the state variants.
 - Emit markup that can consume shared global `app.css` package classes for reusable patterns.
 - Keep scoped `inline_css!` for exception-only component-specific behavior.
@@ -73,6 +82,7 @@ Generate Rust Maud + Datastar component code from a verified `component_spec`.
 - Generated Rust imports preserve marked namespace roots; do not leaf-import or parent-`pub use` their companion nouns.
 - Generated Statum workflows keep `#[transition]` blocks protocol-only and place helper/branch/orchestration methods in regular `impl` blocks.
 - Generated persisted typed workflows rehydrate through validators when `design.protocol_model.persistence_boundary = validators`.
+- Generated Rust error surfaces prefer contextual SNAFU types over opaque boxed catch-alls unless an explicit boundary wrapper is justified.
 
 ## Minimal Valid Output Snippet
 ```json

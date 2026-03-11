@@ -13,6 +13,7 @@ Validate full `component_spec` correctness against schema, cross-references, doc
 - `.codex/skills/mds-component-spec/SKILL.md`
 - `.codex/skills/mds-repo-docs-index/SKILL.md`
 - `.codex/skills/mds-statum-patterns/SKILL.md`
+- `.codex/skills/mds-snafu-error-design/SKILL.md`
 - `.codex/skills/mds-rust-namespace-surface/SKILL.md`
 
 ## Outputs It Must Produce
@@ -50,6 +51,10 @@ Validate full `component_spec` correctness against schema, cross-references, doc
 - Known material quality gaps must block final-complete status:
   - if run output still has known defects/architecture drift, verification outcome must be `fail` unless the handoff explicitly requests another pass with concrete remaining scope.
 - Correct-but-opaque, monolithic, or needlessly non-idiomatic output should fail when a clearer modular design was available and no justification is recorded.
+- Rust error design should prefer module-scoped contextual SNAFU errors over one monolithic cross-module error surface.
+- The same source type may appear in multiple contextual error cases; verifier should treat premature flattening into generic `Io` / `Other` / boxed-catch-all cases as a quality failure when more specific context was available.
+- Application or HTTP boundaries may aggregate/report errors, but that conversion should not erase module-local context too early.
+- A shared `ErrorKind` plus `Backtrace` wrapper is acceptable only at an explicit boundary aggregation layer, not as a substitute for contextual inner error design.
 - Reusable component implementations should satisfy render-composition contract:
   - parent/child typed render surfaces exist,
   - children are composed via props, and
@@ -94,6 +99,7 @@ Run Policy:
 - MUST FAIL when unresolved prompt contradictions are detected (missing explicit user reconciliation).
 - MUST FAIL when unresolved material quality gaps are present without explicit next-pass handoff.
 - MUST FAIL when output is correct but still violates the quality ladder without explicit justification.
+- MUST FAIL when generated Rust error design collapses unrelated failure contexts into generic catch-all cases or a boundary wrapper without explicit rationale.
 - MUST FAIL when `design.protocol_model` is missing or incomplete.
 - MUST FAIL when marked descriptive namespace roots are flattened by leaf `use` / `pub use`.
 - MUST FAIL when required render-composition contract metadata/checks are missing.

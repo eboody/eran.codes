@@ -1,5 +1,6 @@
 use bon::Builder;
 use nutype::nutype;
+use snafu::prelude::*;
 use strum_macros::{Display, EnumString};
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, Display, EnumString)]
@@ -19,26 +20,16 @@ pub enum RoomName {
 )]
 pub struct RoomNameText(String);
 
-#[derive(Debug, Clone, PartialEq)]
+#[derive(Debug, Clone, PartialEq, Snafu)]
 pub enum RoomNameError {
-    Invalid(RoomNameTextError),
-    Unknown(RoomNameText),
-}
-
-impl std::fmt::Display for RoomNameError {
-    fn fmt(
-        &self,
-        f: &mut std::fmt::Formatter<'_>,
-    ) -> std::fmt::Result {
-        match self {
-            RoomNameError::Invalid(error) => {
-                write!(f, "{error}")
-            }
-            RoomNameError::Unknown(value) => {
-                write!(f, "{value}")
-            }
-        }
-    }
+    #[snafu(display("{source}"))]
+    Invalid {
+        source: RoomNameTextError,
+    },
+    #[snafu(display("{value}"))]
+    Unknown {
+        value: RoomNameText,
+    },
 }
 
 impl RoomName {
@@ -46,10 +37,14 @@ impl RoomName {
         value: impl AsRef<str>,
     ) -> Result<Self, RoomNameError> {
         let raw = RoomNameText::try_new(value.as_ref())
-            .map_err(RoomNameError::Invalid)?;
+            .map_err(|source| RoomNameError::Invalid {
+                source,
+            })?;
         raw.to_string()
             .parse()
-            .map_err(|_| RoomNameError::Unknown(raw))
+            .map_err(|_| RoomNameError::Unknown {
+                value: raw,
+            })
     }
 }
 
@@ -109,11 +104,11 @@ mod tests {
     fn room_name_rejects_unknown_values() {
         assert!(matches!(
             RoomName::try_new("lobby"),
-            Err(RoomNameError::Unknown(_))
+            Err(RoomNameError::Unknown { .. })
         ));
         assert!(matches!(
             RoomName::try_new("random-room"),
-            Err(RoomNameError::Unknown(_))
+            Err(RoomNameError::Unknown { .. })
         ));
     }
 }

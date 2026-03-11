@@ -1,6 +1,65 @@
 use bon::Builder;
 use maud::{PreEscaped, Render};
 
+use crate::types::Text;
+use crate::views::partials::button;
+
+crate::views::scoped::inline_css!(
+    r#"
+me {
+  display: grid;
+  gap: var(--space-3);
+  margin-top: var(--space-2);
+  padding: var(--space-card);
+  border-radius: var(--ui-radius-md);
+  border: 1px solid var(--border-default);
+  background: var(--surface-fill-field);
+  box-shadow: inset 0 1px 0 var(--surface-edge-soft);
+  overflow: visible;
+}
+
+me [data-op-filter-label] {
+  margin: 0;
+  font-size: 0.72rem;
+  font-weight: 700;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--text-subtle);
+}
+
+me [data-op-filter-row] {
+  display: grid;
+  gap: var(--space-2);
+  grid-template-columns: minmax(0, 1fr) auto;
+}
+
+me [data-op-filter-row] > input[type='text'] {
+  margin: 0;
+  min-width: 0;
+}
+
+me [data-op-filter-row] > [data-button] {
+  margin: 0;
+}
+
+me [data-op-filter-meta] {
+  margin: 0;
+  font-size: 0.82rem;
+  color: var(--text-muted);
+}
+
+@media (max-width: 48rem) {
+  me [data-op-filter-row] {
+    grid-template-columns: 1fr;
+  }
+
+  me [data-op-filter-row] > [data-button] {
+    width: 100%;
+  }
+}
+"#
+);
+
 #[derive(Clone, Debug, Builder)]
 pub struct OperationalRequestFilter {
     pub target_id: &'static str,
@@ -10,15 +69,15 @@ impl Render for OperationalRequestFilter {
     fn render(&self) -> maud::Markup {
         maud::html! {
             section
-                class="ui-op-filter"
                 data-op-filter
                 data-op-filter-target=(self.target_id)
                 data-signals="{operations_filter_query: ''}"
                 data-init="@post('/api/operations/filter')" {
-                label class="ui-op-filter-label" for="operations-filter-query" {
+                (css())
+                label data-op-filter-label for="operations-filter-query" {
                     "Filter out requests containing"
                 }
-                div class="ui-op-filter-row" {
+                div data-op-filter-row {
                     input
                         id="operations-filter-query"
                         type="text"
@@ -27,15 +86,19 @@ impl Render for OperationalRequestFilter {
                         data-op-filter-query
                         data-bind="operations_filter_query"
                         data-on:input__debounce="@post('/api/operations/filter'); window.scrollOperationalTimelineTop()";
-                    button
-                        class="secondary"
-                        type="button"
-                        data-op-filter-clear
-                        data-on:click="$operations_filter_query = ''; @post('/api/operations/filter'); window.scrollOperationalTimelineTop()" {
-                        "Clear"
-                    }
+                    (button::Button::builder()
+                        .label(Text::from("Clear"))
+                        .variant(button::Variant::Secondary)
+                        .data_attrs(vec![
+                            button::DataAttr::flag("data-op-filter-clear"),
+                            button::DataAttr::value(
+                                "data-on:click",
+                                "$operations_filter_query = ''; @post('/api/operations/filter'); window.scrollOperationalTimelineTop()",
+                            ),
+                        ])
+                        .build())
                 }
-                p class="ui-op-filter-meta" data-op-filter-status {
+                p data-op-filter-meta data-op-filter-status {
                     "Debounced command updates server-side request flow filtering."
                 }
             }

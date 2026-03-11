@@ -142,9 +142,12 @@ impl TraceLogStore {
                 .render()
                 .into_string();
             let handle = sse::Handle::with_tab(session_id.clone(), active_tab_id);
-            let _ = self
+            if let Err(error) = self
                 .sse
-                .send(&handle, sse::Event::patch_elements(network_log));
+                .send(&handle, sse::Event::patch_elements(network_log))
+            {
+                tracing::debug!(?error, session_id = %session_id, "trace log SSE fanout failed");
+            }
         }
     }
 

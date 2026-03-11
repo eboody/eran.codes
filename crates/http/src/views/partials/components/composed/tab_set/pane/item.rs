@@ -7,6 +7,7 @@ use crate::views::partials::components::tab_set;
 #[derive(Clone, Debug)]
 // ci: style-system-component
 pub(crate) struct Item {
+    pub signal_name: Text,
     pub tab_dom_id: Text,
     pub panel_dom_id: Text,
     pub tab_value: Text,
@@ -17,11 +18,13 @@ pub(crate) struct Item {
 
 impl Item {
     pub(crate) fn from_content(
+        signal_name: &Text,
         tab: &Tab,
         tab_value: Text,
         tab_content: &tab_set::content::Tab,
     ) -> Self {
         Self {
+            signal_name: signal_name.clone(),
             tab_dom_id: tab.id.clone(),
             panel_dom_id: tab.controls.clone(),
             tab_value,
@@ -43,13 +46,13 @@ impl Item {
 
 impl Render for Item {
     fn render(&self) -> maud::Markup {
-        let show_expr = tab_set::pane::show_expr(&self.tab_value);
+        let show_expr = tab_set::pane::show_expr(&self.signal_name, &self.tab_value);
         let tabindex_expr = format!("{} ? '0' : '-1'", show_expr);
 
         maud::html! {
             section
                 id=(&self.panel_dom_id)
-                class="tab-set__panel ui-panel"
+                class="tab-set__panel"
                 role="tabpanel"
                 aria-labelledby=(&self.tab_dom_id)
                 data-show=(show_expr)

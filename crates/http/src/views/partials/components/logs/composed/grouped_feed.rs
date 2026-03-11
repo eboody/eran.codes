@@ -36,7 +36,7 @@ impl Render for Group {
             div class="ui-log-group" data-log-group {
                 div class="ui-log-group-header" data-log-group-header {
                     (&self.request_pill)
-                    span data-muted { (&self.count_label) }
+                    span class="u-muted" { (&self.count_label) }
                 }
                 ul class="ui-log-entries" data-live-log-entries {
                     @for row in &self.rows {

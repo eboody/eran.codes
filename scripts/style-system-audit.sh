@@ -17,7 +17,7 @@ if [[ ! -f "$APP_CSS" ]]; then
   exit 1
 fi
 
-echo "== Shared ui-* packages without consumers =="
+echo "== Shared utilities/packages without consumers =="
 packages_reported=0
 while IFS= read -r selector; do
   pkg=${selector#.}
@@ -26,7 +26,7 @@ while IFS= read -r selector; do
     echo "$pkg"
     packages_reported=1
   fi
-done < <(rg -o '^\.[u][i]-[a-z0-9-]+' "$APP_CSS" | sort -u)
+done < <(rg -o '^\.(?:ui|u)-[a-z0-9-]+' "$APP_CSS" | sort -u)
 
 if [[ "$packages_reported" == "0" ]]; then
   echo "none"
@@ -64,7 +64,7 @@ fi
 
 echo
 echo "== Repeated multi-package class clusters in view code =="
-cluster_output=$(rg -o --no-filename 'ui-[a-z0-9-]+(?: ui-[a-z0-9-]+)+' "$VIEW_ROOT" \
+cluster_output=$(rg -o --no-filename '(?:ui|u)-[a-z0-9-]+(?:(?: (?:ui|u)-[a-z0-9-]+)+)' "$VIEW_ROOT" \
   | sort \
   | uniq -c \
   | sort -nr \

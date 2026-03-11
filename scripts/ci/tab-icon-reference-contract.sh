@@ -62,23 +62,33 @@ if rg --no-heading --line-number 'use\s+crate::views::partials::components::tab_
   status=1
 fi
 
-if ! rg --no-heading --line-number 'use crate::views::partials::components::\{tab_set, Tab, TabInteraction\};' "$tab_set_showcase" >/dev/null; then
-  echo "${tab_set_showcase}: expected namespace-style tab_set import with shared Tab primitive."
+if ! rg --no-heading --line-number '^use crate::views::partials::components::tab_set;' "$tab_set_showcase" >/dev/null; then
+  echo "${tab_set_showcase}: expected namespace-style tab_set import."
   status=1
 fi
 
-if ! rg --no-heading --line-number 'TabInteraction::DatastarLocal' "$tab_set_showcase" >/dev/null; then
-  echo "${tab_set_showcase}: tabs must use TabInteraction::DatastarLocal for ui-local Datastar switching."
+if rg --no-heading --line-number 'TabInteraction::DatastarLocal' "$tab_set_showcase" >/dev/null; then
+  echo "${tab_set_showcase}: tab interaction wiring should stay inside tab_set::Component::from_content."
   status=1
 fi
 
-if ! rg --no-heading --line-number 'tab_set::pane::Item::from_content' "$tab_set_showcase" >/dev/null; then
-  echo "${tab_set_showcase}: panes must be composed from shared Tab + content via module-scoped pane::Item::from_content."
+if ! rg --no-heading --line-number 'tab_set::Component::from_content' "$tab_set_showcase" >/dev/null; then
+  echo "${tab_set_showcase}: showcase must compose tab_set through Component::from_content(...)."
   status=1
 fi
 
-if ! rg --no-heading --line-number 'icon:\s+tab\.icon\.clone\(\)' "$tab_set_showcase" >/dev/null; then
-  echo "${tab_set_showcase}: showcase tabs should pass CMS icon tokens via shared Icon primitive."
+if ! rg --no-heading --line-number 'tab_set::ContentProps::builder\(' "$tab_set_showcase" >/dev/null; then
+  echo "${tab_set_showcase}: showcase must build tab_set content props through the namespace surface."
+  status=1
+fi
+
+if rg --no-heading --line-number 'tab_set::pane::Item::from_content' "$tab_set_showcase" >/dev/null; then
+  echo "${tab_set_showcase}: pane assembly should stay inside tab_set::Component::from_content."
+  status=1
+fi
+
+if ! rg --no-heading --line-number 'icon:\s+tab\.icon\.clone\(\)' "$tab_set_component" >/dev/null; then
+  echo "${tab_set_component}: tabs_from_content should pass CMS icon tokens via shared Icon primitive."
   status=1
 fi
 

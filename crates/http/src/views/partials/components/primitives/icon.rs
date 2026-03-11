@@ -6,6 +6,18 @@ use crate::views::proper_theme::ThemeColor;
 
 pub(crate) type IconToken = Text;
 const FALLBACK_ICON_TOKEN: &str = "circle";
+const STYLES: &str = r#"
+.ui-icon {
+  display: var(--control-inline-display);
+  align-items: var(--control-inline-align-items);
+  font-size: var(--control-icon-size);
+  color: var(--icon-color, currentColor);
+}
+"#;
+
+pub(crate) fn head_styles() -> maud::Markup {
+    crate::views::scoped::style(STYLES)
+}
 
 #[derive(Clone, Debug)]
 pub(crate) struct Icon {

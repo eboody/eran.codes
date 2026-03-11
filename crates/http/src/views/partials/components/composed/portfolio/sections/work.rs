@@ -1,6 +1,8 @@
 use maud::Render;
 
-use super::{SectionCopy, render_actions};
+use super::{LeadCopy, SectionCopy, Surface, render_actions};
+use crate::types::Text;
+use crate::views::partials::button;
 use crate::views::partials::components::portfolio::content::{
     WorkCardContent, WorkIndexContent, WorkSectionContent,
 };
@@ -12,7 +14,7 @@ pub struct WorkSection<'a> {
 impl Render for WorkSection<'_> {
     fn render(&self) -> maud::Markup {
         maud::html! {
-            section class="ui-surface-card" {
+            (Surface::section(maud::html! {
                 (SectionCopy {
                     title: &self.content.title,
                     subtitle: &self.content.subtitle,
@@ -23,7 +25,7 @@ impl Render for WorkSection<'_> {
                         (render_actions(&self.content.actions))
                     }
                 }
-            }
+            }))
         }
     }
 }
@@ -35,12 +37,14 @@ pub struct WorkIndexSection<'a> {
 impl Render for WorkIndexSection<'_> {
     fn render(&self) -> maud::Markup {
         maud::html! {
-            section class="ui-surface-card ui-portfolio-case-hero" {
-                p class="ui-portfolio-eyebrow" { (&self.content.eyebrow) }
-                h1 { (&self.content.title) }
-                p class="ui-portfolio-summary" { (&self.content.summary) }
-            }
-            section class="ui-surface-card" {
+            (Surface::section(maud::html! {
+                (LeadCopy {
+                    eyebrow: &self.content.eyebrow,
+                    title: &self.content.title,
+                    summary: &self.content.summary,
+                })
+            }).extra_class("ui-portfolio-lead-surface"))
+            (Surface::section(maud::html! {
                 (SectionCopy {
                     title: &self.content.title,
                     subtitle: &self.content.summary,
@@ -53,7 +57,7 @@ impl Render for WorkIndexSection<'_> {
                         (render_actions(&self.content.actions))
                     }
                 }
-            }
+            }))
         }
     }
 }
@@ -108,7 +112,11 @@ impl Render for WorkCard<'_> {
                         li { (item) }
                     }
                 }
-                a class="button secondary" href=(route) { (&self.content.cta_label) }
+                (button::Button::builder()
+                    .label(self.content.cta_label.clone())
+                    .variant(button::Variant::Secondary)
+                    .role(button::Role::link(Text::from(route.to_string())))
+                    .build())
             }
         }
     }

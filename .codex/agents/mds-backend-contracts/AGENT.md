@@ -12,6 +12,7 @@ Define backend actions and IO contracts required by UI events.
 - `component_spec.state.fields`
 - `component_spec.design.protocol_model`
 - Existing `component_spec.backend_contracts` (if regenerating)
+- `.codex/skills/mds-snafu-error-design/SKILL.md`
 
 ## Outputs It Must Produce
 - `component_spec.backend_contracts.actions`
@@ -24,6 +25,7 @@ Define backend actions and IO contracts required by UI events.
 - Must not alter UI structure.
 - Must not emit Rust endpoint implementation code.
 - Must not hide a strong Statum candidate behind ad-hoc status branching or builder-driven pseudo-workflows.
+- Must not collapse unrelated backend/domain failure contexts into one generic boundary error without explicit justification.
 
 ## Checklist Of Required Invariants
 - Every action has unique `id`.
@@ -35,6 +37,10 @@ Define backend actions and IO contracts required by UI events.
 - If `design.protocol_model.decision` is `statum` or `hybrid`, it must also name lifecycle vocabulary, machine/state types, runtime edges, and the stable core edges to encode with typed transitions.
 - If persisted workflow statuses are rehydrated into typed machines, prefer `persistence_boundary = validators`.
 - Keep plain `bon` for DTO/command assembly and `statum` for protocol legality; Statum-backed machines may still expose Bon-backed builders.
+- Prefer module-scoped contextual SNAFU errors for backend/app/domain code instead of one large cross-module error surface.
+- The same source type may map into multiple contextual error cases when the operation differs.
+- Keep transport/HTTP response conversion at the boundary; do not let response-shaping concerns flatten internal error design early.
+- If a single boundary aggregator is required, a shared `ErrorKind` plus `Backtrace` wrapper is acceptable only as a deliberate outer layer.
 - Prefer small, explicit action/type boundaries over large catch-all request or response shapes.
 
 ## Minimal Valid Output Snippet

@@ -11,6 +11,7 @@ tracing = "0.1.44"
 async-trait = "0.1.86"
 secrecy = "0.10.3"
 bon = "3.8.2"
+snafu = "0.8.9"
 uuid = "1.12.1"
 nutype = { workspace = true }
 strum = { workspace = true }

@@ -394,7 +394,7 @@
       "checked_components": [
         "crates/http/src/views/partials/components/mod.rs",
         "crates/http/src/views/partials/components/primitives/tab.rs",
-        "crates/http/src/views/partials/components/tab_panel.rs"
+        "crates/http/src/views/partials/components/composed/button/mod.rs"
       ],
       "reused": [],
       "created": [

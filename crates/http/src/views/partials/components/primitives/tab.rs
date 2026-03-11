@@ -50,7 +50,7 @@ impl Render for Tab {
                 let click_expr = format!("${} = {}", signal, json_literal(value));
 
                 maud::html! {
-                    button.showcase-tab.tab-set__tab.ui-tab.is-selected[self.is_selected]
+                    button.tab-set__tab.is-selected[self.is_selected]
                         type="button"
                         role="tab"
                         id=(&self.id)
@@ -74,9 +74,9 @@ impl Render for Tab {
 fn render_content(icon: &Option<Icon>, text: &Text) -> maud::Markup {
     maud::html! {
         @if let Some(icon) = icon {
-            span class="showcase-tab-icon" { (icon) }
+            span class="tab-set__tab-icon" { (icon) }
         }
-        span class="showcase-tab-label tab-set__tab-line" { (text) }
+        span class="tab-set__tab-line" { (text) }
     }
 }
 

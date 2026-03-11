@@ -53,6 +53,7 @@
       let sent = 0;
       let succeeded = 0;
       let failed = 0;
+      let failureReason = '';
       let nextIndex = 0;
       const startedAt = performance.now();
 
@@ -60,7 +61,8 @@
         const elapsedMs = performance.now() - startedAt;
         const elapsedSec = elapsedMs / 1000;
         const perSec = elapsedSec > 0 ? sent / elapsedSec : 0;
-        result.textContent = `${prefix}: ${formatInt(sent)}/${formatInt(total)} requests | ok ${formatInt(succeeded)} | failed ${formatInt(failed)} | ${perSec.toFixed(0)} req/s`;
+        const reasonSuffix = failureReason ? ` | last error ${failureReason}` : '';
+        result.textContent = `${prefix}: ${formatInt(sent)}/${formatInt(total)} requests | ok ${formatInt(succeeded)} | failed ${formatInt(failed)} | ${perSec.toFixed(0)} req/s${reasonSuffix}`;
       };
 
       report('Running');
@@ -86,9 +88,13 @@
               succeeded += 1;
             } else {
               failed += 1;
+              failureReason = `HTTP ${response.status}`;
             }
-          } catch (_error) {
+          } catch (error) {
             failed += 1;
+            failureReason = error instanceof Error
+              ? error.message || error.name
+              : 'network error';
           }
 
           sent += 1;
@@ -107,7 +113,8 @@
       const elapsedMs = performance.now() - startedAt;
       const elapsedSec = elapsedMs / 1000;
       const perSec = elapsedSec > 0 ? sent / elapsedSec : 0;
-      result.textContent = `Complete: ${formatInt(sent)} requests in ${elapsedSec.toFixed(2)}s | ${perSec.toFixed(0)} req/s | ok ${formatInt(succeeded)} | failed ${formatInt(failed)}`;
+      const reasonSuffix = failureReason ? ` | last error ${failureReason}` : '';
+      result.textContent = `Complete: ${formatInt(sent)} requests in ${elapsedSec.toFixed(2)}s | ${perSec.toFixed(0)} req/s | ok ${formatInt(succeeded)} | failed ${formatInt(failed)}${reasonSuffix}`;
 
       runButton.disabled = false;
       range.disabled = false;

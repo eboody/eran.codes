@@ -1,46 +1,51 @@
-# Package Catalog
+# Global CSS Catalog
 
-This file documents the current shared `ui-*` package surface in `crates/http/static/app.css`.
+`crates/http/static/app.css` is the shared layer for theme tokens, element defaults, and utilities.
 
-## Core Surfaces
+## Permanent Utilities
 
-- `.ui-surface-card`: generic shared surface chrome
-- `.ui-panel`: panel body shell for tab and content regions
-- `.ui-preview-frame`: media and preview frame shell
-- `.ui-feature-list`: shared feature list treatment
-- `.ui-cta`: primary shared call-to-action surface
+- `.u-container`: shared page-width wrapper
+- `.u-muted`: muted text utility
+- `.u-surface-card`: reusable card/surface shell
 
-## Navigation
+## Migration Holdovers
 
-- `.ui-nav-shell`: outer sticky shell
-- `.ui-nav`: nav layout container
-- `.ui-nav-list`: shared nav list packaging
-- `.ui-nav-brand`: brand cluster
-- `.ui-nav-links`: primary nav link cluster
-- `.ui-nav-auth`: auth action cluster
-- `.ui-nav-link`: reusable nav link affordance
-- `.ui-nav-auth-action`: signed-in auth button treatment
+- none
 
-## Sections And Layout
+## Removed From Global CSS
 
-- `.ui-section-header`: section heading package
-- `.ui-section-meta`: section metadata row
-- `.ui-cta-row`: grouped CTA row layout
-- `.ui-grid-two-column`: generic two-column layout shell
+- `.ui-button` and `.ui-button-row` base package styles
+- `.ui-nav-*`
+- `.ui-auth-*` and `.ui-account-*`
+- `.ui-section-header` and `.ui-section-meta`
+- `.ui-demo-result`
+- `.ui-error-alert`
+- `.ui-key-value-list`
+- `.ui-status-card`
+- `.ui-op-filter*`
+- `.ui-burst-*`
+- `.ui-home-hero*`
+- `.ui-chat-connection-row`
+- `.ui-ping-target`
+- `.ui-info-*`
+- `.ui-panel`
+- `.ui-preview-frame`
+- `.ui-feature-list`
+- `.ui-chat-page*`
+- `.ui-chat-moderation-*`
+- `.ui-lab-tab-set`
+- `.ui-tabs` and `.ui-tab`
+- `.tab-set__tab-icon`
+- `.ui-lab-main`
+- `.ui-lab-chat-surface`
+- `.ui-portfolio-*`
+- `.ui-log-*`
+- `.ui-surface-card`
+- `.ui-pill*`
+- `.ui-icon`
+- shared `.button[data-button]` styles
+- `.container`
+- `.muted`
+- `[data-muted]`
 
-## Tabs And Information Panels
-
-- `.ui-tabs`: tabs rail container
-- `.ui-tab`: shared tab affordance
-- `.ui-info-grid`: information grid layout
-- `.ui-info-card`: information card surface
-
-## Domain Families
-
-- `.ui-portfolio-*`: portfolio surfaces and sections
-- `.ui-log-*`: log viewer shells, rows, tables, and detail panes
-- `.ui-chat-*`: chat demo and moderation layouts
-- `.ui-burst-*`: request burst demo controls and results
-- `.ui-op-filter*`: operational filter controls
-
-Add a new shared package only when the role is reusable across components. If the rule is still tied to one component's content or layout, keep it scoped.
+If a style only belongs to one component, keep it with that component via `inline_css!` instead of adding it back to `app.css`.

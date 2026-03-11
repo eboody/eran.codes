@@ -13,11 +13,12 @@ impl Render for WorkCase {
     fn render(&self) -> maud::Markup {
         let content = portfolio::content::work_case_content(self.slug);
 
-        let body = maud::html! {
-            main class="container ui-portfolio-main" {
+        let body = portfolio::Page {
+            content: maud::html! {
                 (portfolio::WorkCaseDetail { content })
-            }
-        };
+            },
+        }
+        .render();
 
         Layout::builder()
             .title(&content.page_title.to_string())

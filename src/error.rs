@@ -1,56 +1,19 @@
-// main/src/error.rs
-use std::{error::Error as StdError, fmt};
+use snafu::prelude::*;
 
-use derive_more::From;
-use nutype::nutype;
+pub type Result<T> = core::result::Result<T, Error>;
 
-#[derive(Debug, From)]
+#[derive(Debug, Snafu)]
+#[snafu(visibility(pub(crate)))]
 pub enum Error {
-    Infra(infra::Error),
-    MissingEnv {
-        key: &'static str,
+    #[snafu(display("failed to load startup configuration: {source}"))]
+    LoadConfig { source: crate::config::Error },
+    #[snafu(display("failed to initialize infra: {source}"))]
+    InitInfra { source: infra::Error },
+    #[snafu(display("failed to bind HTTP listener at {addr}: {source}"))]
+    BindHttpListener {
+        addr: String,
+        source: std::io::Error,
     },
-    InvalidEnv {
-        key: &'static str,
-        reason: EnvErrorReason,
-    },
-    #[from]
-    Io(std::io::Error),
-    // Http(http::error::Error),
-    // Service(service::error::Error),
-}
-
-#[nutype(sanitize(trim), derive(Clone, Debug, PartialEq, Eq, Display))]
-pub struct EnvErrorReason(String);
-
-pub type Result<T> = std::result::Result<T, Error>;
-
-impl fmt::Display for Error {
-    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        match self {
-            Error::Infra(e) => {
-                write!(f, "infra config error: {e}")
-            }
-            Error::MissingEnv { key } => write!(f, "missing environment variable: {key}"),
-            Error::InvalidEnv { key, reason } => {
-                write!(f, "invalid environment variable {key}: {reason}")
-            }
-            Error::Io(e) => write!(f, "io error: {e}"),
-            // Error::Http(e) => write!(f, "http config error: {e}"),
-            // Error::Service(e) => write!(f, "service config error: {e}"),
-        }
-    }
-}
-
-impl StdError for Error {
-    fn source(&self) -> Option<&(dyn StdError + 'static)> {
-        match self {
-            Error::Infra(e) => Some(e),
-            Error::MissingEnv { .. } => None,
-            Error::InvalidEnv { .. } => None,
-            Error::Io(e) => Some(e),
-            // Error::Http(e) => Some(e),
-            // Error::Service(e) => Some(e),
-        }
-    }
+    #[snafu(display("http server exited with an error: {source}"))]
+    ServeHttp { source: std::io::Error },
 }

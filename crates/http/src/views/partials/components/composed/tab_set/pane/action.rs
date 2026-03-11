@@ -1,6 +1,7 @@
 use maud::Render;
 
 use crate::types::Text;
+use crate::views::partials::components::button;
 use crate::views::partials::components::tab_set;
 
 #[derive(Clone, Debug)]
@@ -22,13 +23,16 @@ impl Render for Action {
     fn render(&self) -> maud::Markup {
         maud::html! {
             @if let Some(href) = &self.href {
-                a class="button tab-set__cta ui-cta" href=(href) {
-                    (&self.label)
-                }
+                (button::Button::builder()
+                    .label(self.label.clone())
+                    .variant(button::Variant::Primary)
+                    .role(button::Role::link(href.clone()))
+                    .build())
             } @else {
-                button class="button tab-set__cta ui-cta" type="button" {
-                    (&self.label)
-                }
+                (button::Button::builder()
+                    .label(self.label.clone())
+                    .variant(button::Variant::Primary)
+                    .build())
             }
         }
     }

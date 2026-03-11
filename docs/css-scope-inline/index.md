@@ -20,7 +20,7 @@ This directory mirrors CSS Scope Inline documentation from the upstream reposito
 - [example-source.md](example-source.md)
 
 ## Workspace conventions
-- Default to component-scoped `inline_css!` helpers with `me` selectors, inserted with `(css())` inside the component root.
+- Default to component-scoped `crate::inline_css!` helpers with `me` selectors, inserted with `(css())` inside the component root.
 - Prefer short, targeted hooks (`id`, semantic class, stable `data-*`) over long selector chains.
 - Use quick `me` selectors for simple local rules; when nested styling gets deep, split into a subcomponent.
 - Avoid magic-number-heavy rules; define component design tokens and update tokens for responsive breakpoints.

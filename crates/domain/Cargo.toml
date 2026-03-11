@@ -6,6 +6,7 @@ edition = "2024"
 [dependencies]
 nutype = { workspace = true }
 derive_more = { version = "2.1.0", features = ["from"] }
+snafu = "0.8.9"
 bon = { version = "3.8.1", features = [
   "experimental-overwritable",
   "experimental-getter",

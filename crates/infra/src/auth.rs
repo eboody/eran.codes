@@ -1,27 +1,83 @@
-use app::auth::{AuthRecord, Error, PasswordHash, PasswordHasher, Repository, Result};
+use app::auth::{self, AuthRecord, PasswordHash, PasswordHasher, Repository};
 use argon2::{
     Argon2, PasswordHash as ArgonPasswordHash, PasswordHasher as _, PasswordVerifier,
 };
 use async_trait::async_trait;
 use domain::user;
 use rand_core::OsRng;
+use snafu::prelude::*;
 use sqlx::{PgPool, Row, postgres::PgRow, types::time};
 
 pub struct AuthRepository {
     pg: PgPool,
 }
 
+#[derive(Debug)]
+struct PasswordHashProviderError(password_hash::Error);
+
+impl core::fmt::Display for PasswordHashProviderError {
+    fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
+        write!(f, "{}", self.0)
+    }
+}
+
+impl std::error::Error for PasswordHashProviderError {}
+
+type RepositoryResult<T> = std::result::Result<T, AuthRepositoryError>;
+#[derive(Debug, Snafu)]
+enum AuthRepositoryError {
+    #[snafu(display("could not query auth record by email"))]
+    FindByEmail { source: sqlx::Error },
+    #[snafu(display("could not query auth record by id"))]
+    FindById { source: sqlx::Error },
+    #[snafu(display("could not decode auth username"))]
+    DecodeUsername { source: user::UsernameError },
+    #[snafu(display("could not decode auth email"))]
+    DecodeEmail { source: user::EmailError },
+}
+
+#[derive(Debug, Snafu)]
+enum AuthHashError {
+    #[snafu(display("could not hash password"))]
+    HashPassword { source: PasswordHashProviderError },
+    #[snafu(display("could not parse stored password hash"))]
+    ParseStoredPasswordHash { source: PasswordHashProviderError },
+}
+
+fn map_repository_error(error: AuthRepositoryError) -> app::auth::Error {
+    match error {
+        AuthRepositoryError::FindByEmail { source } => app::auth::Error::query_repository(
+            app::auth::RepositoryOperation::FindByEmail,
+            source,
+        ),
+        AuthRepositoryError::FindById { source } => app::auth::Error::query_repository(
+            app::auth::RepositoryOperation::FindById,
+            source,
+        ),
+        AuthRepositoryError::DecodeUsername { source } => {
+            app::auth::Error::decode_username(source)
+        }
+        AuthRepositoryError::DecodeEmail { source } => {
+            app::auth::Error::decode_email(source)
+        }
+    }
+}
+
+fn map_hash_error(error: AuthHashError) -> app::auth::Error {
+    match error {
+        AuthHashError::HashPassword { source } => {
+            app::auth::Error::hash(app::auth::HashOperation::HashPassword, source)
+        }
+        AuthHashError::ParseStoredPasswordHash { source } => app::auth::Error::hash(
+            app::auth::HashOperation::ParseStoredPasswordHash,
+            source,
+        ),
+    }
+}
+
 impl AuthRepository {
     pub fn new(pg: PgPool) -> Self {
         Self { pg }
-    }
-
-    fn map_error(error: sqlx::Error) -> Error {
-        Error::Repository(app::auth::RepositoryErrorText::new(error.to_string()))
-    }
-
-    fn map_repo_text(value: String) -> app::auth::RepositoryErrorText {
-        app::auth::RepositoryErrorText::new(value)
     }
 
     fn session_hash_from_credentials(
@@ -32,12 +88,12 @@ impl AuthRepository {
         app::auth::SessionHash::new(format!("auth-v1:{user_id}:{version}"))
     }
 
-    fn auth_record_from_row(row: PgRow) -> Result<AuthRecord> {
+    fn auth_record_from_row(row: PgRow) -> RepositoryResult<AuthRecord> {
         let user_id = row.get::<uuid::Uuid, _>("id");
         let username = user::Username::try_new(row.get::<String, _>("username"))
-            .map_err(|error| Error::Repository(Self::map_repo_text(error.to_string())))?;
+            .context(DecodeUsernameSnafu)?;
         let email = user::Email::try_new(row.get::<String, _>("email"))
-            .map_err(|error| Error::Repository(Self::map_repo_text(error.to_string())))?;
+            .context(DecodeEmailSnafu)?;
         let password_hash = PasswordHash::new(row.get::<String, _>("password_hash"));
         let credential_updated_at =
             row.get::<time::OffsetDateTime, _>("credential_updated_at");
@@ -53,17 +109,11 @@ impl AuthRepository {
             ))
             .build())
     }
-}
 
-#[async_trait]
-impl Repository for AuthRepository {
-    async fn find_by_email(&self, email: &user::Email) -> Result<Option<AuthRecord>> {
-        let start = std::time::Instant::now();
-        tracing::info!(
-            target: "demo.db",
-            message = "db query",
-            db_statement = "SELECT u.id, u.username, u.email, c.password_hash, c.updated_at FROM users u JOIN credentials c ON c.user_id = u.id WHERE u.email = $1"
-        );
+    async fn find_by_email_record(
+        &self,
+        email: &user::Email,
+    ) -> RepositoryResult<Option<AuthRecord>> {
         let record = sqlx::query(
             r#"
             SELECT u.id, u.username, u.email, c.password_hash, c.updated_at AS credential_updated_at
@@ -75,23 +125,15 @@ impl Repository for AuthRepository {
         .bind(email.to_string())
         .fetch_optional(&self.pg)
         .await
-        .map_err(Self::map_error)?;
-        tracing::info!(
-            target: "demo.db",
-            message = "db query complete",
-            db_duration_ms = start.elapsed().as_millis() as u64
-        );
+        .context(FindByEmailSnafu)?;
 
         record.map(Self::auth_record_from_row).transpose()
     }
 
-    async fn find_by_id(&self, user_id: &user::UserId) -> Result<Option<AuthRecord>> {
-        let start = std::time::Instant::now();
-        tracing::info!(
-            target: "demo.db",
-            message = "db query",
-            db_statement = "SELECT u.id, u.username, u.email, c.password_hash, c.updated_at FROM users u JOIN credentials c ON c.user_id = u.id WHERE u.id = $1"
-        );
+    async fn find_by_id_record(
+        &self,
+        user_id: &user::UserId,
+    ) -> RepositoryResult<Option<AuthRecord>> {
         let record = sqlx::query(
             r#"
             SELECT u.id, u.username, u.email, c.password_hash, c.updated_at AS credential_updated_at
@@ -103,14 +145,48 @@ impl Repository for AuthRepository {
         .bind(user_id.as_uuid())
         .fetch_optional(&self.pg)
         .await
-        .map_err(Self::map_error)?;
+        .context(FindByIdSnafu)?;
+
+        record.map(Self::auth_record_from_row).transpose()
+    }
+}
+
+#[async_trait]
+impl Repository for AuthRepository {
+    async fn find_by_email(&self, email: &user::Email) -> auth::Result<Option<AuthRecord>> {
+        let start = std::time::Instant::now();
+        tracing::info!(
+            target: "demo.db",
+            message = "db query",
+            db_statement = "SELECT u.id, u.username, u.email, c.password_hash, c.updated_at FROM users u JOIN credentials c ON c.user_id = u.id WHERE u.email = $1"
+        );
         tracing::info!(
             target: "demo.db",
             message = "db query complete",
             db_duration_ms = start.elapsed().as_millis() as u64
         );
 
-        record.map(Self::auth_record_from_row).transpose()
+        self.find_by_email_record(email)
+            .await
+            .map_err(map_repository_error)
+    }
+
+    async fn find_by_id(&self, user_id: &user::UserId) -> auth::Result<Option<AuthRecord>> {
+        let start = std::time::Instant::now();
+        tracing::info!(
+            target: "demo.db",
+            message = "db query",
+            db_statement = "SELECT u.id, u.username, u.email, c.password_hash, c.updated_at FROM users u JOIN credentials c ON c.user_id = u.id WHERE u.id = $1"
+        );
+        tracing::info!(
+            target: "demo.db",
+            message = "db query complete",
+            db_duration_ms = start.elapsed().as_millis() as u64
+        );
+
+        self.find_by_id_record(user_id)
+            .await
+            .map_err(map_repository_error)
     }
 }
 
@@ -126,21 +202,24 @@ impl Argon2Hasher {
 }
 
 impl PasswordHasher for Argon2Hasher {
-    fn hash(&self, password: &str) -> Result<PasswordHash> {
+    fn hash(&self, password: &str) -> auth::Result<PasswordHash> {
         let salt = password_hash::SaltString::generate(&mut OsRng);
         let hash = self
             .inner
             .hash_password(password.as_bytes(), &salt)
-            .map_err(|error| Error::Hash(app::auth::HashErrorText::new(error.to_string())))?
+            .map_err(PasswordHashProviderError)
+            .context(HashPasswordSnafu)
+            .map_err(map_hash_error)?
             .to_string();
         Ok(PasswordHash::new(hash))
     }
 
-    fn verify(&self, password: &str, password_hash: &PasswordHash) -> Result<bool> {
+    fn verify(&self, password: &str, password_hash: &PasswordHash) -> auth::Result<bool> {
         let hash_text = password_hash.to_string();
-        let parsed = ArgonPasswordHash::new(&hash_text).map_err(|error| {
-            Error::Hash(app::auth::HashErrorText::new(error.to_string()))
-        })?;
+        let parsed = ArgonPasswordHash::new(&hash_text)
+            .map_err(PasswordHashProviderError)
+            .context(ParseStoredPasswordHashSnafu)
+            .map_err(map_hash_error)?;
         Ok(self
             .inner
             .verify_password(password.as_bytes(), &parsed)

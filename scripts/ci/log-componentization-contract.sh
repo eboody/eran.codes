@@ -8,6 +8,14 @@ fi
 
 status=0
 
+count_matches() {
+  local pattern="$1"
+  shift
+  (rg --no-heading --line-number --glob '*.rs' -- "$pattern" "$@" || true) \
+    | wc -l \
+    | tr -d ' '
+}
+
 # Legacy type names should not remain after rename.
 if rg --no-heading --line-number '\b(LiveLog|NetworkLog|TraceLog)\b' \
   crates/http/src/views/partials \
@@ -42,32 +50,42 @@ if ! rg --no-heading --line-number 'request_flows\(' crates/http/src/views/parti
   status=1
 fi
 
-count_chat_request_id=$(rg --no-heading --line-number 'LogFieldKey::RequestId' crates/http/src/handlers/demo/chat.rs | wc -l | tr -d ' ')
+count_chat_request_id=$(count_matches 'LogFieldKey::RequestId' crates/http/src/handlers/demo/chat/post_flow.rs)
 if [[ "${count_chat_request_id}" -lt "2" ]]; then
-  echo "crates/http/src/handlers/demo/chat.rs: expected RequestId field to be recorded on chat incoming + broadcast events."
+  echo "crates/http/src/handlers/demo/chat/post_flow.rs: expected RequestId field to be recorded on chat incoming + broadcast events."
   status=1
 fi
 
-# Reusable log components should consume global CSS, not inline css! blocks.
-if rg --no-heading --line-number 'css!' \
+if ! rg --no-heading --line-number 'upsert_context_field\(fields,\s*LogFieldKey::RequestId' crates/http/src/trace_log.rs >/dev/null; then
+  echo "crates/http/src/trace_log.rs: expected append_context_fields to inject request ids into traced events."
+  status=1
+fi
+
+if ! rg --no-heading --line-number 'append_context_fields_does_not_duplicate_existing_request_id' crates/http/src/trace_log.rs >/dev/null; then
+  echo "crates/http/src/trace_log.rs: expected regression test for pre-existing request ids in append_context_fields."
+  status=1
+fi
+
+# Log components may use scoped inline_css!, but raw css! blocks are disallowed.
+if rg --no-heading --line-number '\bcss!\(' \
   crates/http/src/views/partials/components/logs \
   crates/http/src/views/partials/demo/log \
   >/dev/null; then
-  echo "log-componentization-contract: inline css! found in log components; use app.css ui-log-* packages."
-  rg --no-heading --line-number 'css!' \
+  echo "log-componentization-contract: raw css! blocks found in log components; prefer scoped inline_css! surfaces."
+  rg --no-heading --line-number '\bcss!\(' \
     crates/http/src/views/partials/components/logs \
     crates/http/src/views/partials/demo/log || true
   status=1
 fi
 
 # Helper de-duplication: these should live in vm/* exactly once.
-count_group_by_request=$(rg --no-heading --line-number 'fn\s+group_by_request\b' crates/http/src/views/partials/demo/log -g '*.rs' | wc -l | tr -d ' ')
+count_group_by_request=$(count_matches 'fn\s+group_by_request\b' crates/http/src/views/partials/demo/log)
 if [[ "${count_group_by_request}" != "1" ]]; then
   echo "log-componentization-contract: expected exactly one group_by_request helper in demo/log vm layer, found ${count_group_by_request}."
   status=1
 fi
 
-count_field_text=$(rg --no-heading --line-number 'fn\s+field_text\b' crates/http/src/views/partials/demo/log -g '*.rs' | wc -l | tr -d ' ')
+count_field_text=$(count_matches 'fn\s+field_text\b' crates/http/src/views/partials/demo/log)
 if [[ "${count_field_text}" != "1" ]]; then
   echo "log-componentization-contract: expected exactly one field_text helper in demo/log vm layer, found ${count_field_text}."
   status=1
@@ -80,31 +98,6 @@ for vm_file in \
 do
   if ! rg --no-heading --line-number '#\[cfg\(test\)\]' "${vm_file}" >/dev/null; then
     echo "${vm_file}: expected vm-layer regression tests."
-    status=1
-  fi
-done
-
-APP_CSS="crates/http/static/app.css"
-for cls in \
-  ".ui-log-surface" \
-  ".ui-log-panels" \
-  ".ui-log-panel" \
-  ".ui-log-scroll" \
-  ".ui-log-flow-shell" \
-  ".ui-log-flow-list" \
-  ".ui-log-flow-item" \
-  ".ui-log-flow-details" \
-  ".ui-log-flow-detail" \
-  ".ui-log-flow-event" \
-  ".ui-log-groups" \
-  ".ui-log-group" \
-  ".ui-log-group-header" \
-  ".ui-log-entry" \
-  ".ui-log-table" \
-  ".ui-log-empty"
-do
-  if ! rg -q "^\\s*${cls}\\b" "${APP_CSS}"; then
-    echo "${APP_CSS}: missing required log package class ${cls}."
     status=1
   fi
 done

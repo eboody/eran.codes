@@ -9,8 +9,8 @@ impl Render for Home {
     fn render(&self) -> maud::Markup {
         let content = portfolio::content::portfolio_home_content();
 
-        let body = maud::html! {
-            main class="container ui-portfolio-main" {
+        let body = portfolio::Page {
+            content: maud::html! {
                 (portfolio::PortfolioHero { content: &content.hero })
                 (portfolio::ProofStrip {
                     content: &content.proof_strip,
@@ -26,8 +26,9 @@ impl Render for Home {
                     summary: &content.closing.summary,
                     actions: &content.closing.actions,
                 })
-            }
-        };
+            },
+        }
+        .render();
 
         Layout::builder()
             .title(&content.page_title.to_string())

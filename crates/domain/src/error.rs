@@ -1,16 +1,9 @@
-use derive_more::From;
+use snafu::prelude::*;
 
 pub type Result<T> = core::result::Result<T, Error>;
 
-#[derive(Debug, From)]
+#[derive(Debug, Snafu)]
 pub enum Error {
+    #[snafu(display("domain repository error"))]
     Repo,
 }
-
-impl core::fmt::Display for Error {
-    fn fmt(&self, f: &mut core::fmt::Formatter) -> core::fmt::Result {
-        write!(f, "{self:#?}")
-    }
-}
-
-impl std::error::Error for Error {}

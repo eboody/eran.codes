@@ -1,31 +1,33 @@
-use std::fmt;
-
-use derive_more::From;
+use snafu::prelude::*;
 
 use crate::user::{EmailError, UsernameError};
 
 pub type Result<T> = std::result::Result<T, Error>;
 
-#[derive(Debug, From)]
+#[derive(Debug, Snafu)]
 pub enum Error {
-    Username(UsernameError),
-    Email(EmailError),
+    #[snafu(display("invalid username: {source}"))]
+    Username {
+        source: UsernameError,
+    },
+    #[snafu(display("invalid email: {source}"))]
+    Email {
+        source: EmailError,
+    },
 }
 
-impl fmt::Display for Error {
-    fn fmt(
-        &self,
-        f: &mut fmt::Formatter<'_>,
-    ) -> fmt::Result {
-        match self {
-            Error::Username(e) => {
-                write!(f, "invalid username: {}", e)
-            }
-            Error::Email(e) => {
-                write!(f, "invalid email: {}", e)
-            }
+impl From<UsernameError> for Error {
+    fn from(source: UsernameError) -> Self {
+        Self::Username {
+            source,
         }
     }
 }
 
-impl std::error::Error for Error {}
+impl From<EmailError> for Error {
+    fn from(source: EmailError) -> Self {
+        Self::Email {
+            source,
+        }
+    }
+}

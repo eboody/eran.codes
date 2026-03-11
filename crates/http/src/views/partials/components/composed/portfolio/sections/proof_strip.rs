@@ -1,6 +1,6 @@
 use maud::Render;
 
-use super::{SectionCopy, proof_kind_attr};
+use super::{SectionCopy, Surface, proof_kind_attr};
 use crate::views::partials::components::portfolio::content::ProofStripContent;
 
 pub struct ProofStrip<'a> {
@@ -10,7 +10,7 @@ pub struct ProofStrip<'a> {
 impl Render for ProofStrip<'_> {
     fn render(&self) -> maud::Markup {
         maud::html! {
-            section class="ui-surface-card" {
+            (Surface::section(maud::html! {
                 (SectionCopy {
                     title: &self.content.title,
                     subtitle: &self.content.subtitle,
@@ -23,7 +23,7 @@ impl Render for ProofStrip<'_> {
                         }
                     }
                 }
-            }
+            }))
         }
     }
 }

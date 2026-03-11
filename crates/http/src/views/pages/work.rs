@@ -9,11 +9,12 @@ impl Render for Work {
     fn render(&self) -> maud::Markup {
         let content = portfolio::content::work_index_content();
 
-        let body = maud::html! {
-            main class="container ui-portfolio-main" {
+        let body = portfolio::Page {
+            content: maud::html! {
                 (portfolio::WorkIndexSection { content })
-            }
-        };
+            },
+        }
+        .render();
 
         Layout::builder()
             .title(&content.page_title.to_string())

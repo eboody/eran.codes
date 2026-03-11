@@ -37,6 +37,8 @@ jobs:
         run: scripts/ci/log-componentization-contract.sh
       - name: tab icon reference contract
         run: scripts/ci/tab-icon-reference-contract.sh
+      - name: tab set showcase conventions
+        run: scripts/ci/tab-set-showcase-conventions.sh
       - name: cms content model templates
         run: scripts/ci/cms-content-model.sh
       - name: partials render

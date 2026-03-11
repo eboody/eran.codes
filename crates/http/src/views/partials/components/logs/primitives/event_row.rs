@@ -16,7 +16,7 @@ impl Render for EventRow {
     fn render(&self) -> maud::Markup {
         maud::html! {
             li class="ui-log-entry" data-log-entry {
-                span data-muted data-log-timestamp { (&self.timestamp) }
+                span class="u-muted" data-log-timestamp { (&self.timestamp) }
                 @for pill in &self.pills {
                     (pill)
                 }

@@ -55,12 +55,13 @@
     "reuse_scan": {
       "checked_components": [
         "crates/http/src/views/partials/components/primitives/tab.rs",
-        "crates/http/src/views/partials/components/tab_panel.rs",
-        "crates/http/src/views/partials/components/primitives/icon.rs"
+        "crates/http/src/views/partials/components/primitives/icon.rs",
+        "crates/http/src/views/partials/components/composed/button/mod.rs"
       ],
       "reused": [
         "tab",
-        "tab_panel"
+        "icon",
+        "button"
       ],
       "created": [
         "tab_set"
@@ -332,19 +333,43 @@
   "styling": {
     "mode": "hybrid",
     "global_packages": [
-      "ui-surface-card",
-      "ui-tabs",
-      "ui-tab",
-      "ui-panel",
-      "ui-preview-frame",
-      "ui-feature-list",
-      "ui-cta"
+      "u-surface-card"
     ],
-    "scoped_exceptions": [],
+    "scoped_exceptions": [
+      "tab_set: inline-scoped tab layout, panel composition, and preview presentation remain local to the composed component"
+    ],
     "tokens_used": [
-      "--portfolio-surface-border",
-      "--ui-border-soft",
-      "--ui-text-muted",
+      "--accent-signal",
+      "--accent-signal-soft",
+      "--border-default",
+      "--border-subtle",
+      "--control-border-width",
+      "--control-font-size-compact",
+      "--control-font-weight",
+      "--control-gap",
+      "--control-inline-align-items",
+      "--control-inline-display",
+      "--control-letter-spacing",
+      "--control-line-height",
+      "--control-padding-block",
+      "--control-padding-inline",
+      "--control-radius",
+      "--control-white-space",
+      "--interactive-bleed",
+      "--motion-fast",
+      "--radius-card",
+      "--space-2",
+      "--space-3",
+      "--space-4",
+      "--space-card",
+      "--surface-edge-default",
+      "--surface-edge-soft",
+      "--surface-field",
+      "--surface-panel",
+      "--surface-raised",
+      "--surface-wash-top-soft",
+      "--text-body",
+      "--text-muted",
       "--ui-surface-soft"
     ]
   }

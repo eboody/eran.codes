@@ -14,7 +14,7 @@ use nutype::nutype;
 use strum_macros::{Display, EnumString};
 
 use domain::chat;
-pub use error::{Error, InvalidIdText, InvalidInputText, RepoErrorText, Result};
+pub use error::{Error, RepositoryOperation, Result};
 
 #[derive(Clone, Debug, Builder)]
 pub struct PostMessage {

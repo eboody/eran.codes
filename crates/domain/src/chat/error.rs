@@ -1,31 +1,33 @@
-use std::fmt;
-
-use derive_more::From;
+use snafu::prelude::*;
 
 use crate::chat::{MessageBodyError, RoomNameError};
 
 pub type Result<T> = std::result::Result<T, Error>;
 
-#[derive(Debug, From)]
+#[derive(Debug, Snafu)]
 pub enum Error {
-    RoomName(RoomNameError),
-    MessageBody(MessageBodyError),
+    #[snafu(display("invalid room name: {source}"))]
+    RoomName {
+        source: RoomNameError,
+    },
+    #[snafu(display("invalid message body: {source}"))]
+    MessageBody {
+        source: MessageBodyError,
+    },
 }
 
-impl fmt::Display for Error {
-    fn fmt(
-        &self,
-        f: &mut fmt::Formatter<'_>,
-    ) -> fmt::Result {
-        match self {
-            Error::RoomName(error) => {
-                write!(f, "invalid room name: {}", error)
-            }
-            Error::MessageBody(error) => {
-                write!(f, "invalid message body: {}", error)
-            }
+impl From<RoomNameError> for Error {
+    fn from(source: RoomNameError) -> Self {
+        Self::RoomName {
+            source,
         }
     }
 }
 
-impl std::error::Error for Error {}
+impl From<MessageBodyError> for Error {
+    fn from(source: MessageBodyError) -> Self {
+        Self::MessageBody {
+            source,
+        }
+    }
+}

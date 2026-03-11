@@ -74,7 +74,7 @@ impl Render for FlowTimeline {
                             data-log-flow-detail {
                             header class="ui-log-flow-detail-header" {
                                 h4 class="ui-log-flow-detail-title" { (&flow.title) }
-                                div class="log-fields" {
+                                div class="ui-pill-cluster" {
                                     (Pill::fields(format!("request_id={}", flow.display_id)).render())
                                 }
                             }
@@ -92,7 +92,7 @@ impl Render for FlowTimeline {
                                             (summary_markup)
                                         }
                                         @if !visible_pills.is_empty() {
-                                            div class="log-fields" {
+                                            div class="ui-pill-cluster" {
                                                 @for pill in visible_pills {
                                                     (pill)
                                                 }

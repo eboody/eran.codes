@@ -4,7 +4,7 @@ use maud::{Markup, Render};
 use crate::paths::Route;
 use crate::types::Text;
 use crate::views::partials::components::{
-    NavAuth, NavBar, NavBrand, NavLink, NavLinkList, NavSignedIn,
+    NavAuth, NavBar, NavBrand, NavLink, NavLinkList, NavLinkListRole, NavSignedIn,
 };
 
 pub(crate) const PORTFOLIO_RESUME_URL: &str = "/static/resume.txt";
@@ -21,21 +21,12 @@ pub struct UserNav {
 
 impl Render for UserNav {
     fn render(&self) -> Markup {
-        maud::html! {
-            ul class="ui-nav-list ui-nav-auth" {
-                li {
-                    span class="ui-nav-auth-text" { "Signed in as " (&self.username) }
-                }
-                li {
-                    a class="ui-nav-link" href=(Route::Protected) { "Account" }
-                }
-                li {
-                    form method="post" action=(Route::Logout) {
-                        button type="submit" class="secondary ui-nav-auth-action" { "Sign out" }
-                    }
-                }
-            }
-        }
+        NavSignedIn::builder()
+            .username(self.username.clone())
+            .account_href(Text::from(Route::Protected.as_str()))
+            .logout_action(Text::from(Route::Logout.as_str()))
+            .build()
+            .render()
     }
 }
 
@@ -68,6 +59,14 @@ pub struct Layout<'a> {
 impl Render for Layout<'_> {
     fn render(&self) -> Markup {
         let sse_tab_id = crate::types::SseTabId::new(uuid::Uuid::new_v4().to_string());
+        let global_signals = match self.sse_mode {
+            SseMode::Enabled => format!(
+                "{{sseTabId: '{sse_tab_id}', sseConnected: false, transportErrorSource: '', transportErrorKind: '', transportErrorTitle: '', transportErrorMessage: '', transportErrorStatus: 0, transportRetrying: false}}"
+            ),
+            SseMode::Disabled => {
+                "{transportErrorSource: '', transportErrorKind: '', transportErrorTitle: '', transportErrorMessage: '', transportErrorStatus: 0, transportRetrying: false}".to_string()
+            }
+        };
         let brand = NavBrand::builder()
             .label(Text::from("eran.codes"))
             .href(Text::from(Route::Home.as_str()))
@@ -75,7 +74,7 @@ impl Render for Layout<'_> {
             .dark_logo_src(Text::from("/static/eran.codes-dark.svg"))
             .build();
         let portfolio_links = NavLinkList::builder()
-            .class_name(Text::from("ui-nav-list ui-nav-links"))
+            .role(NavLinkListRole::Primary)
             .children(vec![
                 NavLink::builder()
                     .label(Text::from("Work"))
@@ -117,7 +116,7 @@ impl Render for Layout<'_> {
                 ),
                 None => NavAuth::Guest(
                     NavLinkList::builder()
-                        .class_name(Text::from("ui-nav-list ui-nav-auth"))
+                        .role(NavLinkListRole::Auth)
                         .children(vec![
                             NavLink::builder()
                                 .label(Text::from("Sign in"))
@@ -139,7 +138,7 @@ impl Render for Layout<'_> {
             .build();
         let body_content = maud::html! {
             (nav_bar)
-            div id="error-target" {}
+            (crate::views::partials::Error)
             (self.content.clone())
         };
         maud::html! {
@@ -175,18 +174,18 @@ impl Render for Layout<'_> {
                     link
                         rel="stylesheet"
                         href="https://cdn.jsdelivr.net/gh/iconoir-icons/iconoir@main/css/iconoir.css";
+                    (crate::views::partials::components::head_styles())
+                    script src="/static/css-scope-inline.js" {}
                     script type="module" src="/static/datastar.js" {}
+                    script type="module" src="/static/transport-errors.js" {}
                     script src="/static/surreal.js" {}
                 }
                 @match self.sse_mode {
                     SseMode::Enabled => {
-                        body
-                            data-signals=(format!("{{sseTabId: '{}'}}", sse_tab_id))
-                            data-init=(format!("@get('{}')", Route::Events))
-                        { (body_content) }
+                        body data-signals=(global_signals) data-init=(format!("@get('{}')", Route::Events)) { (body_content) }
                     }
                     SseMode::Disabled => {
-                        body { (body_content) }
+                        body data-signals=(global_signals) { (body_content) }
                     }
                 }
             }
@@ -206,7 +205,7 @@ pub struct Error {
 impl Render for Error {
     fn render(&self) -> Markup {
         let content = maud::html! {
-            main class="container" {
+            main class="u-container" {
                 article {
                     header {
                         h1 { (self.title) }

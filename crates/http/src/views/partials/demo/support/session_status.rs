@@ -1,8 +1,8 @@
 use bon::Builder;
 use maud::Render;
 
-use crate::views::partials::{StatusCard, RequestTraceLog};
 use crate::types::Text;
+use crate::views::partials::{RequestTraceLog, StatusCard, StatusCardItem};
 
 #[derive(Clone, Debug, Builder)]
 pub struct SessionStatus {
@@ -18,14 +18,8 @@ impl Render for SessionStatus {
                 (StatusCard::builder()
                     .title(Text::from("Session details"))
                     .items(vec![
-                        (
-                            Text::from("session_id"),
-                            self.session_id.clone().unwrap_or_else(|| Text::from("none")),
-                        ),
-                        (
-                            Text::from("expiry"),
-                            self.expiry.clone().unwrap_or_else(|| Text::from("none")),
-                        ),
+                        StatusCardItem::optional("session_id", self.session_id.clone()),
+                        StatusCardItem::optional("expiry", self.expiry.clone()),
                     ])
                     .build())
                 (RequestTraceLog::builder().entries(&self.trace).build())
