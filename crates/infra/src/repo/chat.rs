@@ -53,7 +53,7 @@ impl From<ChatPersistenceError> for Error {
     fn from(error: ChatPersistenceError) -> Self {
         match error {
             ChatPersistenceError::Query { operation, source } => {
-                Error::query(operation, source)
+                Error::query_repository(operation, source)
             }
             ChatPersistenceError::DecodeRoomName { source } => {
                 Error::decode_room_name(source)

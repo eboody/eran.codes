@@ -2,14 +2,14 @@
 mod context_flow;
 mod demo_user_flow;
 
-use crate::views::partials::chat;
+use crate::views::partials::components;
 
 const DEMO_USER_EMAIL: &str = "demo.bot@example.com";
 const DEMO_USER_NAME: &str = "Demo Bot";
 
 pub struct ChatContext {
     pub room: domain::chat::Room,
-    pub messages: Vec<chat::Message>,
+    pub messages: Vec<components::chat::Message>,
 }
 
 pub async fn load_chat_context(

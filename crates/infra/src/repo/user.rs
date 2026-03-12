@@ -1,5 +1,4 @@
 pub use SqlxUserRepository as Repository;
-pub use SqlxUserRepository as UserRepository;
 
 use app::auth::PasswordHash;
 use app::user::Repository as AppUserRepository;
@@ -44,11 +43,12 @@ fn is_email_taken(error: &sqlx::Error) -> bool {
 
 fn map_repository_error(error: UserRepositoryError) -> app::user::Error {
     match error {
-        UserRepositoryError::FindByEmail { source } => {
-            app::user::Error::query(app::user::RepositoryOperation::FindByEmail, source)
-        }
+        UserRepositoryError::FindByEmail { source } => app::user::Error::query_repository(
+            app::user::RepositoryOperation::FindByEmail,
+            source,
+        ),
         UserRepositoryError::BeginCreateWithCredentials { source } => {
-            app::user::Error::query(
+            app::user::Error::query_repository(
                 app::user::RepositoryOperation::BeginCreateWithCredentials,
                 source,
             )
@@ -57,15 +57,20 @@ fn map_repository_error(error: UserRepositoryError) -> app::user::Error {
             if is_email_taken(&source) {
                 app::user::Error::EmailTaken
             } else {
-                app::user::Error::query(app::user::RepositoryOperation::InsertUser, source)
+                app::user::Error::query_repository(
+                    app::user::RepositoryOperation::InsertUser,
+                    source,
+                )
             }
         }
-        UserRepositoryError::InsertCredentials { source } => app::user::Error::query(
-            app::user::RepositoryOperation::InsertCredentials,
-            source,
-        ),
+        UserRepositoryError::InsertCredentials { source } => {
+            app::user::Error::query_repository(
+                app::user::RepositoryOperation::InsertCredentials,
+                source,
+            )
+        }
         UserRepositoryError::CommitCreateWithCredentials { source } => {
-            app::user::Error::query(
+            app::user::Error::query_repository(
                 app::user::RepositoryOperation::CommitCreateWithCredentials,
                 source,
             )

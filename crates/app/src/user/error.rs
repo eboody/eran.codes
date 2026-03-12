@@ -12,9 +12,9 @@ pub enum Error {
     #[snafu(display("{source}"))]
     Domain { source: domain::user::Error },
     #[snafu(display("user password hashing failed: {source}"))]
-    Hashing { source: crate::auth::Error },
+    HashPassword { source: crate::auth::Error },
     #[snafu(display("{source}"))]
-    Repo { source: RepositoryError },
+    Repository { source: RepositoryError },
     #[snafu(display("email already in use"))]
     EmailTaken,
 }
@@ -58,16 +58,16 @@ fn box_error(source: impl std::error::Error + Send + Sync + 'static) -> BoxError
 
 impl From<crate::auth::Error> for Error {
     fn from(source: crate::auth::Error) -> Self {
-        Self::Hashing { source }
+        Self::HashPassword { source }
     }
 }
 
 impl Error {
-    pub fn query(
+    pub fn query_repository(
         operation: RepositoryOperation,
         source: impl std::error::Error + Send + Sync + 'static,
     ) -> Self {
-        Self::Repo {
+        Self::Repository {
             source: RepositoryError::Query {
                 operation,
                 source: box_error(source),
@@ -76,15 +76,19 @@ impl Error {
     }
 
     pub fn decode_username(source: user::UsernameError) -> Self {
-        Self::Repo {
+        Self::Repository {
             source: RepositoryError::DecodeUsername { source },
         }
     }
 
     pub fn decode_email(source: user::EmailError) -> Self {
-        Self::Repo {
+        Self::Repository {
             source: RepositoryError::DecodeEmail { source },
         }
+    }
+
+    pub fn hash_password(source: crate::auth::Error) -> Self {
+        Self::HashPassword { source }
     }
 }
 
@@ -95,7 +99,7 @@ mod tests {
 
     #[test]
     fn repo_error_preserves_source() {
-        let error = Error::query(
+        let error = Error::query_repository(
             RepositoryOperation::FindByEmail,
             std::io::Error::other("db down"),
         );

@@ -3,7 +3,7 @@ moddef::moddef!(mod { entity, error, repository });
 pub use entity::User;
 pub use error::{Error, Result};
 use nutype::nutype;
-pub use repository::{UserRepository, UserRepository as Repository};
+pub use repository::Repository;
 
 #[nutype(
     sanitize(trim, lowercase),

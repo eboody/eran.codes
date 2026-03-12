@@ -1,13 +1,13 @@
 use statum::{machine, state, transition};
 
 use crate::types::Text;
-use crate::views::partials::chat;
+use crate::views::partials::{chat, components};
 
 #[derive(Clone, Debug)]
 pub struct ViewerData {
     maybe_user: Option<crate::views::page::UserNav>,
     viewer_id: Option<domain::user::UserId>,
-    interactivity: chat::Mode,
+    chat_mode: components::chat::Mode,
 }
 
 #[derive(Clone, Debug)]
@@ -51,7 +51,7 @@ impl LabPageFlow<Incoming> {
         Ok(self.mark_viewer_resolved(ViewerData {
             maybe_user,
             viewer_id,
-            interactivity: chat::Mode::from(is_authenticated),
+            chat_mode: components::chat::Mode::from(is_authenticated),
         }))
     }
 }
@@ -75,7 +75,7 @@ impl LabPageFlow<ViewerResolved> {
             .room_id(Text::from(context.room.id.as_uuid().to_string()))
             .room_name(Text::from(context.room.name.to_string()))
             .messages(context.messages)
-            .interactivity(self.state_data.interactivity)
+            .mode(self.state_data.chat_mode)
             .build();
         Ok(self.mark_chat_loaded(ChatLoadedData {
             maybe_user,
@@ -111,8 +111,8 @@ mod tests {
         let incoming = LabPageFlow::<Incoming>::from_auth_user(None);
         let resolved = incoming.resolve_viewer().expect("resolved");
         assert!(matches!(
-            resolved.state_data.interactivity,
-            chat::Mode::DemoOnly
+            resolved.state_data.chat_mode,
+            components::chat::Mode::DemoOnly
         ));
     }
 }

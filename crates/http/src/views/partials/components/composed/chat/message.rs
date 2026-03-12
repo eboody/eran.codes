@@ -1,6 +1,7 @@
-use crate::types::Text;
 use bon::Builder;
 use maud::Render;
+
+use crate::types::Text;
 
 #[derive(Clone, Copy, Debug, strum_macros::AsRefStr)]
 #[strum(serialize_all = "snake_case")]
@@ -29,12 +30,12 @@ pub struct Message {
 impl Render for Message {
     fn render(&self) -> maud::Markup {
         let author = self.author.to_string();
-        let status = self.status.as_ref();
         let avatar = author
             .chars()
             .next()
-            .map(|c| c.to_uppercase().collect::<String>())
+            .map(|character| character.to_uppercase().collect::<String>())
             .unwrap_or_else(|| "?".to_string());
+
         maud::html! {
             li id=(format!("chat-message-{}", self.message_id)) data-chat-message {
                 span data-chat-avatar aria-hidden="true" { (avatar) }
@@ -42,8 +43,8 @@ impl Render for Message {
                     div data-chat-meta {
                         strong { (author) }
                         span data-chat-timestamp { (&self.timestamp) }
-                        span data-chat-status data-chat-status-kind=(status) {
-                            (status)
+                        span data-chat-status data-chat-status-kind=(self.status.as_ref()) {
+                            (self.status.as_ref())
                         }
                     }
                     p data-chat-body { (&self.body) }
@@ -53,23 +54,24 @@ impl Render for Message {
     }
 }
 
-#[derive(Clone, Debug, Builder)]
-pub struct Messages {
-    pub messages: Vec<Message>,
-    pub side: Side,
-}
+#[cfg(test)]
+mod tests {
+    use super::*;
 
-impl Render for Messages {
-    fn render(&self) -> maud::Markup {
-        let side = self.side.as_ref();
-        maud::html! {
-            div data-chat-feed {
-                ul data-chat-messages data-chat-side=(side) {
-                    @for message in &self.messages {
-                        (message.render())
-                    }
-                }
-            }
-        }
+    #[test]
+    fn renders_pending_status_and_message_id() {
+        let markup = Message::builder()
+            .message_id(Text::from("abc123"))
+            .author(Text::from("Demo Bot"))
+            .timestamp(Text::from("2026-03-11 10:00"))
+            .body(Text::from("hello"))
+            .status(Status::Pending)
+            .build()
+            .render()
+            .into_string();
+
+        assert!(markup.contains("id=\"chat-message-abc123\""));
+        assert!(markup.contains("data-chat-status-kind=\"pending\""));
+        assert!(markup.contains(">pending<"));
     }
 }

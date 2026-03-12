@@ -56,7 +56,7 @@ impl ChatModerationFlow<Incoming> {
             .to_string()
             .parse::<uuid::Uuid>()
             .map_err(|error| {
-                crate::error::Error::Chat(app::chat::Error::invalid_message_id(error))
+                crate::error::Error::from(app::chat::Error::invalid_message_id(error))
             })?;
 
         Ok(domain_chat::MessageId::from_uuid(id))
@@ -72,7 +72,7 @@ impl ChatModerationFlow<Incoming> {
             Some(crate::views::partials::ModerationAction::Remove) => {
                 Ok(app::chat::ModerationDecision::Remove)
             }
-            None => Err(crate::error::Error::Chat(
+            None => Err(crate::error::Error::from(
                 app::chat::Error::invalid_moderation_decision(
                     self.decision_text.to_string(),
                 ),
@@ -85,7 +85,7 @@ impl ChatModerationFlow<Incoming> {
             .clone()
             .map(|value| {
                 app::chat::ModerationReason::try_new(value.to_string()).map_err(|error| {
-                    crate::error::Error::Chat(app::chat::Error::invalid_moderation_reason(
+                    crate::error::Error::from(app::chat::Error::invalid_moderation_reason(
                         error,
                     ))
                 })

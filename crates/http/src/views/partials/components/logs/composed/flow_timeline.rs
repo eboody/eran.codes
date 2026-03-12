@@ -1,6 +1,5 @@
 use bon::Builder;
 use maud::Render;
-use serde_json::json;
 use std::collections::BTreeMap;
 
 use crate::types::Text;
@@ -21,34 +20,20 @@ impl Render for FlowTimeline {
                 .build()
                 .render();
         }
-        let initial_flow = self
-            .flows
-            .first()
-            .map(|flow| flow.id.to_string())
-            .unwrap_or_default();
-        let local_signals = json!({ "active_flow_id": initial_flow }).to_string();
-
         maud::html! {
-            div
-                class="ui-log-flow-shell"
-                data-log-flow-shell
-                data-signals__ifmissing=(local_signals) {
+            div class="ui-log-flow-shell" data-log-flow-shell {
                 nav
                     class="ui-log-flow-list"
                     aria-label="Recent request flows"
                     data-log-flow-list {
                     @for (index, flow) in self.flows.iter().enumerate() {
-                        @let selected_expr = selected_expr(&flow.id);
-                        @let click_expr = click_expr(&flow.id);
                         @let flow_search = flow_search_text(flow);
-                        button
-                            type="button"
+                        a
+                            href=(format!("#{}", flow.detail_id))
                             class=(item_class(index == 0))
-                            data-class:is-selected=(selected_expr)
                             data-log-flow-item
                             data-flow-id=(&flow.id)
-                            data-flow-search=(flow_search)
-                            data-on:click=(click_expr) {
+                            data-flow-search=(flow_search) {
                             span class="ui-log-flow-item-id" { (&flow.display_id) }
                             span class="ui-log-flow-item-title" { (&flow.title) }
                             span class="ui-log-flow-item-meta" {
@@ -63,12 +48,10 @@ impl Render for FlowTimeline {
 
                 div class="ui-log-flow-details" data-log-flow-details {
                     @for (index, flow) in self.flows.iter().enumerate() {
-                        @let selected_expr = selected_expr(&flow.id);
                         @let flow_search = flow_search_text(flow);
                         section
                             id=(&flow.detail_id)
                             class=(detail_class(index == 0))
-                            data-class:is-active=(selected_expr)
                             data-flow-id=(&flow.id)
                             data-flow-search=(flow_search)
                             data-log-flow-detail {
@@ -135,7 +118,7 @@ fn status_pill(value: &Text) -> maud::Markup {
 
 fn item_class(is_default: bool) -> &'static str {
     if is_default {
-        "ui-log-flow-item is-selected"
+        "ui-log-flow-item is-default"
     } else {
         "ui-log-flow-item"
     }
@@ -143,22 +126,10 @@ fn item_class(is_default: bool) -> &'static str {
 
 fn detail_class(is_default: bool) -> &'static str {
     if is_default {
-        "ui-log-flow-detail is-active"
+        "ui-log-flow-detail is-default"
     } else {
         "ui-log-flow-detail"
     }
-}
-
-fn selected_expr(flow_id: &Text) -> String {
-    format!("$active_flow_id == {}", json_literal(flow_id))
-}
-
-fn click_expr(flow_id: &Text) -> String {
-    format!("$active_flow_id = {}", json_literal(flow_id))
-}
-
-fn json_literal(value: &Text) -> String {
-    json!(value.to_string()).to_string()
 }
 
 pub fn flow_matches_any_search_term(flow: &Flow, terms: &[String]) -> bool {
@@ -350,5 +321,50 @@ mod tests {
         assert!(summary.contains("$2=owner-1"));
         assert_eq!(visible_pills.len(), 1);
         assert_eq!(visible_pills[0].text.to_string(), "sender=demo");
+    }
+
+    #[test]
+    fn render_marks_first_flow_as_default_and_links_to_detail() {
+        let timeline = FlowTimeline {
+            flows: vec![
+                Flow {
+                    id: Text::from("req-abc"),
+                    detail_id: Text::from("network-flow-req-abc"),
+                    display_id: Text::from("abc"),
+                    title: Text::from("Flow abc"),
+                    latest_timestamp: Text::from("12:00:00"),
+                    status: Some(Text::from("200")),
+                    events: vec![FlowEvent {
+                        timestamp: Text::from("12:00:00"),
+                        stage_label: Text::from("request"),
+                        summary: Text::from("HTTP GET /events started"),
+                        pills: Vec::new(),
+                    }],
+                },
+                Flow {
+                    id: Text::from("req-def"),
+                    detail_id: Text::from("network-flow-req-def"),
+                    display_id: Text::from("def"),
+                    title: Text::from("Flow def"),
+                    latest_timestamp: Text::from("12:01:00"),
+                    status: Some(Text::from("202")),
+                    events: vec![FlowEvent {
+                        timestamp: Text::from("12:01:00"),
+                        stage_label: Text::from("backend"),
+                        summary: Text::from("Enqueued SSE fanout"),
+                        pills: Vec::new(),
+                    }],
+                },
+            ],
+        };
+
+        let markup = timeline.render().into_string();
+
+        assert!(markup.contains(r#"class="ui-log-flow-item is-default""#));
+        assert!(markup.contains("href=\"#network-flow-req-abc\""));
+        assert!(markup.contains(r#"class="ui-log-flow-detail is-default""#));
+        assert!(!markup.contains("data-signals__ifmissing"));
+        assert!(!markup.contains("is-selected"));
+        assert!(!markup.contains("is-active"));
     }
 }

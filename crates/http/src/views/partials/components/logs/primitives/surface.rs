@@ -9,70 +9,6 @@ crate::views::scoped::inline_css!(
 me {
   display: grid;
   gap: var(--size-4);
-  --log-panel-gap: var(--size-2);
-  --log-panel-padding: var(--size-3) var(--size-4);
-  --log-panel-border: var(--border-size-1) solid var(--ui-border-soft);
-  --log-panel-background: var(--ui-surface-soft);
-  --log-panel-heading-size: 0.95rem;
-  --log-panel-heading-tracking: normal;
-  --log-panel-heading-transform: none;
-  --log-panel-heading-color: inherit;
-
-  --log-scroll-max-height: 20rem;
-  --log-scroll-max-height-mobile: 16.25rem;
-  --log-scroll-max-height-compact: 13.75rem;
-  --log-scroll-padding: 0 var(--size-1) 0 0;
-  --log-scroll-padding-mobile: 0;
-  --log-scroll-border: 0;
-  --log-scroll-radius: 0;
-  --log-scroll-background: transparent;
-  --log-scroll-shadow:
-    inset 12px 0 12px -12px rgba(0, 0, 0, 0.35),
-    inset -12px 0 12px -12px rgba(0, 0, 0, 0.35);
-  --log-scroll-shadow-mobile: none;
-
-  --log-flow-shell-gap: var(--size-3);
-  --log-flow-item-padding: var(--size-2) var(--size-3);
-  --log-flow-item-radius: var(--ui-radius-sm);
-  --log-flow-item-border:
-    var(--border-size-1) solid
-    color-mix(in srgb, var(--ui-text-muted) 24%, transparent);
-  --log-flow-item-background: color-mix(
-    in srgb,
-    var(--ui-surface-card) 88%,
-    transparent
-  );
-  --log-flow-item-transition: none;
-  --log-flow-item-hover-border-color: color-mix(
-    in srgb,
-    var(--portfolio-accent-a) 52%,
-    transparent
-  );
-  --log-flow-item-hover-background: color-mix(
-    in srgb,
-    var(--portfolio-accent-a) 14%,
-    transparent
-  );
-  --log-flow-item-hover-transform: none;
-  --log-flow-item-selected-border-color: color-mix(
-    in srgb,
-    var(--portfolio-accent-a) 42%,
-    transparent
-  );
-  --log-flow-item-selected-background: var(--log-flow-item-background);
-  --log-flow-item-selected-shadow: none;
-
-  --log-flow-details-padding: 0;
-  --log-flow-details-border: 0;
-  --log-flow-details-radius: 0;
-  --log-flow-details-background: transparent;
-  --log-flow-details-shadow: none;
-  --log-flow-detail-header-margin-block-end: 0;
-  --log-flow-detail-header-padding-block-end: 0;
-  --log-flow-detail-header-border: 0;
-  --log-flow-detail-title-size: 0.9rem;
-  --log-flow-event-padding-block: 0;
-  --log-flow-event-border: 0;
 }
 
 me[data-log-panels] {
@@ -82,35 +18,39 @@ me[data-log-panels] {
 me .ui-log-panel {
   display: flex;
   flex-direction: column;
-  gap: var(--log-panel-gap);
+  gap: var(--log-panel-gap, var(--size-2));
   margin: 0;
-  padding: var(--log-panel-padding);
+  padding: var(--log-panel-padding, var(--size-3) var(--size-4));
   border-radius: var(--ui-radius-sm);
-  border: var(--log-panel-border);
-  background: var(--log-panel-background);
+  border: var(--log-panel-border, var(--border-size-1) solid var(--ui-border-soft));
+  background: var(--log-panel-background, var(--ui-surface-soft));
 }
 
 me [data-log-heading] h3 {
   margin: 0;
-  font-size: var(--log-panel-heading-size);
-  letter-spacing: var(--log-panel-heading-tracking);
-  text-transform: var(--log-panel-heading-transform);
-  color: var(--log-panel-heading-color);
+  font-size: var(--log-panel-heading-size, 0.95rem);
+  letter-spacing: var(--log-panel-heading-tracking, normal);
+  text-transform: var(--log-panel-heading-transform, none);
+  color: var(--log-panel-heading-color, inherit);
 }
 
 me .ui-log-scroll {
-  max-height: var(--log-scroll-max-height);
+  max-height: var(--log-scroll-max-height, 20rem);
   overflow: auto;
   display: flex;
   flex-direction: column;
   gap: var(--size-4);
   min-height: 0;
-  padding: var(--log-scroll-padding);
-  border: var(--log-scroll-border);
-  border-radius: var(--log-scroll-radius);
-  background: var(--log-scroll-background);
+  padding: var(--log-scroll-padding, 0 var(--size-1) 0 0);
+  border: var(--log-scroll-border, 0);
+  border-radius: var(--log-scroll-radius, 0);
+  background: var(--log-scroll-background, transparent);
   scrollbar-gutter: stable both-edges;
-  box-shadow: var(--log-scroll-shadow);
+  box-shadow: var(
+    --log-scroll-shadow,
+    inset 12px 0 12px -12px rgba(0, 0, 0, 0.35),
+    inset -12px 0 12px -12px rgba(0, 0, 0, 0.35)
+  );
 }
 
 me .ui-log-empty {
@@ -209,7 +149,7 @@ me .ui-log-group-header {
 
 me .ui-log-flow-shell {
   display: grid;
-  gap: var(--log-flow-shell-gap);
+  gap: var(--log-flow-shell-gap, var(--size-3));
 }
 
 me .ui-log-flow-list {
@@ -224,32 +164,51 @@ me .ui-log-flow-item {
   flex-direction: column;
   gap: var(--size-1);
   margin: 0;
-  padding: var(--log-flow-item-padding);
-  border-radius: var(--log-flow-item-radius);
-  border: var(--log-flow-item-border);
-  background: var(--log-flow-item-background);
+  padding: var(--log-flow-item-padding, var(--size-2) var(--size-3));
+  border-radius: var(--log-flow-item-radius, var(--ui-radius-sm));
+  border: var(
+    --log-flow-item-border,
+    var(--border-size-1) solid
+      color-mix(in srgb, var(--ui-text-muted) 24%, transparent)
+  );
+  background: var(
+    --log-flow-item-background,
+    color-mix(in srgb, var(--ui-surface-card) 88%, transparent)
+  );
   color: inherit;
   cursor: pointer;
   font: inherit;
   text-decoration: none;
   text-align: left;
-  transition: var(--log-flow-item-transition);
+  transition: var(--log-flow-item-transition, none);
 }
 
 me .ui-log-flow-item:hover,
 me .ui-log-flow-item:focus-visible {
   outline: none;
-  border-color: var(--log-flow-item-hover-border-color);
-  background: var(--log-flow-item-hover-background);
-  transform: var(--log-flow-item-hover-transform);
+  border-color: var(
+    --log-flow-item-hover-border-color,
+    color-mix(in srgb, var(--portfolio-accent-a) 52%, transparent)
+  );
+  background: var(
+    --log-flow-item-hover-background,
+    color-mix(in srgb, var(--portfolio-accent-a) 14%, transparent)
+  );
+  transform: var(--log-flow-item-hover-transform, none);
   position: relative;
   z-index: 1;
 }
 
-me .ui-log-flow-item.is-selected {
-  border-color: var(--log-flow-item-selected-border-color);
-  background: var(--log-flow-item-selected-background);
-  box-shadow: var(--log-flow-item-selected-shadow);
+me .ui-log-flow-item.is-default {
+  border-color: var(
+    --log-flow-item-selected-border-color,
+    color-mix(in srgb, var(--portfolio-accent-a) 42%, transparent)
+  );
+  background: var(
+    --log-flow-item-selected-background,
+    color-mix(in srgb, var(--ui-surface-card) 88%, transparent)
+  );
+  box-shadow: var(--log-flow-item-selected-shadow, none);
 }
 
 me .ui-log-flow-item-id {
@@ -278,11 +237,11 @@ me .ui-log-flow-item-time {
 
 me .ui-log-flow-details {
   min-height: 0;
-  padding: var(--log-flow-details-padding);
-  border: var(--log-flow-details-border);
-  border-radius: var(--log-flow-details-radius);
-  background: var(--log-flow-details-background);
-  box-shadow: var(--log-flow-details-shadow);
+  padding: var(--log-flow-details-padding, 0);
+  border: var(--log-flow-details-border, 0);
+  border-radius: var(--log-flow-details-radius, 0);
+  background: var(--log-flow-details-background, transparent);
+  box-shadow: var(--log-flow-details-shadow, none);
 }
 
 me .ui-log-flow-detail {
@@ -291,8 +250,17 @@ me .ui-log-flow-detail {
   gap: var(--size-2);
 }
 
-me .ui-log-flow-detail.is-active {
+me .ui-log-flow-detail.is-default {
   display: flex;
+}
+
+me .ui-log-flow-detail:target {
+  display: flex;
+}
+
+me .ui-log-flow-details:has(.ui-log-flow-detail:target)
+  .ui-log-flow-detail.is-default:not(:target) {
+  display: none;
 }
 
 me .ui-log-flow-detail-header {
@@ -301,22 +269,22 @@ me .ui-log-flow-detail-header {
   align-items: center;
   justify-content: space-between;
   gap: var(--size-2);
-  margin-bottom: var(--log-flow-detail-header-margin-block-end);
-  padding-bottom: var(--log-flow-detail-header-padding-block-end);
-  border-bottom: var(--log-flow-detail-header-border);
+  margin-bottom: var(--log-flow-detail-header-margin-block-end, 0);
+  padding-bottom: var(--log-flow-detail-header-padding-block-end, 0);
+  border-bottom: var(--log-flow-detail-header-border, 0);
 }
 
 me .ui-log-flow-detail-title {
   margin: 0;
-  font-size: var(--log-flow-detail-title-size);
+  font-size: var(--log-flow-detail-title-size, 0.9rem);
 }
 
 me .ui-log-flow-event {
   display: flex;
   flex-direction: column;
   gap: var(--size-1);
-  padding-block: var(--log-flow-event-padding-block);
-  border-bottom: var(--log-flow-event-border);
+  padding-block: var(--log-flow-event-padding-block, 0);
+  border-bottom: var(--log-flow-event-border, 0);
 }
 
 me .ui-log-flow-event:last-child {
@@ -363,9 +331,9 @@ me .ui-log-flow-event-summary-inline {
   }
 
   me .ui-log-scroll {
-    max-height: var(--log-scroll-max-height-mobile);
-    padding: var(--log-scroll-padding-mobile);
-    box-shadow: var(--log-scroll-shadow-mobile);
+    max-height: var(--log-scroll-max-height-mobile, 16.25rem);
+    padding: var(--log-scroll-padding-mobile, 0);
+    box-shadow: var(--log-scroll-shadow-mobile, none);
   }
 
   me .ui-log-table {
@@ -385,7 +353,7 @@ me .ui-log-flow-event-summary-inline {
 
 @media (max-width: 30rem) {
   me .ui-log-scroll {
-    max-height: var(--log-scroll-max-height-compact);
+    max-height: var(--log-scroll-max-height-compact, 13.75rem);
   }
 
   me .ui-log-table {

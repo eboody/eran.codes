@@ -20,8 +20,10 @@ type BoxError = Box<dyn std::error::Error + Send + Sync + 'static>;
 pub enum Error {
     #[snafu(display("{source}"))]
     Repository { source: RepositoryError },
-    #[snafu(display("{source}"))]
-    Hash { source: HashError },
+    #[snafu(display("auth password hashing failed: {source}"))]
+    HashPassword { source: PasswordHashError },
+    #[snafu(display("stored password hash parsing failed: {source}"))]
+    ParseStoredPasswordHash { source: PasswordHashError },
     #[snafu(display("invalid authenticated user id: {source}"))]
     InvalidAuthenticatedUserId { source: uuid::Error },
 }
@@ -47,21 +49,19 @@ pub enum RepositoryError {
     DecodeEmail { source: user::EmailError },
 }
 
-#[derive(Clone, Copy, Debug, Display)]
-pub enum HashOperation {
-    #[strum(serialize = "hash password")]
-    HashPassword,
-    #[strum(serialize = "parse stored password hash")]
-    ParseStoredPasswordHash,
+#[derive(Debug)]
+pub struct PasswordHashError(BoxError);
+
+impl core::fmt::Display for PasswordHashError {
+    fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
+        write!(f, "{}", self.0)
+    }
 }
 
-#[derive(Debug, Snafu)]
-pub enum HashError {
-    #[snafu(display("auth hash operation failed while {operation}: {source}"))]
-    Operation {
-        operation: HashOperation,
-        source: BoxError,
-    },
+impl std::error::Error for PasswordHashError {
+    fn source(&self) -> Option<&(dyn std::error::Error + 'static)> {
+        Some(&*self.0)
+    }
 }
 
 fn box_error(source: impl std::error::Error + Send + Sync + 'static) -> BoxError {
@@ -93,15 +93,19 @@ impl Error {
         }
     }
 
-    pub fn hash(
-        operation: HashOperation,
+    pub fn hash_password(
         source: impl std::error::Error + Send + Sync + 'static,
     ) -> Self {
-        Self::Hash {
-            source: HashError::Operation {
-                operation,
-                source: box_error(source),
-            },
+        Self::HashPassword {
+            source: PasswordHashError(box_error(source)),
+        }
+    }
+
+    pub fn parse_stored_password_hash(
+        source: impl std::error::Error + Send + Sync + 'static,
+    ) -> Self {
+        Self::ParseStoredPasswordHash {
+            source: PasswordHashError(box_error(source)),
         }
     }
 }
@@ -270,6 +274,42 @@ mod tests {
                 .map(std::string::ToString::to_string)
                 .as_deref(),
             Some("db unavailable"),
+        );
+    }
+
+    #[test]
+    fn hash_password_error_preserves_source() {
+        let error = Error::hash_password(std::io::Error::other("hash failed"));
+
+        assert_eq!(
+            error
+                .source()
+                .map(std::string::ToString::to_string)
+                .as_deref(),
+            Some("hash failed"),
+        );
+        assert_eq!(
+            error
+                .to_string(),
+            "auth password hashing failed: hash failed",
+        );
+    }
+
+    #[test]
+    fn parse_stored_password_hash_error_preserves_source() {
+        let error =
+            Error::parse_stored_password_hash(std::io::Error::other("invalid hash"));
+
+        assert_eq!(
+            error
+                .source()
+                .map(std::string::ToString::to_string)
+                .as_deref(),
+            Some("invalid hash"),
+        );
+        assert_eq!(
+            error.to_string(),
+            "stored password hash parsing failed: invalid hash",
         );
     }
 

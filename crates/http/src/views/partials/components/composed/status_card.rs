@@ -9,10 +9,6 @@ crate::views::scoped::inline_css!(
 me {
   margin-top: 1rem;
   padding: 1rem 1.15rem;
-  border-radius: var(--ui-radius-md);
-  border: 1px solid var(--border-default);
-  background: var(--surface-fill-field);
-  box-shadow: inset 0 1px 0 var(--surface-edge-soft);
 }
 
 me > p {
@@ -59,7 +55,7 @@ impl Render for StatusCard {
             .collect();
 
         maud::html! {
-            div data-demo-result data-status-card {
+            div class="u-inset-card" data-demo-result data-status-card {
                 (css())
                 p { strong { (&self.title) } }
                 (KeyValueList::builder().items(items).build())

@@ -110,8 +110,7 @@ mod tests {
         fn hash(&self, _password: &str) -> crate::auth::Result<crate::auth::PasswordHash> {
             match self.hash_outcome {
                 HashOutcome::Ok => Ok(crate::auth::PasswordHash::new("hash")),
-                HashOutcome::Fail => Err(crate::auth::Error::hash(
-                    crate::auth::HashOperation::HashPassword,
+                HashOutcome::Fail => Err(crate::auth::Error::hash_password(
                     std::io::Error::other("hash failed"),
                 )),
             }
@@ -200,8 +199,8 @@ mod tests {
 
         assert!(matches!(
             result,
-            Err(Error::Hashing {
-                source: crate::auth::Error::Hash { .. },
+            Err(Error::HashPassword {
+                source: crate::auth::Error::HashPassword { .. },
             })
         ));
     }

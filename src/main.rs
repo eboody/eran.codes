@@ -5,7 +5,6 @@ use std::sync::Arc;
 
 use app::user;
 use error::Result;
-use infra::user::UserRepository as UserRepo;
 use snafu::ResultExt;
 use tower_cookies::Key;
 use tower_sessions::session_store::ExpiredDeletion;
@@ -33,11 +32,11 @@ async fn main() -> Result<()> {
         .await
         .context(error::InitInfraSnafu)?;
 
-    let user_repo = Arc::new(UserRepo::new(infra.db.clone()));
+    let user_repo = Arc::new(infra::user::Repository::new(infra.db.clone()));
     let auth_hasher = Arc::new(infra::auth::Argon2Hasher::new());
     let user_service = user::Service::new(user_repo, auth_hasher.clone());
 
-    let auth_repo = Arc::new(infra::auth::AuthRepository::new(infra.db.clone()));
+    let auth_repo = Arc::new(infra::auth::Repository::new(infra.db.clone()));
     let auth_provider = app::auth::ProviderImpl::new(auth_repo, auth_hasher);
     let auth_service = app::auth::Service::new(Arc::new(auth_provider));
 

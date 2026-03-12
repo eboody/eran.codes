@@ -1,5 +1,6 @@
 mod auth_shell;
 pub mod button;
+pub mod chat;
 mod demo_result_placeholder;
 mod nav_bar;
 pub mod portfolio;
@@ -16,5 +17,5 @@ pub use demo_result_placeholder::DemoResultPlaceholder;
 pub use nav_bar::{
     NavAuth, NavBar, NavBrand, NavLink, NavLinkList, NavLinkListRole, NavSignedIn,
 };
-pub use section_header::{SectionHeader, SectionHeaderMetaText};
+pub use section_header::{SectionHeader, SectionHeaderLevel, SectionHeaderMetaText};
 pub use status_card::{StatusCard, StatusCardItem};

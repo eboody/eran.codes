@@ -1,18 +1,19 @@
 use bon::Builder;
 use maud::Render;
-use serde_json::json;
 
 use crate::paths::Route;
 use crate::types::Text;
-use crate::views::partials::{SectionHeader, SectionHeaderMetaText, button, chat};
+use crate::views::partials::{
+    SectionHeader, SectionHeaderMetaText, button, components,
+};
 
 #[derive(Clone, Debug, Builder)]
 pub struct DemoSection {
     pub room_id: Text,
     pub room_name: Text,
-    pub messages: Vec<chat::Message>,
+    pub messages: Vec<components::chat::Message>,
     #[builder(default)]
-    pub interactivity: chat::Mode,
+    pub mode: components::chat::Mode,
 }
 
 impl DemoSection {
@@ -21,36 +22,26 @@ impl DemoSection {
 
 impl Render for DemoSection {
     fn render(&self) -> maud::Markup {
-        let subtitle = match self.interactivity {
-            chat::Mode::Interactive => Text::from(
+        let subtitle = match self.mode {
+            components::chat::Mode::Interactive => Text::from(
                 "Send messages as yourself or the demo user and watch SSE fanout.",
             ),
-            chat::Mode::DemoOnly => {
+            components::chat::Mode::DemoOnly => {
                 Text::from("Try live posts as the demo user. Sign in to send as yourself.")
             }
         };
         maud::html! {
-            section
-                id=(Self::ANCHOR_ID)
-                data-lab-chat-surface
-                data-chat-surface
-                data-signals=(json!({
-                    "roomId": self.room_id.to_string(),
-                    "body": "",
-                    "botBody": "",
-                    "sseConnected": false
-                }).to_string()) {
-                (chat::surface_styles())
+            section id=(Self::ANCHOR_ID) {
                 (SectionHeader::builder()
                     .title(Text::from("Live chat room"))
                     .subtitle(subtitle)
-                    .action(match self.interactivity {
-                        chat::Mode::Interactive => button::Button::builder()
+                    .action(match self.mode {
+                        components::chat::Mode::Interactive => button::Button::builder()
                             .label(Text::from("Moderation queue"))
                             .variant(button::Variant::Secondary)
                             .role(button::Role::link(Route::ChatModeration.as_str()))
                             .build(),
-                        chat::Mode::DemoOnly => button::Button::builder()
+                        components::chat::Mode::DemoOnly => button::Button::builder()
                             .label(Text::from("Sign in to interact"))
                             .variant(button::Variant::Secondary)
                             .role(button::Role::link(Route::Login.as_str()))
@@ -60,14 +51,12 @@ impl Render for DemoSection {
                         .text(Text::from(format!("Room: {}", self.room_name)))
                         .build())
                     .build())
-                (chat::Connection::builder()
-                    .connected_signal(Text::from("$sseConnected"))
-                    .build())
-                (chat::panel::Set::builder()
+                (components::chat::Surface::builder()
+                    .room_id(self.room_id.clone())
                     .messages(self.messages.clone())
-                    .interactivity(self.interactivity)
+                    .mode(self.mode)
+                    .variant(components::chat::Variant::Lab)
                     .build())
-                script src="/static/chat-demo.js" {}
             }
         }
     }

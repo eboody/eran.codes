@@ -1,4 +1,7 @@
-use app::auth::{self, AuthRecord, PasswordHash, PasswordHasher, Repository};
+use app::auth::{
+    self, AuthRecord, PasswordHash, PasswordHasher as AppPasswordHasher,
+    Repository as AppRepository,
+};
 use argon2::{
     Argon2, PasswordHash as ArgonPasswordHash, PasswordHasher as _, PasswordVerifier,
 };
@@ -8,24 +11,24 @@ use rand_core::OsRng;
 use snafu::prelude::*;
 use sqlx::{PgPool, Row, postgres::PgRow, types::time};
 
-pub struct AuthRepository {
+pub struct Repository {
     pg: PgPool,
 }
 
 #[derive(Debug)]
-struct PasswordHashProviderError(password_hash::Error);
+struct PasswordHashError(password_hash::Error);
 
-impl core::fmt::Display for PasswordHashProviderError {
+impl core::fmt::Display for PasswordHashError {
     fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
         write!(f, "{}", self.0)
     }
 }
 
-impl std::error::Error for PasswordHashProviderError {}
+impl std::error::Error for PasswordHashError {}
 
-type RepositoryResult<T> = std::result::Result<T, AuthRepositoryError>;
+type RepositoryResult<T> = std::result::Result<T, RepositoryError>;
 #[derive(Debug, Snafu)]
-enum AuthRepositoryError {
+enum RepositoryError {
     #[snafu(display("could not query auth record by email"))]
     FindByEmail { source: sqlx::Error },
     #[snafu(display("could not query auth record by id"))]
@@ -36,46 +39,26 @@ enum AuthRepositoryError {
     DecodeEmail { source: user::EmailError },
 }
 
-#[derive(Debug, Snafu)]
-enum AuthHashError {
-    #[snafu(display("could not hash password"))]
-    HashPassword { source: PasswordHashProviderError },
-    #[snafu(display("could not parse stored password hash"))]
-    ParseStoredPasswordHash { source: PasswordHashProviderError },
-}
-
-fn map_repository_error(error: AuthRepositoryError) -> app::auth::Error {
+fn map_repository_error(error: RepositoryError) -> app::auth::Error {
     match error {
-        AuthRepositoryError::FindByEmail { source } => app::auth::Error::query_repository(
+        RepositoryError::FindByEmail { source } => app::auth::Error::query_repository(
             app::auth::RepositoryOperation::FindByEmail,
             source,
         ),
-        AuthRepositoryError::FindById { source } => app::auth::Error::query_repository(
+        RepositoryError::FindById { source } => app::auth::Error::query_repository(
             app::auth::RepositoryOperation::FindById,
             source,
         ),
-        AuthRepositoryError::DecodeUsername { source } => {
+        RepositoryError::DecodeUsername { source } => {
             app::auth::Error::decode_username(source)
         }
-        AuthRepositoryError::DecodeEmail { source } => {
+        RepositoryError::DecodeEmail { source } => {
             app::auth::Error::decode_email(source)
         }
     }
 }
 
-fn map_hash_error(error: AuthHashError) -> app::auth::Error {
-    match error {
-        AuthHashError::HashPassword { source } => {
-            app::auth::Error::hash(app::auth::HashOperation::HashPassword, source)
-        }
-        AuthHashError::ParseStoredPasswordHash { source } => app::auth::Error::hash(
-            app::auth::HashOperation::ParseStoredPasswordHash,
-            source,
-        ),
-    }
-}
-
-impl AuthRepository {
+impl Repository {
     pub fn new(pg: PgPool) -> Self {
         Self { pg }
     }
@@ -152,7 +135,7 @@ impl AuthRepository {
 }
 
 #[async_trait]
-impl Repository for AuthRepository {
+impl AppRepository for Repository {
     async fn find_by_email(&self, email: &user::Email) -> auth::Result<Option<AuthRecord>> {
         let start = std::time::Instant::now();
         tracing::info!(
@@ -201,15 +184,14 @@ impl Argon2Hasher {
     }
 }
 
-impl PasswordHasher for Argon2Hasher {
+impl AppPasswordHasher for Argon2Hasher {
     fn hash(&self, password: &str) -> auth::Result<PasswordHash> {
         let salt = password_hash::SaltString::generate(&mut OsRng);
         let hash = self
             .inner
             .hash_password(password.as_bytes(), &salt)
-            .map_err(PasswordHashProviderError)
-            .context(HashPasswordSnafu)
-            .map_err(map_hash_error)?
+            .map_err(PasswordHashError)
+            .map_err(auth::Error::hash_password)?
             .to_string();
         Ok(PasswordHash::new(hash))
     }
@@ -217,9 +199,8 @@ impl PasswordHasher for Argon2Hasher {
     fn verify(&self, password: &str, password_hash: &PasswordHash) -> auth::Result<bool> {
         let hash_text = password_hash.to_string();
         let parsed = ArgonPasswordHash::new(&hash_text)
-            .map_err(PasswordHashProviderError)
-            .context(ParseStoredPasswordHashSnafu)
-            .map_err(map_hash_error)?;
+            .map_err(PasswordHashError)
+            .map_err(auth::Error::parse_stored_password_hash)?;
         Ok(self
             .inner
             .verify_password(password.as_bytes(), &parsed)

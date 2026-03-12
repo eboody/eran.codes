@@ -10,12 +10,13 @@ pub(crate) fn head_styles() -> maud::Markup {
 }
 
 pub use composed::button;
+pub use composed::chat;
 pub(crate) use composed::portfolio;
 pub(crate) use composed::tab_set;
 pub use composed::{
     AuthShell, AuthShellVariant, DemoResultPlaceholder, NavAuth, NavBar, NavBrand, NavLink,
-    NavLinkList, NavLinkListRole, NavSignedIn, SectionHeader, SectionHeaderMetaText,
-    StatusCard, StatusCardItem,
+    NavLinkList, NavLinkListRole, NavSignedIn, SectionHeader, SectionHeaderLevel,
+    SectionHeaderMetaText, StatusCard, StatusCardItem,
 };
 pub use logs::primitives::EmptyState;
 pub use primitives::{BadgeKind, KeyValueList, Pill};

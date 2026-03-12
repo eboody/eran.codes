@@ -5,6 +5,7 @@ mod error;
 pub use error::{Error, Result};
 mod repo;
 pub use repo::user;
+use snafu::ResultExt;
 use sqlx::PgPool;
 use sqlx::postgres::PgPoolOptions;
 
@@ -17,20 +18,28 @@ pub struct Infra {
 impl Infra {
     #[tracing::instrument(skip(cfg))]
     pub async fn init(cfg: &config::InfraConfig) -> Result<Self> {
+        let database_url = cfg.db.url.to_string();
         let pool = PgPoolOptions::new()
             .max_connections(cfg.db.max_connections)
             .connect(cfg.db.url.as_ref())
             .await
-            .map_err(error::Error::Pgsql)?;
+            .context(error::ConnectDbSnafu {
+                database_url: database_url.clone(),
+            })?;
 
-        pool.acquire().await.map_err(error::Error::Pgsql)?;
+        pool.acquire()
+            .await
+            .context(error::CheckDbConnectionSnafu { database_url })?;
 
         tracing::info!("running database migrations");
-        sqlx::migrate!().run(&pool).await?;
+        sqlx::migrate!()
+            .run(&pool)
+            .await
+            .context(error::RunMigrationsSnafu)?;
 
         let http_client = reqwest::Client::builder()
             .build()
-            .map_err(error::Error::HttpClient)?;
+            .context(error::BuildHttpClientSnafu)?;
 
         Ok(Self {
             db: pool,

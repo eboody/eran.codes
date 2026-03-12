@@ -311,6 +311,18 @@ input[type="password"] {
   overflow: visible;
 }
 
+.u-inset-card {
+  --inset-card-border: var(--border-default);
+  --inset-card-bg: var(--surface-fill-field);
+  --inset-card-shadow: inset 0 1px 0 var(--surface-edge-soft);
+
+  border: 1px solid var(--inset-card-border);
+  border-radius: var(--ui-radius-md);
+  background: var(--inset-card-bg);
+  box-shadow: var(--inset-card-shadow);
+  overflow: visible;
+}
+
 @media (max-width: 48rem) {
   :root {
     --nav-scroll-offset: 9rem;

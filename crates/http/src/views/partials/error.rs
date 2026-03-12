@@ -3,11 +3,9 @@ use maud::Render;
 crate::views::scoped::inline_css!(
     r#"
 me {
+  --inset-card-border: var(--ui-text-danger);
+  --inset-card-bg: var(--ui-surface-danger);
   padding: 1rem 1.15rem;
-  border-radius: var(--ui-radius-md);
-  border: 1px solid var(--ui-text-danger);
-  background: var(--ui-surface-danger);
-  box-shadow: inset 0 1px 0 var(--surface-edge-soft);
 }
 
 me strong {
@@ -25,6 +23,7 @@ impl Render for Error {
             div id="error-target" data-show="$transportErrorMessage" style="display:none;" {
                 (css())
                 article
+                    class="u-inset-card"
                     role="alert"
                     data-transport-error=""
                     data-attr:data-transport-error-kind="$transportErrorKind"

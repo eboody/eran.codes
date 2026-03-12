@@ -103,23 +103,6 @@ me [data-operations-surface] {
     1px solid color-mix(in srgb, var(--border-subtle) 72%, transparent);
 }
 
-me [data-chat-surface][data-lab-chat-surface] {
-  margin-top: 0;
-  border-color: var(--border-default);
-  background: var(--surface-fill-panel);
-  box-shadow: var(--shadow-panel);
-}
-
-me [data-lab-chat-surface]:not([data-chat-surface]) {
-  background:
-    linear-gradient(
-      180deg,
-      color-mix(in srgb, var(--accent-signal-soft) 26%, transparent),
-      transparent 42%
-    ),
-    var(--surface-panel);
-}
-
 @media (prefers-color-scheme: dark) {
   me [data-operations-surface] {
     --log-scroll-shadow: inset 0 1px 0 var(--surface-edge-soft);
@@ -144,22 +127,6 @@ me [data-lab-chat-surface]:not([data-chat-surface]) {
         transparent 30%
       ),
       color-mix(in srgb, var(--accent-signal) 14%, var(--surface-field));
-  }
-
-  me [data-chat-surface][data-lab-chat-surface],
-  me [data-lab-chat-surface]:not([data-chat-surface]) {
-    background:
-      linear-gradient(
-        180deg,
-        var(--surface-wash-top-soft),
-        transparent 34%
-      ),
-      color-mix(in srgb, var(--surface-panel) 92%, black 8%);
-  }
-
-  me [data-chat-surface][data-lab-chat-surface],
-  me [data-lab-chat-surface]:not([data-chat-surface]) {
-    box-shadow: inset 0 1px 0 var(--surface-edge-soft);
   }
 }
 "#
@@ -188,7 +155,7 @@ impl maud::Render for Lab {
                     section
                         id=(chat::DemoSection::ANCHOR_ID)
                         class="u-surface-card"
-                        data-lab-chat-surface
+                        data-chat-surface-variant="lab"
                     {
                         ({
                             SectionHeader::builder()

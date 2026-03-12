@@ -5,6 +5,7 @@
 ## Permanent Utilities
 
 - `.u-container`: shared page-width wrapper
+- `.u-inset-card`: reusable inset card shell for field/status/alert surfaces
 - `.u-muted`: muted text utility
 - `.u-surface-card`: reusable card/surface shell
 

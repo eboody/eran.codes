@@ -6,7 +6,7 @@ use statum::{machine, state, transition};
 use super::{ChatSignals, DemoChatSignals};
 use crate::trace_log::{LogMessageKnown, LogTargetKnown};
 use crate::types::{LogFieldKey, Text, UserIdText};
-use crate::views::partials::chat;
+use crate::views::partials::{chat, components};
 use crate::{paths::Route, request};
 use domain::chat as domain_chat;
 
@@ -151,7 +151,7 @@ impl ChatPostFlow<Incoming> {
 
     fn room_id_from_text(value: &str) -> Result<domain_chat::RoomId, crate::error::Error> {
         let id = value.parse::<uuid::Uuid>().map_err(|error| {
-            crate::error::Error::Chat(app::chat::Error::invalid_room_id(error))
+            crate::error::Error::from(app::chat::Error::invalid_room_id(error))
         })?;
 
         Ok(domain_chat::RoomId::from_uuid(id))
@@ -297,7 +297,7 @@ impl ChatPostFlow<MessagePosted> {
 impl ChatPostFlow<IncomingRecorded> {
     pub(super) fn render_message_html(self) -> ChatPostFlow<HtmlRendered> {
         let message = &self.state_data.message;
-        let markup = chat::Message::builder()
+        let markup = components::chat::Message::builder()
             .message_id(Text::from(message.id.as_uuid().to_string()))
             .author(Text::from(self.author_name.clone()))
             .timestamp(Text::from(crate::chat_demo::format_message_time(
@@ -431,11 +431,13 @@ impl ChatPostFlow<Broadcasted> {
     }
 }
 
-fn to_chat_message_status(value: domain_chat::MessageStatus) -> chat::message::Status {
+fn to_chat_message_status(
+    value: domain_chat::MessageStatus,
+) -> components::chat::Status {
     match value {
-        domain_chat::MessageStatus::Visible => chat::message::Status::Visible,
-        domain_chat::MessageStatus::Pending => chat::message::Status::Pending,
-        domain_chat::MessageStatus::Removed => chat::message::Status::Removed,
+        domain_chat::MessageStatus::Visible => components::chat::Status::Visible,
+        domain_chat::MessageStatus::Pending => components::chat::Status::Pending,
+        domain_chat::MessageStatus::Removed => components::chat::Status::Removed,
     }
 }
 

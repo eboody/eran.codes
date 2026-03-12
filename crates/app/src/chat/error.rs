@@ -10,7 +10,7 @@ pub enum Error {
     #[snafu(display("{source}"))]
     Domain { source: domain::chat::Error },
     #[snafu(display("{source}"))]
-    Repo { source: RepositoryError },
+    Repository { source: RepositoryError },
     #[snafu(display("invalid room id: {source}"))]
     InvalidRoomId { source: uuid::Error },
     #[snafu(display("invalid message id: {source}"))]
@@ -18,7 +18,9 @@ pub enum Error {
     #[snafu(display("invalid moderation decision: {decision}"))]
     InvalidModerationDecision { decision: String },
     #[snafu(display("invalid moderation reason: {source}"))]
-    InvalidModerationReason { source: BoxError },
+    InvalidModerationReason {
+        source: super::ModerationReasonError,
+    },
     #[snafu(display("invalid stored message status: {status}"))]
     InvalidStoredMessageStatus { status: String },
     #[snafu(display("invalid stored moderation status: {status}"))]
@@ -107,11 +109,11 @@ fn box_error(source: impl std::error::Error + Send + Sync + 'static) -> BoxError
 }
 
 impl Error {
-    pub fn query(
+    pub fn query_repository(
         operation: RepositoryOperation,
         source: impl std::error::Error + Send + Sync + 'static,
     ) -> Self {
-        Self::Repo {
+        Self::Repository {
             source: RepositoryError::Query {
                 operation,
                 source: box_error(source),
@@ -120,43 +122,43 @@ impl Error {
     }
 
     pub fn decode_room_name(source: domain::chat::RoomNameError) -> Self {
-        Self::Repo {
+        Self::Repository {
             source: RepositoryError::DecodeRoomName { source },
         }
     }
 
     pub fn decode_client_id(source: domain::chat::ClientIdError) -> Self {
-        Self::Repo {
+        Self::Repository {
             source: RepositoryError::DecodeClientId { source },
         }
     }
 
     pub fn decode_message_body(source: domain::chat::MessageBodyError) -> Self {
-        Self::Repo {
+        Self::Repository {
             source: RepositoryError::DecodeMessageBody { source },
         }
     }
 
     pub fn decode_moderation_room_name(source: domain::chat::RoomNameError) -> Self {
-        Self::Repo {
+        Self::Repository {
             source: RepositoryError::DecodeModerationRoomName { source },
         }
     }
 
     pub fn decode_moderation_message_body(source: domain::chat::MessageBodyError) -> Self {
-        Self::Repo {
+        Self::Repository {
             source: RepositoryError::DecodeModerationMessageBody { source },
         }
     }
 
     pub fn decode_moderation_reason(source: super::ModerationReasonError) -> Self {
-        Self::Repo {
+        Self::Repository {
             source: RepositoryError::DecodeModerationReason { source },
         }
     }
 
     pub fn decode_moderation_timestamp(source: super::TimestampTextError) -> Self {
-        Self::Repo {
+        Self::Repository {
             source: RepositoryError::DecodeModerationTimestamp { source },
         }
     }
@@ -175,12 +177,8 @@ impl Error {
         }
     }
 
-    pub fn invalid_moderation_reason(
-        source: impl std::error::Error + Send + Sync + 'static,
-    ) -> Self {
-        Self::InvalidModerationReason {
-            source: box_error(source),
-        }
+    pub fn invalid_moderation_reason(source: super::ModerationReasonError) -> Self {
+        Self::InvalidModerationReason { source }
     }
 
     pub fn invalid_stored_message_status(status: impl Into<String>) -> Self {
@@ -203,7 +201,7 @@ mod tests {
 
     #[test]
     fn repo_error_preserves_source() {
-        let error = Error::query(
+        let error = Error::query_repository(
             RepositoryOperation::FindRoomById,
             std::io::Error::other("db down"),
         );
@@ -231,6 +229,15 @@ mod tests {
             .parse::<uuid::Uuid>()
             .expect_err("invalid uuid");
         let error = Error::invalid_room_id(source);
+
+        assert!(error.source().is_some());
+    }
+
+    #[test]
+    fn invalid_moderation_reason_preserves_source() {
+        let source = super::super::ModerationReason::try_new("x".repeat(201))
+            .expect_err("invalid moderation reason");
+        let error = Error::invalid_moderation_reason(source);
 
         assert!(error.source().is_some());
     }

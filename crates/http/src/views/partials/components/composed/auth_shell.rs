@@ -33,12 +33,10 @@ me [data-auth-summary] {
 }
 
 me [data-auth-message] {
+  --inset-card-border: var(--ui-text-danger);
+  --inset-card-bg: var(--ui-surface-danger);
   margin-top: 1rem;
   padding: 1rem 1.15rem;
-  border-radius: var(--ui-radius-md);
-  border: 1px solid var(--ui-text-danger);
-  background: var(--ui-surface-danger);
-  box-shadow: inset 0 1px 0 var(--surface-edge-soft);
 }
 
 me [data-auth-form] {
@@ -138,7 +136,7 @@ impl Render for AuthShell {
                     }
 
                     @if let Some(message) = &self.message {
-                        p data-auth-message role="alert" { (message) }
+                        p class="u-inset-card" data-auth-message role="alert" { (message) }
                     }
 
                     (&self.body)

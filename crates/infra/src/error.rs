@@ -1,62 +1,29 @@
-// infra/src/error.rs
-use std::fmt;
+use snafu::prelude::*;
 
-use derive_more::From;
-use nutype::nutype;
+pub type Result<T> = core::result::Result<T, Error>;
 
-#[derive(Debug, From)]
+#[derive(Debug, Snafu)]
+#[snafu(visibility(pub(crate)))]
 pub enum Error {
-    MissingEnv {
-        key: &'static str,
-    },
+    #[snafu(display("missing required environment variable `{name}`"))]
+    MissingEnv { name: &'static str },
+    #[snafu(display("invalid value for `{name}`: {reason}"))]
     InvalidEnv {
-        key: &'static str,
-        value: EnvValue,
+        name: &'static str,
         reason: &'static str,
     },
-    Io(std::io::Error),
-    Pgsql(sqlx::Error),
-    HttpClient(reqwest::Error),
-    #[from]
-    Migrate(sqlx::migrate::MigrateError),
-}
-
-#[nutype(sanitize(trim), derive(Clone, Debug, PartialEq, Eq, Display))]
-pub struct EnvValue(String);
-
-pub type Result<T> = std::result::Result<T, Error>;
-
-impl fmt::Display for Error {
-    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        match self {
-            Error::MissingEnv { key } => {
-                write!(f, "missing required environment variable `{key}`")
-            }
-            Error::InvalidEnv { key, reason, .. } => {
-                write!(f, "invalid value for `{key}`: {reason}")
-            }
-            Error::Io(e) => write!(f, "io error: {e}"),
-            Error::Pgsql(e) => {
-                write!(f, "postgresql error: {e}")
-            }
-            Error::HttpClient(e) => {
-                write!(f, "http client error: {e}")
-            }
-            Error::Migrate(e) => {
-                write!(f, "database migration error: {e}")
-            }
-        }
-    }
-}
-
-impl std::error::Error for Error {
-    fn source(&self) -> Option<&(dyn std::error::Error + 'static)> {
-        match self {
-            Error::Io(e) => Some(e),
-            Error::Pgsql(e) => Some(e),
-            Error::HttpClient(e) => Some(e),
-            Error::Migrate(e) => Some(e),
-            _ => None,
-        }
-    }
+    #[snafu(display("failed to connect to postgres at {database_url}: {source}"))]
+    ConnectDb {
+        database_url: String,
+        source: sqlx::Error,
+    },
+    #[snafu(display("failed to verify postgres connectivity at {database_url}: {source}"))]
+    CheckDbConnection {
+        database_url: String,
+        source: sqlx::Error,
+    },
+    #[snafu(display("failed to run database migrations: {source}"))]
+    RunMigrations { source: sqlx::migrate::MigrateError },
+    #[snafu(display("failed to build shared HTTP client: {source}"))]
+    BuildHttpClient { source: reqwest::Error },
 }

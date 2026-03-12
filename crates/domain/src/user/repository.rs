@@ -1,6 +1,6 @@
 use crate::{error::Result, user};
 
-pub trait UserRepository: Send + Sync {
+pub trait Repository: Send + Sync {
     fn get_by_id(
         &self,
         id: &user::UserId,

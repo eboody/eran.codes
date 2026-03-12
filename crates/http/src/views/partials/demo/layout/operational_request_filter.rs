@@ -11,10 +11,6 @@ me {
   gap: var(--space-3);
   margin-top: var(--space-2);
   padding: var(--space-card);
-  border-radius: var(--ui-radius-md);
-  border: 1px solid var(--border-default);
-  background: var(--surface-fill-field);
-  box-shadow: inset 0 1px 0 var(--surface-edge-soft);
   overflow: visible;
 }
 
@@ -69,6 +65,7 @@ impl Render for OperationalRequestFilter {
     fn render(&self) -> maud::Markup {
         maud::html! {
             section
+                class="u-inset-card"
                 data-op-filter
                 data-op-filter-target=(self.target_id)
                 data-signals="{operations_filter_query: ''}"

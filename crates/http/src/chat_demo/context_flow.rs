@@ -2,7 +2,7 @@ use std::collections::HashMap;
 
 use statum::{machine, state, transition};
 
-use crate::views::partials::chat;
+use crate::views::partials::components;
 use domain::chat as domain_chat;
 
 #[derive(Clone, Debug)]
@@ -25,7 +25,7 @@ pub struct MessagesLoadedData {
 #[derive(Clone, Debug)]
 pub struct ContextBuiltData {
     room: domain::chat::Room,
-    message_views: Vec<chat::Message>,
+    message_views: Vec<components::chat::Message>,
 }
 
 #[state]
@@ -174,7 +174,7 @@ impl ChatDemoContextFlow<MessagesLoaded> {
 impl ChatDemoContextFlow<MessagesLoaded> {
     fn mark_context_built(
         self,
-        message_views: Vec<chat::Message>,
+        message_views: Vec<components::chat::Message>,
     ) -> ChatDemoContextFlow<ContextBuilt> {
         let room = self.state_data.room.clone();
         self.transition_with(ContextBuiltData {
@@ -202,7 +202,7 @@ impl<S: ChatDemoContextStateTrait> ChatDemoContextFlow<S> {
 async fn map_message_views(
     state: &crate::State,
     messages: &[domain::chat::Message],
-) -> Vec<chat::Message> {
+) -> Vec<components::chat::Message> {
     let mut names = HashMap::new();
     for message in messages {
         let user_id = domain::user::UserId::from_uuid(*message.user_id.as_uuid());
@@ -232,7 +232,7 @@ async fn map_message_views(
                 .get(&user_id)
                 .cloned()
                 .unwrap_or_else(|| fallback_author_label(&user_id));
-            chat::Message::builder()
+            components::chat::Message::builder()
                 .message_id(crate::types::Text::from(message.id.as_uuid().to_string()))
                 .author(crate::types::Text::from(author))
                 .timestamp(crate::types::Text::from(super::format_message_time(
@@ -249,11 +249,13 @@ fn fallback_author_label(user_id: &domain::user::UserId) -> String {
     format!("user-{}", &user_id.as_uuid().to_string()[..8])
 }
 
-fn to_chat_message_status(value: domain::chat::MessageStatus) -> chat::message::Status {
+fn to_chat_message_status(
+    value: domain::chat::MessageStatus,
+) -> components::chat::Status {
     match value {
-        domain::chat::MessageStatus::Visible => chat::message::Status::Visible,
-        domain::chat::MessageStatus::Pending => chat::message::Status::Pending,
-        domain::chat::MessageStatus::Removed => chat::message::Status::Removed,
+        domain::chat::MessageStatus::Visible => components::chat::Status::Visible,
+        domain::chat::MessageStatus::Pending => components::chat::Status::Pending,
+        domain::chat::MessageStatus::Removed => components::chat::Status::Removed,
     }
 }
 
