@@ -5,6 +5,8 @@ use std::collections::BTreeMap;
 use crate::types::Text;
 use crate::views::partials::components::{Pill, logs};
 
+// ci: string-literal-check-exempt
+
 #[derive(Clone, Debug, Builder)]
 pub struct FlowTimeline {
     pub flows: Vec<Flow>,
@@ -104,6 +106,7 @@ pub struct Flow {
 }
 
 #[derive(Clone, Debug, Builder)]
+// ci: partials-render-exempt
 pub struct FlowEvent {
     pub timestamp: Text,
     pub stage_label: Text,

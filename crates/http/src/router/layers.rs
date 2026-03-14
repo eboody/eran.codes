@@ -11,7 +11,7 @@ use tower_cookies::CookieManagerLayer;
 use tower_cookies::cookie::SameSite;
 use tower_http::classify::ServerErrorsFailureClass;
 use tower_http::request_id::{MakeRequestUuid, PropagateRequestIdLayer, SetRequestIdLayer};
-use tower_http::trace::TraceLayer;
+use tower_http::trace;
 use tower_sessions::{Expiry, SessionManagerLayer, SessionStore};
 use tracing::field;
 
@@ -88,7 +88,7 @@ pub struct RequestLayerPipeline<RequestLayerFlow> {
 impl RequestLayerPipeline<CoreReady> {
     pub fn add_trace(mut self) -> RequestLayerPipeline<TraceAdded> {
         self.router = self.router.layer(
-            TraceLayer::new_for_http()
+            trace::TraceLayer::new_for_http()
                 .make_span_with(|request: &axum::http::Request<axum::body::Body>| {
                     let span = tracing::info_span!(
                         "http.request",

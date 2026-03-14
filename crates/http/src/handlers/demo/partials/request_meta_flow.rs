@@ -1,4 +1,4 @@
-use axum::http::StatusCode;
+use axum::http;
 use maud::Render;
 use statum::{machine, state, transition};
 
@@ -66,7 +66,7 @@ impl RequestMetaPartialFlow<Incoming> {
 }
 
 impl RequestMetaPartialFlow<SnapshotPrepared> {
-    pub(super) fn into_response(self) -> (StatusCode, axum::response::Html<String>) {
+    pub(super) fn into_response(self) -> (http::StatusCode, axum::response::Html<String>) {
         let partial = crate::views::partials::RequestMeta::builder()
             .maybe_request_id(self.request_id)
             .maybe_session_id(self.session_id)
@@ -76,7 +76,7 @@ impl RequestMetaPartialFlow<SnapshotPrepared> {
             .trace(self.trace)
             .build();
         (
-            StatusCode::OK,
+            http::StatusCode::OK,
             axum::response::Html(partial.render().into_string()),
         )
     }
@@ -100,7 +100,7 @@ mod tests {
             .build();
 
         let response = prepared.into_response();
-        assert_eq!(response.0, StatusCode::OK);
+        assert_eq!(response.0, http::StatusCode::OK);
         assert!(response.1.0.contains("request-meta-target"));
     }
 }

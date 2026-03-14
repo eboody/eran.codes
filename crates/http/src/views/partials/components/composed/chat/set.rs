@@ -29,7 +29,7 @@ impl Render for Set {
 mod tests {
     use super::*;
     use crate::types::Text;
-    use crate::views::partials::button;
+    use crate::views::partials;
 
     fn panel() -> chat::Panel {
         chat::Panel::composer(
@@ -47,10 +47,10 @@ mod tests {
                 .input_signal(Text::from("botBody"))
                 .placeholder(Text::from("Send as demo user..."))
                 .submit(
-                    button::Button::builder()
+                    partials::button::Button::builder()
                         .label(Text::from("Send as demo"))
-                        .variant(button::Variant::Secondary)
-                        .role(button::Role::submit())
+                        .variant(partials::button::Variant::Secondary)
+                        .role(partials::button::Role::submit())
                         .build(),
                 )
                 .build(),

@@ -3,8 +3,7 @@ pub mod chat;
 pub mod config;
 mod error;
 pub use error::{Error, Result};
-mod repo;
-pub use repo::user;
+pub mod repo;
 use snafu::ResultExt;
 use sqlx::PgPool;
 use sqlx::postgres::PgPoolOptions;
@@ -17,7 +16,7 @@ pub struct Infra {
 
 impl Infra {
     #[tracing::instrument(skip(cfg))]
-    pub async fn init(cfg: &config::InfraConfig) -> Result<Self> {
+    pub async fn init(cfg: &config::Infra) -> Result<Self> {
         let database_url = cfg.db.url.to_string();
         let pool = PgPoolOptions::new()
             .max_connections(cfg.db.max_connections)

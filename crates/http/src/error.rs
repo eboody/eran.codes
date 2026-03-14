@@ -1,6 +1,6 @@
 // http/error.rs
 use axum::http::{
-    HeaderValue,
+    self,
     header::{CACHE_CONTROL, CONTENT_TYPE},
 };
 use datastar::prelude::PatchSignals;
@@ -86,10 +86,13 @@ impl axum::response::IntoResponse for ErrorResponse {
                 );
                 (
                     [
-                        (CONTENT_TYPE, HeaderValue::from_static("text/event-stream")),
+                        (
+                            CONTENT_TYPE,
+                            http::HeaderValue::from_static("text/event-stream"),
+                        ),
                         (
                             CACHE_CONTROL,
-                            HeaderValue::from_static("no-cache, no-transform"),
+                            http::HeaderValue::from_static("no-cache, no-transform"),
                         ),
                     ],
                     body,
@@ -247,7 +250,7 @@ mod tests {
     use super::*;
     use axum::{
         body::to_bytes,
-        http::{StatusCode, header::CONTENT_TYPE},
+        http::{self, header::CONTENT_TYPE},
         response::IntoResponse,
     };
 
@@ -258,10 +261,10 @@ mod tests {
 
         match response {
             ErrorResponse::Page { status, view } => {
-                assert_eq!(status, StatusCode::CONFLICT);
+                assert_eq!(status, http::StatusCode::CONFLICT);
                 assert_eq!(view.title, "Email already in use");
                 assert_eq!(view.message, "Email already in use.");
-                assert_eq!(view.status, StatusCode::CONFLICT.as_u16());
+                assert_eq!(view.status, http::StatusCode::CONFLICT.as_u16());
             }
             ErrorResponse::Datastar { .. } => panic!("expected page response"),
         }
@@ -273,7 +276,7 @@ mod tests {
             .into_error_response(crate::request::Kind::Datastar)
             .into_response();
 
-        assert_eq!(response.status(), StatusCode::OK);
+        assert_eq!(response.status(), http::StatusCode::OK);
         assert_eq!(
             response
                 .headers()
@@ -305,7 +308,7 @@ mod tests {
 
         match response {
             ErrorResponse::Page { status, view } => {
-                assert_eq!(status, StatusCode::BAD_REQUEST);
+                assert_eq!(status, http::StatusCode::BAD_REQUEST);
                 assert_eq!(view.title, "Invalid input");
                 assert_eq!(view.message, "Invalid chat request.");
             }

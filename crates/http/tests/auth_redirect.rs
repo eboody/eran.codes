@@ -267,8 +267,8 @@ fn test_app() -> axum::Router {
     let user_service = user::Service::new(user_repo, hasher);
     let auth_provider = Arc::new(TestAuthProvider);
     let auth_service = auth::Service::new(auth_provider);
-    let sse_registry = app_http::SseRegistry::new();
-    let trace_log = app_http::trace_log::TraceLogStore::builder()
+    let sse_registry = app_http::sse::Registry::new();
+    let trace_log = app_http::trace_log::Store::builder()
         .with_sse(sse_registry.clone())
         .build();
     let cookie_key = Key::generate();

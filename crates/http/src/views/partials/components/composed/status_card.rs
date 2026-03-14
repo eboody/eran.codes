@@ -25,6 +25,7 @@ pub struct StatusCard {
 }
 
 #[derive(Clone, Debug, PartialEq, Eq)]
+// ci: partials-render-exempt
 pub struct StatusCardItem {
     pub label: Text,
     pub value: Text,

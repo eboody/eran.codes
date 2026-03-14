@@ -1,29 +1,29 @@
 use bon::Builder;
 use nutype::nutype;
 
-use crate::error::{Error, Result};
+use crate as infra;
 
 #[derive(Clone, Debug, Builder)]
-pub struct InfraConfig {
-    pub db: DbConfig,
+pub struct Infra {
+    pub db: Db,
 }
 
 #[derive(Clone, Debug, Builder)]
-pub struct DbConfig {
+pub struct Db {
     pub url: DbUrl,
     pub max_connections: u32,
 }
 
-impl InfraConfig {
-    pub fn from_env() -> Result<Self> {
+impl Infra {
+    pub fn from_env() -> infra::Result<Self> {
         let database_url =
-            utils::envs::get_env("DATABASE_URL").map_err(|_| Error::MissingEnv {
+            utils::envs::get_env("DATABASE_URL").map_err(|_| infra::Error::MissingEnv {
                 name: "DATABASE_URL",
             })?;
         let max_connections = max_connections_from_env()?;
 
         Ok(Self::builder()
-            .db(DbConfig::builder()
+            .db(Db::builder()
                 .url(DbUrl::new(database_url))
                 .max_connections(max_connections)
                 .build())
@@ -31,13 +31,13 @@ impl InfraConfig {
     }
 }
 
-fn max_connections_from_env() -> Result<u32> {
+fn max_connections_from_env() -> infra::Result<u32> {
     const NAME: &str = "INFRA_DB_MAX_CONNECTIONS";
     let value = match std::env::var(NAME) {
         Ok(value) => value,
         Err(std::env::VarError::NotPresent) => return Ok(10),
         Err(std::env::VarError::NotUnicode(_)) => {
-            return Err(Error::InvalidEnv {
+            return Err(infra::Error::InvalidEnv {
                 name: NAME,
                 reason: "must be a valid u32 integer",
             });
@@ -47,14 +47,14 @@ fn max_connections_from_env() -> Result<u32> {
     parse_max_connections_env_value(NAME, &value)
 }
 
-fn parse_max_connections_env_value(name: &'static str, value: &str) -> Result<u32> {
-    let parsed = value.parse::<u32>().map_err(|_| Error::InvalidEnv {
+fn parse_max_connections_env_value(name: &'static str, value: &str) -> infra::Result<u32> {
+    let parsed = value.parse::<u32>().map_err(|_| infra::Error::InvalidEnv {
         name,
         reason: "must be a valid u32 integer",
     })?;
 
     if parsed == 0 {
-        return Err(Error::InvalidEnv {
+        return Err(infra::Error::InvalidEnv {
             name,
             reason: "must be greater than 0",
         });
@@ -66,15 +66,15 @@ fn parse_max_connections_env_value(name: &'static str, value: &str) -> Result<u3
 #[cfg(test)]
 mod tests {
     use super::parse_max_connections_env_value;
-    use crate::error::Error;
+    use crate as infra;
 
     fn assert_invalid_env(
-        error: Error,
+        error: infra::Error,
         expected_name: &'static str,
         expected_reason: &'static str,
     ) {
         match error {
-            Error::InvalidEnv { name, reason } => {
+            infra::Error::InvalidEnv { name, reason } => {
                 assert_eq!(name, expected_name);
                 assert_eq!(reason, expected_reason);
             }

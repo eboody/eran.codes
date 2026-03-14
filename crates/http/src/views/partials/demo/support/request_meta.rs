@@ -2,7 +2,7 @@ use bon::Builder;
 use maud::Render;
 
 use crate::types::Text;
-use crate::views::partials::{RequestTraceLog, StatusCard, StatusCardItem};
+use crate::views::partials;
 
 #[derive(Clone, Debug, Builder)]
 pub struct RequestMeta {
@@ -18,17 +18,17 @@ impl Render for RequestMeta {
     fn render(&self) -> maud::Markup {
         maud::html! {
             article id="request-meta-target" {
-                (StatusCard::builder()
+                (partials::StatusCard::builder()
                     .title(Text::from("Request metadata"))
                     .items(vec![
-                        StatusCardItem::optional("request_id", self.request_id.clone()),
-                        StatusCardItem::optional("session_id", self.session_id.clone()),
-                        StatusCardItem::optional("user_id", self.user_id.clone()),
-                        StatusCardItem::optional("client_ip", self.client_ip.clone()),
-                        StatusCardItem::optional("user_agent", self.user_agent.clone()),
+                        partials::StatusCardItem::optional("request_id", self.request_id.clone()),
+                        partials::StatusCardItem::optional("session_id", self.session_id.clone()),
+                        partials::StatusCardItem::optional("user_id", self.user_id.clone()),
+                        partials::StatusCardItem::optional("client_ip", self.client_ip.clone()),
+                        partials::StatusCardItem::optional("user_agent", self.user_agent.clone()),
                     ])
                     .build())
-                (RequestTraceLog::builder().entries(&self.trace).build())
+                (partials::RequestTraceLog::builder().entries(&self.trace).build())
             }
         }
     }

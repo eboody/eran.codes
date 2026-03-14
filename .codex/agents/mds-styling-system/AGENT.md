@@ -31,6 +31,9 @@ Apply the hybrid styling policy at the end of component generation: extract reus
 - Scoped inline CSS is kept only for non-reusable, component-specific behavior and documented in `scoped_exceptions`.
 - Reusable class names are generic and library-oriented (`ui-tabs`, `ui-panel`, `ui-cta`, etc.).
 - Reusable package rules prefer OpenProps/shared tokens (`--size-*`, `--radius-*`, `--border-size-*`) instead of raw numeric literals.
+- Existing parent or page-level theming hooks stay intact across scoped-CSS refactors; component roots must consume public tokens via fallback values instead of redefining them.
+- Styling refactors against an existing rendered surface must capture a before-state screenshot or live reference before changing the shell contract.
+- Non-trivial visual changes must be verified with a before/after comparison, not just code inspection.
 - Modern CSS capabilities should be used when they exist and improve clarity/reduce JS, with progressive enhancement fallbacks.
 - A styling-system review pass must happen before the prompt is considered complete.
 

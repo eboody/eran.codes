@@ -1,4 +1,4 @@
-use axum::http::StatusCode;
+use axum::http;
 use statum::{machine, state, transition};
 use tower_cookies::{Cookies, Key};
 
@@ -55,7 +55,7 @@ impl OperationsFilterFlow<Incoming> {
 impl OperationsFilterFlow<SessionBound> {
     pub(super) fn apply_filter(
         self,
-        trace_log: &crate::trace_log::TraceLogStore,
+        trace_log: &crate::trace_log::Store,
     ) -> OperationsFilterFlow<FilterApplied> {
         let query = self.filter_query.as_ref().map(|value| value.to_string());
         trace_log.set_stream_flow_filter(
@@ -78,7 +78,7 @@ impl OperationsFilterFlow<SessionBound> {
 impl OperationsFilterFlow<FilterApplied> {
     pub(super) fn refresh_panels(
         self,
-        trace_log: &crate::trace_log::TraceLogStore,
+        trace_log: &crate::trace_log::Store,
     ) -> OperationsFilterFlow<Refreshed> {
         trace_log.refresh_stream_log_panels(
             &self.state_data.session_id,
@@ -96,8 +96,8 @@ impl OperationsFilterFlow<FilterApplied> {
 }
 
 impl OperationsFilterFlow<Refreshed> {
-    pub(super) fn status_code(&self) -> StatusCode {
-        StatusCode::NO_CONTENT
+    pub(super) fn status_code(&self) -> http::StatusCode {
+        http::StatusCode::NO_CONTENT
     }
 }
 
@@ -112,12 +112,12 @@ mod tests {
         let cookies = Cookies::default();
         let key = Key::generate();
         let trace_log =
-            crate::trace_log::TraceLogStore::new(crate::sse::Registry::new(), 32, false);
+            crate::trace_log::Store::new(crate::sse::Registry::new(), 32, false);
         let refreshed = OperationsFilterFlow::<Incoming>::new(None, None)
             .bind_session(&cookies, &key)
             .apply_filter(&trace_log)
             .refresh_panels(&trace_log);
 
-        assert_eq!(refreshed.status_code(), StatusCode::NO_CONTENT);
+        assert_eq!(refreshed.status_code(), http::StatusCode::NO_CONTENT);
     }
 }

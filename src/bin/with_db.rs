@@ -1,6 +1,6 @@
 use std::{
     env,
-    process::{Command, ExitCode},
+    process::{self, ExitCode},
 };
 
 fn main() -> ExitCode {
@@ -29,7 +29,7 @@ fn main() -> ExitCode {
         }
     };
 
-    let status = Command::new(cmd)
+    let status = process::Command::new(cmd)
         .args(args)
         .env("DATABASE_URL", database_url)
         .status();

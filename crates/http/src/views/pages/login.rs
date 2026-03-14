@@ -4,14 +4,13 @@ use urlencoding;
 
 use crate::paths::Route;
 use crate::types::Text;
-use crate::views::page::UserNav;
-use crate::views::partials::{button, AuthShell};
+use crate::views::{page, partials};
 
 #[derive(Builder)]
 pub struct Login<'a> {
     pub message: Option<&'a str>,
     pub next: Option<&'a str>,
-    pub user: Option<UserNav>,
+    pub user: Option<page::UserNav>,
 }
 
 impl Render for Login<'_> {
@@ -32,11 +31,11 @@ impl Render for Login<'_> {
                     span { "Password" }
                     input type="password" name="password" required;
                 }
-                (button::Button::builder()
+                (partials::button::Button::builder()
                     .label(Text::from("Sign in"))
-                    .variant(button::Variant::Primary)
-                    .role(button::Role::submit())
-                    .data_attrs(vec![button::DataAttr::flag("data-auth-submit")])
+                    .variant(partials::button::Variant::Primary)
+                    .role(partials::button::Role::submit())
+                    .data_attrs(vec![partials::button::DataAttr::flag("data-auth-submit")])
                     .build())
             }
         };
@@ -51,7 +50,7 @@ impl Render for Login<'_> {
             }
         };
         let content = maud::html! {
-            (AuthShell::builder()
+            (partials::AuthShell::builder()
                 .title(Text::from("Sign in"))
                 .summary(Text::from("Use your email address to continue."))
                 .maybe_message(self.message.map(Text::from))
@@ -60,7 +59,7 @@ impl Render for Login<'_> {
                 .build())
         };
 
-        crate::views::page::Layout::builder()
+        page::Layout::builder()
             .title("Sign in")
             .content(content)
             .maybe_with_user(self.user.clone())

@@ -1,4 +1,4 @@
-use axum::http::HeaderMap;
+use axum::http;
 use statum::{machine, state, transition};
 
 #[derive(Clone, Debug)]
@@ -15,7 +15,7 @@ pub enum RequestContextState {
 
 #[machine]
 pub(crate) struct RequestContextFlow<RequestContextState> {
-    headers: HeaderMap,
+    headers: http::HeaderMap,
     session_id: Option<crate::types::SessionId>,
     request_id: Option<crate::types::RequestId>,
     client_ip: Option<crate::types::ClientIp>,
@@ -25,7 +25,7 @@ pub(crate) struct RequestContextFlow<RequestContextState> {
 
 impl RequestContextFlow<Incoming> {
     pub(crate) fn new(
-        headers: HeaderMap,
+        headers: http::HeaderMap,
         session_id: Option<crate::types::SessionId>,
     ) -> Self {
         RequestContextFlow::<Incoming>::builder()
@@ -42,7 +42,7 @@ impl RequestContextFlow<Incoming> {
 #[transition]
 impl RequestContextFlow<Incoming> {
     pub(crate) fn resolve_headers(mut self) -> RequestContextFlow<HeadersResolved> {
-        self.request_id = crate::request::request_id_from_headers(&self.headers);
+        self.request_id = crate::request::id_from_headers(&self.headers);
         self.client_ip = crate::request::client_ip_from_headers(&self.headers);
         self.user_agent = crate::request::user_agent_from_headers(&self.headers);
         self.kind = crate::request::kind_from_headers(&self.headers);
@@ -82,12 +82,12 @@ pub(crate) type IncomingFlow = RequestContextFlow<Incoming>;
 #[cfg(test)]
 mod tests {
     use super::*;
-    use axum::http::HeaderValue;
+    use axum::http;
 
     #[test]
     fn resolve_headers_detects_datastar_kind() {
-        let mut headers = HeaderMap::new();
-        headers.insert("datastar-request", HeaderValue::from_static("1"));
+        let mut headers = http::HeaderMap::new();
+        headers.insert("datastar-request", http::HeaderValue::from_static("1"));
 
         let built = IncomingFlow::new(headers, None)
             .resolve_headers()

@@ -23,7 +23,7 @@ fn entry(target: &str, message: &str, fields: Vec<(&str, &str)>) -> TraceEntry {
 #[test]
 fn backend_demo_db_event_summary_includes_normalized_statement() {
     let event = build_flow_event(
-        log::vm::request_flow::kind::FlowEventKind::Backend,
+        log::vm::request_flow::kind::FlowEvent::Backend,
         &entry(
             "demo.db",
             "\"db query\"",
@@ -50,7 +50,7 @@ fn backend_demo_db_event_summary_includes_normalized_statement() {
 #[test]
 fn backend_demo_db_event_summary_preserves_multiple_placeholders() {
     let event = build_flow_event(
-        log::vm::request_flow::kind::FlowEventKind::Backend,
+        log::vm::request_flow::kind::FlowEvent::Backend,
         &entry(
             "demo.db",
             "\"db query\"",
@@ -74,7 +74,7 @@ fn backend_demo_db_event_summary_preserves_multiple_placeholders() {
 #[test]
 fn backend_non_db_event_summary_uses_default_format() {
     let event = build_flow_event(
-        log::vm::request_flow::kind::FlowEventKind::Backend,
+        log::vm::request_flow::kind::FlowEvent::Backend,
         &entry("app::chat::service", "moderation check passed", vec![]),
     );
 

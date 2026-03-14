@@ -1,4 +1,4 @@
-use crate::types::Text;
+use crate::{paths::Route, types::Text};
 
 use super::types::{
     CaseListSection, ClosingContent, CmsActionLink, CmsImageAsset, CrateCardContent,
@@ -46,12 +46,22 @@ pub(super) fn validate_work_case(content: &WorkCaseContent, slug: WorkCaseSlug) 
 
     let case_route = slug.route();
     assert!(
-        content.actions.iter().any(|action| {
-            let href = action.href.to_string();
-            href == case_route.as_str() || href.starts_with("/lab")
-        }),
+        content
+            .actions
+            .iter()
+            .any(|action| action_targets_case_or_lab(action, case_route)),
         "work case {slug:?} should include at least one action to itself or /lab",
     );
+}
+
+fn action_targets_case_or_lab(action: &CmsActionLink, case_route: Route) -> bool {
+    let href = action.href.to_string();
+    let path = href.split(['#', '?']).next().unwrap_or(href.as_str());
+
+    matches!(
+        Route::from_path(path),
+        Some(route) if route == case_route || route == Route::Lab
+    )
 }
 
 fn validate_portfolio_hero(content: &PortfolioHeroContent, path: &str) {

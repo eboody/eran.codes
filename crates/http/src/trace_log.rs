@@ -5,16 +5,10 @@ use std::{
     time::Instant,
 };
 
-use axum::{
-    body::Body,
-    extract::Extension,
-    http::{Request, StatusCode},
-    middleware::Next,
-    response::Response,
-};
+use axum::{body::Body, extract::Extension, http, middleware::Next, response};
 use dashmap::DashMap;
 use tracing::{Event, Level};
-use tracing_subscriber::{Layer, registry::LookupSpan};
+use tracing_subscriber::{layer::Layer as SubscriberLayer, registry::LookupSpan};
 
 use crate::paths::Route;
 use crate::types::{
@@ -36,7 +30,7 @@ pub struct TraceEntry {
 }
 
 #[derive(Clone)]
-pub struct TraceLogStore {
+pub struct Store {
     requests: Arc<DashMap<RequestId, VecDeque<TraceEntry>>>,
     sessions: Arc<DashMap<SessionId, VecDeque<TraceEntry>>>,
     flow_filters: Arc<DashMap<sse::StreamKey, Text>>,
@@ -46,7 +40,7 @@ pub struct TraceLogStore {
     emit_sse: bool,
 }
 
-impl TraceLogStore {
+impl Store {
     pub fn new(sse: sse::Registry, max_entries: usize, emit_sse: bool) -> Self {
         Self {
             requests: Arc::new(DashMap::new()),
@@ -221,7 +215,7 @@ fn parse_filter_terms(query: &str) -> Vec<Text> {
 }
 
 #[bon]
-impl TraceLogStore {
+impl Store {
     #[builder]
     pub fn builder(
         #[builder(setters(name = with_sse))] sse: sse::Registry,
@@ -232,27 +226,27 @@ impl TraceLogStore {
     }
 }
 
-pub struct TraceLogLayer {
-    store: TraceLogStore,
+pub struct Layer {
+    store: Store,
 }
 
-impl TraceLogLayer {
-    pub fn new(store: TraceLogStore) -> Self {
+impl Layer {
+    pub fn new(store: Store) -> Self {
         Self { store }
     }
 }
 
-pub struct DiagnosticTraceLogLayer {
-    store: TraceLogStore,
+pub struct DiagnosticLayer {
+    store: Store,
 }
 
-impl DiagnosticTraceLogLayer {
-    pub fn new(store: TraceLogStore) -> Self {
+impl DiagnosticLayer {
+    pub fn new(store: Store) -> Self {
         Self { store }
     }
 }
 
-impl<S> Layer<S> for TraceLogLayer
+impl<S> SubscriberLayer<S> for Layer
 where
     S: tracing::Subscriber + for<'a> LookupSpan<'a>,
 {
@@ -311,7 +305,7 @@ where
     }
 }
 
-impl<S> Layer<S> for DiagnosticTraceLogLayer
+impl<S> SubscriberLayer<S> for DiagnosticLayer
 where
     S: tracing::Subscriber + for<'a> LookupSpan<'a>,
 {
@@ -373,6 +367,8 @@ pub enum LogTargetKnown {
     DemoRequest,
     #[strum(serialize = "demo.request.diagnostic")]
     DemoRequestDiagnostic,
+    #[strum(serialize = "demo.db")]
+    DemoDb,
     #[strum(serialize = "demo.sse")]
     DemoSse,
     #[strum(serialize = "demo.chat")]
@@ -398,6 +394,7 @@ impl LogTargetKind {
         matches!(
             self,
             Self::Known(LogTargetKnown::DemoRequest)
+                | Self::Known(LogTargetKnown::DemoDb)
                 | Self::Known(LogTargetKnown::DemoSse)
                 | Self::Known(LogTargetKnown::DemoChat)
         )
@@ -528,9 +525,9 @@ fn upsert_context_field(
 
 pub async fn audit_middleware(
     Extension(state): Extension<crate::State>,
-    req: Request<Body>,
+    req: http::Request<Body>,
     next: Next,
-) -> Response {
+) -> response::Response {
     let started_at = Instant::now();
     let method = req.method().to_string();
     let path = req.uri().path().to_string();
@@ -627,7 +624,7 @@ pub async fn audit_middleware(
             .build(),
     );
 
-    if response.status() == StatusCode::INTERNAL_SERVER_ERROR {
+    if response.status() == http::StatusCode::INTERNAL_SERVER_ERROR {
         tracing::error!(target: LogTargetKnown::DemoRequest.as_str(), "response error");
     }
 
@@ -666,6 +663,7 @@ impl LogTargetKnown {
         match self {
             LogTargetKnown::DemoRequest => "demo.request",
             LogTargetKnown::DemoRequestDiagnostic => "demo.request.diagnostic",
+            LogTargetKnown::DemoDb => "demo.db",
             LogTargetKnown::DemoSse => "demo.sse",
             LogTargetKnown::DemoChat => "demo.chat",
             LogTargetKnown::HttpRouterLayers => "http::router::layers",

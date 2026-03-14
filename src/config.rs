@@ -1,4 +1,3 @@
-use infra::config::InfraConfig;
 use nutype::nutype;
 use snafu::prelude::*;
 
@@ -22,7 +21,7 @@ pub(crate) enum Error {
 
 #[derive(Clone, Debug)]
 pub(crate) struct Config {
-    pub infra: InfraConfig,
+    pub infra: infra::config::Infra,
     pub http: HttpConfig,
 }
 
@@ -109,7 +108,7 @@ pub struct HostName(String);
 
 impl Config {
     pub fn load() -> Result<Self> {
-        let infra = InfraConfig::from_env().context(LoadInfraConfigSnafu)?;
+        let infra = infra::config::Infra::from_env().context(LoadInfraConfigSnafu)?;
         let http = HttpConfig::from_env()?;
 
         Ok(Self { infra, http })

@@ -1,6 +1,6 @@
 pub use SqlxUserRepository as Repository;
 
-use app::auth::PasswordHash;
+use app::auth;
 use app::user::Repository as AppUserRepository;
 use async_trait::async_trait;
 use domain::user;
@@ -112,7 +112,7 @@ impl AppUserRepository for SqlxUserRepository {
     async fn create_with_credentials(
         &self,
         user: &user::User,
-        password_hash: &PasswordHash,
+        password_hash: &auth::PasswordHash,
     ) -> app::user::Result<()> {
         let user_id = user.id.as_uuid().to_string();
         let username = user.username.to_string();

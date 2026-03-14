@@ -4248,6 +4248,7 @@ dependencies = [
  "base64 0.22.1",
  "clap",
  "playwright",
+ "serde_json",
  "tokio",
  "tokio-stream",
  "url",

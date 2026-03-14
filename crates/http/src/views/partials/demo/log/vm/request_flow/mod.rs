@@ -13,7 +13,6 @@ mod pills;
 mod tests;
 
 use event_builder::build_flow_event;
-use kind::{flow_event_kind, FlowEventKind};
 
 pub fn request_flows(
     entries: &[TraceEntry],
@@ -24,7 +23,7 @@ pub fn request_flows(
     let mut flow_map: HashMap<String, FlowAggregate> = HashMap::new();
 
     for (index, entry) in entries.iter().enumerate() {
-        let Some(kind) = flow_event_kind(entry) else {
+        let Some(kind) = kind::flow_event(entry) else {
             continue;
         };
 
@@ -114,9 +113,9 @@ struct FlowAggregate {
 fn hydrate_request_fields(
     aggregate: &mut FlowAggregate,
     entry: &TraceEntry,
-    kind: FlowEventKind,
+    kind: kind::FlowEvent,
 ) {
-    if matches!(kind, FlowEventKind::RequestEnd | FlowEventKind::RequestStart) {
+    if matches!(kind, kind::FlowEvent::RequestEnd | kind::FlowEvent::RequestStart) {
         aggregate.has_request_envelope = true;
         if aggregate.method.is_none() {
             aggregate.method = field_text(entry, LogFieldKey::Method);

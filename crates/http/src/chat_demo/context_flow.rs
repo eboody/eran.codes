@@ -2,18 +2,17 @@ use std::collections::HashMap;
 
 use statum::{machine, state, transition};
 
-use crate::views::partials::components;
-use domain::chat as domain_chat;
+use crate::views::partials;
 
 #[derive(Clone, Debug)]
 pub struct ViewerResolvedData {
-    chat_user_id: domain_chat::UserId,
+    chat_user_id: domain::chat::UserId,
 }
 
 #[derive(Clone, Debug)]
 pub struct RoomReadyData {
     room: domain::chat::Room,
-    chat_user_id: domain_chat::UserId,
+    chat_user_id: domain::chat::UserId,
 }
 
 #[derive(Clone, Debug)]
@@ -25,7 +24,7 @@ pub struct MessagesLoadedData {
 #[derive(Clone, Debug)]
 pub struct ContextBuiltData {
     room: domain::chat::Room,
-    message_views: Vec<components::chat::Message>,
+    message_views: Vec<partials::components::chat::Message>,
 }
 
 #[state]
@@ -40,14 +39,14 @@ pub enum ChatDemoContextState {
 #[machine]
 pub(super) struct ChatDemoContextFlow<ChatDemoContextState> {
     viewer_user_id: Option<domain::user::UserId>,
-    room_name: domain_chat::RoomName,
+    room_name: domain::chat::RoomName,
 }
 
 impl ChatDemoContextFlow<Incoming> {
     pub(super) fn from_viewer(maybe_viewer_user_id: Option<domain::user::UserId>) -> Self {
         ChatDemoContextFlow::<Incoming>::builder()
             .maybe_viewer_user_id(maybe_viewer_user_id)
-            .room_name(domain_chat::RoomName::Lobby)
+            .room_name(domain::chat::RoomName::Lobby)
             .build()
     }
 
@@ -70,7 +69,7 @@ impl ChatDemoContextFlow<Incoming> {
         viewer_user_id: domain::user::UserId,
     ) -> ChatDemoContextFlow<ViewerResolved> {
         self.transition_with(ViewerResolvedData {
-            chat_user_id: domain_chat::UserId::from_uuid(*viewer_user_id.as_uuid()),
+            chat_user_id: domain::chat::UserId::from_uuid(*viewer_user_id.as_uuid()),
         })
     }
 }
@@ -109,7 +108,7 @@ impl ChatDemoContextFlow<ViewerResolved> {
         Ok(self.mark_room_ready(room))
     }
 
-    pub(super) fn chat_user_id(&self) -> domain_chat::UserId {
+    pub(super) fn chat_user_id(&self) -> domain::chat::UserId {
         self.state_data.chat_user_id
     }
 }
@@ -144,7 +143,7 @@ impl ChatDemoContextFlow<RoomReady> {
         &self.state_data.room
     }
 
-    pub(super) fn chat_user_id(&self) -> domain_chat::UserId {
+    pub(super) fn chat_user_id(&self) -> domain::chat::UserId {
         self.state_data.chat_user_id
     }
 }
@@ -174,7 +173,7 @@ impl ChatDemoContextFlow<MessagesLoaded> {
 impl ChatDemoContextFlow<MessagesLoaded> {
     fn mark_context_built(
         self,
-        message_views: Vec<components::chat::Message>,
+        message_views: Vec<partials::components::chat::Message>,
     ) -> ChatDemoContextFlow<ContextBuilt> {
         let room = self.state_data.room.clone();
         self.transition_with(ContextBuiltData {
@@ -194,7 +193,7 @@ impl ChatDemoContextFlow<ContextBuilt> {
 }
 
 impl<S: ChatDemoContextStateTrait> ChatDemoContextFlow<S> {
-    fn room_name(&self) -> domain_chat::RoomName {
+    fn room_name(&self) -> domain::chat::RoomName {
         self.room_name
     }
 }
@@ -202,7 +201,7 @@ impl<S: ChatDemoContextStateTrait> ChatDemoContextFlow<S> {
 async fn map_message_views(
     state: &crate::State,
     messages: &[domain::chat::Message],
-) -> Vec<components::chat::Message> {
+) -> Vec<partials::components::chat::Message> {
     let mut names = HashMap::new();
     for message in messages {
         let user_id = domain::user::UserId::from_uuid(*message.user_id.as_uuid());
@@ -232,7 +231,7 @@ async fn map_message_views(
                 .get(&user_id)
                 .cloned()
                 .unwrap_or_else(|| fallback_author_label(&user_id));
-            components::chat::Message::builder()
+            partials::components::chat::Message::builder()
                 .message_id(crate::types::Text::from(message.id.as_uuid().to_string()))
                 .author(crate::types::Text::from(author))
                 .timestamp(crate::types::Text::from(super::format_message_time(
@@ -251,11 +250,11 @@ fn fallback_author_label(user_id: &domain::user::UserId) -> String {
 
 fn to_chat_message_status(
     value: domain::chat::MessageStatus,
-) -> components::chat::Status {
+) -> partials::components::chat::Status {
     match value {
-        domain::chat::MessageStatus::Visible => components::chat::Status::Visible,
-        domain::chat::MessageStatus::Pending => components::chat::Status::Pending,
-        domain::chat::MessageStatus::Removed => components::chat::Status::Removed,
+        domain::chat::MessageStatus::Visible => partials::components::chat::Status::Visible,
+        domain::chat::MessageStatus::Pending => partials::components::chat::Status::Pending,
+        domain::chat::MessageStatus::Removed => partials::components::chat::Status::Removed,
     }
 }
 
@@ -272,25 +271,24 @@ mod tests {
 
     use super::*;
     use app::{auth, user};
-    use domain::user as domain_user;
     use tower_cookies::Key;
 
     struct TestUserRepo {
-        demo_user: domain_user::User,
+        demo_user: domain::user::User,
     }
 
     #[async_trait]
     impl user::Repository for TestUserRepo {
         async fn find_by_email(
             &self,
-            _email: &domain_user::Email,
-        ) -> user::Result<Option<domain_user::User>> {
+            _email: &domain::user::Email,
+        ) -> user::Result<Option<domain::user::User>> {
             Ok(Some(self.demo_user.clone()))
         }
 
         async fn create_with_credentials(
             &self,
-            _user: &domain_user::User,
+            _user: &domain::user::User,
             _password_hash: &auth::PasswordHash,
         ) -> user::Result<()> {
             Ok(())
@@ -314,16 +312,16 @@ mod tests {
     }
 
     struct TestChatRepo {
-        room: Mutex<Option<domain_chat::Room>>,
-        messages: Mutex<Vec<domain_chat::Message>>,
+        room: Mutex<Option<domain::chat::Room>>,
+        messages: Mutex<Vec<domain::chat::Message>>,
         create_room_calls: AtomicUsize,
         membership_calls: AtomicUsize,
     }
 
     impl TestChatRepo {
         fn new(
-            room: Option<domain_chat::Room>,
-            messages: Vec<domain_chat::Message>,
+            room: Option<domain::chat::Room>,
+            messages: Vec<domain::chat::Message>,
         ) -> Self {
             Self {
                 room: Mutex::new(room),
@@ -344,7 +342,7 @@ mod tests {
 
     #[async_trait]
     impl app::chat::Repository for TestChatRepo {
-        async fn create_room(&self, room: &domain_chat::Room) -> app::chat::Result<()> {
+        async fn create_room(&self, room: &domain::chat::Room) -> app::chat::Result<()> {
             self.create_room_calls.fetch_add(1, Ordering::SeqCst);
             *self.room.lock().expect("room lock") = Some(room.clone());
             Ok(())
@@ -352,46 +350,46 @@ mod tests {
 
         async fn find_room(
             &self,
-            room_id: &domain_chat::RoomId,
-        ) -> app::chat::Result<Option<domain_chat::Room>> {
+            room_id: &domain::chat::RoomId,
+        ) -> app::chat::Result<Option<domain::chat::Room>> {
             let room = self.room.lock().expect("room lock");
             Ok(room.as_ref().filter(|room| room.id == *room_id).cloned())
         }
 
         async fn find_room_by_name(
             &self,
-            name: &domain_chat::RoomName,
-        ) -> app::chat::Result<Option<domain_chat::Room>> {
+            name: &domain::chat::RoomName,
+        ) -> app::chat::Result<Option<domain::chat::Room>> {
             let room = self.room.lock().expect("room lock");
             Ok(room.as_ref().filter(|room| room.name == *name).cloned())
         }
 
         async fn list_messages(
             &self,
-            _room_id: &domain_chat::RoomId,
+            _room_id: &domain::chat::RoomId,
             _limit: usize,
-        ) -> app::chat::Result<Vec<domain_chat::Message>> {
+        ) -> app::chat::Result<Vec<domain::chat::Message>> {
             Ok(self.messages.lock().expect("messages lock").clone())
         }
 
         async fn find_message(
             &self,
-            _message_id: &domain_chat::MessageId,
-        ) -> app::chat::Result<Option<domain_chat::Message>> {
+            _message_id: &domain::chat::MessageId,
+        ) -> app::chat::Result<Option<domain::chat::Message>> {
             Ok(None)
         }
 
         async fn insert_message(
             &self,
-            _message: &domain_chat::Message,
+            _message: &domain::chat::Message,
         ) -> app::chat::Result<()> {
             Ok(())
         }
 
         async fn add_membership(
             &self,
-            _room_id: &domain_chat::RoomId,
-            _user_id: &domain_chat::UserId,
+            _room_id: &domain::chat::RoomId,
+            _user_id: &domain::chat::UserId,
             _role: app::chat::RoomRole,
         ) -> app::chat::Result<()> {
             self.membership_calls.fetch_add(1, Ordering::SeqCst);
@@ -400,16 +398,16 @@ mod tests {
 
         async fn is_member(
             &self,
-            _room_id: &domain_chat::RoomId,
-            _user_id: &domain_chat::UserId,
+            _room_id: &domain::chat::RoomId,
+            _user_id: &domain::chat::UserId,
         ) -> app::chat::Result<bool> {
             Ok(true)
         }
 
         async fn update_message_status(
             &self,
-            _message_id: &domain_chat::MessageId,
-            _status: domain_chat::MessageStatus,
+            _message_id: &domain::chat::MessageId,
+            _status: domain::chat::MessageStatus,
         ) -> app::chat::Result<app::chat::PendingMutationResult> {
             Ok(app::chat::PendingMutationResult::Applied)
         }
@@ -421,7 +419,7 @@ mod tests {
     impl app::chat::ModerationQueue for ModerationQueue {
         async fn enqueue(
             &self,
-            _message_id: &domain_chat::MessageId,
+            _message_id: &domain::chat::MessageId,
             _reason: &app::chat::ModerationReason,
         ) -> app::chat::Result<()> {
             Ok(())
@@ -436,8 +434,8 @@ mod tests {
 
         async fn complete_if_pending(
             &self,
-            _message_id: &domain_chat::MessageId,
-            _reviewer_id: &domain_chat::UserId,
+            _message_id: &domain::chat::MessageId,
+            _reviewer_id: &domain::chat::UserId,
             _decision: app::chat::ModerationDecision,
             _reason: Option<app::chat::ModerationReason>,
         ) -> app::chat::Result<app::chat::PendingMutationResult> {
@@ -451,8 +449,8 @@ mod tests {
     impl app::chat::RateLimiter for RateLimiter {
         async fn check(
             &self,
-            _room_id: &domain_chat::RoomId,
-            _user_id: &domain_chat::UserId,
+            _room_id: &domain::chat::RoomId,
+            _user_id: &domain::chat::UserId,
         ) -> app::chat::Result<()> {
             Ok(())
         }
@@ -478,45 +476,45 @@ mod tests {
     struct Ids;
 
     impl app::chat::IdGenerator for Ids {
-        fn new_room_id(&self) -> domain_chat::RoomId {
-            domain_chat::RoomId::from_uuid(uuid::Uuid::from_u128(0x1111))
+        fn new_room_id(&self) -> domain::chat::RoomId {
+            domain::chat::RoomId::from_uuid(uuid::Uuid::from_u128(0x1111))
         }
 
-        fn new_message_id(&self) -> domain_chat::MessageId {
-            domain_chat::MessageId::from_uuid(uuid::Uuid::from_u128(0x2222))
+        fn new_message_id(&self) -> domain::chat::MessageId {
+            domain::chat::MessageId::from_uuid(uuid::Uuid::from_u128(0x2222))
         }
     }
 
-    fn demo_user() -> domain_user::User {
-        domain_user::User::builder()
-            .id(domain_user::UserId::from_uuid(uuid::Uuid::nil()))
-            .username(domain_user::Username::try_new("demo_bot").expect("username"))
-            .email(domain_user::Email::try_new("demo.bot@example.com").expect("email"))
+    fn demo_user() -> domain::user::User {
+        domain::user::User::builder()
+            .id(domain::user::UserId::from_uuid(uuid::Uuid::nil()))
+            .username(domain::user::Username::try_new("demo_bot").expect("username"))
+            .email(domain::user::Email::try_new("demo.bot@example.com").expect("email"))
             .build()
     }
 
-    fn sample_room() -> domain_chat::Room {
-        domain_chat::Room::builder()
-            .id(domain_chat::RoomId::from_uuid(uuid::Uuid::from_u128(
+    fn sample_room() -> domain::chat::Room {
+        domain::chat::Room::builder()
+            .id(domain::chat::RoomId::from_uuid(uuid::Uuid::from_u128(
                 0x1234,
             )))
-            .name(domain_chat::RoomName::Lobby)
-            .created_by(domain_chat::UserId::from_uuid(uuid::Uuid::nil()))
+            .name(domain::chat::RoomName::Lobby)
+            .created_by(domain::chat::UserId::from_uuid(uuid::Uuid::nil()))
             .build()
     }
 
-    fn sample_message(room_id: domain_chat::RoomId) -> domain_chat::Message {
-        domain_chat::Message::builder()
-            .id(domain_chat::MessageId::from_uuid(uuid::Uuid::from_u128(
+    fn sample_message(room_id: domain::chat::RoomId) -> domain::chat::Message {
+        domain::chat::Message::builder()
+            .id(domain::chat::MessageId::from_uuid(uuid::Uuid::from_u128(
                 0x3333,
             )))
             .room_id(room_id)
-            .user_id(domain_chat::UserId::from_uuid(uuid::Uuid::nil()))
+            .user_id(domain::chat::UserId::from_uuid(uuid::Uuid::nil()))
             .body(
-                domain_chat::MessageBody::try_new("hello from test")
+                domain::chat::MessageBody::try_new("hello from test")
                     .expect("valid message body"),
             )
-            .status(domain_chat::MessageStatus::Visible)
+            .status(domain::chat::MessageStatus::Visible)
             .maybe_client_id(None)
             .created_at(std::time::SystemTime::UNIX_EPOCH)
             .build()
@@ -530,8 +528,8 @@ mod tests {
             Arc::new(TestHasher),
         );
         let auth_service = auth::Service::disabled();
-        let sse_registry = crate::SseRegistry::new();
-        let trace_log = crate::trace_log::TraceLogStore::builder()
+        let sse_registry = crate::sse::Registry::new();
+        let trace_log = crate::trace_log::Store::builder()
             .with_sse(sse_registry.clone())
             .build();
         let chat_service = app::chat::Service::builder()
@@ -557,7 +555,7 @@ mod tests {
     async fn resolve_viewer_uses_authenticated_user_id() {
         let chat_repo = Arc::new(TestChatRepo::new(Some(sample_room()), Vec::new()));
         let state = test_state(chat_repo);
-        let viewer = domain_user::UserId::from_uuid(uuid::Uuid::from_u128(0x4444));
+        let viewer = domain::user::UserId::from_uuid(uuid::Uuid::from_u128(0x4444));
 
         let resolved = IncomingFlow::from_viewer(Some(viewer))
             .resolve_viewer(&state)
@@ -586,7 +584,7 @@ mod tests {
         let chat_repo =
             Arc::new(TestChatRepo::new(Some(existing_room.clone()), Vec::new()));
         let state = test_state(chat_repo.clone());
-        let viewer = domain_user::UserId::from_uuid(uuid::Uuid::from_u128(0x5555));
+        let viewer = domain::user::UserId::from_uuid(uuid::Uuid::from_u128(0x5555));
 
         let room_ready = IncomingFlow::from_viewer(Some(viewer))
             .resolve_viewer(&state)
@@ -605,7 +603,7 @@ mod tests {
     async fn ensure_room_creates_lobby_when_missing() {
         let chat_repo = Arc::new(TestChatRepo::new(None, Vec::new()));
         let state = test_state(chat_repo.clone());
-        let viewer = domain_user::UserId::from_uuid(uuid::Uuid::from_u128(0x6666));
+        let viewer = domain::user::UserId::from_uuid(uuid::Uuid::from_u128(0x6666));
 
         let room_ready = IncomingFlow::from_viewer(Some(viewer))
             .resolve_viewer(&state)
@@ -615,7 +613,7 @@ mod tests {
             .await
             .expect("room ensured");
 
-        assert_eq!(room_ready.room().name, domain_chat::RoomName::Lobby);
+        assert_eq!(room_ready.room().name, domain::chat::RoomName::Lobby);
         assert_eq!(chat_repo.create_room_calls(), 1);
         assert_eq!(chat_repo.membership_calls(), 1);
     }
@@ -628,7 +626,7 @@ mod tests {
             vec![sample_message(room.id)],
         ));
         let state = test_state(chat_repo);
-        let viewer = domain_user::UserId::from_uuid(uuid::Uuid::from_u128(0x7777));
+        let viewer = domain::user::UserId::from_uuid(uuid::Uuid::from_u128(0x7777));
 
         let context = IncomingFlow::from_viewer(Some(viewer))
             .resolve_viewer(&state)

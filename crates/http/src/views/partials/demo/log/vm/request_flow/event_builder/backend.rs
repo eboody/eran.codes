@@ -1,4 +1,4 @@
-use crate::trace_log::TraceEntry;
+use crate::trace_log::{LogTargetKind, LogTargetKnown, TraceEntry};
 use crate::types::{LogFieldKey, Text};
 use crate::views::partials::components::Pill;
 use crate::views::partials::demo::log;
@@ -15,7 +15,10 @@ pub(super) fn backend_event(entry: &TraceEntry) -> (Text, Text, Vec<Pill>) {
 }
 
 fn db_backend_summary(entry: &TraceEntry) -> Option<Text> {
-    if entry.target.to_string() != "demo.db" {
+    if !matches!(
+        LogTargetKind::parse(&entry.target.to_string()),
+        LogTargetKind::Known(LogTargetKnown::DemoDb)
+    ) {
         return None;
     }
 

@@ -61,47 +61,53 @@ fn base_routes() -> Router {
     Router::new()
         .route(
             Route::PartialPing.as_str(),
-            get(crate::handlers::ping_partial),
+            get(crate::handlers::demo::partials::ping_partial),
         )
         .route(
             Route::PartialAuthStatus.as_str(),
-            get(crate::handlers::auth_status_partial),
+            get(crate::handlers::demo::partials::auth_status_partial),
         )
         .route(
             Route::PartialSessionStatus.as_str(),
-            get(crate::handlers::session_status_partial),
+            get(crate::handlers::demo::partials::session_status_partial),
         )
         .route(
             Route::PartialRequestMeta.as_str(),
-            get(crate::handlers::request_meta_partial),
+            get(crate::handlers::demo::partials::request_meta_partial),
         )
         .route(
             Route::PartialBoundaryCheck.as_str(),
-            get(crate::handlers::boundary_check_partial),
+            get(crate::handlers::demo::partials::boundary_check_partial),
         )
         .route(
             Route::PartialDbCheck.as_str(),
-            get(crate::handlers::db_check_partial),
+            get(crate::handlers::demo::partials::db_check_partial),
         )
         .route(
             Route::PartialRequestBurstProbe.as_str(),
-            get(crate::handlers::request_burst_probe),
+            get(crate::handlers::demo::partials::request_burst_probe),
         )
         .route(
             Route::PartialSurrealGuarded.as_str(),
-            get(crate::handlers::surreal_message_guarded),
+            get(crate::handlers::sse::surreal_message_guarded),
         )
         .route(
             Route::PartialSurrealCancel.as_str(),
-            get(crate::handlers::surreal_message_cancel),
+            get(crate::handlers::sse::surreal_message_cancel),
         )
-        .route(Route::ErrorTest.as_str(), get(crate::handlers::error_test))
-        .route(Route::Events.as_str(), get(crate::handlers::events))
-        .route(Route::Health.as_str(), get(crate::handlers::health))
-        .route("/api/counter/sync", post(crate::handlers::counter_sync))
+        .route(
+            Route::ErrorTest.as_str(),
+            get(crate::handlers::pages::error_test),
+        )
+        .route(Route::Events.as_str(), get(crate::handlers::sse::events))
+        .route(Route::Health.as_str(), get(crate::handlers::pages::health))
+        .route(
+            "/api/counter/sync",
+            post(crate::handlers::pages::counter_sync),
+        )
         .route(
             "/api/operations/filter",
-            post(crate::handlers::operations_filter_update),
+            post(crate::handlers::pages::operations_filter_update),
         )
         .nest_service(
             "/static",
@@ -112,51 +118,55 @@ fn base_routes() -> Router {
 fn pages_routes() -> Router {
     use crate::paths::Route;
     let protected = Router::new()
-        .route(Route::Protected.as_str(), get(crate::handlers::protected))
+        .route(
+            Route::Protected.as_str(),
+            get(crate::handlers::auth::protected),
+        )
         .route_layer(from_fn(crate::auth::require_auth_middleware));
 
     let chat_protected = Router::new()
         .route(
             Route::ChatMessages.as_str(),
-            post(crate::handlers::post_chat_message),
+            post(crate::handlers::demo::chat::post_chat_message),
         )
         .route(
             Route::ChatModeration.as_str(),
-            get(crate::handlers::moderation_page).post(crate::handlers::moderate_message),
+            get(crate::handlers::demo::chat::moderation_page)
+                .post(crate::handlers::demo::chat::moderate_message),
         )
         .route_layer(from_fn(crate::auth::require_auth_middleware));
 
     Router::new()
-        .route(Route::Home.as_str(), get(crate::handlers::home))
-        .route(Route::Lab.as_str(), get(crate::handlers::lab))
-        .route(Route::Work.as_str(), get(crate::handlers::work))
+        .route(Route::Home.as_str(), get(crate::handlers::pages::home))
+        .route(Route::Lab.as_str(), get(crate::handlers::pages::lab))
+        .route(Route::Work.as_str(), get(crate::handlers::pages::work))
         .route(
             Route::WorkChatRealtime.as_str(),
-            get(crate::handlers::work_chat_realtime),
+            get(crate::handlers::pages::work_chat_realtime),
         )
         .route(
             Route::WorkCommandSse.as_str(),
-            get(crate::handlers::work_command_sse),
+            get(crate::handlers::pages::work_command_sse),
         )
         .route(
             Route::WorkOperationalVisibility.as_str(),
-            get(crate::handlers::work_operational_visibility),
+            get(crate::handlers::pages::work_operational_visibility),
         )
         .route(
             Route::Login.as_str(),
-            get(crate::handlers::login_form).post(crate::handlers::login),
+            get(crate::handlers::auth::login_form).post(crate::handlers::auth::login),
         )
         .route(
             Route::Register.as_str(),
-            get(crate::handlers::register_form).post(crate::handlers::register),
+            get(crate::handlers::auth::register_form).post(crate::handlers::auth::register),
         )
         .route(
             Route::Logout.as_str(),
-            axum::routing::post(crate::handlers::logout),
+            axum::routing::post(crate::handlers::auth::logout),
         )
         .route(
             Route::ChatMessagesDemo.as_str(),
-            post(crate::handlers::post_demo_chat_message),
+            post(crate::handlers::demo::chat::post_demo_chat_message),
         )
         .merge(protected)
         .merge(chat_protected)

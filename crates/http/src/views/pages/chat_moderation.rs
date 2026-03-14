@@ -3,8 +3,7 @@ use maud::Render;
 
 use crate::paths::Route;
 use crate::types::Text;
-use crate::views::page::{Layout, UserNav};
-use crate::views::partials::{button, ModerationAction};
+use crate::views::{page, partials};
 
 crate::views::scoped::inline_css!(
     r#"
@@ -117,7 +116,7 @@ me [data-chat-moderation-card] .button:focus-visible {
 pub struct ChatModeration {
     pub entries: Vec<app::chat::ModerationItem>,
     #[builder(setters(name = with_user))]
-    pub user: Option<UserNav>,
+    pub user: Option<page::UserNav>,
 }
 
 impl Render for ChatModeration {
@@ -152,22 +151,22 @@ impl Render for ChatModeration {
                                     form method="post" action=(Route::ChatModeration) {
                                         input type="hidden" name="message_id" value=(entry.message_id.as_uuid());
                                         input type="hidden" name="reason" value=(&entry.reason);
-                                        (button::Row::builder()
+                                        (partials::button::Row::builder()
                                             .items(vec![
-                                                button::Button::builder()
+                                                partials::button::Button::builder()
                                                     .label(Text::from("Approve"))
-                                                    .variant(button::Variant::Secondary)
-                                                    .role(button::Role::submit_with(
+                                                    .variant(partials::button::Variant::Secondary)
+                                                    .role(partials::button::Role::submit_with(
                                                         "decision",
-                                                        ModerationAction::Approve.to_string(),
+                                                        partials::ModerationAction::Approve.to_string(),
                                                     ))
                                                     .build(),
-                                                button::Button::builder()
+                                                partials::button::Button::builder()
                                                     .label(Text::from("Remove"))
-                                                    .variant(button::Variant::Primary)
-                                                    .role(button::Role::submit_with(
+                                                    .variant(partials::button::Variant::Primary)
+                                                    .role(partials::button::Role::submit_with(
                                                         "decision",
-                                                        ModerationAction::Remove.to_string(),
+                                                        partials::ModerationAction::Remove.to_string(),
                                                     ))
                                                     .build(),
                                             ])
@@ -181,7 +180,7 @@ impl Render for ChatModeration {
             }
         };
 
-        Layout::builder()
+        page::Layout::builder()
             .title("Chat moderation")
             .content(content)
             .maybe_with_user(self.user.clone())

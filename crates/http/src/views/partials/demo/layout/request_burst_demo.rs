@@ -2,7 +2,7 @@ use bon::Builder;
 use maud::Render;
 
 use crate::types::Text;
-use crate::views::partials::button;
+use crate::views::partials;
 
 use super::SectionHeader;
 
@@ -170,9 +170,9 @@ impl Render for RequestBurstDemo {
                         " requests"
                     }
                     div data-burst-actions {
-                        (button::Button::builder()
+                        (partials::button::Button::builder()
                             .label(Text::from("Send burst"))
-                            .data_attrs(vec![button::DataAttr::flag("data-burst-run")])
+                            .data_attrs(vec![partials::button::DataAttr::flag("data-burst-run")])
                             .build())
                         p class="u-muted" {
                             "Concurrency: "

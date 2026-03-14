@@ -11,7 +11,7 @@ use core::convert::Infallible;
 use datastar::axum::ReadSignals;
 use serde::Deserialize;
 use statum::{machine, state, transition};
-use tokio::sync::broadcast::error::RecvError;
+use tokio::sync::broadcast::error;
 use tokio::time::Duration;
 use tower_cookies::Cookies;
 
@@ -147,8 +147,8 @@ impl EventsConnectionFlow<Ready> {
                         let sse_event = event.as_datastar_event().write_as_axum_sse_event();
                         yield Ok::<_, Infallible>(sse_event);
                     }
-                    Err(RecvError::Lagged(_)) => continue,
-                    Err(RecvError::Closed) => {
+                    Err(error::RecvError::Lagged(_)) => continue,
+                    Err(error::RecvError::Closed) => {
                         tracing::info!(session_id = %session_id, "sse disconnected");
                         break;
                     }
@@ -247,7 +247,7 @@ struct ConnectionCleanupGuard {
     surreal_cancel: std::sync::Arc<
         dashmap::DashMap<crate::sse::StreamKey, tokio_util::sync::CancellationToken>,
     >,
-    trace_log: crate::trace_log::TraceLogStore,
+    trace_log: crate::trace_log::Store,
 }
 
 impl ConnectionCleanupGuard {
@@ -259,7 +259,7 @@ impl ConnectionCleanupGuard {
         surreal_cancel: std::sync::Arc<
             dashmap::DashMap<crate::sse::StreamKey, tokio_util::sync::CancellationToken>,
         >,
-        trace_log: crate::trace_log::TraceLogStore,
+        trace_log: crate::trace_log::Store,
     ) -> Self {
         Self {
             stream_key,
@@ -302,7 +302,7 @@ mod tests {
     #[test]
     fn cleanup_preserves_trace_entries_across_disconnects() {
         let registry = crate::sse::Registry::new();
-        let trace_log = crate::trace_log::TraceLogStore::builder()
+        let trace_log = crate::trace_log::Store::builder()
             .with_sse(registry.clone())
             .with_emit_sse(false)
             .build();

@@ -16,8 +16,7 @@ mod views;
 pub use error::{Error, Result};
 pub use paths::Route;
 pub use router::router;
-pub use sse::Registry as SseRegistry;
-pub use state::{DemoState, State};
+pub use state::State;
 pub use types::*;
 
 #[doc(hidden)]

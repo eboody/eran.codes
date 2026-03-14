@@ -10,28 +10,28 @@ mod request;
 mod tests;
 
 pub(super) fn build_flow_event(
-    kind: log::vm::request_flow::kind::FlowEventKind,
+    kind: log::vm::request_flow::kind::FlowEvent,
     entry: &TraceEntry,
 ) -> logs::composed::FlowEvent {
     let (summary, stage_label, pills) = match kind {
-        log::vm::request_flow::kind::FlowEventKind::RequestEnd => {
+        log::vm::request_flow::kind::FlowEvent::RequestEnd => {
             request::request_end_event(entry)
         }
-        log::vm::request_flow::kind::FlowEventKind::RequestStart => {
+        log::vm::request_flow::kind::FlowEvent::RequestStart => {
             request::request_start_event(entry)
         }
-        log::vm::request_flow::kind::FlowEventKind::ChatIncoming => {
+        log::vm::request_flow::kind::FlowEvent::ChatIncoming => {
             chat::chat_incoming_event(entry)
         }
-        log::vm::request_flow::kind::FlowEventKind::ChatBroadcast => {
+        log::vm::request_flow::kind::FlowEvent::ChatBroadcast => {
             chat::chat_broadcast_event(entry)
         }
-        log::vm::request_flow::kind::FlowEventKind::Sse => (
+        log::vm::request_flow::kind::FlowEvent::Sse => (
             Text::from(format!("SSE event: {}", entry.message)),
             Text::from("sse"),
             log::vm::request_flow::pills::field_pills(entry),
         ),
-        log::vm::request_flow::kind::FlowEventKind::Backend => {
+        log::vm::request_flow::kind::FlowEvent::Backend => {
             backend::backend_event(entry)
         }
     };

@@ -2,7 +2,7 @@ use maud::Render;
 
 use super::{LeadCopy, SectionCopy, Surface, render_actions};
 use crate::types::Text;
-use crate::views::partials::button;
+use crate::views::partials;
 use crate::views::partials::components::portfolio::content::{
     WorkCardContent, WorkIndexContent, WorkSectionContent,
 };
@@ -112,10 +112,10 @@ impl Render for WorkCard<'_> {
                         li { (item) }
                     }
                 }
-                (button::Button::builder()
+                (partials::button::Button::builder()
                     .label(self.content.cta_label.clone())
-                    .variant(button::Variant::Secondary)
-                    .role(button::Role::link(Text::from(route.to_string())))
+                    .variant(partials::button::Variant::Secondary)
+                    .role(partials::button::Role::link(Text::from(route.to_string())))
                     .build())
             }
         }

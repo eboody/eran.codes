@@ -93,9 +93,7 @@ impl Error {
         }
     }
 
-    pub fn hash_password(
-        source: impl std::error::Error + Send + Sync + 'static,
-    ) -> Self {
+    pub fn hash_password(source: impl std::error::Error + Send + Sync + 'static) -> Self {
         Self::HashPassword {
             source: PasswordHashError(box_error(source)),
         }
@@ -289,8 +287,7 @@ mod tests {
             Some("hash failed"),
         );
         assert_eq!(
-            error
-                .to_string(),
+            error.to_string(),
             "auth password hashing failed: hash failed",
         );
     }

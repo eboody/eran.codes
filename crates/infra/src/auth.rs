@@ -1,7 +1,4 @@
-use app::auth::{
-    self, AuthRecord, PasswordHash, PasswordHasher as AppPasswordHasher,
-    Repository as AppRepository,
-};
+use app::auth;
 use argon2::{
     Argon2, PasswordHash as ArgonPasswordHash, PasswordHasher as _, PasswordVerifier,
 };
@@ -52,9 +49,7 @@ fn map_repository_error(error: RepositoryError) -> app::auth::Error {
         RepositoryError::DecodeUsername { source } => {
             app::auth::Error::decode_username(source)
         }
-        RepositoryError::DecodeEmail { source } => {
-            app::auth::Error::decode_email(source)
-        }
+        RepositoryError::DecodeEmail { source } => app::auth::Error::decode_email(source),
     }
 }
 
@@ -71,17 +66,17 @@ impl Repository {
         app::auth::SessionHash::new(format!("auth-v1:{user_id}:{version}"))
     }
 
-    fn auth_record_from_row(row: PgRow) -> RepositoryResult<AuthRecord> {
+    fn auth_record_from_row(row: PgRow) -> RepositoryResult<auth::AuthRecord> {
         let user_id = row.get::<uuid::Uuid, _>("id");
         let username = user::Username::try_new(row.get::<String, _>("username"))
             .context(DecodeUsernameSnafu)?;
         let email = user::Email::try_new(row.get::<String, _>("email"))
             .context(DecodeEmailSnafu)?;
-        let password_hash = PasswordHash::new(row.get::<String, _>("password_hash"));
+        let password_hash = auth::PasswordHash::new(row.get::<String, _>("password_hash"));
         let credential_updated_at =
             row.get::<time::OffsetDateTime, _>("credential_updated_at");
 
-        Ok(AuthRecord::builder()
+        Ok(auth::AuthRecord::builder()
             .id(user::UserId::from_uuid(user_id))
             .username(username)
             .email(email)
@@ -96,7 +91,7 @@ impl Repository {
     async fn find_by_email_record(
         &self,
         email: &user::Email,
-    ) -> RepositoryResult<Option<AuthRecord>> {
+    ) -> RepositoryResult<Option<auth::AuthRecord>> {
         let record = sqlx::query(
             r#"
             SELECT u.id, u.username, u.email, c.password_hash, c.updated_at AS credential_updated_at
@@ -116,7 +111,7 @@ impl Repository {
     async fn find_by_id_record(
         &self,
         user_id: &user::UserId,
-    ) -> RepositoryResult<Option<AuthRecord>> {
+    ) -> RepositoryResult<Option<auth::AuthRecord>> {
         let record = sqlx::query(
             r#"
             SELECT u.id, u.username, u.email, c.password_hash, c.updated_at AS credential_updated_at
@@ -135,8 +130,11 @@ impl Repository {
 }
 
 #[async_trait]
-impl AppRepository for Repository {
-    async fn find_by_email(&self, email: &user::Email) -> auth::Result<Option<AuthRecord>> {
+impl auth::Repository for Repository {
+    async fn find_by_email(
+        &self,
+        email: &user::Email,
+    ) -> auth::Result<Option<auth::AuthRecord>> {
         let start = std::time::Instant::now();
         tracing::info!(
             target: "demo.db",
@@ -154,7 +152,10 @@ impl AppRepository for Repository {
             .map_err(map_repository_error)
     }
 
-    async fn find_by_id(&self, user_id: &user::UserId) -> auth::Result<Option<AuthRecord>> {
+    async fn find_by_id(
+        &self,
+        user_id: &user::UserId,
+    ) -> auth::Result<Option<auth::AuthRecord>> {
         let start = std::time::Instant::now();
         tracing::info!(
             target: "demo.db",
@@ -184,8 +185,8 @@ impl Argon2Hasher {
     }
 }
 
-impl AppPasswordHasher for Argon2Hasher {
-    fn hash(&self, password: &str) -> auth::Result<PasswordHash> {
+impl auth::PasswordHasher for Argon2Hasher {
+    fn hash(&self, password: &str) -> auth::Result<auth::PasswordHash> {
         let salt = password_hash::SaltString::generate(&mut OsRng);
         let hash = self
             .inner
@@ -193,10 +194,14 @@ impl AppPasswordHasher for Argon2Hasher {
             .map_err(PasswordHashError)
             .map_err(auth::Error::hash_password)?
             .to_string();
-        Ok(PasswordHash::new(hash))
+        Ok(auth::PasswordHash::new(hash))
     }
 
-    fn verify(&self, password: &str, password_hash: &PasswordHash) -> auth::Result<bool> {
+    fn verify(
+        &self,
+        password: &str,
+        password_hash: &auth::PasswordHash,
+    ) -> auth::Result<bool> {
         let hash_text = password_hash.to_string();
         let parsed = ArgonPasswordHash::new(&hash_text)
             .map_err(PasswordHashError)

@@ -1,7 +1,7 @@
 use maud::Render;
 
 use super::{SectionCopy, Surface};
-use crate::views::partials::button;
+use crate::views::partials;
 use crate::views::partials::components::portfolio::content::CrateSectionContent;
 
 pub struct CrateSection<'a> {
@@ -29,16 +29,16 @@ impl Render for CrateSection<'_> {
                                 }
                             }
                             div class="ui-portfolio-card-links" {
-                                (button::Button::builder()
+                                (partials::button::Button::builder()
                                     .label(card.repository_label.clone())
-                                    .variant(button::Variant::Secondary)
-                                    .role(button::Role::external_link(card.repository_url.clone()))
+                                    .variant(partials::button::Variant::Secondary)
+                                    .role(partials::button::Role::external_link(card.repository_url.clone()))
                                     .build())
                                 @if let (Some(docs_url), Some(docs_label)) = (&card.docs_url, &card.docs_label) {
-                                    (button::Button::builder()
+                                    (partials::button::Button::builder()
                                         .label(docs_label.clone())
-                                        .variant(button::Variant::Secondary)
-                                        .role(button::Role::external_link(docs_url.clone()))
+                                        .variant(partials::button::Variant::Secondary)
+                                        .role(partials::button::Role::external_link(docs_url.clone()))
                                         .build())
                                 }
                             }

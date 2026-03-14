@@ -52,7 +52,7 @@ impl Render for Panel {
 mod tests {
     use super::*;
     use crate::types::Text;
-    use crate::views::partials::button;
+    use crate::views::partials;
 
     fn window() -> chat::Window {
         chat::Window::builder()
@@ -75,10 +75,10 @@ mod tests {
                 .input_signal(Text::from("body"))
                 .placeholder(Text::from("Say something..."))
                 .submit(
-                    button::Button::builder()
+                    partials::button::Button::builder()
                         .label(Text::from("Send"))
-                        .variant(button::Variant::Primary)
-                        .role(button::Role::submit())
+                        .variant(partials::button::Variant::Primary)
+                        .role(partials::button::Role::submit())
                         .build(),
                 )
                 .build(),

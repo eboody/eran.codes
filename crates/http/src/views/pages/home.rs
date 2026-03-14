@@ -1,27 +1,26 @@
 use maud::Render;
 
-use crate::views::page::{Layout, NavMode};
-use crate::views::partials::components::portfolio;
+use crate::views::{page, partials};
 
 pub struct Home;
 
 impl Render for Home {
     fn render(&self) -> maud::Markup {
-        let content = portfolio::content::portfolio_home_content();
+        let content = partials::components::portfolio::content::portfolio_home_content();
 
-        let body = portfolio::Page {
+        let body = partials::components::portfolio::Page {
             content: maud::html! {
-                (portfolio::PortfolioHero { content: &content.hero })
-                (portfolio::ProofStrip {
+                (partials::components::portfolio::PortfolioHero { content: &content.hero })
+                (partials::components::portfolio::ProofStrip {
                     content: &content.proof_strip,
                 })
-                (portfolio::WorkSection {
+                (partials::components::portfolio::WorkSection {
                     content: &content.work_section,
                 })
-                (portfolio::CrateSection {
+                (partials::components::portfolio::CrateSection {
                     content: &content.crate_section,
                 })
-                (portfolio::ClosingSection {
+                (partials::components::portfolio::ClosingSection {
                     title: &content.closing.title,
                     summary: &content.closing.summary,
                     actions: &content.closing.actions,
@@ -30,10 +29,10 @@ impl Render for Home {
         }
         .render();
 
-        Layout::builder()
+        page::Layout::builder()
             .title(&content.page_title.to_string())
             .content(body)
-            .nav_mode(NavMode::Portfolio)
+            .nav_mode(page::NavMode::Portfolio)
             .build()
             .render()
     }

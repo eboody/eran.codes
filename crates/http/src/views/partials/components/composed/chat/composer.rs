@@ -2,7 +2,7 @@ use bon::Builder;
 use maud::Render;
 
 use crate::types::Text;
-use crate::views::partials::button;
+use crate::views::partials;
 
 #[derive(Clone, Debug, Builder)]
 pub struct Composer {
@@ -12,7 +12,7 @@ pub struct Composer {
     pub input_id: Text,
     pub input_signal: Text,
     pub placeholder: Text,
-    pub submit: button::Button,
+    pub submit: partials::button::Button,
 }
 
 impl Render for Composer {

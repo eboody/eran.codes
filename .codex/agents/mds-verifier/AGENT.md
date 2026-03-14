@@ -59,6 +59,8 @@ Validate full `component_spec` correctness against schema, cross-references, doc
   - parent/child typed render surfaces exist,
   - children are composed via props, and
   - primitive reuse is preferred over duplicate leaf components.
+- Styling refactors must preserve public theming hooks exposed to page shells or parent surfaces; silently rebinding those hooks at component roots is a verification failure.
+- Non-trivial styling refactors must include explicit visual regression validation against a before-state or live reference before they can pass.
 - CI enforcement references for this contract:
   - `scripts/ci/descriptive-module-imports.sh`
   - `scripts/ci/render-composition-contract.sh`
@@ -103,3 +105,5 @@ Run Policy:
 - MUST FAIL when `design.protocol_model` is missing or incomplete.
 - MUST FAIL when marked descriptive namespace roots are flattened by leaf `use` / `pub use`.
 - MUST FAIL when required render-composition contract metadata/checks are missing.
+- MUST FAIL when a styling refactor redefines public theme hooks on a component root in a way that blocks parent/page overrides without explicit redesign intent.
+- MUST FAIL when a non-trivial styling refactor is declared complete without before/after visual verification.

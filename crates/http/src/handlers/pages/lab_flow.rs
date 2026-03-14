@@ -1,19 +1,19 @@
 use statum::{machine, state, transition};
 
 use crate::types::Text;
-use crate::views::partials::{chat, components};
+use crate::views::partials;
 
 #[derive(Clone, Debug)]
 pub struct ViewerData {
     maybe_user: Option<crate::views::page::UserNav>,
     viewer_id: Option<domain::user::UserId>,
-    chat_mode: components::chat::Mode,
+    chat_mode: partials::components::chat::Mode,
 }
 
 #[derive(Clone, Debug)]
 pub struct ChatLoadedData {
     maybe_user: Option<crate::views::page::UserNav>,
-    chat_demo: chat::DemoSection,
+    chat_demo: partials::chat::DemoSection,
 }
 
 #[state]
@@ -51,7 +51,7 @@ impl LabPageFlow<Incoming> {
         Ok(self.mark_viewer_resolved(ViewerData {
             maybe_user,
             viewer_id,
-            chat_mode: components::chat::Mode::from(is_authenticated),
+            chat_mode: partials::components::chat::Mode::from(is_authenticated),
         }))
     }
 }
@@ -71,7 +71,7 @@ impl LabPageFlow<ViewerResolved> {
         let context =
             crate::chat_demo::load_chat_context(state, self.state_data.viewer_id).await?;
         let maybe_user = self.state_data.maybe_user.clone();
-        let chat_demo = chat::DemoSection::builder()
+        let chat_demo = partials::chat::DemoSection::builder()
             .room_id(Text::from(context.room.id.as_uuid().to_string()))
             .room_name(Text::from(context.room.name.to_string()))
             .messages(context.messages)
@@ -112,7 +112,7 @@ mod tests {
         let resolved = incoming.resolve_viewer().expect("resolved");
         assert!(matches!(
             resolved.state_data.chat_mode,
-            components::chat::Mode::DemoOnly
+            partials::components::chat::Mode::DemoOnly
         ));
     }
 }

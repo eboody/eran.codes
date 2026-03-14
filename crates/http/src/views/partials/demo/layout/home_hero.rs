@@ -3,9 +3,7 @@ use maud::Render;
 
 use crate::paths::Route;
 use crate::types::Text;
-use crate::views::page::UserNav;
-use crate::views::partials::components::Pill;
-use crate::views::partials::button;
+use crate::views::{page, partials};
 
 crate::views::scoped::inline_css!(
     r#"
@@ -206,7 +204,7 @@ me [data-button-row] {
 
 #[derive(Clone, Debug, Builder)]
 pub struct HomeHero {
-    pub user: Option<UserNav>,
+    pub user: Option<page::UserNav>,
 }
 
 impl Render for HomeHero {
@@ -221,23 +219,23 @@ impl Render for HomeHero {
                         "I build secure, observable backend systems with typed boundaries. This portfolio runs on the same real auth, Postgres, and SSE stack I ship in production-style projects."
                     }
                     div data-home-hero-tags {
-                        (Pill::builder().text(Text::from("axum-login")).build())
-                        (Pill::builder().text(Text::from("tower-sessions")).build())
-                        (Pill::builder().text(Text::from("sqlx + postgres")).build())
-                        (Pill::builder().text(Text::from("datastar + sse")).build())
-                        (Pill::builder().text(Text::from("argon2")).build())
+                        (partials::components::Pill::builder().text(Text::from("axum-login")).build())
+                        (partials::components::Pill::builder().text(Text::from("tower-sessions")).build())
+                        (partials::components::Pill::builder().text(Text::from("sqlx + postgres")).build())
+                        (partials::components::Pill::builder().text(Text::from("datastar + sse")).build())
+                        (partials::components::Pill::builder().text(Text::from("argon2")).build())
                     }
-                    (button::Row::builder()
+                    (partials::button::Row::builder()
                         .items(vec![
-                            button::Button::builder()
+                            partials::button::Button::builder()
                                 .label(Text::from("Open live demo"))
-                                .variant(button::Variant::Primary)
-                                .role(button::Role::link("#chat-demo"))
+                                .variant(partials::button::Variant::Primary)
+                                .role(partials::button::Role::link("#chat-demo"))
                                 .build(),
-                            button::Button::builder()
+                            partials::button::Button::builder()
                                 .label(Text::from("Review engineering quality"))
-                                .variant(button::Variant::Secondary)
-                                .role(button::Role::link("#engineering-quality"))
+                                .variant(partials::button::Variant::Secondary)
+                                .role(partials::button::Role::link("#engineering-quality"))
                                 .build(),
                         ])
                         .build())
@@ -247,25 +245,25 @@ impl Render for HomeHero {
                     @if let Some(user) = &self.user {
                         p { "Signed in as " strong { (&user.username) } "." }
                         p class="u-muted" { (&user.email) }
-                        (button::Button::builder()
+                        (partials::button::Button::builder()
                             .label(Text::from("Open account"))
-                            .variant(button::Variant::Primary)
-                            .role(button::Role::link(Route::Protected.as_str()))
+                            .variant(partials::button::Variant::Primary)
+                            .role(partials::button::Role::link(Route::Protected.as_str()))
                             .build())
                     } @else {
                         p { "No active session." }
                         p class="u-muted" { "Create an account to see session-backed auth." }
-                        (button::Row::builder()
+                        (partials::button::Row::builder()
                             .items(vec![
-                                button::Button::builder()
+                                partials::button::Button::builder()
                                     .label(Text::from("Create account"))
-                                    .variant(button::Variant::Primary)
-                                    .role(button::Role::link(Route::Register.as_str()))
+                                    .variant(partials::button::Variant::Primary)
+                                    .role(partials::button::Role::link(Route::Register.as_str()))
                                     .build(),
-                                button::Button::builder()
+                                partials::button::Button::builder()
                                     .label(Text::from("Sign in"))
-                                    .variant(button::Variant::Secondary)
-                                    .role(button::Role::link(Route::Login.as_str()))
+                                    .variant(partials::button::Variant::Secondary)
+                                    .role(partials::button::Role::link(Route::Login.as_str()))
                                     .build(),
                             ])
                             .build())

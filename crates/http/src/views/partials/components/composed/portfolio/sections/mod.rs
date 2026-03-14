@@ -1,7 +1,7 @@
 use maud::{Markup, Render};
 
 use crate::types::Text;
-use crate::views::partials::button;
+use crate::views::partials;
 
 use super::content::{CmsActionLink, CtaKind, ProofKind};
 
@@ -130,22 +130,22 @@ impl Render for Surface {
     }
 }
 
-pub(super) fn render_actions(actions: &[CmsActionLink]) -> button::Row {
-    button::Row::builder()
+pub(super) fn render_actions(actions: &[CmsActionLink]) -> partials::button::Row {
+    partials::button::Row::builder()
         .items(
             actions
                 .iter()
                 .map(|action| {
-                    button::Button::builder()
+                    partials::button::Button::builder()
                         .label(action.label.clone())
                         .variant(match action.tone {
-                            CtaKind::Primary => button::Variant::Primary,
-                            CtaKind::Secondary => button::Variant::Secondary,
+                            CtaKind::Primary => partials::button::Variant::Primary,
+                            CtaKind::Secondary => partials::button::Variant::Secondary,
                         })
                         .role(if action.kind.is_external() {
-                            button::Role::external_link(action.href.clone())
+                            partials::button::Role::external_link(action.href.clone())
                         } else {
-                            button::Role::link(action.href.clone())
+                            partials::button::Role::link(action.href.clone())
                         })
                         .build()
                 })

@@ -9,6 +9,12 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
+      - name: install CI tooling
+        run: |
+          if ! command -v rg >/dev/null 2>&1; then
+            apt-get update
+            apt-get install -y ripgrep
+          fi
       - name: stringy checks
         run: scripts/ci/stringy-check.sh
       - name: no String fields

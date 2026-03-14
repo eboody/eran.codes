@@ -2,7 +2,7 @@ use bon::Builder;
 use maud::Render;
 
 use crate::types::Text;
-use crate::views::partials::{RequestTraceLog, StatusCard, StatusCardItem};
+use crate::views::partials;
 
 #[derive(Clone, Debug, Builder)]
 pub struct BoundaryCheck {
@@ -17,15 +17,15 @@ impl Render for BoundaryCheck {
     fn render(&self) -> maud::Markup {
         maud::html! {
             article id="boundary-target" {
-                (StatusCard::builder()
+                (partials::StatusCard::builder()
                     .title(self.label.clone())
                     .items(vec![
-                        StatusCardItem::text("username", self.username.clone()),
-                        StatusCardItem::text("email", self.email.clone()),
-                        StatusCardItem::text("result", self.result.clone()),
+                        partials::StatusCardItem::text("username", self.username.clone()),
+                        partials::StatusCardItem::text("email", self.email.clone()),
+                        partials::StatusCardItem::text("result", self.result.clone()),
                     ])
                     .build())
-                (RequestTraceLog::builder().entries(&self.trace).build())
+                (partials::RequestTraceLog::builder().entries(&self.trace).build())
             }
         }
     }

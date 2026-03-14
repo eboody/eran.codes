@@ -2,7 +2,7 @@ use bon::Builder;
 use maud::Render;
 
 use crate::types::Text;
-use crate::views::partials::{RequestTraceLog, StatusCard, StatusCardItem};
+use crate::views::partials;
 
 #[derive(Clone, Debug, Builder)]
 pub struct SessionStatus {
@@ -15,14 +15,14 @@ impl Render for SessionStatus {
     fn render(&self) -> maud::Markup {
         maud::html! {
             article id="session-status-target" {
-                (StatusCard::builder()
+                (partials::StatusCard::builder()
                     .title(Text::from("Session details"))
                     .items(vec![
-                        StatusCardItem::optional("session_id", self.session_id.clone()),
-                        StatusCardItem::optional("expiry", self.expiry.clone()),
+                        partials::StatusCardItem::optional("session_id", self.session_id.clone()),
+                        partials::StatusCardItem::optional("expiry", self.expiry.clone()),
                     ])
                     .build())
-                (RequestTraceLog::builder().entries(&self.trace).build())
+                (partials::RequestTraceLog::builder().entries(&self.trace).build())
             }
         }
     }

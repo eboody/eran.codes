@@ -13,6 +13,114 @@ if ! command -v jq >/dev/null 2>&1; then
   exit 1
 fi
 
+declare -A seen_files=()
+
+add_candidate_file() {
+  local candidate=$1
+  [[ -n "$candidate" && -f "$candidate" ]] || return 0
+  seen_files["$candidate"]=1
+}
+
+local_module_file() {
+  local base_dir=$1
+  local module_name=$2
+
+  if [[ -f "$base_dir/${module_name}.rs" ]]; then
+    printf '%s\n' "$base_dir/${module_name}.rs"
+    return 0
+  fi
+
+  if [[ -f "$base_dir/${module_name}/mod.rs" ]]; then
+    printf '%s\n' "$base_dir/${module_name}/mod.rs"
+    return 0
+  fi
+
+  return 1
+}
+
+handler_scope() {
+  local file=$1
+  local handler=$2
+
+  awk -v handler="$handler" '
+    !capturing && $0 ~ "pub[[:space:]]+async[[:space:]]+fn[[:space:]]+" handler "[[:space:]]*\\(" {
+      capturing = 1
+    }
+
+    capturing && $0 ~ "^[[:space:]]*pub[[:space:]]+async[[:space:]]+fn[[:space:]]+" &&
+      $0 !~ "pub[[:space:]]+async[[:space:]]+fn[[:space:]]+" handler "[[:space:]]*\\(" {
+      exit
+    }
+
+    capturing { print }
+  ' "$file"
+}
+
+unique_definition_file() {
+  local symbol=$1
+  local -a matches=()
+
+  mapfile -t matches < <(
+    rg --no-heading --line-number -g '*.rs' \
+      "fn[[:space:]]+${symbol}\\b" crates src generated \
+      | cut -d: -f1 \
+      | awk '!seen[$0]++'
+  )
+
+  if ((${#matches[@]} == 1)); then
+    printf '%s\n' "${matches[0]}"
+  fi
+}
+
+implementation_files_for_handler() {
+  local file=$1
+  local handler=$2
+  local base_dir
+  local scope
+  local local_modules=()
+  local symbol_files=()
+  local symbol
+  local resolved
+
+  seen_files=()
+  add_candidate_file "$file"
+
+  base_dir=$(dirname "$file")
+  scope=$(handler_scope "$file" "$handler")
+
+  while IFS= read -r module_name; do
+    [[ -n "$module_name" ]] || continue
+    resolved=$(local_module_file "$base_dir" "$module_name" || true)
+    [[ -n "$resolved" ]] || continue
+    add_candidate_file "$resolved"
+    local_modules+=("$resolved")
+  done < <(
+    printf '%s\n' "$scope" \
+      | grep -oE '\b[A-Za-z_][A-Za-z0-9_]*::' \
+      | sed 's/::$//' \
+      | awk '!seen[$0]++'
+  )
+
+  while IFS= read -r symbol; do
+    [[ -n "$symbol" ]] || continue
+    resolved=$(unique_definition_file "$symbol" || true)
+    [[ -n "$resolved" ]] || continue
+    add_candidate_file "$resolved"
+  done < <(
+    {
+      printf '%s\n' "$scope"
+      for module_file in "${local_modules[@]}"; do
+        sed -n '1,240p' "$module_file"
+      done
+    } \
+      | grep -oE '(\.|::)[A-Za-z_][A-Za-z0-9_]*\(' \
+      | sed -E 's/^(\.|::)([A-Za-z_][A-Za-z0-9_]*)\($/\2/' \
+      | awk '!seen[$0]++'
+  )
+
+  printf '%s\n' "${!seen_files[@]}" | sort
+}
+
 # 1) Datastar command handlers (explicitly marked) must be StatusCode-based and non-JSON.
 mapfile -t markers < <(
   rg --no-heading --line-number -g '*.rs' \
@@ -32,6 +140,7 @@ for marker in "${markers[@]}"; do
   rest="${marker#*|}"
   line="${rest%%|*}"
   handler="${rest##*|}"
+  mapfile -t implementation_files < <(implementation_files_for_handler "$file" "$handler")
 
   if rg -U --no-heading --line-number \
     "pub\\s+async\\s+fn\\s+${handler}\\b[\\s\\S]{0,260}->\\s*Json<" "$file" >/dev/null; then
@@ -46,14 +155,14 @@ for marker in "${markers[@]}"; do
   fi
 
   if ! rg --no-heading --line-number \
-    'StatusCode::(NO_CONTENT|ACCEPTED)' "$file" >/dev/null; then
+    'StatusCode::(NO_CONTENT|ACCEPTED)' "${implementation_files[@]}" >/dev/null; then
     echo "${file}:${line}: Datastar command '${handler}' must return 204 or 202."
     status=1
   fi
 
   if ! rg --no-heading --line-number \
-    'patch_signals\(|event\("datastar-patch-signals"\)' "$file" >/dev/null; then
-    echo "${file}:${line}: Datastar command '${handler}' file must emit datastar-patch-signals."
+    'patch_signals\(|event\("datastar-patch-signals"\)|patch_elements\(' "${implementation_files[@]}" >/dev/null; then
+    echo "${file}:${line}: Datastar command '${handler}' implementation must emit an SSE patch event."
     status=1
   fi
 done

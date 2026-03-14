@@ -2,11 +2,7 @@ use bon::Builder;
 
 use crate::paths::Route;
 use crate::types::Text;
-use crate::views::page::{SseMode, UserNav};
-use crate::views::partials::{
-    DemoResultPlaceholder, EngineeringQuality, HomeHero, OperationalRequestFilter,
-    RequestBurstDemo, SectionHeader, TabSetShowcase, button, chat,
-};
+use crate::views::{page, partials};
 
 crate::views::scoped::inline_css!(
     r#"
@@ -134,8 +130,8 @@ me [data-operations-surface] {
 
 #[derive(Builder)]
 pub struct Lab {
-    pub user: Option<UserNav>,
-    pub chat_demo: Option<chat::DemoSection>,
+    pub user: Option<page::UserNav>,
+    pub chat_demo: Option<partials::chat::DemoSection>,
 }
 
 impl maud::Render for Lab {
@@ -143,32 +139,32 @@ impl maud::Render for Lab {
         let content = maud::html! {
             main class="u-container" data-lab-page {
                 (css())
-                (HomeHero::builder().maybe_user(self.user.clone()).build())
+                (partials::HomeHero::builder().maybe_user(self.user.clone()).build())
 
-                (TabSetShowcase::builder().build())
+                (partials::TabSetShowcase::builder().build())
 
-                (RequestBurstDemo::builder()
+                (partials::RequestBurstDemo::builder()
                     .endpoint(Text::from(Route::PartialRequestBurstProbe.as_str()))
                     .build())
 
                 @if let Some(chat_demo) = &self.chat_demo { (chat_demo.render()) } @else {
                     section
-                        id=(chat::DemoSection::ANCHOR_ID)
+                        id=(partials::chat::DemoSection::ANCHOR_ID)
                         class="u-surface-card"
                         data-chat-surface-variant="lab"
                     {
                         ({
-                            SectionHeader::builder()
+                            partials::SectionHeader::builder()
                                 .title(Text::from("Live chat room"))
                                 .subtitle(
                                     Text::from(
                                         "Sign in to send messages and see the chat room.",
                                     ),
                                 )
-                                .action(button::Button::builder()
+                                .action(partials::button::Button::builder()
                                     .label(Text::from("Sign in"))
-                                    .variant(button::Variant::Secondary)
-                                    .role(button::Role::link(Route::Login.as_str()))
+                                    .variant(partials::button::Variant::Secondary)
+                                    .role(partials::button::Role::link(Route::Login.as_str()))
                                     .build())
                                 .build()
                         })
@@ -181,7 +177,7 @@ impl maud::Render for Lab {
                     data-operations-surface
                 {
                     ({
-                        SectionHeader::builder()
+                        partials::SectionHeader::builder()
                             .title(Text::from("Operational View"))
                             .subtitle(
                                 Text::from(
@@ -191,12 +187,12 @@ impl maud::Render for Lab {
                             .build()
                     })
                     ({
-                        OperationalRequestFilter::builder()
+                        partials::OperationalRequestFilter::builder()
                             .target_id("network-log-target")
                             .build()
                     })
                     ({
-                        DemoResultPlaceholder::builder()
+                        partials::DemoResultPlaceholder::builder()
                             .target_id(Text::from("network-log-target"))
                             .message(
                                 Text::from(
@@ -207,14 +203,14 @@ impl maud::Render for Lab {
                     })
                 }
 
-                (EngineeringQuality::builder().build())
+                (partials::EngineeringQuality::builder().build())
             }
         };
 
-        crate::views::page::Layout::builder()
+        page::Layout::builder()
             .title("Live Lab")
             .content(content)
-            .sse_mode(SseMode::Enabled)
+            .sse_mode(page::SseMode::Enabled)
             .maybe_with_user(self.user.clone())
             .build()
             .render()

@@ -1,4 +1,4 @@
-use axum::{http::StatusCode, response::IntoResponse};
+use axum::{http, response::IntoResponse};
 use datastar::prelude::{ElementPatchMode, PatchElements};
 use maud::Render;
 use statum::{machine, state, transition};
@@ -6,9 +6,8 @@ use statum::{machine, state, transition};
 use super::{ChatSignals, DemoChatSignals};
 use crate::trace_log::{LogMessageKnown, LogTargetKnown};
 use crate::types::{LogFieldKey, Text, UserIdText};
-use crate::views::partials::{chat, components};
+use crate::views::partials;
 use crate::{paths::Route, request};
-use domain::chat as domain_chat;
 
 #[derive(Clone, Copy, Debug)]
 pub(super) enum ChatSender {
@@ -27,12 +26,12 @@ impl ChatSender {
 
 #[derive(Clone, Debug)]
 pub struct PostedData {
-    message: domain_chat::Message,
+    message: domain::chat::Message,
 }
 
 #[derive(Clone, Debug)]
 pub struct HtmlData {
-    message_html: String,
+    message_markup: maud::Markup,
 }
 
 #[state]
@@ -47,9 +46,9 @@ pub enum ChatPostState {
 
 #[machine]
 pub(super) struct ChatPostFlow<ChatPostState> {
-    room_id: domain_chat::RoomId,
-    user_id: domain_chat::UserId,
-    body: domain_chat::MessageBody,
+    room_id: domain::chat::RoomId,
+    user_id: domain::chat::UserId,
+    body: domain::chat::MessageBody,
     body_text: String,
     sender: ChatSender,
     author_name: String,
@@ -110,9 +109,9 @@ impl ChatPostFlow<Incoming> {
 
     #[allow(clippy::too_many_arguments)]
     fn new(
-        room_id: domain_chat::RoomId,
-        user_id: domain_chat::UserId,
-        body: domain_chat::MessageBody,
+        room_id: domain::chat::RoomId,
+        user_id: domain::chat::UserId,
+        body: domain::chat::MessageBody,
         body_text: String,
         sender: ChatSender,
         author_name: String,
@@ -149,25 +148,25 @@ impl ChatPostFlow<Incoming> {
             .unwrap_or_else(|| Text::from(format!("fallback-{}", uuid::Uuid::new_v4())))
     }
 
-    fn room_id_from_text(value: &str) -> Result<domain_chat::RoomId, crate::error::Error> {
+    fn room_id_from_text(value: &str) -> Result<domain::chat::RoomId, crate::error::Error> {
         let id = value.parse::<uuid::Uuid>().map_err(|error| {
             crate::error::Error::from(app::chat::Error::invalid_room_id(error))
         })?;
 
-        Ok(domain_chat::RoomId::from_uuid(id))
+        Ok(domain::chat::RoomId::from_uuid(id))
     }
 
     fn message_body_from_text(
         value: &str,
-    ) -> Result<domain_chat::MessageBody, crate::error::Error> {
-        domain_chat::MessageBody::try_new(value)
+    ) -> Result<domain::chat::MessageBody, crate::error::Error> {
+        domain::chat::MessageBody::try_new(value)
             .map_err(domain::chat::Error::from)
             .map_err(app::chat::Error::from)
             .map_err(crate::error::Error::from)
     }
 
-    fn chat_user_id_from_user_id(value: domain::user::UserId) -> domain_chat::UserId {
-        domain_chat::UserId::from_uuid(*value.as_uuid())
+    fn chat_user_id_from_user_id(value: domain::user::UserId) -> domain::chat::UserId {
+        domain::chat::UserId::from_uuid(*value.as_uuid())
     }
 }
 
@@ -214,7 +213,7 @@ impl ChatPostFlow<CommandBuilt> {
 impl ChatPostFlow<CommandBuilt> {
     pub(super) fn mark_message_posted(
         self,
-        message: domain_chat::Message,
+        message: domain::chat::Message,
     ) -> ChatPostFlow<MessagePosted> {
         self.transition_with(PostedData { message })
     }
@@ -297,7 +296,7 @@ impl ChatPostFlow<MessagePosted> {
 impl ChatPostFlow<IncomingRecorded> {
     pub(super) fn render_message_html(self) -> ChatPostFlow<HtmlRendered> {
         let message = &self.state_data.message;
-        let markup = components::chat::Message::builder()
+        let markup = partials::components::chat::Message::builder()
             .message_id(Text::from(message.id.as_uuid().to_string()))
             .author(Text::from(self.author_name.clone()))
             .timestamp(Text::from(crate::chat_demo::format_message_time(
@@ -306,22 +305,24 @@ impl ChatPostFlow<IncomingRecorded> {
             .body(Text::from(message.body.to_string()))
             .status(to_chat_message_status(message.status))
             .build()
-            .render()
-            .into_string();
+            .render();
         self.mark_html_rendered(markup)
     }
 }
 
 #[transition]
 impl ChatPostFlow<IncomingRecorded> {
-    fn mark_html_rendered(self, message_html: String) -> ChatPostFlow<HtmlRendered> {
-        self.transition_with(HtmlData { message_html })
+    fn mark_html_rendered(
+        self,
+        message_markup: maud::Markup,
+    ) -> ChatPostFlow<HtmlRendered> {
+        self.transition_with(HtmlData { message_markup })
     }
 }
 
 impl ChatPostFlow<HtmlRendered> {
-    pub(super) fn message_html(&self) -> &str {
-        &self.state_data.message_html
+    pub(super) fn message_markup(&self) -> &maud::Markup {
+        &self.state_data.message_markup
     }
 
     pub(super) fn broadcast(self, state: &crate::State) -> ChatPostFlow<Broadcasted> {
@@ -330,8 +331,8 @@ impl ChatPostFlow<HtmlRendered> {
     }
 
     fn broadcast_message(&self, state: &crate::State) {
-        let message_html = self.message_html();
-        let event = PatchElements::new(message_html)
+        let message_html = self.message_markup().clone().into_string();
+        let event = PatchElements::new(message_html.as_str())
             .selector("[data-chat-messages]")
             .mode(ElementPatchMode::Prepend)
             .into_datastar_event();
@@ -421,10 +422,13 @@ impl ChatPostFlow<HtmlRendered> {
 impl ChatPostFlow<Broadcasted> {
     pub(super) fn into_response(self) -> axum::response::Response {
         match request::current_kind() {
-            request::Kind::Datastar => StatusCode::ACCEPTED.into_response(),
+            request::Kind::Datastar => http::StatusCode::ACCEPTED.into_response(),
             request::Kind::Page => {
-                let target =
-                    format!("{}#{}", Route::Home.as_str(), chat::DemoSection::ANCHOR_ID);
+                let target = format!(
+                    "{}#{}",
+                    Route::Home.as_str(),
+                    partials::chat::DemoSection::ANCHOR_ID
+                );
                 axum::response::Redirect::to(target.as_str()).into_response()
             }
         }
@@ -432,12 +436,12 @@ impl ChatPostFlow<Broadcasted> {
 }
 
 fn to_chat_message_status(
-    value: domain_chat::MessageStatus,
-) -> components::chat::Status {
+    value: domain::chat::MessageStatus,
+) -> partials::components::chat::Status {
     match value {
-        domain_chat::MessageStatus::Visible => components::chat::Status::Visible,
-        domain_chat::MessageStatus::Pending => components::chat::Status::Pending,
-        domain_chat::MessageStatus::Removed => components::chat::Status::Removed,
+        domain::chat::MessageStatus::Visible => partials::components::chat::Status::Visible,
+        domain::chat::MessageStatus::Pending => partials::components::chat::Status::Pending,
+        domain::chat::MessageStatus::Removed => partials::components::chat::Status::Removed,
     }
 }
 
@@ -448,17 +452,17 @@ mod tests {
     use super::*;
     use crate::types::SseTabId;
 
-    fn sample_body() -> domain_chat::MessageBody {
-        domain_chat::MessageBody::try_new("hello").expect("valid body")
+    fn sample_body() -> domain::chat::MessageBody {
+        domain::chat::MessageBody::try_new("hello").expect("valid body")
     }
 
-    fn sample_message() -> domain_chat::Message {
-        domain_chat::Message::builder()
-            .id(domain_chat::MessageId::new_v4())
-            .room_id(domain_chat::RoomId::new_v4())
-            .user_id(domain_chat::UserId::new_v4())
+    fn sample_message() -> domain::chat::Message {
+        domain::chat::Message::builder()
+            .id(domain::chat::MessageId::new_v4())
+            .room_id(domain::chat::RoomId::new_v4())
+            .user_id(domain::chat::UserId::new_v4())
             .body(sample_body())
-            .status(domain_chat::MessageStatus::Visible)
+            .status(domain::chat::MessageStatus::Visible)
             .maybe_client_id(None)
             .created_at(std::time::SystemTime::UNIX_EPOCH)
             .build()
@@ -475,8 +479,8 @@ mod tests {
 
     fn incoming() -> ChatPostFlow<Incoming> {
         IncomingFlow::new(
-            domain_chat::RoomId::new_v4(),
-            domain_chat::UserId::new_v4(),
+            domain::chat::RoomId::new_v4(),
+            domain::chat::UserId::new_v4(),
             sample_body(),
             "hello".to_string(),
             ChatSender::You,
@@ -499,9 +503,10 @@ mod tests {
             .mark_command_built()
             .mark_message_posted(sample_message());
         let rendered = posted.mark_incoming_recorded().render_message_html();
+        let markup = rendered.message_markup().clone().into_string();
 
-        assert!(rendered.message_html().contains("person"));
-        assert!(rendered.message_html().contains("hello"));
+        assert!(markup.contains("person"));
+        assert!(markup.contains("hello"));
     }
 
     #[test]
@@ -509,7 +514,7 @@ mod tests {
         let user = auth_user();
         let incoming = IncomingFlow::from_authenticated_signals(
             ChatSignals {
-                room_id: Text::from(domain_chat::RoomId::new_v4().as_uuid().to_string()),
+                room_id: Text::from(domain::chat::RoomId::new_v4().as_uuid().to_string()),
                 body: Text::from("hello"),
                 sse_tab_id: Some(SseTabId::new("tab-1")),
             },

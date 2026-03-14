@@ -4,7 +4,7 @@ use serde_json::json;
 
 use crate::paths::Route;
 use crate::types::Text;
-use crate::views::partials::button;
+use crate::views::partials;
 
 use super as chat;
 
@@ -18,7 +18,7 @@ struct RoleSpec {
     action: Route,
     input_signal: &'static str,
     button_label: &'static str,
-    button_variant: button::Variant,
+    button_variant: partials::button::Variant,
     side: chat::Side,
     input_id: &'static str,
 }
@@ -39,7 +39,7 @@ impl Role {
                 action: Route::ChatMessages,
                 input_signal: "body",
                 button_label: "Send",
-                button_variant: button::Variant::Primary,
+                button_variant: partials::button::Variant::Primary,
                 side: chat::Side::Right,
                 input_id: "chat-input-you",
             },
@@ -50,7 +50,7 @@ impl Role {
                 action: Route::ChatMessagesDemo,
                 input_signal: "botBody",
                 button_label: "Send as demo",
-                button_variant: button::Variant::Secondary,
+                button_variant: partials::button::Variant::Secondary,
                 side: chat::Side::Left,
                 input_id: "chat-input-demo",
             },
@@ -117,10 +117,10 @@ impl Surface {
                     .input_signal(Text::from(spec.input_signal))
                     .placeholder(Text::from(spec.placeholder))
                     .submit(
-                        button::Button::builder()
+                        partials::button::Button::builder()
                             .label(Text::from(spec.button_label))
                             .variant(spec.button_variant)
-                            .role(button::Role::submit())
+                            .role(partials::button::Role::submit())
                             .build(),
                     )
                     .build(),

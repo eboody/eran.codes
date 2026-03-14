@@ -4,14 +4,13 @@ use urlencoding;
 
 use crate::paths::Route;
 use crate::types::Text;
-use crate::views::page::UserNav;
-use crate::views::partials::{button, AuthShell};
+use crate::views::{page, partials};
 
 #[derive(Builder)]
 pub struct Register<'a> {
     pub message: Option<&'a str>,
     pub next: Option<&'a str>,
-    pub user: Option<UserNav>,
+    pub user: Option<page::UserNav>,
 }
 
 impl Render for Register<'_> {
@@ -36,11 +35,11 @@ impl Render for Register<'_> {
                     span { "Password" }
                     input type="password" name="password" required;
                 }
-                (button::Button::builder()
+                (partials::button::Button::builder()
                     .label(Text::from("Create account"))
-                    .variant(button::Variant::Primary)
-                    .role(button::Role::submit())
-                    .data_attrs(vec![button::DataAttr::flag("data-auth-submit")])
+                    .variant(partials::button::Variant::Primary)
+                    .role(partials::button::Role::submit())
+                    .data_attrs(vec![partials::button::DataAttr::flag("data-auth-submit")])
                     .build())
             }
         };
@@ -55,7 +54,7 @@ impl Render for Register<'_> {
             }
         };
         let content = maud::html! {
-            (AuthShell::builder()
+            (partials::AuthShell::builder()
                 .title(Text::from("Create account"))
                 .summary(Text::from("Pick a username and password to get started."))
                 .maybe_message(self.message.map(Text::from))
@@ -64,7 +63,7 @@ impl Render for Register<'_> {
                 .build())
         };
 
-        crate::views::page::Layout::builder()
+        page::Layout::builder()
             .title("Create account")
             .content(content)
             .maybe_with_user(self.user.clone())

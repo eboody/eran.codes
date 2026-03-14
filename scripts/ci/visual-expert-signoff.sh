@@ -17,6 +17,11 @@ if [[ -z "$changed_files" ]]; then
   changed_files="$(git show --pretty='' --name-only HEAD || true)"
 fi
 
+if [[ "${ACT:-}" == "true" ]]; then
+  echo "visual-expert-signoff: skipping under act; manual signoff artifacts are GitHub CI only"
+  exit 0
+fi
+
 if [[ -z "$changed_files" ]]; then
   echo "visual-expert-signoff: no changed files detected; skipping"
   exit 0

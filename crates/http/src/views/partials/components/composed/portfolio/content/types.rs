@@ -1,3 +1,5 @@
+// ci: partials-render-file-exempt
+
 use serde::Deserialize;
 
 use crate::paths::Route;

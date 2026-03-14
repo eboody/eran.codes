@@ -4,7 +4,6 @@ mod error;
 use std::sync::Arc;
 
 use app::user;
-use error::Result;
 use snafu::ResultExt;
 use tower_cookies::Key;
 use tower_sessions::session_store::ExpiredDeletion;
@@ -12,12 +11,12 @@ use tower_sessions_sqlx_store::PostgresStore;
 use tracing_subscriber::{EnvFilter, layer::SubscriberExt, util::SubscriberInitExt};
 
 #[tokio::main]
-async fn main() -> Result<()> {
-    let sse_registry = http::SseRegistry::new();
-    let trace_log = http::trace_log::TraceLogStore::builder()
+async fn main() -> error::Result<()> {
+    let sse_registry = http::sse::Registry::new();
+    let trace_log = http::trace_log::Store::builder()
         .with_sse(sse_registry.clone())
         .build();
-    let diagnostic_log = http::trace_log::TraceLogStore::builder()
+    let diagnostic_log = http::trace_log::Store::builder()
         .with_sse(sse_registry.clone())
         .with_max_entries(100)
         .with_emit_sse(false)
@@ -32,7 +31,7 @@ async fn main() -> Result<()> {
         .await
         .context(error::InitInfraSnafu)?;
 
-    let user_repo = Arc::new(infra::user::Repository::new(infra.db.clone()));
+    let user_repo = Arc::new(infra::repo::user::Repository::new(infra.db.clone()));
     let auth_hasher = Arc::new(infra::auth::Argon2Hasher::new());
     let user_service = user::Service::new(user_repo, auth_hasher.clone());
 
@@ -92,17 +91,14 @@ async fn main() -> Result<()> {
     Ok(())
 }
 
-fn init_tracing(
-    trace_log: http::trace_log::TraceLogStore,
-    diagnostic_log: http::trace_log::TraceLogStore,
-) {
+fn init_tracing(trace_log: http::trace_log::Store, diagnostic_log: http::trace_log::Store) {
     let env_filter =
         EnvFilter::try_from_default_env().unwrap_or_else(|_| "info,http=debug".into());
     let log_format = LogFormat::from_env();
 
     let subscriber = tracing_subscriber::registry().with(env_filter);
-    let trace_layer = http::trace_log::TraceLogLayer::new(trace_log);
-    let diagnostic_layer = http::trace_log::DiagnosticTraceLogLayer::new(diagnostic_log);
+    let trace_layer = http::trace_log::Layer::new(trace_log);
+    let diagnostic_layer = http::trace_log::DiagnosticLayer::new(diagnostic_log);
 
     match log_format {
         LogFormat::Json => {

@@ -1,6 +1,6 @@
 use std::sync::atomic::{AtomicI64, Ordering};
 
-use axum::http::StatusCode;
+use axum::http;
 use statum::{machine, state, transition};
 use tower_cookies::{Cookies, Key};
 
@@ -158,20 +158,20 @@ impl CounterSyncFlow<CounterUpdated> {
 }
 
 impl CounterSyncFlow<PatchDispatched> {
-    pub(super) fn status_code(&self) -> StatusCode {
-        StatusCode::NO_CONTENT
+    pub(super) fn status_code(&self) -> http::StatusCode {
+        http::StatusCode::NO_CONTENT
     }
 }
 
 impl CounterSyncFlow<SessionUnavailable> {
-    pub(super) fn status_code(&self) -> StatusCode {
-        StatusCode::PRECONDITION_REQUIRED
+    pub(super) fn status_code(&self) -> http::StatusCode {
+        http::StatusCode::PRECONDITION_REQUIRED
     }
 }
 
 impl CounterSyncFlow<DispatchFailed> {
-    pub(super) fn status_code(&self) -> StatusCode {
-        StatusCode::SERVICE_UNAVAILABLE
+    pub(super) fn status_code(&self) -> http::StatusCode {
+        http::StatusCode::SERVICE_UNAVAILABLE
     }
 }
 
@@ -200,7 +200,7 @@ impl StreamCheckOutcome {
 }
 
 impl DispatchOutcome {
-    pub(super) fn status_code(&self) -> StatusCode {
+    pub(super) fn status_code(&self) -> http::StatusCode {
         match self {
             Self::Dispatched(dispatched) => dispatched.status_code(),
             Self::Unavailable(unavailable) => unavailable.status_code(),

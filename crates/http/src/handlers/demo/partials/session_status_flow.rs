@@ -1,4 +1,4 @@
-use axum::http::StatusCode;
+use axum::http;
 use maud::Render;
 use statum::{machine, state, transition};
 use tower_sessions::Session;
@@ -45,14 +45,14 @@ impl SessionStatusPartialFlow<Incoming> {
 }
 
 impl SessionStatusPartialFlow<SnapshotPrepared> {
-    pub(super) fn into_response(self) -> (StatusCode, axum::response::Html<String>) {
+    pub(super) fn into_response(self) -> (http::StatusCode, axum::response::Html<String>) {
         let partial = crate::views::partials::SessionStatus::builder()
             .maybe_session_id(self.session_id)
             .maybe_expiry(self.expiry)
             .trace(self.trace)
             .build();
         (
-            StatusCode::OK,
+            http::StatusCode::OK,
             axum::response::Html(partial.render().into_string()),
         )
     }
@@ -73,7 +73,7 @@ mod tests {
             .build();
 
         let response = prepared.into_response();
-        assert_eq!(response.0, StatusCode::OK);
+        assert_eq!(response.0, http::StatusCode::OK);
         assert!(response.1.0.contains("session-status-target"));
     }
 }

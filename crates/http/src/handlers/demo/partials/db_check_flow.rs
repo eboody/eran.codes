@@ -1,4 +1,4 @@
-use axum::http::StatusCode;
+use axum::http;
 use statum::{machine, state, transition};
 
 use crate::types::Text;
@@ -78,7 +78,7 @@ impl DbCheckPartialFlow<LookupEvaluated> {
     pub(super) fn into_response(
         self,
         state: &crate::State,
-    ) -> (StatusCode, axum::response::Html<String>) {
+    ) -> (http::StatusCode, axum::response::Html<String>) {
         let trace = super::trace_snapshot(state);
         let partial = crate::views::partials::DbCheck::builder()
             .email(Text::from(self.email_text.unwrap_or_default()))
@@ -86,7 +86,7 @@ impl DbCheckPartialFlow<LookupEvaluated> {
             .trace(trace)
             .build();
         (
-            StatusCode::OK,
+            http::StatusCode::OK,
             axum::response::Html(maud::Render::render(&partial).into_string()),
         )
     }

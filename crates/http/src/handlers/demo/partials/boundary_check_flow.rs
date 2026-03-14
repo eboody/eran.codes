@@ -1,4 +1,4 @@
-use axum::http::StatusCode;
+use axum::http;
 use maud::Render;
 use statum::{machine, state, transition};
 
@@ -78,7 +78,7 @@ impl BoundaryCheckPartialFlow<CaseResolved> {
 }
 
 impl BoundaryCheckPartialFlow<ValidationEvaluated> {
-    pub(super) fn into_response(self) -> (StatusCode, axum::response::Html<String>) {
+    pub(super) fn into_response(self) -> (http::StatusCode, axum::response::Html<String>) {
         let partial = crate::views::partials::BoundaryCheck::builder()
             .label(self.label.unwrap_or_else(|| Text::from("Boundary check")))
             .username(self.username.unwrap_or_else(|| Text::from("none")))
@@ -87,7 +87,7 @@ impl BoundaryCheckPartialFlow<ValidationEvaluated> {
             .trace(self.trace)
             .build();
         (
-            StatusCode::OK,
+            http::StatusCode::OK,
             axum::response::Html(partial.render().into_string()),
         )
     }
@@ -111,7 +111,7 @@ mod tests {
             .build();
 
         let response = evaluated.into_response();
-        assert_eq!(response.0, StatusCode::OK);
+        assert_eq!(response.0, http::StatusCode::OK);
         assert!(response.1.0.contains("boundary-target"));
     }
 }

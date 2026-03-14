@@ -1,12 +1,6 @@
-use axum::{
-    body::Body,
-    extract::Extension,
-    http::{HeaderMap, Request, header},
-    middleware::Next,
-    response::Response,
-};
+use axum::{body::Body, extract::Extension, http, middleware::Next, response};
 
-use crate::sse::{Handle as SseHandle, SESSION_COOKIE};
+use crate::sse::{self, SESSION_COOKIE};
 use crate::types::{ClientIp, RequestId, SessionId, SseTabId, UserAgent, UserIdText};
 use std::cell::RefCell;
 use tower_cookies::{Cookies, Key};
@@ -45,9 +39,9 @@ pub fn current_context() -> Option<Context> {
 
 pub async fn set_context_middleware(
     Extension(state): Extension<crate::State>,
-    req: Request<Body>,
+    req: http::Request<Body>,
     next: Next,
-) -> Response {
+) -> response::Response {
     let context = context_from_request(&req, &state.cookie_key);
     let mut req = req;
     req.extensions_mut().insert(context.clone());
@@ -85,7 +79,7 @@ pub fn set_sse_tab_id(sse_tab_id: impl Into<SseTabId>) {
     }
 }
 
-fn context_from_request(req: &Request<Body>, key: &Key) -> Context {
+fn context_from_request(req: &http::Request<Body>, key: &Key) -> Context {
     let cookies = req.extensions().get::<Cookies>();
     let session_id = cookies.map(|cookies| ensure_session_id(cookies, key));
 
@@ -99,10 +93,10 @@ fn ensure_session_id(cookies: &Cookies, key: &Key) -> SessionId {
     if let Some(session_id) = session_id_from_cookies(cookies, key) {
         return session_id;
     }
-    SseHandle::from_cookies(cookies, key).id()
+    sse::Handle::from_cookies(cookies, key).id()
 }
 
-pub(crate) fn kind_from_headers(headers: &HeaderMap) -> Kind {
+pub(crate) fn kind_from_headers(headers: &http::HeaderMap) -> Kind {
     if headers.contains_key("datastar-request") {
         Kind::Datastar
     } else {
@@ -117,47 +111,52 @@ fn session_id_from_cookies(cookies: &Cookies, key: &Key) -> Option<SessionId> {
         .map(|cookie| SessionId::new(cookie.value()))
 }
 
-pub(crate) fn request_id_from_headers(headers: &HeaderMap) -> Option<RequestId> {
-    header_value(headers, header::HeaderName::from_static("x-request-id"))
-        .map(RequestId::new)
+pub(crate) fn id_from_headers(headers: &http::HeaderMap) -> Option<RequestId> {
+    header_value(
+        headers,
+        http::header::HeaderName::from_static("x-request-id"),
+    )
+    .map(RequestId::new)
 }
 
-pub(crate) fn user_agent_from_headers(headers: &HeaderMap) -> Option<UserAgent> {
-    header_value(headers, header::USER_AGENT).map(UserAgent::new)
+pub(crate) fn user_agent_from_headers(headers: &http::HeaderMap) -> Option<UserAgent> {
+    header_value(headers, http::header::USER_AGENT).map(UserAgent::new)
 }
 
-pub(crate) fn client_ip_from_headers(headers: &HeaderMap) -> Option<ClientIp> {
-    let forwarded =
-        header_value(headers, header::HeaderName::from_static("x-forwarded-for"))
-            .and_then(|value| value.split(',').next().map(str::trim))
-            .map(ClientIp::new);
+pub(crate) fn client_ip_from_headers(headers: &http::HeaderMap) -> Option<ClientIp> {
+    let forwarded = header_value(
+        headers,
+        http::header::HeaderName::from_static("x-forwarded-for"),
+    )
+    .and_then(|value| value.split(',').next().map(str::trim))
+    .map(ClientIp::new);
 
     forwarded.or_else(|| {
-        header_value(headers, header::HeaderName::from_static("x-real-ip"))
+        header_value(headers, http::header::HeaderName::from_static("x-real-ip"))
             .map(ClientIp::new)
     })
 }
 
-fn header_value(headers: &HeaderMap, name: header::HeaderName) -> Option<&str> {
+fn header_value(headers: &http::HeaderMap, name: http::header::HeaderName) -> Option<&str> {
     headers.get(name).and_then(|value| value.to_str().ok())
 }
 
 #[cfg(test)]
 mod tests {
     use super::*;
-    use axum::http::HeaderValue;
+    use axum::http;
     use tower_cookies::{Cookie, Cookies, Key};
 
     #[test]
     fn prefers_forwarded_ip_over_real_ip() {
-        let mut headers = HeaderMap::new();
+        let mut headers = http::HeaderMap::new();
         headers.insert(
-            header::HeaderName::from_static("x-forwarded-for"),
-            HeaderValue::from_static("203.0.113.5, 10.0.0.1"),
+            http::header::HeaderName::from_static("x-forwarded-for"),
+            http::HeaderValue::from_static("203.0.113.5, 10.0.0.1"),
         );
         headers.insert(
-            header::HeaderName::from_static("x-real-ip"),
-            HeaderValue::from_static("198.51.100.7"),
+            http::header::HeaderName::from_static("x-real-ip"),
+            http::HeaderValue::from_static("198.51.100.7"),
         );
 
         let client_ip = client_ip_from_headers(&headers);
@@ -170,8 +169,8 @@ mod tests {
 
     #[test]
     fn detects_datastar_request() {
-        let mut headers = HeaderMap::new();
-        headers.insert("datastar-request", HeaderValue::from_static("1"));
+        let mut headers = http::HeaderMap::new();
+        headers.insert("datastar-request", http::HeaderValue::from_static("1"));
 
         let kind = kind_from_headers(&headers);
 
@@ -202,7 +201,10 @@ mod tests {
             .signed(&key)
             .add(Cookie::new(SESSION_COOKIE, "signed123"));
 
-        let mut req = Request::builder().uri("/").body(Body::empty()).unwrap();
+        let mut req = http::Request::builder()
+            .uri("/")
+            .body(Body::empty())
+            .unwrap();
         req.extensions_mut().insert(cookies);
 
         let context = context_from_request(&req, &key);
@@ -217,7 +219,10 @@ mod tests {
     fn context_creates_session_cookie_when_missing() {
         let key = Key::generate();
         let cookies = Cookies::default();
-        let mut req = Request::builder().uri("/").body(Body::empty()).unwrap();
+        let mut req = http::Request::builder()
+            .uri("/")
+            .body(Body::empty())
+            .unwrap();
         req.extensions_mut().insert(cookies.clone());
 
         let context = context_from_request(&req, &key);
@@ -233,11 +238,11 @@ mod tests {
     #[test]
     fn ignores_unsigned_session_cookie() {
         let key = Key::generate();
-        let req = Request::builder()
+        let req = http::Request::builder()
             .uri("/")
             .header(
-                header::COOKIE,
-                HeaderValue::from_static("session_id=unsigned"),
+                http::header::COOKIE,
+                http::HeaderValue::from_static("session_id=unsigned"),
             )
             .body(Body::empty())
             .unwrap();

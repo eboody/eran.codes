@@ -1,4 +1,4 @@
-use axum::http::StatusCode;
+use axum::http;
 use statum::{machine, state, transition};
 use tokio::time::{Duration, sleep};
 use tower_cookies::Cookies;
@@ -123,8 +123,8 @@ impl SurrealCancelFlow<TokenPrepared> {
 }
 
 impl SurrealCancelFlow<Spawned> {
-    pub(in crate::handlers::sse) fn status_code(&self) -> StatusCode {
-        StatusCode::ACCEPTED
+    pub(in crate::handlers::sse) fn status_code(&self) -> http::StatusCode {
+        http::StatusCode::ACCEPTED
     }
 }
 

@@ -1,4 +1,4 @@
-use axum::{extract::Extension, http::StatusCode, response::IntoResponse};
+use axum::{extract::Extension, http, response::IntoResponse};
 use maud::Render;
 use serde::Deserialize;
 use tower_sessions::Session;
@@ -84,9 +84,12 @@ pub async fn db_check_partial(
 
 pub async fn ping_partial(Extension(_state): Extension<crate::State>) -> impl IntoResponse {
     let elements = views::partials::Ping.render();
-    (StatusCode::OK, axum::response::Html(elements.into_string()))
+    (
+        http::StatusCode::OK,
+        axum::response::Html(elements.into_string()),
+    )
 }
 
 pub async fn request_burst_probe() -> impl IntoResponse {
-    StatusCode::NO_CONTENT
+    http::StatusCode::NO_CONTENT
 }

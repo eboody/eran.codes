@@ -2,7 +2,7 @@ use bon::Builder;
 use maud::{PreEscaped, Render};
 
 use crate::types::Text;
-use crate::views::partials::button;
+use crate::views::partials;
 
 crate::views::scoped::inline_css!(
     r#"
@@ -83,12 +83,12 @@ impl Render for OperationalRequestFilter {
                         data-op-filter-query
                         data-bind="operations_filter_query"
                         data-on:input__debounce="@post('/api/operations/filter'); window.scrollOperationalTimelineTop()";
-                    (button::Button::builder()
+                    (partials::button::Button::builder()
                         .label(Text::from("Clear"))
-                        .variant(button::Variant::Secondary)
+                        .variant(partials::button::Variant::Secondary)
                         .data_attrs(vec![
-                            button::DataAttr::flag("data-op-filter-clear"),
-                            button::DataAttr::value(
+                            partials::button::DataAttr::flag("data-op-filter-clear"),
+                            partials::button::DataAttr::value(
                                 "data-on:click",
                                 "$operations_filter_query = ''; @post('/api/operations/filter'); window.scrollOperationalTimelineTop()",
                             ),

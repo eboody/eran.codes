@@ -2,7 +2,7 @@ use maud::Render;
 use std::str::FromStr;
 use strum_macros::{AsRefStr, Display, EnumString};
 
-#[derive(Clone, Copy, Debug, Display, EnumString, AsRefStr)]
+#[derive(Clone, Copy, Debug, PartialEq, Eq, Display, EnumString, AsRefStr)]
 pub enum Route {
     #[strum(serialize = "/")]
     Home,

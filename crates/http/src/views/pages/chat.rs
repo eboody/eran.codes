@@ -2,8 +2,7 @@ use bon::Builder;
 use maud::Render;
 
 use crate::types::Text;
-use crate::views::page::{Layout, UserNav};
-use crate::views::partials::components;
+use crate::views::{page, partials};
 
 crate::views::scoped::inline_css!(
     r#"
@@ -25,9 +24,9 @@ me > :where(header, section) {
 pub struct Chat {
     pub room_id: Text,
     pub room_name: Text,
-    pub messages: Vec<components::chat::Message>,
+    pub messages: Vec<partials::components::chat::Message>,
     #[builder(setters(name = with_user))]
-    pub user: Option<UserNav>,
+    pub user: Option<page::UserNav>,
 }
 
 impl Render for Chat {
@@ -36,21 +35,21 @@ impl Render for Chat {
             main class="u-container" data-chat-page {
                 (css())
                 ({
-                    components::chat::Hero::builder()
+                    partials::components::chat::Hero::builder()
                         .room_name(self.room_name.clone())
                         .room_id(self.room_id.clone())
                         .build()
                 })
 
-                (components::chat::Surface::builder()
+                (partials::components::chat::Surface::builder()
                     .room_id(self.room_id.clone())
                     .messages(self.messages.clone())
-                    .mode(components::chat::Mode::Interactive)
+                    .mode(partials::components::chat::Mode::Interactive)
                     .build())
             }
         };
 
-        Layout::builder()
+        page::Layout::builder()
             .title("Chat room")
             .content(content)
             .maybe_with_user(self.user.clone())

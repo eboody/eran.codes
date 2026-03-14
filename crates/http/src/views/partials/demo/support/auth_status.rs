@@ -2,7 +2,7 @@ use bon::Builder;
 use maud::Render;
 
 use crate::types::Text;
-use crate::views::partials::{RequestTraceLog, StatusCard, StatusCardItem};
+use crate::views::partials;
 
 #[derive(Clone, Copy, Debug)]
 enum AuthStatusLabel {
@@ -37,20 +37,20 @@ impl Render for AuthStatus {
             AuthStatusLabel::Anonymous
         };
         let items = vec![
-            StatusCardItem::optional("user_id", self.user_id.clone()),
-            StatusCardItem::optional("username", self.username.clone()),
-            StatusCardItem::optional("email", self.email.clone()),
-            StatusCardItem::optional("session_id", self.session_id.clone()),
-            StatusCardItem::optional("expiry", self.expiry.clone()),
+            partials::StatusCardItem::optional("user_id", self.user_id.clone()),
+            partials::StatusCardItem::optional("username", self.username.clone()),
+            partials::StatusCardItem::optional("email", self.email.clone()),
+            partials::StatusCardItem::optional("session_id", self.session_id.clone()),
+            partials::StatusCardItem::optional("expiry", self.expiry.clone()),
         ];
 
         maud::html! {
             article id="auth-status-target" {
-                (StatusCard::builder()
+                (partials::StatusCard::builder()
                     .title(Text::from(status))
                     .items(items)
                     .build())
-                (RequestTraceLog::builder().entries(&self.trace).build())
+                (partials::RequestTraceLog::builder().entries(&self.trace).build())
             }
         }
     }

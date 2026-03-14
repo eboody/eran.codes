@@ -1,29 +1,28 @@
 use bon::Builder;
 use maud::Render;
 
-use crate::views::page::{Layout, NavMode};
-use crate::views::partials::components::portfolio::{self, content::WorkCaseSlug};
+use crate::views::{page, partials};
 
 #[derive(Clone, Debug, Builder)]
 pub struct WorkCase {
-    pub slug: WorkCaseSlug,
+    pub slug: partials::components::portfolio::content::WorkCaseSlug,
 }
 
 impl Render for WorkCase {
     fn render(&self) -> maud::Markup {
-        let content = portfolio::content::work_case_content(self.slug);
+        let content = partials::components::portfolio::content::work_case_content(self.slug);
 
-        let body = portfolio::Page {
+        let body = partials::components::portfolio::Page {
             content: maud::html! {
-                (portfolio::WorkCaseDetail { content })
+                (partials::components::portfolio::WorkCaseDetail { content })
             },
         }
         .render();
 
-        Layout::builder()
+        page::Layout::builder()
             .title(&content.page_title.to_string())
             .content(body)
-            .nav_mode(NavMode::Portfolio)
+            .nav_mode(page::NavMode::Portfolio)
             .build()
             .render()
     }

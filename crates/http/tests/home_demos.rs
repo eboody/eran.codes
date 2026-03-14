@@ -58,9 +58,9 @@ fn test_app() -> axum::Router {
     let hasher = Arc::new(TestHasher);
     let user_service = user::Service::new(user_repo, hasher);
     let auth_service = auth::Service::disabled();
-    let sse_registry = app_http::SseRegistry::new();
+    let sse_registry = app_http::sse::Registry::new();
     let cookie_key = Key::generate();
-    let trace_log = app_http::trace_log::TraceLogStore::builder()
+    let trace_log = app_http::trace_log::Store::builder()
         .with_sse(sse_registry.clone())
         .build();
     let chat = app::chat::Service::builder()

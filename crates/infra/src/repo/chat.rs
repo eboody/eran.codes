@@ -4,7 +4,7 @@ pub use SqlxChatRateLimiter as RateLimiter;
 pub use SqlxChatRepository as Repository;
 
 use app::chat::{
-    AuditEntry, Error, ModerationQueueStatus, ModerationReason, PendingMutationResult,
+    AuditEntry, ModerationQueueStatus, ModerationReason, PendingMutationResult,
     RepositoryOperation, Result, RoomRole,
 };
 use async_trait::async_trait;
@@ -49,38 +49,38 @@ enum ChatPersistenceError {
     },
 }
 
-impl From<ChatPersistenceError> for Error {
+impl From<ChatPersistenceError> for app::chat::Error {
     fn from(error: ChatPersistenceError) -> Self {
         match error {
             ChatPersistenceError::Query { operation, source } => {
-                Error::query_repository(operation, source)
+                app::chat::Error::query_repository(operation, source)
             }
             ChatPersistenceError::DecodeRoomName { source } => {
-                Error::decode_room_name(source)
+                app::chat::Error::decode_room_name(source)
             }
             ChatPersistenceError::DecodeClientId { source } => {
-                Error::decode_client_id(source)
+                app::chat::Error::decode_client_id(source)
             }
             ChatPersistenceError::DecodeMessageBody { source } => {
-                Error::decode_message_body(source)
+                app::chat::Error::decode_message_body(source)
             }
             ChatPersistenceError::InvalidStoredMessageStatus { status } => {
-                Error::invalid_stored_message_status(status)
+                app::chat::Error::invalid_stored_message_status(status)
             }
             ChatPersistenceError::DecodeModerationRoomName { source } => {
-                Error::decode_moderation_room_name(source)
+                app::chat::Error::decode_moderation_room_name(source)
             }
             ChatPersistenceError::DecodeModerationMessageBody { source } => {
-                Error::decode_moderation_message_body(source)
+                app::chat::Error::decode_moderation_message_body(source)
             }
             ChatPersistenceError::InvalidStoredModerationStatus { status } => {
-                Error::invalid_stored_moderation_status(status)
+                app::chat::Error::invalid_stored_moderation_status(status)
             }
             ChatPersistenceError::DecodeModerationReason { source } => {
-                Error::decode_moderation_reason(source)
+                app::chat::Error::decode_moderation_reason(source)
             }
             ChatPersistenceError::DecodeModerationTimestamp { source } => {
-                Error::decode_moderation_timestamp(source)
+                app::chat::Error::decode_moderation_timestamp(source)
             }
         }
     }
@@ -649,7 +649,11 @@ impl app::chat::RateLimiter for SqlxChatRateLimiter {
         })?;
 
         let allowed = row.get::<bool, _>("allowed");
-        if allowed { Ok(()) } else { Err(Error::RateLimited) }
+        if allowed {
+            Ok(())
+        } else {
+            Err(app::chat::Error::RateLimited)
+        }
     }
 }
 
