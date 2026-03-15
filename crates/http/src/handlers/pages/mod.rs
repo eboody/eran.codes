@@ -12,7 +12,7 @@ use crate::types::{SseTabId, Text};
 use crate::views::partials::components::portfolio::content::WorkCaseSlug;
 use crate::views::{self, pages};
 
-pub async fn health(Extension(_state): Extension<crate::State>) -> &'static str {
+pub async fn health() -> &'static str {
     "OK"
 }
 

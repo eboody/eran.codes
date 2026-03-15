@@ -429,6 +429,19 @@ async fn request_burst_probe_returns_no_content() {
 }
 
 #[tokio::test]
+async fn health_endpoint_returns_ok() {
+    let app = test_app();
+    let response = app
+        .oneshot(Request::get("/health").body(Body::empty()).unwrap())
+        .await
+        .unwrap();
+
+    assert_eq!(response.status(), axum::http::StatusCode::OK);
+    let body = to_bytes(response.into_body(), usize::MAX).await.unwrap();
+    assert_eq!(&body[..], b"OK");
+}
+
+#[tokio::test]
 async fn work_routes_render_successfully() {
     let app = test_app();
     let routes = [
