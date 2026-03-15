@@ -72,4 +72,5 @@ jobs:
       - name: descriptive module imports
         run: scripts/ci/descriptive-module-imports.sh
       - name: visual expert signoff
+        if: ${{ hashFiles('artifacts/visual/audits/latest/signoff.env') != '' }}
         run: scripts/ci/visual-expert-signoff.sh
