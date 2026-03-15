@@ -6,7 +6,7 @@ use crate::paths::Route;
 use crate::types::Text;
 use crate::views::partials;
 
-use super as chat;
+use crate::views::partials::components::chat;
 
 const CONNECTED_SIGNAL: &str = "$sseConnected";
 
@@ -163,7 +163,7 @@ impl Render for Surface {
                 data-chat-surface-variant=(self.variant.as_ref())
                 data-signals=(self.signals())
             {
-                (super::css())
+                (chat::css())
                 (chat::Set::builder()
                     .panels(self.panels())
                     .with_connection(

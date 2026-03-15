@@ -1,7 +1,7 @@
 use bon::Builder;
 use maud::Render;
 
-use super as chat;
+use crate::views::partials::components::chat;
 
 #[derive(Clone, Debug, Builder)]
 pub struct Set {

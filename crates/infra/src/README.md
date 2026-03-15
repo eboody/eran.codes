@@ -1,12 +1,14 @@
 # infra::src
 
-Concrete implementations for persistence and external mechanisms.
+This directory is the concrete mechanism surface for the workspace.
 
-## Modules
-- `repo/` SQL repositories for app traits.
-- `auth.rs` hashing + auth repository.
-- `chat.rs` chat repo + infra helpers.
+## Read order
+- `config.rs`
+- `auth.rs`
+- [repo/README.md](./repo/README.md)
+- `chat.rs`
 
 ## Rules
 - Own SQL and migrations.
 - Map DB rows into domain types.
+- Keep transport concerns out of infra code.

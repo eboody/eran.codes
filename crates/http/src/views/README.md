@@ -1,19 +1,17 @@
-# Views
+# http::views
 
-Views are Maud components split by responsibility so templates stay small and reusable.
+The view layer is split so page shells, reusable components, and demo-specific composition stay understandable as the UI grows.
 
-## Modules
-- `page.rs`: shared layout + page-level helpers (e.g., `Layout`, `Error`, `UserNav`).
-- `pages/`: full-page documents (`Home`, `Login`, `Register`, `Protected`).
-- `partials/`: Datastar fragments and reusable UI blocks for demos and SSE patches.
-- `partials/demo/`: demo-only fragments (status panels, trace logs, ping).
+## Read order
+1. [page.rs](./page.rs) for layout and site-wide shell components
+2. [pages/README.md](./pages/README.md) for full documents
+3. [partials/README.md](./partials/README.md) for reusable components and patch surfaces
 
-## Conventions
-- Pages and partials implement `maud::Render`.
-- Reusable styling and behavior live in global static assets (`/static/app.css`, `/static/*.js`).
-- Pages should be composed from `page::Layout` to keep a consistent shell.
+## What lives here
+- `page.rs` for shared layout and page-level helpers
+- `pages/` for full page documents like home, lab, login, and work pages
+- `partials/` for reusable render components, demo sections, and Datastar patch targets
+- `scoped.rs` and `proper_theme.rs` for scoped styling and theme behavior
 
-## Readme map
-- `crates/http/README.md`
-- `crates/http/src/README.md`
-- `crates/http/src/handlers/README.md`
+## Why it matters
+This repo treats frontend composition as real engineering work: typed render inputs, reusable shells, and explicit boundaries between library-style components and demo-specific surfaces.

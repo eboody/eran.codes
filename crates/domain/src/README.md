@@ -1,11 +1,13 @@
 # domain::src
 
-Core business types and invariants.
+This directory is the pure business core of the workspace.
 
-## Modules
-- `chat/` chat entities and value objects.
-- `user/` user entities and value objects.
+## Read order
+- [user/README.md](./user/README.md)
+- [chat/README.md](./chat/README.md)
+- [error.rs](./error.rs)
 
 ## Rules
 - No serde derives.
 - No HTTP or DB concepts.
+- No transport-specific naming leaking into core types.

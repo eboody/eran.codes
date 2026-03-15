@@ -1,21 +1,20 @@
-# HTTP handlers
+# http::handlers
 
-Handlers are grouped by concern to keep the router readable and navigation predictable.
-Each module focuses on a single HTTP surface.
+Handlers are grouped by transport concern so the route map stays readable and the code matches the public surface.
 
 ## Modules
-- `pages.rs`: full-page HTML handlers (`/`, `/login`, `/register`, `/protected`, `/logout`).
-- `auth.rs`: auth form + session handlers (login/register/logout/protected).
-- `demo/partials.rs`: Datastar fragment handlers used by the demos.
-- `demo/chat.rs`: live chat message handlers and moderation queue.
-- `sse.rs`: SSE stream and Datastar signal demo handlers.
+- [auth/mod.rs](./auth/mod.rs) for login, registration, logout, and page gating
+- [pages/mod.rs](./pages/mod.rs) for full-page handlers and page-scoped Datastar commands
+- [demo/README.md](./demo/README.md) for chat endpoints and interactive demo partials
+- [sse/mod.rs](./sse/mod.rs) for the EventSource stream and surreal-message demo endpoints
+
+## Read order
+1. [pages/mod.rs](./pages/mod.rs)
+2. [auth/mod.rs](./auth/mod.rs)
+3. [demo/README.md](./demo/README.md)
+4. [../request.rs](../request.rs) and [../request_context_flow.rs](../request_context_flow.rs)
 
 ## Guidelines
-- Keep handlers small and IO-focused; push validation and policy to `app`.
-- Prefer `views::render` for full pages and explicit `Html` for partials.
-- Keep request DTOs scoped to the module that owns the route.
-
-## Readme map
-- `crates/http/README.md`
-- `crates/http/src/README.md`
-- `crates/http/src/views/README.md`
+- Map transport inputs into `app` or `domain` types early.
+- Keep response mapping at the HTTP edge.
+- Keep orchestration small; long-lived business decisions belong in `app`.

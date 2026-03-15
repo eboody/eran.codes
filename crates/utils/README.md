@@ -1,11 +1,19 @@
-# utils crate
+# utils
 
-Shared helpers with no layer-specific dependencies.
+`utils` is the small shared-tools layer. It stays deliberately narrow so common helpers do not collapse the main boundary structure.
 
-## Responsibilities
-- Small, reusable utilities that can be used across layers.
-- Keep this crate lightweight and free of HTTP/DB concerns.
-- Developer tooling binaries (for example `visual_snapshot`) that are not layer-specific.
+## What it owns
+- cross-cutting helpers with no domain/app/http/infra allegiance
+- environment and encoding utilities
+- developer tooling binaries such as visual snapshot capture
 
-## Boundaries
-- Should not depend on `http` or `infra`.
+## Read it like this
+- [src/lib.rs](./src/lib.rs)
+- [src/envs.rs](./src/envs.rs)
+- [src/bin/visual_snapshot.rs](./src/bin/visual_snapshot.rs)
+
+## Why this crate exists
+It gives the workspace a place for genuinely reusable support code without turning `http` or `infra` into a dumping ground.
+
+## Read next
+- [root README](../../README.md)

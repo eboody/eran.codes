@@ -3,7 +3,7 @@ use maud::Render;
 
 use crate::types::Text;
 
-use super as chat;
+use crate::views::partials::components::chat;
 
 #[derive(Clone, Debug, Builder)]
 pub struct Window {

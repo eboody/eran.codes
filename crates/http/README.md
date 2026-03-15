@@ -1,49 +1,37 @@
-# HTTP crate
+# http
 
-HTTP transport, Datastar endpoints, and Maud views.
+`http` is where the portfolio becomes a working system: routing, auth/session transport, Datastar endpoints, SSE fanout, Maud views, and the live operational surface.
 
-## Routes
-- `GET /` renders the home page.
-- `GET /partials/ping` sends a Datastar patch via SSE.
-- `GET /health` returns `ok`.
+## What it owns
+- router and middleware composition
+- page handlers, Datastar partial handlers, and EventSource endpoints
+- session-aware stream routing and event helpers
+- page and partial rendering
+- trace surfaces that feed the operational UI
 
-## Sessions
-- Auth sessions use `tower-sessions` with the SQLx Postgres store.
-- Session cleanup runs on an interval configured by `SESSION_CLEANUP_INTERVAL_SECS` (default: 3600).
-- Migrations for sessions live in `crates/infra/migrations/004_sessions.*.sql`.
+## Fast read order
+1. [src/README.md](./src/README.md)
+2. [src/router/README.md](./src/router/README.md)
+3. [src/handlers/README.md](./src/handlers/README.md)
+4. [src/views/README.md](./src/views/README.md)
+5. [src/sse/README.md](./src/sse/README.md)
 
-## Views
-Maud views live in `crates/http/src/views/` and implement `maud::Render`.
+## Runtime surfaces
+- [`/`](https://eran.codes/) for the portfolio landing page
+- [`/lab`](https://eran.codes/lab) for the operational demo surface
+- [`/events`](https://eran.codes/events) for the EventSource stream
+- `/demo/chat/*` and `/partials/*` for the interactive support surfaces behind the demos
 
-## Router builder
-Router wiring is assembled via Bon to keep the call site self-documenting:
+## What to inspect in code
+- [src/router/routes.rs](./src/router/routes.rs) for public route shape
+- [src/state.rs](./src/state.rs) for HTTP-owned runtime state
+- [src/trace_log.rs](./src/trace_log.rs) for live vs diagnostic tracing behavior
+- [src/views/page.rs](./src/views/page.rs) for the site shell
 
-```rust
-http::router(state, session_store);
-```
+## Why this crate exists
+It keeps transport, rendering, and realtime delivery close together while still treating `app` and `domain` as the source of business truth.
 
-Under the hood this flows through named builder steps in `crates/http/src/router/`.
-Use Bon's typestate builder patterns for router/state configuration so call sites read like a checklist.
-
-## Internal docs
-- `crates/http/src/README.md`
-- `crates/http/src/router/README.md`
-- `crates/http/src/sse/README.md`
-- `crates/http/src/handlers/README.md`
-- `crates/http/src/handlers/demo/README.md`
-- `crates/http/src/views/README.md`
-- `crates/http/src/views/pages/README.md`
-- `crates/http/src/views/partials/README.md`
-
-## Static assets
-Static files are served from `crates/http/static/` at `/static`.
-
-Included scripts:
-- `datastar` via CDN in layout
-- `css-scope-inline` via `/static/css-scope-inline.js`
-- `surreal` via `/static/surreal.js`
-
-## Styling and behavior
-Use shared static assets for reusable styling/behavior:
-- `/static/app.css` for styles
-- `/static/*.js` for component behavior hooks
+## Read next
+- [root README](../../README.md)
+- [Auth + Sessions](../../docs/auth-sessions.md)
+- [Tracing Plan](../../docs/tracing.md)

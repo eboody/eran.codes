@@ -1,10 +1,12 @@
 # app::chat
 
-Chat use cases and policy.
+Chat use cases and policy live here.
 
-## Responsibilities
-- Post messages, join rooms, moderation queue.
-- Enforce rate limits and membership checks (via traits).
+## What to inspect
+- `mod.rs` for the service and command surface
+- `post_message_flow.rs` for the capstone path
+- `moderate_message_flow.rs` for moderation policy
+- `error.rs` for chat-specific contextual failures
 
-## Inputs
-- Command structs built from validated domain types.
+## What it proves
+Posting, moderation, rate limiting, and membership checks are modeled as explicit application workflows instead of transport glue.

@@ -1,10 +1,16 @@
 # http::sse
 
-Server-Sent Events registry and session handling.
+`http::sse` owns the server-side stream registry and the event helpers that make Datastar convergence and live operational updates possible.
 
-## Responsibilities
-- Maintain SSE streams keyed by typed stream identity:
-- `session_id` from signed cookie.
-- `sse_tab_id` from Datastar signals (when present).
-- Support session-scoped fanout (`send_by_id`) across all tabs in the same session.
-- Dispatch Datastar patches to the correct stream or session group.
+## What it owns
+- session plus optional tab keyed stream identity
+- subscription management and fanout helpers
+- patch event construction for elements and signals
+
+## Read it like this
+- [mod.rs](./mod.rs)
+- [session.rs](./session.rs)
+- [../handlers/sse/mod.rs](../handlers/sse/mod.rs)
+
+## Why it matters
+The project's realtime story is not "open a socket and hope." Streams are tied to session identity, handlers emit explicit patch events, and the rest of the app can reason about delivery in typed terms.

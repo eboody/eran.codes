@@ -1,24 +1,33 @@
-# infra crate
+# infra
 
-Concrete implementations for external mechanisms.
+`infra` is the mechanism layer: Postgres, hashing, migrations, and repository implementations that satisfy the contracts defined in `app`.
 
-## Responsibilities
-- Implements app-defined traits (repositories, hashing, clocks).
-- Owns SQL, migrations, and DB query efficiency.
-- Maps database rows into domain entities.
-- Implements credential hashing with argon2.
+## What it owns
+- SQL repositories and query shaping
+- Argon2 hashing and auth persistence
+- migrations and database-backed session support
+- infra-specific configuration parsing
 
-## Migrations
-Migrations live in `crates/infra/migrations/`.
+## What it intentionally avoids
+- HTTP or view logic
+- business policy that belongs in `app`
+- accepting invalid raw values where domain types should exist first
+
+## Read it like this
+- [src/config.rs](./src/config.rs)
+- [src/auth.rs](./src/auth.rs)
+- [src/repo/README.md](./src/repo/README.md)
+- [migrations/](./migrations/)
+
+## Local database workflow
 
 ```bash
 cargo run --bin with_db -- sqlx migrate run --source crates/infra/migrations
 ```
 
-## Boundaries
-- Depends on `domain` and `app` traits.
-- Must not accept plaintext passwords for persistence.
+## Why this crate exists
+`infra` should be able to change query strategy, indexes, or hashing mechanics without dragging transport or policy concerns into the same layer.
 
-## Configuration
-- `DATABASE_URL` is required.
-- `INFRA_DB_MAX_CONNECTIONS` is optional (defaults to `10`).
+## Read next
+- [app](../app/README.md)
+- [http](../http/README.md)

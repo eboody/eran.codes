@@ -32,7 +32,7 @@ run_snapshot() {
   local click_selector="${3:-}"
   local element_selector="${4:-}"
   local args=(
-    run -p utils --bin visual_snapshot --
+    run -p utils --features visual-snapshot --bin visual_snapshot --
     --url "$url"
     --output "$snapshot_output"
     --wait-ms "$wait_ms"
