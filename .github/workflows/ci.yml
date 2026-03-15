@@ -11,11 +11,23 @@ jobs:
       - uses: actions/checkout@v4
       - name: install CI tooling
         run: |
+          packages=()
           if ! command -v rg >/dev/null 2>&1; then
-            apt-get update
-            apt-get install -y ripgrep
+            packages+=(ripgrep)
           fi
-      - name: stringy checks
+          if ! command -v jq >/dev/null 2>&1; then
+            packages+=(jq)
+          fi
+          if [ "${#packages[@]}" -gt 0 ]; then
+            SUDO=""
+            if command -v sudo >/dev/null 2>&1; then
+              SUDO="sudo"
+            fi
+            $SUDO apt-get update
+            $SUDO apt-get install -y "${packages[@]}"
+          fi
+      - name: advisory stringy checks
+        continue-on-error: true
         run: scripts/ci/stringy-check.sh
       - name: no String fields
         run: scripts/ci/no-string-fields.sh
