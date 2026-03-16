@@ -2,7 +2,7 @@ use bon::Builder;
 use maud::Render;
 
 use crate::types::Text;
-use crate::views::partials::components;
+use crate::views::partials::components::tab_set;
 
 #[derive(Clone, Debug, Builder)]
 pub struct TabSetShowcase {}
@@ -12,8 +12,8 @@ impl Render for TabSetShowcase {
         let content = load_content();
 
         maud::html! {
-            (components::tab_set::Component::from_content(
-                components::tab_set::ContentProps::builder()
+            (tab_set::Component::from_content(
+                tab_set::ContentProps::builder()
                     .id("tab-set-showcase")
                     .class("u-surface-card tab-set-showcase")
                     .aria_label(Text::from("Solutions"))
@@ -24,7 +24,7 @@ impl Render for TabSetShowcase {
     }
 }
 
-fn load_content() -> components::tab_set::content::TabSetContent {
+fn load_content() -> tab_set::content::TabSetContent {
     let raw = include_str!(concat!(
         env!("CARGO_MANIFEST_DIR"),
         "/src/views/partials/demo/layout/content/tab_set_showcase.json"
