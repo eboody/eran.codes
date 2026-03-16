@@ -11,7 +11,7 @@ RUN cargo build --release --locked
 FROM debian:bookworm-slim
 
 RUN apt-get update \
-    && apt-get install -y --no-install-recommends ca-certificates \
+    && apt-get install -y --no-install-recommends ca-certificates curl \
     && rm -rf /var/lib/apt/lists/*
 
 WORKDIR /app
@@ -22,6 +22,9 @@ COPY crates/infra/migrations /app/crates/infra/migrations
 
 ENV HOST=0.0.0.0
 ENV PORT=3000
+
+HEALTHCHECK --interval=30s --timeout=5s --start-period=10s --retries=3 \
+    CMD curl --fail --silent --show-error "http://127.0.0.1:${PORT}/health"
 
 EXPOSE 3000
 
