@@ -141,15 +141,14 @@ impl auth::Repository for Repository {
             message = "db query",
             db_statement = "SELECT u.id, u.username, u.email, c.password_hash, c.updated_at FROM users u JOIN credentials c ON c.user_id = u.id WHERE u.email = $1"
         );
+        let result = self.find_by_email_record(email).await;
         tracing::info!(
             target: "demo.db",
             message = "db query complete",
             db_duration_ms = start.elapsed().as_millis() as u64
         );
 
-        self.find_by_email_record(email)
-            .await
-            .map_err(map_repository_error)
+        result.map_err(map_repository_error)
     }
 
     async fn find_by_id(&self, user_id: &user::Id) -> auth::Result<Option<auth::Record>> {
@@ -159,15 +158,14 @@ impl auth::Repository for Repository {
             message = "db query",
             db_statement = "SELECT u.id, u.username, u.email, c.password_hash, c.updated_at FROM users u JOIN credentials c ON c.user_id = u.id WHERE u.id = $1"
         );
+        let result = self.find_by_id_record(user_id).await;
         tracing::info!(
             target: "demo.db",
             message = "db query complete",
             db_duration_ms = start.elapsed().as_millis() as u64
         );
 
-        self.find_by_id_record(user_id)
-            .await
-            .map_err(map_repository_error)
+        result.map_err(map_repository_error)
     }
 }
 

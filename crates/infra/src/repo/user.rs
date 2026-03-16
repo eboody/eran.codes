@@ -98,15 +98,14 @@ impl AppUserRepository for SqlxUserRepository {
             db_statement = "SELECT id, username, email FROM users WHERE email = $1",
             db_bind_1 = email_value.clone()
         );
+        let result = self.find_by_email_record(email_value).await;
         tracing::info!(
             target: "demo.db",
             message = "db query complete",
             db_duration_ms = start.elapsed().as_millis() as u64
         );
 
-        self.find_by_email_record(email_value)
-            .await
-            .map_err(map_repository_error)
+        result.map_err(map_repository_error)
     }
 
     async fn create_with_credentials(
@@ -179,7 +178,7 @@ impl SqlxUserRepository {
             .await
             .context(BeginCreateWithCredentialsSnafu)?;
 
-        sqlx::query(
+        let insert_user = sqlx::query(
             r#"
             INSERT INTO users (id, username, email)
             VALUES ($1, $2, $3)
@@ -189,13 +188,13 @@ impl SqlxUserRepository {
         .bind(username)
         .bind(email)
         .execute(&mut *tx)
-        .await
-        .context(InsertUserSnafu)?;
+        .await;
         tracing::info!(
             target: "demo.db",
             message = "db query complete",
             db_duration_ms = start.elapsed().as_millis() as u64
         );
+        insert_user.context(InsertUserSnafu)?;
 
         tracing::info!(
             target: "demo.db",
@@ -205,7 +204,7 @@ impl SqlxUserRepository {
             db_bind_2 = password_hash_value.clone()
         );
         let start = std::time::Instant::now();
-        sqlx::query(
+        let insert_credentials = sqlx::query(
             r#"
             INSERT INTO credentials (user_id, password_hash)
             VALUES ($1, $2)
@@ -214,13 +213,13 @@ impl SqlxUserRepository {
         .bind(user.id.as_uuid())
         .bind(password_hash_value)
         .execute(&mut *tx)
-        .await
-        .context(InsertCredentialsSnafu)?;
+        .await;
         tracing::info!(
             target: "demo.db",
             message = "db query complete",
             db_duration_ms = start.elapsed().as_millis() as u64
         );
+        insert_credentials.context(InsertCredentialsSnafu)?;
 
         tx.commit()
             .await

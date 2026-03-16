@@ -106,7 +106,7 @@ impl axum::response::IntoResponse for ErrorResponse {
 impl axum::response::IntoResponse for Error {
     fn into_response(self) -> axum::response::Response {
         tracing::error!(error = %self, error_debug = ?self, "request failed");
-        self.into_error_response(crate::request::current_kind())
+        self.error_response_for_kind(crate::request::current_kind())
             .into_response()
     }
 }
@@ -162,11 +162,24 @@ impl Error {
                 title: "Internal server error",
                 message: "Internal server error.",
             },
-            Error::Auth { .. } => ErrorPresentation {
+            Error::Auth {
+                source: app::auth::Error::InvalidAuthenticatedUserId { .. },
+            } => ErrorPresentation {
                 kind: "auth",
                 status: axum::http::StatusCode::UNAUTHORIZED,
                 title: "Unauthorized",
                 message: "Unable to authenticate.",
+            },
+            Error::Auth {
+                source:
+                    app::auth::Error::Repository { .. }
+                    | app::auth::Error::HashPassword { .. }
+                    | app::auth::Error::ParseStoredPasswordHash { .. },
+            } => ErrorPresentation {
+                kind: "internal",
+                status: axum::http::StatusCode::INTERNAL_SERVER_ERROR,
+                title: "Internal server error",
+                message: "Internal server error.",
             },
             Error::Chat {
                 source: app::chat::Error::RateLimited,
@@ -228,7 +241,7 @@ impl Error {
         }
     }
 
-    fn into_error_response(&self, kind: crate::request::Kind) -> ErrorResponse {
+    fn error_response_for_kind(&self, kind: crate::request::Kind) -> ErrorResponse {
         let presentation = self.presentation();
         match kind {
             crate::request::Kind::Datastar => ErrorResponse::Datastar { presentation },
@@ -257,7 +270,7 @@ mod tests {
     #[test]
     fn page_errors_keep_http_status_codes() {
         let response = Error::from(app::user::Error::EmailTaken)
-            .into_error_response(crate::request::Kind::Page);
+            .error_response_for_kind(crate::request::Kind::Page);
 
         match response {
             ErrorResponse::Page { status, view } => {
@@ -273,7 +286,7 @@ mod tests {
     #[tokio::test]
     async fn datastar_errors_use_signal_patch_contract() {
         let response = Error::from(app::chat::Error::NotMember)
-            .into_error_response(crate::request::Kind::Datastar)
+            .error_response_for_kind(crate::request::Kind::Datastar)
             .into_response();
 
         assert_eq!(response.status(), http::StatusCode::OK);
@@ -304,13 +317,31 @@ mod tests {
     fn validation_errors_map_to_bad_request_for_pages() {
         let response =
             Error::from(app::chat::Error::invalid_moderation_decision("bad room"))
-                .into_error_response(crate::request::Kind::Page);
+                .error_response_for_kind(crate::request::Kind::Page);
 
         match response {
             ErrorResponse::Page { status, view } => {
                 assert_eq!(status, http::StatusCode::BAD_REQUEST);
                 assert_eq!(view.title, "Invalid input");
                 assert_eq!(view.message, "Invalid chat request.");
+            }
+            ErrorResponse::Datastar { .. } => panic!("expected page response"),
+        }
+    }
+
+    #[test]
+    fn auth_repository_errors_map_to_internal_server_error() {
+        let response = Error::from(app::auth::Error::query_repository(
+            app::auth::RepositoryOperation::FindByEmail,
+            std::io::Error::other("db unavailable"),
+        ))
+        .error_response_for_kind(crate::request::Kind::Page);
+
+        match response {
+            ErrorResponse::Page { status, view } => {
+                assert_eq!(status, http::StatusCode::INTERNAL_SERVER_ERROR);
+                assert_eq!(view.title, "Internal server error");
+                assert_eq!(view.message, "Internal server error.");
             }
             ErrorResponse::Datastar { .. } => panic!("expected page response"),
         }

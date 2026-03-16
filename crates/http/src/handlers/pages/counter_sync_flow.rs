@@ -4,7 +4,7 @@ use axum::http;
 use statum::{machine, state, transition};
 use tower_cookies::{Cookies, Key};
 
-use crate::types::{SessionId, SseTabId};
+use crate::types::SseTabId;
 
 #[derive(Clone)]
 pub struct SessionData {
@@ -64,12 +64,8 @@ impl CounterSyncFlow<Incoming> {
 }
 
 impl CounterSyncFlow<SessionBound> {
-    pub(super) fn session_id(&self) -> SessionId {
-        self.state_data.session.id()
-    }
-
-    pub(super) fn verify_streams(self, has_streams: bool) -> StreamCheckOutcome {
-        if has_streams {
+    pub(super) fn verify_stream(self, sse: &crate::sse::Registry) -> StreamCheckOutcome {
+        if sse.has_handle(&self.state_data.session) {
             StreamCheckOutcome::Ready(self.mark_stream_verified())
         } else {
             StreamCheckOutcome::Unavailable(self.mark_session_unavailable())
@@ -217,20 +213,24 @@ mod tests {
 
     #[test]
     fn verify_streams_routes_to_unavailable_when_missing() {
+        let registry = crate::sse::Registry::new();
         let cookies = Cookies::default();
         let key = Key::generate();
         let bound = CounterSyncFlow::<Incoming>::new(1, None).bind_session(&cookies, &key);
-        let outcome = bound.verify_streams(false);
+        let outcome = bound.verify_stream(&registry);
         assert!(matches!(outcome, StreamCheckOutcome::Unavailable(_)));
     }
 
     #[test]
     fn update_counter_applies_floor_at_zero() {
+        let registry = crate::sse::Registry::new();
         let cookies = Cookies::default();
         let key = Key::generate();
+        let handle = crate::sse::Handle::from_cookies_with_tab(&cookies, &key, None);
+        let (_receiver, _guard) = registry.subscribe(&handle);
         let counter = AtomicI64::new(0);
         let bound = IncomingFlow::new(-5, None).bind_session(&cookies, &key);
-        let ready = match bound.verify_streams(true) {
+        let ready = match bound.verify_stream(&registry) {
             StreamCheckOutcome::Ready(ready) => ready,
             StreamCheckOutcome::Unavailable(_) => panic!("expected ready state"),
         };
@@ -249,7 +249,7 @@ mod tests {
         let counter = AtomicI64::new(0);
 
         let bound = IncomingFlow::new(2, None).bind_session(&cookies, &key);
-        let ready = match bound.verify_streams(true) {
+        let ready = match bound.verify_stream(&registry) {
             StreamCheckOutcome::Ready(ready) => ready,
             StreamCheckOutcome::Unavailable(_) => panic!("expected ready state"),
         };
@@ -257,5 +257,27 @@ mod tests {
         let outcome = updated.dispatch_patch(&registry);
 
         assert!(matches!(outcome, DispatchOutcome::Dispatched(_)));
+    }
+
+    #[test]
+    fn verify_stream_rejects_unknown_tab_even_when_session_has_other_streams() {
+        let registry = crate::sse::Registry::new();
+        let cookies = Cookies::default();
+        let key = Key::generate();
+        let handle = crate::sse::Handle::from_cookies_with_tab(
+            &cookies,
+            &key,
+            Some(SseTabId::new("tab-a")),
+        );
+        let (_receiver, _guard) = registry.subscribe(&handle);
+        let counter = AtomicI64::new(0);
+
+        let outcome = IncomingFlow::new(2, Some(SseTabId::new("tab-b")))
+            .bind_session(&cookies, &key)
+            .verify_stream(&registry)
+            .dispatch(&counter, &registry);
+
+        assert!(matches!(outcome, DispatchOutcome::Unavailable(_)));
+        assert_eq!(counter.load(Ordering::Relaxed), 0);
     }
 }

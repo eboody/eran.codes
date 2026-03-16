@@ -200,6 +200,14 @@ impl Registry {
             .any(|entry| entry.key().session_id() == session_id)
     }
 
+    pub fn has_handle(&self, handle: &Handle) -> bool {
+        if handle.tab_id().is_none() {
+            return self.has_streams_for_session(&handle.id());
+        }
+
+        self.sessions.contains_key(handle.stream_key())
+    }
+
     pub fn release(&self, key: &StreamKey) {
         if let Some(entry) = self.sessions.get(key) {
             let remaining = entry.release();
@@ -280,5 +288,21 @@ mod tests {
         assert!(result.is_ok());
         assert!(rx_a.try_recv().is_ok());
         assert!(rx_b.try_recv().is_ok());
+    }
+
+    #[test]
+    fn has_handle_requires_exact_tab_match_when_tab_id_is_present() {
+        let registry = Registry::new();
+        let key = Key::generate();
+        let cookies = Cookies::default();
+        let base = Handle::from_cookies(&cookies, &key);
+        let session_id = base.id();
+        let tab_a = Handle::with_tab(session_id.clone(), Some(SseTabId::new("tab-a")));
+        let tab_b = Handle::with_tab(session_id, Some(SseTabId::new("tab-b")));
+
+        let (_rx_a, _guard_a) = registry.subscribe(&tab_a);
+
+        assert!(registry.has_handle(&tab_a));
+        assert!(!registry.has_handle(&tab_b));
     }
 }

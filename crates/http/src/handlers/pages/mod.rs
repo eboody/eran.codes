@@ -91,11 +91,8 @@ pub async fn counter_sync(
         signals.sse_tab_id.clone(),
     );
     let session_bound = incoming.bind_session(&cookies, &state.cookie_key);
-    let has_streams = state
-        .sse
-        .has_streams_for_session(&session_bound.session_id());
     session_bound
-        .verify_streams(has_streams)
+        .verify_stream(&state.sse)
         .dispatch(state.demo.counter.server_count.as_ref(), &state.sse)
         .status_code()
 }

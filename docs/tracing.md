@@ -20,7 +20,12 @@ Attach these fields whenever available:
 - `method`, `status`, `latency_ms`.
 - `client_ip`, `user_agent` (if available and safe).
 
-Never log plaintext passwords or secrets. Avoid logging raw emails; use a hash if needed.
+Default rule: never log plaintext passwords or secrets. Avoid logging raw emails; use a hash if needed.
+
+## Portfolio Demo Exception
+- The live portfolio demos intentionally show raw request, auth, chat, and DB-bind values in `demo.*` traces so viewers can inspect the full request-to-query flow.
+- This exception is deliberate and demo-only. It exists to make the `/lab` and related portfolio surfaces legible, not to define the baseline for non-demo application code.
+- When reusing tracing patterns outside the portfolio demo, revert to sanitized fields and hashed identifiers unless the feature explicitly requires otherwise.
 
 ## HTTP Layer (Request Span + Middleware)
 - Use `tower_http::trace::TraceLayer` with a custom `make_span` to emit a single
