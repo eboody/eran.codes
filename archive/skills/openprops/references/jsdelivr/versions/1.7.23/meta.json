@@ -1,4 +1,0 @@
-{
-  "error": "Fetch failed on 2026-02-28 due intermittent DNS resolution for data.jsdelivr.com",
-  "target": "https://data.jsdelivr.com/v1/package/npm/open-props@1.7.23"
-}

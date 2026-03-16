@@ -1,4 +1,0 @@
-{
-  "error": "Fetch failed on 2026-02-28 due intermittent DNS resolution for unpkg.com",
-  "target": "https://unpkg.com/open-props@1.7.23/?meta"
-}

@@ -1,4 +1,0 @@
-interface:
-  display_name: "Visual Snapshot Check"
-  short_description: "Playwright full-page screenshot baseline checker"
-  default_prompt: "Use $visual-snapshot-check with local docs first (via docs/reference-map.md), then run screenshot/baseline checks and report sources_used."

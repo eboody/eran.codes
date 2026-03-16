@@ -1,4 +1,0 @@
-interface:
-  display_name: "View Transition API"
-  short_description: "Source-backed View Transition API implementation guidance."
-  default_prompt: "Use the mirrored MDN View Transition docs to guide implementation decisions and examples."

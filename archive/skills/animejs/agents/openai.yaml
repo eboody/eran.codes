@@ -1,4 +1,0 @@
-interface:
-  display_name: "Anime.js"
-  short_description: "Use local mirrored anime.js docs and references"
-  default_prompt: "Use $animejs to implement or verify anime.js code against the local mirrored documentation."

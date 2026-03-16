@@ -1,4 +1,0 @@
-interface:
-  display_name: "Lint Guardrail Engineer"
-  short_description: "Turns repeated mistakes into enforceable checks"
-  default_prompt: "Use $lint-guardrail-engineer with local docs first (via docs/reference-map.md), then return gap analysis, guardrail change, rollout notes, and sources_used."

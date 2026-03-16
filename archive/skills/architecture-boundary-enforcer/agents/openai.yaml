@@ -1,4 +1,0 @@
-interface:
-  display_name: "Architecture Boundary Enforcer"
-  short_description: "Boundary ownership, auth/session security flow, and DTO/model separation reviewer"
-  default_prompt: "Use $architecture-boundary-enforcer with local docs first (via docs/reference-map.md), then produce a boundary map, minimal type/trait plan, failure handling, and sources_used."

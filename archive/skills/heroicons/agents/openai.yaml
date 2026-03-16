@@ -1,4 +1,0 @@
-interface:
-  display_name: "Heroicons"
-  short_description: "heroicons crate docs and icon usage reference"
-  default_prompt: "Use $heroicons to answer Rust heroicons crate icon lookup and usage questions from bundled docs.rs references."

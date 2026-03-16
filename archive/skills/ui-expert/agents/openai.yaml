@@ -1,4 +1,0 @@
-interface:
-  display_name: "UI Expert"
-  short_description: "UI visual system and component polish reviewer"
-  default_prompt: "Use $ui-expert with local docs first (via docs/reference-map.md), then provide implementation-ready UI changes, interactive-state screenshot evidence, baseline_status, and sources_used."

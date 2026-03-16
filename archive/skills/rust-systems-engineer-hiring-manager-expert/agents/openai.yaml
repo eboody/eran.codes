@@ -1,4 +1,0 @@
-interface:
-  display_name: "Rust Systems Engineer Hiring Manager Expert"
-  short_description: "Rust systems hiring assessment and interview design"
-  default_prompt: "Use $rust-systems-engineer-hiring-manager-expert to assess systems-focused Rust candidates; for visual/UI work include interaction-correctness and operational-intelligibility verdicts with screenshot evidence and baseline_status."

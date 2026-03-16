@@ -1,1 +1,0 @@
-window.SIDEBAR_ITEMS = {"mod":["hypertext","icon_name","icon_variant"],"struct":["Icon"],"trait":["IconName","IconVariant","ToSvg"]};

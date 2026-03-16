@@ -1,4 +1,0 @@
-interface:
-  display_name: "Open Props"
-  short_description: "Open Props docs, tokens, and import-path reference"
-  default_prompt: "Use $openprops to answer Open Props token, import, documentation, and version-diff questions from the bundled references."

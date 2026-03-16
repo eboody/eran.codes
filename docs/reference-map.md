@@ -7,8 +7,7 @@ This file is the local source-of-truth router for tool and pattern documentation
 Use sources in this order:
 1. Local docs listed in this map (`docs/**`).
 2. Repository code for current behavior (`src/**`, `crates/**`, `scripts/**`).
-3. Archived skill-local mirrored references (`archive/skills/*/references/**`) for external APIs.
-4. Internet lookup only when local docs are missing or stale.
+3. Internet lookup only when local docs are missing or stale.
 
 ## Output Grounding Contract
 
