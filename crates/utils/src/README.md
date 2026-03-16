@@ -1,6 +1,6 @@
 # utils::src
 
-Shared helpers with minimal dependencies live here.
+Read this directory to confirm that shared helpers are genuinely cross-cutting instead of becoming a miscellaneous dumping ground.
 
 ## What to inspect
 - `envs.rs` for environment helpers

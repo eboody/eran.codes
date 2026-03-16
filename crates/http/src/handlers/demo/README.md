@@ -12,4 +12,4 @@ This module powers the interactive proof surfaces behind `/lab` and the home pag
 - [partials/mod.rs](./partials/mod.rs)
 
 ## Boundaries
-Business policy still lives in `app`; these handlers exist to expose that behavior clearly through pages, Datastar partials, and SSE-backed interactions.
+Business policy still lives in `app`; these handlers exist to expose that behavior clearly through pages, Datastar partials, and SSE-backed interactions. They should wire existing component/partial surfaces together, not become an alternate place where reusable UI contracts are invented.

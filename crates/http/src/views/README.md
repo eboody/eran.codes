@@ -1,6 +1,12 @@
 # http::views
 
-The view layer is split so page shells, reusable components, and demo-specific composition stay understandable as the UI grows.
+The view layer is split so the repo can distinguish reusable UI contracts from demo-specific composition as the UI grows.
+
+## What this split proves
+- `page.rs` owns the shared page shell and layout vocabulary
+- `pages/` assembles full documents from existing shells and partials
+- `partials/` carries reusable component contracts and Datastar patch targets
+- demo composition can stay local without pretending to be a library surface
 
 ## Read order
 1. [page.rs](./page.rs) for layout and site-wide shell components
