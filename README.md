@@ -1,7 +1,7 @@
 <div align="center">
   <picture>
     <source media="(prefers-color-scheme: dark)" srcset="./crates/http/static/eran.codes-dark.svg">
-    <img alt="eran.codes logo" src="./crates/http/static/eran.codes-light.svg" width="420">
+    <img alt="eran.codes logo" src="./crates/http/static/eran.codes-light.svg" width="280">
   </picture>
   <p><strong>A Rust portfolio application built to demonstrate architecture, realtime delivery, and operational clarity under load.</strong></p>
   <p>
