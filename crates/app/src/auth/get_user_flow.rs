@@ -1,10 +1,10 @@
 use statum::{machine, state, transition};
 
-use super::{AuthRecord, AuthenticatedUser};
+use super::{AuthenticatedUser, Record};
 
 #[derive(Clone, Debug)]
 pub struct RecordData {
-    record: AuthRecord,
+    record: Record,
 }
 
 #[derive(Clone, Debug)]
@@ -28,7 +28,7 @@ impl GetUserFlow<Incoming> {
         GetUserFlow::<Incoming>::builder().build()
     }
 
-    pub(super) fn classify_lookup(self, record: Option<AuthRecord>) -> LookupOutcome {
+    pub(super) fn classify_lookup(self, record: Option<Record>) -> LookupOutcome {
         match record {
             Some(record) => LookupOutcome::Found(self.mark_record_found(record)),
             None => {
@@ -41,7 +41,7 @@ impl GetUserFlow<Incoming> {
 
 #[transition]
 impl GetUserFlow<Incoming> {
-    fn mark_record_found(self, record: AuthRecord) -> GetUserFlow<RecordFound> {
+    fn mark_record_found(self, record: Record) -> GetUserFlow<RecordFound> {
         self.transition_with(RecordData { record })
     }
 
@@ -91,9 +91,9 @@ mod tests {
     use super::*;
     use domain::user;
 
-    fn test_record() -> AuthRecord {
-        AuthRecord::builder()
-            .id(user::UserId::new_v4())
+    fn test_record() -> Record {
+        Record::builder()
+            .id(user::Id::new_v4())
             .username(user::Username::try_new("person").expect("valid username"))
             .email(user::Email::try_new("person@example.com").expect("valid email"))
             .password_hash(super::super::PasswordHash::new("hash"))

@@ -1,6 +1,7 @@
 use axum::{http, response::IntoResponse};
 use datastar::prelude::{ElementPatchMode, PatchElements};
 use maud::Render;
+use domain::chat;
 use statum::{machine, state, transition};
 
 use super::{ChatSignals, DemoChatSignals};
@@ -46,9 +47,9 @@ pub enum ChatPostState {
 
 #[machine]
 pub(super) struct ChatPostFlow<ChatPostState> {
-    room_id: domain::chat::RoomId,
-    user_id: domain::chat::UserId,
-    body: domain::chat::MessageBody,
+    room_id: chat::room::Id,
+    user_id: chat::UserId,
+    body: chat::message::Body,
     body_text: String,
     sender: ChatSender,
     author_name: String,
@@ -109,9 +110,9 @@ impl ChatPostFlow<Incoming> {
 
     #[allow(clippy::too_many_arguments)]
     fn new(
-        room_id: domain::chat::RoomId,
+        room_id: domain::chat::room::Id,
         user_id: domain::chat::UserId,
-        body: domain::chat::MessageBody,
+        body: domain::chat::message::Body,
         body_text: String,
         sender: ChatSender,
         author_name: String,
@@ -148,24 +149,26 @@ impl ChatPostFlow<Incoming> {
             .unwrap_or_else(|| Text::from(format!("fallback-{}", uuid::Uuid::new_v4())))
     }
 
-    fn room_id_from_text(value: &str) -> Result<domain::chat::RoomId, crate::error::Error> {
+    fn room_id_from_text(
+        value: &str,
+    ) -> Result<domain::chat::room::Id, crate::error::Error> {
         let id = value.parse::<uuid::Uuid>().map_err(|error| {
             crate::error::Error::from(app::chat::Error::invalid_room_id(error))
         })?;
 
-        Ok(domain::chat::RoomId::from_uuid(id))
+        Ok(domain::chat::room::Id::from_uuid(id))
     }
 
     fn message_body_from_text(
         value: &str,
-    ) -> Result<domain::chat::MessageBody, crate::error::Error> {
-        domain::chat::MessageBody::try_new(value)
+    ) -> Result<domain::chat::message::Body, crate::error::Error> {
+        domain::chat::message::Body::try_new(value)
             .map_err(domain::chat::Error::from)
             .map_err(app::chat::Error::from)
             .map_err(crate::error::Error::from)
     }
 
-    fn chat_user_id_from_user_id(value: domain::user::UserId) -> domain::chat::UserId {
+    fn chat_user_id_from_user_id(value: domain::user::Id) -> domain::chat::UserId {
         domain::chat::UserId::from_uuid(*value.as_uuid())
     }
 }
@@ -436,12 +439,18 @@ impl ChatPostFlow<Broadcasted> {
 }
 
 fn to_chat_message_status(
-    value: domain::chat::MessageStatus,
+    value: domain::chat::message::Status,
 ) -> partials::components::chat::Status {
     match value {
-        domain::chat::MessageStatus::Visible => partials::components::chat::Status::Visible,
-        domain::chat::MessageStatus::Pending => partials::components::chat::Status::Pending,
-        domain::chat::MessageStatus::Removed => partials::components::chat::Status::Removed,
+        domain::chat::message::Status::Visible => {
+            partials::components::chat::Status::Visible
+        }
+        domain::chat::message::Status::Pending => {
+            partials::components::chat::Status::Pending
+        }
+        domain::chat::message::Status::Removed => {
+            partials::components::chat::Status::Removed
+        }
     }
 }
 
@@ -452,17 +461,17 @@ mod tests {
     use super::*;
     use crate::types::SseTabId;
 
-    fn sample_body() -> domain::chat::MessageBody {
-        domain::chat::MessageBody::try_new("hello").expect("valid body")
+    fn sample_body() -> domain::chat::message::Body {
+        domain::chat::message::Body::try_new("hello").expect("valid body")
     }
 
     fn sample_message() -> domain::chat::Message {
         domain::chat::Message::builder()
-            .id(domain::chat::MessageId::new_v4())
-            .room_id(domain::chat::RoomId::new_v4())
+            .id(domain::chat::message::Id::new_v4())
+            .room_id(domain::chat::room::Id::new_v4())
             .user_id(domain::chat::UserId::new_v4())
             .body(sample_body())
-            .status(domain::chat::MessageStatus::Visible)
+            .status(domain::chat::message::Status::Visible)
             .maybe_client_id(None)
             .created_at(std::time::SystemTime::UNIX_EPOCH)
             .build()
@@ -470,7 +479,7 @@ mod tests {
 
     fn auth_user() -> crate::auth::User {
         crate::auth::User::builder()
-            .id(crate::auth::UserId::from(domain::user::UserId::new_v4()))
+            .id(crate::auth::UserId::from(domain::user::Id::new_v4()))
             .username(domain::user::Username::try_new("person").expect("valid username"))
             .email(domain::user::Email::try_new("person@example.com").expect("valid email"))
             .session_hash_bytes(vec![1, 2, 3])
@@ -479,7 +488,7 @@ mod tests {
 
     fn incoming() -> ChatPostFlow<Incoming> {
         IncomingFlow::new(
-            domain::chat::RoomId::new_v4(),
+            domain::chat::room::Id::new_v4(),
             domain::chat::UserId::new_v4(),
             sample_body(),
             "hello".to_string(),
@@ -514,7 +523,7 @@ mod tests {
         let user = auth_user();
         let incoming = IncomingFlow::from_authenticated_signals(
             ChatSignals {
-                room_id: Text::from(domain::chat::RoomId::new_v4().as_uuid().to_string()),
+                room_id: Text::from(domain::chat::room::Id::new_v4().as_uuid().to_string()),
                 body: Text::from("hello"),
                 sse_tab_id: Some(SseTabId::new("tab-1")),
             },

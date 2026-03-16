@@ -19,8 +19,8 @@ pub(super) struct DbCheckPartialFlow<DbCheckPartialState> {
 impl DbCheckPartialFlow<Incoming> {
     pub(super) fn from_query(email: Option<Text>) -> Self {
         DbCheckPartialFlow::<Incoming>::builder()
-            .maybe_email_text(email.map(|value| value.to_string()))
-            .maybe_result(None)
+            .email_text(email.map(|value| value.to_string()))
+            .result(None)
             .build()
     }
 }

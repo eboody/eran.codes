@@ -90,8 +90,8 @@ impl DemoUserEnsureFlow<Missing> {
     pub(super) fn registration_command(
         &self,
         password: SecretString,
-    ) -> app::user::RegisterUser {
-        app::user::RegisterUser::builder()
+    ) -> app::user::Register {
+        app::user::Register::builder()
             .username(self.state_data.username.clone())
             .email(self.state_data.email.clone())
             .password(password)
@@ -100,7 +100,7 @@ impl DemoUserEnsureFlow<Missing> {
 
     pub(super) fn apply_registration_result(
         self,
-        result: app::user::Result<domain::user::UserId>,
+        result: app::user::Result<domain::user::Id>,
     ) -> crate::Result<DemoUserEnsureFlow<RegistrationAccepted>> {
         match result {
             Ok(_) | Err(app::user::Error::EmailTaken) => Ok(self.accept_registration()),

@@ -1,9 +1,11 @@
 use crate::trace_log::{LogTargetKind, LogTargetKnown, TraceEntry};
 use crate::types::{LogFieldKey, Text};
-use crate::views::partials::components::Pill;
+use crate::views::partials::components;
 use crate::views::partials::demo::log;
 
-pub(super) fn backend_event(entry: &TraceEntry) -> (Text, Text, Vec<Pill>) {
+pub(super) fn backend_event(
+    entry: &TraceEntry,
+) -> (Text, Text, Vec<components::Pill>) {
     let summary = db_backend_summary(entry)
         .unwrap_or_else(|| Text::from(format!("{}: {}", entry.target, entry.message)));
 

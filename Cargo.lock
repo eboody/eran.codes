@@ -1903,9 +1903,7 @@ checksum = "112b39cec0b298b6c1999fee3e31427f74f676e4cb9879ed1a121b43661a4154"
 
 [[package]]
 name = "macro_registry"
-version = "0.3.16"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "4351ad48f3a6fa223bb3ed032019a81e8ebaebd085e1e40b0c62f7c74124e788"
+version = "0.5.4"
 dependencies = [
  "module_path_extractor",
  "syn 2.0.111",
@@ -2026,9 +2024,7 @@ checksum = "4a0b3262dc837d2513fe2ef31ff8461352ef932dcca31ba0c0abe33547cf6b9b"
 
 [[package]]
 name = "module_path_extractor"
-version = "0.3.16"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "aa2f734e5da4faa9131599491cfb62706b8b96225f6ef7bd1ddcde6c1a5f9465"
+version = "0.5.4"
 dependencies = [
  "proc-macro2",
  "syn 2.0.111",
@@ -3444,9 +3440,7 @@ checksum = "6ce2be8dc25455e1f91df71bfa12ad37d7af1092ae736f3a6cd0e37bc7810596"
 
 [[package]]
 name = "statum"
-version = "0.3.16"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "bb8e4acbfbedf041c15fced98b945c0b653584d27b50c30d3188a60c2342d2b3"
+version = "0.5.4"
 dependencies = [
  "bon",
  "statum-core",
@@ -3455,15 +3449,11 @@ dependencies = [
 
 [[package]]
 name = "statum-core"
-version = "0.3.16"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "8113e5eef7e8f04c1536a44396e01cd1f093f11b6c219a59b38ea9ee6b594d2e"
+version = "0.5.4"
 
 [[package]]
 name = "statum-macros"
-version = "0.3.16"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "47370364cbd45ef8832e85e75d109adfd37264809f0f17b2ea4be6f0b2fcd9ef"
+version = "0.5.4"
 dependencies = [
  "macro_registry",
  "moddef 0.2.6",

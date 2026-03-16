@@ -38,7 +38,7 @@ impl CounterSyncFlow<Incoming> {
     pub(super) fn new(delta: i64, sse_tab_id: Option<SseTabId>) -> Self {
         CounterSyncFlow::<Incoming>::builder()
             .delta(delta)
-            .maybe_sse_tab_id(sse_tab_id)
+            .sse_tab_id(sse_tab_id)
             .build()
     }
 

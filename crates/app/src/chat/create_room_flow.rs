@@ -19,7 +19,7 @@ pub enum CreateRoomState {
 
 #[machine]
 pub(super) struct CreateRoomFlow<CreateRoomState> {
-    room_name: chat::RoomName,
+    room_name: chat::room::Name,
     created_by: chat::UserId,
 }
 
@@ -58,7 +58,7 @@ impl CreateRoomFlow<Incoming> {
 impl CreateRoomFlow<Incoming> {
     pub(super) fn materialize_room(
         self,
-        room_id: chat::RoomId,
+        room_id: chat::room::Id,
     ) -> CreateRoomFlow<RoomMaterialized> {
         let room_name = self.room_name;
         let created_by = self.created_by;
@@ -87,7 +87,7 @@ impl CreateRoomFlow<RoomMaterialized> {
 }
 
 impl CreateRoomFlow<RoomPersisted> {
-    pub(super) fn room_id(&self) -> chat::RoomId {
+    pub(super) fn room_id(&self) -> chat::room::Id {
         self.state_data.room.id
     }
 
@@ -156,7 +156,7 @@ mod tests {
 
     fn command() -> CreateRoom {
         CreateRoom::builder()
-            .name(chat::RoomName::Lobby)
+            .name(chat::room::Name::Lobby)
             .created_by(chat::UserId::new_v4())
             .build()
     }
@@ -164,7 +164,7 @@ mod tests {
     #[test]
     fn create_room_flow_happy_path_reaches_audited() {
         let incoming = CreateRoomFlow::<Incoming>::from_command(command());
-        let room_id = chat::RoomId::new_v4();
+        let room_id = chat::room::Id::new_v4();
 
         let materialized = incoming.materialize_room(room_id);
         assert_eq!(materialized.room().id, room_id);

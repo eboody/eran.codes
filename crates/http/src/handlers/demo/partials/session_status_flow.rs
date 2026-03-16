@@ -21,8 +21,8 @@ pub(super) struct SessionStatusPartialFlow<SessionStatusPartialState> {
 impl SessionStatusPartialFlow<Incoming> {
     pub(super) fn new() -> Self {
         SessionStatusPartialFlow::<Incoming>::builder()
-            .maybe_session_id(None)
-            .maybe_expiry(None)
+            .session_id(None)
+            .expiry(None)
             .trace(Vec::new())
             .build()
     }
@@ -67,8 +67,8 @@ mod tests {
     #[test]
     fn prepared_flow_renders_session_status_target() {
         let prepared = SessionStatusPartialFlow::<SnapshotPrepared>::builder()
-            .session_id(Text::from("session-1"))
-            .expiry(Text::from("in one hour"))
+            .session_id(Some(Text::from("session-1")))
+            .expiry(Some(Text::from("in one hour")))
             .trace(Vec::new())
             .build();
 

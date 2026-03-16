@@ -3,7 +3,7 @@ use maud::Render;
 
 use crate::trace_log::TraceEntry;
 use crate::types::Text;
-use crate::views::partials::components::logs;
+use crate::views::partials::components;
 
 use super::vm;
 
@@ -27,28 +27,28 @@ impl Render for TransportLogSet<'_> {
             .collect();
         if !excluded_terms.is_empty() {
             request_flows.retain(|flow| {
-                !logs::composed::flow_matches_any_search_term(flow, &excluded_terms)
+                !components::logs::composed::flow_matches_any_search_term(flow, &excluded_terms)
             });
         }
-        let flow_body = logs::composed::FlowTimeline::builder()
+        let flow_body = components::logs::composed::FlowTimeline::builder()
             .flows(request_flows)
             .build()
             .render();
 
-        logs::primitives::Surface::builder()
+        components::logs::primitives::Surface::builder()
             .target_id(Text::from("network-log-target"))
-            .layout(logs::primitives::SurfaceLayout::Panels)
+            .layout(components::logs::primitives::SurfaceLayout::Panels)
             .children(vec![
-                logs::primitives::Panel::builder()
+                components::logs::primitives::Panel::builder()
                     .title(Text::from("System flow timeline"))
-                    .body(logs::primitives::PanelBody::Content(flow_body))
+                    .body(components::logs::primitives::PanelBody::Content(flow_body))
                     .build(),
             ])
             .auto_scroll(
-                logs::primitives::AutoScroll::builder()
+                components::logs::primitives::AutoScroll::builder()
                     .root_id(Text::from("network-log-target"))
                     .selector(Text::from("[data-log-scroll]"))
-                    .scope(logs::primitives::AutoScrollScope::Single)
+                    .scope(components::logs::primitives::AutoScrollScope::Single)
                     .build(),
             )
             .build()

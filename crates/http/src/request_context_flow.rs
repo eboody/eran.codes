@@ -1,6 +1,11 @@
 use axum::http;
 use statum::{machine, state, transition};
 
+use crate::{
+    request,
+    types::{ClientIp, RequestId, SessionId, UserAgent},
+};
+
 #[derive(Clone, Debug)]
 pub struct BuiltData {
     context: crate::request::Context,
@@ -16,24 +21,24 @@ pub enum RequestContextState {
 #[machine]
 pub(crate) struct RequestContextFlow<RequestContextState> {
     headers: http::HeaderMap,
-    session_id: Option<crate::types::SessionId>,
-    request_id: Option<crate::types::RequestId>,
-    client_ip: Option<crate::types::ClientIp>,
-    user_agent: Option<crate::types::UserAgent>,
-    kind: crate::request::Kind,
+    session_id: Option<SessionId>,
+    request_id: Option<RequestId>,
+    client_ip: Option<ClientIp>,
+    user_agent: Option<UserAgent>,
+    kind: request::Kind,
 }
 
 impl RequestContextFlow<Incoming> {
     pub(crate) fn new(
         headers: http::HeaderMap,
-        session_id: Option<crate::types::SessionId>,
+        session_id: Option<SessionId>,
     ) -> Self {
         RequestContextFlow::<Incoming>::builder()
             .headers(headers)
-            .maybe_session_id(session_id)
-            .maybe_request_id(None)
-            .maybe_client_ip(None)
-            .maybe_user_agent(None)
+            .session_id(session_id)
+            .request_id(None)
+            .client_ip(None)
+            .user_agent(None)
             .kind(crate::request::Kind::Page)
             .build()
     }

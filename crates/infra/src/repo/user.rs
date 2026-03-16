@@ -236,7 +236,7 @@ impl SqlxUserRepository {
             .context(DecodeEmailSnafu)?;
 
         Ok(user::User {
-            id: user::UserId::from_uuid(row.get::<uuid::Uuid, _>("id")),
+            id: user::Id::from_uuid(row.get::<uuid::Uuid, _>("id")),
             username,
             email,
         })

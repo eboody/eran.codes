@@ -77,18 +77,22 @@ pub enum RepositoryError {
         source: BoxError,
     },
     #[snafu(display("failed to decode room name: {source}"))]
-    DecodeRoomName { source: domain::chat::RoomNameError },
+    DecodeRoomName {
+        source: domain::chat::room::NameError,
+    },
     #[snafu(display("failed to decode client id: {source}"))]
     DecodeClientId { source: domain::chat::ClientIdError },
     #[snafu(display("failed to decode message body: {source}"))]
     DecodeMessageBody {
-        source: domain::chat::MessageBodyError,
+        source: domain::chat::message::BodyError,
     },
     #[snafu(display("failed to decode moderation room name: {source}"))]
-    DecodeModerationRoomName { source: domain::chat::RoomNameError },
+    DecodeModerationRoomName {
+        source: domain::chat::room::NameError,
+    },
     #[snafu(display("failed to decode moderation message body: {source}"))]
     DecodeModerationMessageBody {
-        source: domain::chat::MessageBodyError,
+        source: domain::chat::message::BodyError,
     },
     #[snafu(display("failed to decode moderation reason: {source}"))]
     DecodeModerationReason {
@@ -121,7 +125,7 @@ impl Error {
         }
     }
 
-    pub fn decode_room_name(source: domain::chat::RoomNameError) -> Self {
+    pub fn decode_room_name(source: domain::chat::room::NameError) -> Self {
         Self::Repository {
             source: RepositoryError::DecodeRoomName { source },
         }
@@ -133,19 +137,21 @@ impl Error {
         }
     }
 
-    pub fn decode_message_body(source: domain::chat::MessageBodyError) -> Self {
+    pub fn decode_message_body(source: domain::chat::message::BodyError) -> Self {
         Self::Repository {
             source: RepositoryError::DecodeMessageBody { source },
         }
     }
 
-    pub fn decode_moderation_room_name(source: domain::chat::RoomNameError) -> Self {
+    pub fn decode_moderation_room_name(source: domain::chat::room::NameError) -> Self {
         Self::Repository {
             source: RepositoryError::DecodeModerationRoomName { source },
         }
     }
 
-    pub fn decode_moderation_message_body(source: domain::chat::MessageBodyError) -> Self {
+    pub fn decode_moderation_message_body(
+        source: domain::chat::message::BodyError,
+    ) -> Self {
         Self::Repository {
             source: RepositoryError::DecodeModerationMessageBody { source },
         }

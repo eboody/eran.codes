@@ -8,24 +8,24 @@ use domain::chat;
 
 #[derive(Clone, Debug, PartialEq)]
 pub struct LoadedData {
-    room_id: chat::RoomId,
-    message_status: chat::MessageStatus,
+    room_id: chat::room::Id,
+    message_status: chat::message::Status,
 }
 
 #[derive(Clone, Debug, PartialEq)]
 pub struct PendingVerifiedData {
-    room_id: chat::RoomId,
+    room_id: chat::room::Id,
 }
 
 #[derive(Clone, Debug, PartialEq)]
 pub struct ResolutionData {
-    room_id: chat::RoomId,
-    message_status: chat::MessageStatus,
+    room_id: chat::room::Id,
+    message_status: chat::message::Status,
 }
 
 #[derive(Clone, Debug, PartialEq)]
 pub struct AuditPreparedData {
-    room_id: chat::RoomId,
+    room_id: chat::room::Id,
     metadata: Vec<(AuditKey, AuditValue)>,
 }
 
@@ -43,7 +43,7 @@ pub enum ModerateMessageState {
 
 #[machine]
 pub(super) struct ModerateMessageFlow<ModerateMessageState> {
-    message_id: chat::MessageId,
+    message_id: chat::message::Id,
     reviewer_id: chat::UserId,
     decision: ModerationDecision,
     reason: Option<ModerationReason>,
@@ -116,7 +116,7 @@ impl ModerateMessageFlow<MessageLoaded> {
 
 impl ModerateMessageFlow<MessageLoaded> {
     pub(super) fn classify_pending(self) -> PendingOutcome {
-        if self.state_data.message_status == chat::MessageStatus::Pending {
+        if self.state_data.message_status == chat::message::Status::Pending {
             PendingOutcome::Pending(self.mark_pending_verified())
         } else {
             PendingOutcome::Conflict
@@ -128,8 +128,8 @@ impl ModerateMessageFlow<MessageLoaded> {
 impl ModerateMessageFlow<PendingVerified> {
     pub(super) fn resolve(self) -> ModerateMessageFlow<Resolved> {
         let message_status = match self.decision {
-            ModerationDecision::Approve => chat::MessageStatus::Visible,
-            ModerationDecision::Remove => chat::MessageStatus::Removed,
+            ModerationDecision::Approve => chat::message::Status::Visible,
+            ModerationDecision::Remove => chat::message::Status::Removed,
         };
         let data = ResolutionData {
             room_id: self.state_data.room_id,
@@ -207,7 +207,7 @@ impl ModerateMessageFlow<QueueCompletionApplied> {
 }
 
 impl<S: ModerateMessageStateTrait> ModerateMessageFlow<S> {
-    pub(super) fn message_id(&self) -> chat::MessageId {
+    pub(super) fn message_id(&self) -> chat::message::Id {
         self.message_id
     }
 
@@ -225,7 +225,7 @@ impl<S: ModerateMessageStateTrait> ModerateMessageFlow<S> {
 }
 
 impl ModerateMessageFlow<Resolved> {
-    pub(super) fn message_status(&self) -> chat::MessageStatus {
+    pub(super) fn message_status(&self) -> chat::message::Status {
         self.state_data.message_status
     }
 
@@ -262,7 +262,7 @@ impl ModerateMessageFlow<MessageStatusApplied> {
 }
 
 impl ModerateMessageFlow<AuditPrepared> {
-    pub(super) fn room_id(&self) -> chat::RoomId {
+    pub(super) fn room_id(&self) -> chat::room::Id {
         self.state_data.room_id
     }
 
@@ -308,7 +308,7 @@ impl ModerateMessageFlow<Incoming> {
             .message_id(message_id)
             .reviewer_id(reviewer_id)
             .decision(decision)
-            .maybe_reason(reason)
+            .reason(reason)
             .build()
     }
 }
@@ -386,12 +386,12 @@ mod tests {
 
     use super::*;
 
-    fn build_message(status: chat::MessageStatus) -> chat::Message {
+    fn build_message(status: chat::message::Status) -> chat::Message {
         chat::Message::builder()
-            .id(chat::MessageId::new_v4())
-            .room_id(chat::RoomId::new_v4())
+            .id(chat::message::Id::new_v4())
+            .room_id(chat::room::Id::new_v4())
             .user_id(chat::UserId::new_v4())
-            .body(chat::MessageBody::try_new("hello").expect("valid body"))
+            .body(chat::message::Body::try_new("hello").expect("valid body"))
             .status(status)
             .maybe_client_id(None)
             .created_at(std::time::SystemTime::UNIX_EPOCH)
@@ -399,7 +399,7 @@ mod tests {
     }
 
     fn build_command(
-        message_id: chat::MessageId,
+        message_id: chat::message::Id,
         decision: ModerationDecision,
     ) -> ModerateMessage {
         ModerateMessage::builder()
@@ -412,12 +412,12 @@ mod tests {
 
     struct TestRepository {
         message: Mutex<Option<chat::Message>>,
-        updated: Mutex<Vec<(chat::MessageId, chat::MessageStatus)>>,
+        updated: Mutex<Vec<(chat::message::Id, chat::message::Status)>>,
         update_result: PendingMutationResult,
     }
 
     impl TestRepository {
-        fn updated(&self) -> Vec<(chat::MessageId, chat::MessageStatus)> {
+        fn updated(&self) -> Vec<(chat::message::Id, chat::message::Status)> {
             self.updated.lock().expect("updated lock").clone()
         }
     }
@@ -430,21 +430,21 @@ mod tests {
 
         async fn find_room(
             &self,
-            _room_id: &chat::RoomId,
+            _room_id: &chat::room::Id,
         ) -> super::super::Result<Option<chat::Room>> {
             unimplemented!("not used in this test")
         }
 
         async fn find_room_by_name(
             &self,
-            _name: &chat::RoomName,
+            _name: &chat::room::Name,
         ) -> super::super::Result<Option<chat::Room>> {
             unimplemented!("not used in this test")
         }
 
         async fn list_messages(
             &self,
-            _room_id: &chat::RoomId,
+            _room_id: &chat::room::Id,
             _limit: usize,
         ) -> super::super::Result<Vec<chat::Message>> {
             unimplemented!("not used in this test")
@@ -452,7 +452,7 @@ mod tests {
 
         async fn find_message(
             &self,
-            _message_id: &chat::MessageId,
+            _message_id: &chat::message::Id,
         ) -> super::super::Result<Option<chat::Message>> {
             Ok(self.message.lock().expect("message lock").clone())
         }
@@ -466,7 +466,7 @@ mod tests {
 
         async fn add_membership(
             &self,
-            _room_id: &chat::RoomId,
+            _room_id: &chat::room::Id,
             _user_id: &chat::UserId,
             _role: super::super::RoomRole,
         ) -> super::super::Result<()> {
@@ -475,7 +475,7 @@ mod tests {
 
         async fn is_member(
             &self,
-            _room_id: &chat::RoomId,
+            _room_id: &chat::room::Id,
             _user_id: &chat::UserId,
         ) -> super::super::Result<bool> {
             unimplemented!("not used in this test")
@@ -483,8 +483,8 @@ mod tests {
 
         async fn update_message_status(
             &self,
-            message_id: &chat::MessageId,
-            status: chat::MessageStatus,
+            message_id: &chat::message::Id,
+            status: chat::message::Status,
         ) -> super::super::Result<PendingMutationResult> {
             self.updated
                 .lock()
@@ -496,11 +496,13 @@ mod tests {
 
     #[derive(Default)]
     struct TestModerationQueue {
-        completions: Mutex<Vec<(chat::MessageId, chat::UserId, ModerationDecision)>>,
+        completions: Mutex<Vec<(chat::message::Id, chat::UserId, ModerationDecision)>>,
     }
 
     impl TestModerationQueue {
-        fn completions(&self) -> Vec<(chat::MessageId, chat::UserId, ModerationDecision)> {
+        fn completions(
+            &self,
+        ) -> Vec<(chat::message::Id, chat::UserId, ModerationDecision)> {
             self.completions.lock().expect("completions lock").clone()
         }
     }
@@ -509,7 +511,7 @@ mod tests {
     impl super::super::ModerationQueue for TestModerationQueue {
         async fn enqueue(
             &self,
-            _message_id: &chat::MessageId,
+            _message_id: &chat::message::Id,
             _reason: &super::super::ModerationReason,
         ) -> super::super::Result<()> {
             unimplemented!("not used in this test")
@@ -524,7 +526,7 @@ mod tests {
 
         async fn complete_if_pending(
             &self,
-            message_id: &chat::MessageId,
+            message_id: &chat::message::Id,
             reviewer_id: &chat::UserId,
             decision: ModerationDecision,
             _reason: Option<super::super::ModerationReason>,
@@ -574,7 +576,7 @@ mod tests {
     impl super::super::RateLimiter for NoopRateLimiter {
         async fn check(
             &self,
-            _room_id: &chat::RoomId,
+            _room_id: &chat::room::Id,
             _user_id: &chat::UserId,
         ) -> super::super::Result<()> {
             Ok(())
@@ -584,12 +586,12 @@ mod tests {
     struct FixedIds;
 
     impl super::super::IdGenerator for FixedIds {
-        fn new_room_id(&self) -> chat::RoomId {
-            chat::RoomId::new_v4()
+        fn new_room_id(&self) -> chat::room::Id {
+            chat::room::Id::new_v4()
         }
 
-        fn new_message_id(&self) -> chat::MessageId {
-            chat::MessageId::new_v4()
+        fn new_message_id(&self) -> chat::message::Id {
+            chat::message::Id::new_v4()
         }
     }
 
@@ -610,7 +612,7 @@ mod tests {
 
     #[test]
     fn ensure_pending_rejects_non_pending_messages() {
-        let message = build_message(chat::MessageStatus::Visible);
+        let message = build_message(chat::message::Status::Visible);
         let command = build_command(message.id, ModerationDecision::Approve);
 
         let loaded = ModerateMessageFlow::<Incoming>::from_command(command)
@@ -623,7 +625,7 @@ mod tests {
 
     #[test]
     fn resolve_maps_decision_to_message_status() {
-        let message = build_message(chat::MessageStatus::Pending);
+        let message = build_message(chat::message::Status::Pending);
         let command = build_command(message.id, ModerationDecision::Remove);
 
         let pending = ModerateMessageFlow::<Incoming>::from_command(command)
@@ -634,13 +636,13 @@ mod tests {
             .expect("pending");
         let resolved = pending.resolve();
 
-        assert_eq!(resolved.message_status(), chat::MessageStatus::Removed);
+        assert_eq!(resolved.message_status(), chat::message::Status::Removed);
         assert_eq!(resolved.decision(), ModerationDecision::Remove);
     }
 
     #[test]
     fn applied_markers_require_applied_mutation_result() {
-        let message = build_message(chat::MessageStatus::Pending);
+        let message = build_message(chat::message::Status::Pending);
         let command = build_command(message.id, ModerationDecision::Approve);
         let pending = ModerateMessageFlow::<Incoming>::from_command(command)
             .load_lookup(Some(message))
@@ -658,7 +660,8 @@ mod tests {
 
     #[test]
     fn load_lookup_rejects_missing_message() {
-        let command = build_command(chat::MessageId::new_v4(), ModerationDecision::Approve);
+        let command =
+            build_command(chat::message::Id::new_v4(), ModerationDecision::Approve);
         let incoming = ModerateMessageFlow::<Incoming>::from_command(command);
 
         let result = incoming.load_lookup(None);
@@ -667,7 +670,7 @@ mod tests {
 
     #[test]
     fn prepare_audit_contains_message_id_metadata() {
-        let message = build_message(chat::MessageStatus::Pending);
+        let message = build_message(chat::message::Status::Pending);
         let command = build_command(message.id, ModerationDecision::Approve);
         let prepared = ModerateMessageFlow::<Incoming>::from_command(command)
             .load_lookup(Some(message))
@@ -694,7 +697,7 @@ mod tests {
 
     #[tokio::test]
     async fn moderate_runs_full_pending_path_through_audit() {
-        let message = build_message(chat::MessageStatus::Pending);
+        let message = build_message(chat::message::Status::Pending);
         let repo = Arc::new(TestRepository {
             message: Mutex::new(Some(message.clone())),
             updated: Mutex::new(Vec::new()),
@@ -714,7 +717,7 @@ mod tests {
         assert!(result.is_ok());
         assert_eq!(
             repo.updated(),
-            vec![(message.id, chat::MessageStatus::Visible)]
+            vec![(message.id, chat::message::Status::Visible)]
         );
         assert_eq!(moderation.completions().len(), 1);
         assert_eq!(audit.entries().len(), 1);

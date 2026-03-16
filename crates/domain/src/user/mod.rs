@@ -40,9 +40,9 @@ fn is_valid_email(value: &str) -> bool {
 }
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
-pub struct UserId(uuid::Uuid);
+pub struct Id(uuid::Uuid);
 
-impl UserId {
+impl Id {
     pub fn new_v4() -> Self {
         Self(uuid::Uuid::new_v4())
     }
@@ -55,8 +55,6 @@ impl UserId {
         &self.0
     }
 }
-
-pub type Id = UserId;
 
 #[cfg(test)]
 mod tests {

@@ -4,7 +4,7 @@ use snafu::prelude::*;
 use strum_macros::{Display, EnumString};
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, Display, EnumString)]
-pub enum RoomName {
+pub enum Name {
     #[strum(serialize = "Lobby")]
     Lobby,
     #[strum(serialize = "Demo")]
@@ -18,40 +18,30 @@ pub enum RoomName {
     validate(not_empty, len_char_max = 64),
     derive(Debug, Clone, PartialEq, Eq, Display)
 )]
-pub struct RoomNameText(String);
+pub struct NameText(String);
 
 #[derive(Debug, Clone, PartialEq, Snafu)]
-pub enum RoomNameError {
+pub enum NameError {
     #[snafu(display("{source}"))]
-    Invalid {
-        source: RoomNameTextError,
-    },
+    Invalid { source: NameTextError },
     #[snafu(display("{value}"))]
-    Unknown {
-        value: RoomNameText,
-    },
+    Unknown { value: NameText },
 }
 
-impl RoomName {
-    pub fn try_new(
-        value: impl AsRef<str>,
-    ) -> Result<Self, RoomNameError> {
-        let raw = RoomNameText::try_new(value.as_ref())
-            .map_err(|source| RoomNameError::Invalid {
-                source,
-            })?;
+impl Name {
+    pub fn try_new(value: impl AsRef<str>) -> Result<Self, NameError> {
+        let raw = NameText::try_new(value.as_ref())
+            .map_err(|source| NameError::Invalid { source })?;
         raw.to_string()
             .parse()
-            .map_err(|_| RoomNameError::Unknown {
-                value: raw,
-            })
+            .map_err(|_| NameError::Unknown { value: raw })
     }
 }
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
-pub struct RoomId(uuid::Uuid);
+pub struct Id(uuid::Uuid);
 
-impl RoomId {
+impl Id {
     pub fn new_v4() -> Self {
         Self(uuid::Uuid::new_v4())
     }
@@ -84,31 +74,31 @@ impl UserId {
 
 #[derive(Debug, Clone, PartialEq, Builder)]
 pub struct Room {
-    pub id: RoomId,
-    pub name: RoomName,
+    pub id: Id,
+    pub name: Name,
     pub created_by: UserId,
 }
 
 #[cfg(test)]
 mod tests {
-    use super::{RoomName, RoomNameError};
+    use super::{Name, NameError};
 
     #[test]
     fn room_name_accepts_known_values() {
-        assert_eq!(RoomName::try_new("Lobby"), Ok(RoomName::Lobby));
-        assert_eq!(RoomName::try_new("Demo"), Ok(RoomName::Demo));
-        assert_eq!(RoomName::try_new("Support"), Ok(RoomName::Support));
+        assert_eq!(Name::try_new("Lobby"), Ok(Name::Lobby));
+        assert_eq!(Name::try_new("Demo"), Ok(Name::Demo));
+        assert_eq!(Name::try_new("Support"), Ok(Name::Support));
     }
 
     #[test]
     fn room_name_rejects_unknown_values() {
         assert!(matches!(
-            RoomName::try_new("lobby"),
-            Err(RoomNameError::Unknown { .. })
+            Name::try_new("lobby"),
+            Err(NameError::Unknown { .. })
         ));
         assert!(matches!(
-            RoomName::try_new("random-room"),
-            Err(RoomNameError::Unknown { .. })
+            Name::try_new("random-room"),
+            Err(NameError::Unknown { .. })
         ));
     }
 }

@@ -22,9 +22,9 @@ pub(super) struct ProtectedGateFlow<ProtectedGateState> {
 impl ProtectedGateFlow<Incoming> {
     pub(super) fn from_session(auth_session: crate::auth::Session) -> Self {
         ProtectedGateFlow::<Incoming>::builder()
-            .maybe_user(auth_session.user)
-            .maybe_username(None)
-            .maybe_email(None)
+            .user(auth_session.user)
+            .username(None)
+            .email(None)
             .build()
     }
 
@@ -101,9 +101,9 @@ mod tests {
     #[test]
     fn guest_classification_routes_to_guest_variant() {
         let incoming = IncomingFlow::builder()
-            .maybe_user(None)
-            .maybe_username(None)
-            .maybe_email(None)
+            .user(None)
+            .username(None)
+            .email(None)
             .build();
 
         assert!(matches!(

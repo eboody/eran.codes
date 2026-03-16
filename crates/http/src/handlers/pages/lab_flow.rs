@@ -6,7 +6,7 @@ use crate::views::partials;
 #[derive(Clone, Debug)]
 pub struct ViewerData {
     maybe_user: Option<crate::views::page::UserNav>,
-    viewer_id: Option<domain::user::UserId>,
+    viewer_id: Option<domain::user::Id>,
     chat_mode: partials::components::chat::Mode,
 }
 
@@ -31,7 +31,7 @@ pub(super) struct LabPageFlow<LabPageState> {
 impl LabPageFlow<Incoming> {
     pub(super) fn from_auth_user(auth_user: Option<crate::auth::User>) -> Self {
         LabPageFlow::<Incoming>::builder()
-            .maybe_auth_user(auth_user)
+            .auth_user(auth_user)
             .build()
     }
 

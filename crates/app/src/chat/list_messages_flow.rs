@@ -18,7 +18,7 @@ pub enum ListMessagesState {
 
 #[machine]
 pub(super) struct ListMessagesFlow<ListMessagesState> {
-    room_id: chat::RoomId,
+    room_id: chat::room::Id,
     user_id: chat::UserId,
     limit: usize,
 }
@@ -57,7 +57,7 @@ impl ListMessagesFlow<Incoming> {
 }
 
 impl<S: ListMessagesStateTrait> ListMessagesFlow<S> {
-    pub(super) fn room_id(&self) -> &chat::RoomId {
+    pub(super) fn room_id(&self) -> &chat::room::Id {
         &self.room_id
     }
 
@@ -182,19 +182,19 @@ mod tests {
 
     fn command() -> ListMessages {
         ListMessages::builder()
-            .room_id(chat::RoomId::new_v4())
+            .room_id(chat::room::Id::new_v4())
             .user_id(chat::UserId::new_v4())
             .limit(10)
             .build()
     }
 
-    fn message(room_id: chat::RoomId, user_id: chat::UserId) -> chat::Message {
+    fn message(room_id: chat::room::Id, user_id: chat::UserId) -> chat::Message {
         chat::Message::builder()
-            .id(chat::MessageId::new_v4())
+            .id(chat::message::Id::new_v4())
             .room_id(room_id)
             .user_id(user_id)
-            .body(chat::MessageBody::try_new("hello").expect("valid body"))
-            .status(chat::MessageStatus::Visible)
+            .body(chat::message::Body::try_new("hello").expect("valid body"))
+            .status(chat::message::Status::Visible)
             .maybe_client_id(None)
             .created_at(std::time::SystemTime::UNIX_EPOCH)
             .build()

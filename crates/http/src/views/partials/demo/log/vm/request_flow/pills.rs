@@ -1,6 +1,6 @@
 use crate::trace_log::TraceEntry;
 use crate::types::{LogFieldKey, LogFieldValue, Text};
-use crate::views::partials::components::Pill;
+use crate::views::partials::components;
 use crate::views::partials::demo::log;
 
 pub(super) fn method_or_unknown(entry: &TraceEntry) -> Text {
@@ -16,17 +16,17 @@ pub(super) fn status_or_dash(entry: &TraceEntry) -> Text {
     log::vm::field_text(entry, LogFieldKey::Status).unwrap_or_else(|| Text::from("-"))
 }
 
-pub(super) fn field_pills(entry: &TraceEntry) -> Vec<Pill> {
+pub(super) fn field_pills(entry: &TraceEntry) -> Vec<components::Pill> {
     let mut pills = Vec::new();
 
     if let Some(method) = log::vm::field_text(entry, LogFieldKey::Method) {
-        pills.push(Pill::method(method));
+        pills.push(components::Pill::method(method));
     }
     if let Some(path) = log::vm::field_text(entry, LogFieldKey::Path) {
-        pills.push(Pill::path(path));
+        pills.push(components::Pill::path(path));
     }
     if let Some(status) = log::vm::field_text(entry, LogFieldKey::Status) {
-        pills.push(Pill::status(status));
+        pills.push(components::Pill::status(status));
     }
 
     push_fields_as_pills(
@@ -45,27 +45,27 @@ pub(super) fn field_pills(entry: &TraceEntry) -> Vec<Pill> {
     push_db_bind_pills(&mut pills, entry);
 
     if pills.is_empty() {
-        pills.push(Pill::target(entry.target.clone()));
+        pills.push(components::Pill::target(entry.target.clone()));
     }
 
     pills
 }
 
 pub(super) fn push_fields_as_pills(
-    pills: &mut Vec<Pill>,
+    pills: &mut Vec<components::Pill>,
     entry: &TraceEntry,
     fields: &[(LogFieldKey, &'static str)],
 ) {
     for (key, name) in fields {
         if let Some(value) = log::vm::field_text(entry, key.clone()) {
-            pills.push(Pill::fields(format!("{name}={value}")));
+            pills.push(components::Pill::fields(format!("{name}={value}")));
         }
     }
 }
 
-fn push_db_bind_pills(pills: &mut Vec<Pill>, entry: &TraceEntry) {
+fn push_db_bind_pills(pills: &mut Vec<components::Pill>, entry: &TraceEntry) {
     for (index, value) in db_bind_values(entry) {
-        pills.push(Pill::fields(format!("${index}={value}")));
+        pills.push(components::Pill::fields(format!("${index}={value}")));
     }
 }
 

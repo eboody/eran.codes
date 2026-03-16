@@ -4,7 +4,7 @@ use maud::{Markup, Render};
 
 use crate::trace_log::TraceEntry;
 use crate::types::{LogFieldKey, Text};
-use crate::views::partials::components::{BadgeKind, Pill};
+use crate::views::partials::components;
 use strum_macros::{Display, EnumString};
 
 use super::field_text;
@@ -29,42 +29,42 @@ pub fn chat_flow_rows(entries: &[&TraceEntry]) -> Vec<Vec<Markup>> {
 
 fn direction_pill(entry: &TraceEntry) -> Markup {
     match FlowDirection::from_entry(entry) {
-        FlowDirection::Incoming => Pill::fields("incoming").render(),
-        FlowDirection::Outgoing => Pill::fields("outgoing").render(),
-        FlowDirection::Unknown => Pill::fields("unknown").render(),
+        FlowDirection::Incoming => components::Pill::fields("incoming").render(),
+        FlowDirection::Outgoing => components::Pill::fields("outgoing").render(),
+        FlowDirection::Unknown => components::Pill::fields("unknown").render(),
     }
 }
 
 fn sender_pill(entry: &TraceEntry) -> Markup {
     let sender = ChatSender::from_entry(entry);
     let (label, kind) = match sender {
-        ChatSender::You => (Text::from("You"), BadgeKind::You),
-        ChatSender::Demo => (Text::from("Demo"), BadgeKind::Demo),
-        ChatSender::Unknown => (Text::from("User"), BadgeKind::Secondary),
+        ChatSender::You => (Text::from("You"), components::BadgeKind::You),
+        ChatSender::Demo => (Text::from("Demo"), components::BadgeKind::Demo),
+        ChatSender::Unknown => (Text::from("User"), components::BadgeKind::Secondary),
     };
-    Pill::badge(label, kind).render()
+    components::Pill::badge(label, kind).render()
 }
 
 fn receiver_pill(entry: &TraceEntry) -> Markup {
     match field_text(entry, LogFieldKey::Receiver) {
-        Some(receiver) => Pill::fields(format!("to:{}", receiver)).render(),
-        None => Pill::fields("to:unknown").render(),
+        Some(receiver) => components::Pill::fields(format!("to:{}", receiver)).render(),
+        None => components::Pill::fields("to:unknown").render(),
     }
 }
 
 fn user_pill(entry: &TraceEntry) -> Markup {
     let Some(user_id) = field_text(entry, LogFieldKey::UserId) else {
-        return Pill::fields("user:unknown").render();
+        return components::Pill::fields("user:unknown").render();
     };
     let user_text = user_id.to_string();
     let short_id = user_text.split('-').next().unwrap_or(user_text.as_str());
     let sender = ChatSender::from_entry(entry);
     let (label, kind) = match sender {
-        ChatSender::You => (format!("You ({short_id})"), BadgeKind::You),
-        ChatSender::Demo => (format!("Demo ({short_id})"), BadgeKind::Demo),
-        ChatSender::Unknown => (format!("User ({short_id})"), BadgeKind::Secondary),
+        ChatSender::You => (format!("You ({short_id})"), components::BadgeKind::You),
+        ChatSender::Demo => (format!("Demo ({short_id})"), components::BadgeKind::Demo),
+        ChatSender::Unknown => (format!("User ({short_id})"), components::BadgeKind::Secondary),
     };
-    Pill::badge(label, kind).render()
+    components::Pill::badge(label, kind).render()
 }
 
 #[derive(Clone, Copy, Debug)]

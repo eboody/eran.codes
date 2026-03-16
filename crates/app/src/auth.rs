@@ -116,15 +116,15 @@ pub struct Credentials {
 
 #[derive(Clone, Debug, Builder)]
 pub struct AuthenticatedUser {
-    pub id: user::UserId,
+    pub id: user::Id,
     pub username: user::Username,
     pub email: user::Email,
     pub session_hash: SessionHash,
 }
 
 #[derive(Clone, Debug, Builder)]
-pub struct AuthRecord {
-    pub id: user::UserId,
+pub struct Record {
+    pub id: user::Id,
     pub username: user::Username,
     pub email: user::Email,
     pub password_hash: PasswordHash,
@@ -137,7 +137,7 @@ pub trait Provider: Send + Sync {
         &self,
         credentials: Credentials,
     ) -> Result<Option<AuthenticatedUser>>;
-    async fn get_user(&self, user_id: &user::UserId) -> Result<Option<AuthenticatedUser>>;
+    async fn get_user(&self, user_id: &user::Id) -> Result<Option<AuthenticatedUser>>;
 }
 
 #[derive(Clone)]
@@ -163,10 +163,7 @@ impl Service {
         self.provider.authenticate(credentials).await
     }
 
-    pub async fn get_user(
-        &self,
-        user_id: &user::UserId,
-    ) -> Result<Option<AuthenticatedUser>> {
+    pub async fn get_user(&self, user_id: &user::Id) -> Result<Option<AuthenticatedUser>> {
         self.provider.get_user(user_id).await
     }
 }
@@ -182,15 +179,15 @@ impl Provider for DisabledProvider {
         Ok(None)
     }
 
-    async fn get_user(&self, _user_id: &user::UserId) -> Result<Option<AuthenticatedUser>> {
+    async fn get_user(&self, _user_id: &user::Id) -> Result<Option<AuthenticatedUser>> {
         Ok(None)
     }
 }
 
 #[async_trait]
 pub trait Repository: Send + Sync {
-    async fn find_by_email(&self, email: &user::Email) -> Result<Option<AuthRecord>>;
-    async fn find_by_id(&self, user_id: &user::UserId) -> Result<Option<AuthRecord>>;
+    async fn find_by_email(&self, email: &user::Email) -> Result<Option<Record>>;
+    async fn find_by_id(&self, user_id: &user::Id) -> Result<Option<Record>>;
 }
 
 pub trait PasswordHasher: Send + Sync {
@@ -223,7 +220,7 @@ impl Provider for ProviderImpl {
             .authenticate(self.hasher.as_ref())
     }
 
-    async fn get_user(&self, user_id: &user::UserId) -> Result<Option<AuthenticatedUser>> {
+    async fn get_user(&self, user_id: &user::Id) -> Result<Option<AuthenticatedUser>> {
         let incoming = get_user_flow::IncomingFlow::new();
         let record = self.repo.find_by_id(user_id).await?;
         Ok(incoming.classify_lookup(record).into_user_option())
@@ -310,8 +307,8 @@ mod tests {
         );
     }
 
-    fn test_user_id() -> user::UserId {
-        user::UserId::from_uuid(uuid::Uuid::new_v4())
+    fn test_user_id() -> user::Id {
+        user::Id::from_uuid(uuid::Uuid::new_v4())
     }
 
     fn test_password_hash() -> PasswordHash {
@@ -323,16 +320,16 @@ mod tests {
     }
 
     struct TestRepo {
-        record: Option<AuthRecord>,
+        record: Option<Record>,
     }
 
     #[async_trait]
     impl Repository for TestRepo {
-        async fn find_by_email(&self, _email: &user::Email) -> Result<Option<AuthRecord>> {
+        async fn find_by_email(&self, _email: &user::Email) -> Result<Option<Record>> {
             Ok(self.record.clone())
         }
 
-        async fn find_by_id(&self, _user_id: &user::UserId) -> Result<Option<AuthRecord>> {
+        async fn find_by_id(&self, _user_id: &user::Id) -> Result<Option<Record>> {
             Ok(self.record.clone())
         }
     }
@@ -355,7 +352,7 @@ mod tests {
     async fn authenticate_returns_user_on_valid_password() {
         let repo = Arc::new(TestRepo {
             record: Some(
-                AuthRecord::builder()
+                Record::builder()
                     .id(test_user_id())
                     .username(test_username())
                     .email(test_email())
@@ -384,7 +381,7 @@ mod tests {
     async fn authenticate_returns_none_on_invalid_password() {
         let repo = Arc::new(TestRepo {
             record: Some(
-                AuthRecord::builder()
+                Record::builder()
                     .id(test_user_id())
                     .username(test_username())
                     .email(test_email())
@@ -414,7 +411,7 @@ mod tests {
         let session_hash = SessionHash::new("session-version");
         let repo = Arc::new(TestRepo {
             record: Some(
-                AuthRecord::builder()
+                Record::builder()
                     .id(test_user_id())
                     .username(test_username())
                     .email(test_email())

@@ -13,6 +13,7 @@ pub use composed::button;
 pub use composed::chat;
 pub(crate) use composed::portfolio;
 pub(crate) use composed::tab_set;
+pub use composed::button::Button;
 pub use composed::{
     AuthShell, AuthShellVariant, DemoResultPlaceholder, NavAuth, NavBar, NavBrand, NavLink,
     NavLinkList, NavLinkListRole, NavSignedIn, SectionHeader, SectionHeaderLevel,

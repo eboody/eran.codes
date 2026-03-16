@@ -66,7 +66,7 @@ impl Repository {
         app::auth::SessionHash::new(format!("auth-v1:{user_id}:{version}"))
     }
 
-    fn auth_record_from_row(row: PgRow) -> RepositoryResult<auth::AuthRecord> {
+    fn auth_record_from_row(row: PgRow) -> RepositoryResult<auth::Record> {
         let user_id = row.get::<uuid::Uuid, _>("id");
         let username = user::Username::try_new(row.get::<String, _>("username"))
             .context(DecodeUsernameSnafu)?;
@@ -76,8 +76,8 @@ impl Repository {
         let credential_updated_at =
             row.get::<time::OffsetDateTime, _>("credential_updated_at");
 
-        Ok(auth::AuthRecord::builder()
-            .id(user::UserId::from_uuid(user_id))
+        Ok(auth::Record::builder()
+            .id(user::Id::from_uuid(user_id))
             .username(username)
             .email(email)
             .password_hash(password_hash)
@@ -91,7 +91,7 @@ impl Repository {
     async fn find_by_email_record(
         &self,
         email: &user::Email,
-    ) -> RepositoryResult<Option<auth::AuthRecord>> {
+    ) -> RepositoryResult<Option<auth::Record>> {
         let record = sqlx::query(
             r#"
             SELECT u.id, u.username, u.email, c.password_hash, c.updated_at AS credential_updated_at
@@ -110,8 +110,8 @@ impl Repository {
 
     async fn find_by_id_record(
         &self,
-        user_id: &user::UserId,
-    ) -> RepositoryResult<Option<auth::AuthRecord>> {
+        user_id: &user::Id,
+    ) -> RepositoryResult<Option<auth::Record>> {
         let record = sqlx::query(
             r#"
             SELECT u.id, u.username, u.email, c.password_hash, c.updated_at AS credential_updated_at
@@ -134,7 +134,7 @@ impl auth::Repository for Repository {
     async fn find_by_email(
         &self,
         email: &user::Email,
-    ) -> auth::Result<Option<auth::AuthRecord>> {
+    ) -> auth::Result<Option<auth::Record>> {
         let start = std::time::Instant::now();
         tracing::info!(
             target: "demo.db",
@@ -152,10 +152,7 @@ impl auth::Repository for Repository {
             .map_err(map_repository_error)
     }
 
-    async fn find_by_id(
-        &self,
-        user_id: &user::UserId,
-    ) -> auth::Result<Option<auth::AuthRecord>> {
+    async fn find_by_id(&self, user_id: &user::Id) -> auth::Result<Option<auth::Record>> {
         let start = std::time::Instant::now();
         tracing::info!(
             target: "demo.db",

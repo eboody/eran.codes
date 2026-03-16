@@ -22,7 +22,7 @@ pub enum RegisterFlowState {
 #[machine]
 pub(super) struct RegisterFlow<RegisterFlowState> {
     next: Option<String>,
-    command: app::user::RegisterUser,
+    command: app::user::Register,
     credentials: app::auth::Credentials,
 }
 
@@ -39,7 +39,7 @@ impl RegisterFlow<Incoming> {
             .map_err(crate::Error::from)?;
         let password = SecretString::new(form.password.to_string().into());
 
-        let command = app::user::RegisterUser::builder()
+        let command = app::user::Register::builder()
             .username(username)
             .email(email.clone())
             .password(password.clone())
@@ -50,7 +50,7 @@ impl RegisterFlow<Incoming> {
             .build();
 
         Ok(RegisterFlow::<Incoming>::builder()
-            .maybe_next(next)
+            .next(next)
             .command(command)
             .credentials(credentials)
             .build())
@@ -66,7 +66,7 @@ impl RegisterFlow<Incoming> {
 
     pub(super) fn apply_registration_result(
         self,
-        result: app::user::Result<domain::user::UserId>,
+        result: app::user::Result<domain::user::Id>,
     ) -> crate::Result<RegistrationOutcome> {
         match result {
             Ok(_) => Ok(RegistrationOutcome::Succeeded(

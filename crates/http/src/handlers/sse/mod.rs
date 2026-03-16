@@ -72,8 +72,8 @@ impl EventsConnectionFlow<Incoming> {
             .state(state)
             .session(session)
             .session_id(session_id)
-            .maybe_tab_id(tab_id)
-            .maybe_filter_query(signals.operations_filter_query)
+            .tab_id(tab_id)
+            .filter_query(signals.operations_filter_query)
             .build()
     }
 }

@@ -2,7 +2,7 @@ use std::collections::{HashMap, HashSet};
 
 use crate::trace_log::TraceEntry;
 use crate::types::{LogFieldKey, SseTabId, Text};
-use crate::views::partials::components::logs;
+use crate::views::partials::components;
 
 use super::{field_text, short_request_id};
 
@@ -18,7 +18,7 @@ pub fn request_flows(
     entries: &[TraceEntry],
     max_flows: usize,
     active_tab_id: Option<&SseTabId>,
-) -> Vec<logs::composed::Flow> {
+) -> Vec<components::logs::composed::Flow> {
     let mut order: Vec<String> = Vec::new();
     let mut flow_map: HashMap<String, FlowAggregate> = HashMap::new();
 
@@ -82,7 +82,7 @@ pub fn request_flows(
         .take(max_flows)
         .map(|flow| {
             let title = flow_title(&flow);
-            logs::composed::Flow {
+            components::logs::composed::Flow {
                 id: flow.id,
                 detail_id: flow.detail_id,
                 display_id: flow.display_id,
@@ -107,7 +107,7 @@ struct FlowAggregate {
     path: Option<Text>,
     status: Option<Text>,
     tab_ids: HashSet<String>,
-    events: Vec<logs::composed::FlowEvent>,
+    events: Vec<components::logs::composed::FlowEvent>,
 }
 
 fn hydrate_request_fields(

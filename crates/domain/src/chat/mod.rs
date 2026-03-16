@@ -1,8 +1,7 @@
-moddef::moddef!(mod { error, message, room });
+mod error;
+pub mod message;
+pub mod room;
 
 pub use error::{Error, Result};
-pub use message::{
-    ClientId, ClientIdError, Message, MessageBody, MessageBodyError, MessageId,
-    MessageStatus,
-};
-pub use room::{Room, RoomId, RoomName, RoomNameError, UserId};
+pub use message::{ClientId, ClientIdError, Message};
+pub use room::{Room, UserId};

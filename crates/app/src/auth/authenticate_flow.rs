@@ -1,14 +1,12 @@
 use secrecy::{ExposeSecret, SecretString};
 use statum::{machine, state, transition};
 
-use super::{
-    AuthRecord, AuthenticatedUser, Credentials, PasswordHash, PasswordHasher, Result,
-};
+use super::{AuthenticatedUser, Credentials, PasswordHash, PasswordHasher, Record, Result};
 use domain::user;
 
 #[derive(Clone, Debug)]
 pub struct RecordData {
-    record: AuthRecord,
+    record: Record,
 }
 
 #[derive(Clone, Debug)]
@@ -38,7 +36,7 @@ impl AuthenticateFlow<Incoming> {
             .build()
     }
 
-    pub(super) fn classify_lookup(self, record: Option<AuthRecord>) -> LookupOutcome {
+    pub(super) fn classify_lookup(self, record: Option<Record>) -> LookupOutcome {
         match record {
             Some(record) => LookupOutcome::Found(self.mark_record_found(record)),
             None => {
@@ -61,7 +59,7 @@ impl<S: AuthenticateStateTrait> AuthenticateFlow<S> {
 
 #[transition]
 impl AuthenticateFlow<Incoming> {
-    fn mark_record_found(self, record: AuthRecord) -> AuthenticateFlow<RecordFound> {
+    fn mark_record_found(self, record: Record) -> AuthenticateFlow<RecordFound> {
         self.transition_with(RecordData { record })
     }
 
@@ -171,9 +169,9 @@ mod tests {
         user::Username::try_new("person").expect("valid username")
     }
 
-    fn test_record() -> AuthRecord {
-        AuthRecord::builder()
-            .id(user::UserId::new_v4())
+    fn test_record() -> Record {
+        Record::builder()
+            .id(user::Id::new_v4())
             .username(test_username())
             .email(test_email())
             .password_hash(PasswordHash::new("hash"))

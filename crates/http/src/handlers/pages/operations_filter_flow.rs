@@ -26,8 +26,8 @@ pub(super) struct OperationsFilterFlow<OperationsFilterState> {
 impl OperationsFilterFlow<Incoming> {
     pub(super) fn new(filter_query: Option<Text>, sse_tab_id: Option<SseTabId>) -> Self {
         OperationsFilterFlow::<Incoming>::builder()
-            .maybe_sse_tab_id(sse_tab_id)
-            .maybe_filter_query(filter_query)
+            .sse_tab_id(sse_tab_id)
+            .filter_query(filter_query)
             .build()
     }
 

@@ -23,11 +23,11 @@ pub(super) struct RequestMetaPartialFlow<RequestMetaPartialState> {
 impl RequestMetaPartialFlow<Incoming> {
     pub(super) fn new() -> Self {
         RequestMetaPartialFlow::<Incoming>::builder()
-            .maybe_request_id(None)
-            .maybe_session_id(None)
-            .maybe_user_id(None)
-            .maybe_client_ip(None)
-            .maybe_user_agent(None)
+            .request_id(None)
+            .session_id(None)
+            .user_id(None)
+            .client_ip(None)
+            .user_agent(None)
             .trace(Vec::new())
             .build()
     }
@@ -91,11 +91,11 @@ mod tests {
     #[test]
     fn prepared_flow_renders_request_meta_target() {
         let prepared = RequestMetaPartialFlow::<SnapshotPrepared>::builder()
-            .request_id(Text::from("request-1"))
-            .session_id(Text::from("session-1"))
-            .user_id(Text::from("user-1"))
-            .client_ip(Text::from("127.0.0.1"))
-            .user_agent(Text::from("test-agent"))
+            .request_id(Some(Text::from("request-1")))
+            .session_id(Some(Text::from("session-1")))
+            .user_id(Some(Text::from("user-1")))
+            .client_ip(Some(Text::from("127.0.0.1")))
+            .user_agent(Some(Text::from("test-agent")))
             .trace(Vec::new())
             .build();
 

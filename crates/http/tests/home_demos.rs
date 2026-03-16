@@ -22,7 +22,7 @@ impl user::Repository for TestUserRepo {
         email: &domain_user::Email,
     ) -> user::Result<Option<domain_user::User>> {
         Ok(Some(domain_user::User {
-            id: domain_user::UserId::from_uuid(uuid::Uuid::nil()),
+            id: domain_user::Id::from_uuid(uuid::Uuid::nil()),
             username: domain_user::Username::try_new("demo_bot").unwrap(),
             email: email.clone(),
         }))
@@ -93,21 +93,21 @@ impl app::chat::Repository for ChatRepo {
 
     async fn find_room(
         &self,
-        room_id: &domain_chat::RoomId,
+        room_id: &domain_chat::room::Id,
     ) -> app::chat::Result<Option<domain_chat::Room>> {
         Ok(Some(domain_chat::Room {
             id: *room_id,
-            name: domain_chat::RoomName::Lobby,
+            name: domain_chat::room::Name::Lobby,
             created_by: domain_chat::UserId::from_uuid(uuid::Uuid::nil()),
         }))
     }
 
     async fn find_room_by_name(
         &self,
-        name: &domain_chat::RoomName,
+        name: &domain_chat::room::Name,
     ) -> app::chat::Result<Option<domain_chat::Room>> {
         Ok(Some(domain_chat::Room {
-            id: domain_chat::RoomId::new_v4(),
+            id: domain_chat::room::Id::new_v4(),
             name: *name,
             created_by: domain_chat::UserId::from_uuid(uuid::Uuid::nil()),
         }))
@@ -115,21 +115,21 @@ impl app::chat::Repository for ChatRepo {
 
     async fn list_messages(
         &self,
-        room_id: &domain_chat::RoomId,
+        room_id: &domain_chat::room::Id,
         _limit: usize,
     ) -> app::chat::Result<Vec<domain_chat::Message>> {
         Ok(vec![
             domain_chat::Message::builder()
-                .id(domain_chat::MessageId::from_uuid(uuid::Uuid::from_u128(
+                .id(domain_chat::message::Id::from_uuid(uuid::Uuid::from_u128(
                     0xaaaa,
                 )))
                 .room_id(*room_id)
                 .user_id(domain_chat::UserId::from_uuid(uuid::Uuid::nil()))
                 .body(
-                    domain_chat::MessageBody::try_new("hello from test")
+                    domain_chat::message::Body::try_new("hello from test")
                         .expect("valid body"),
                 )
-                .status(domain_chat::MessageStatus::Visible)
+                .status(domain_chat::message::Status::Visible)
                 .maybe_client_id(None)
                 .created_at(std::time::SystemTime::UNIX_EPOCH)
                 .build(),
@@ -138,7 +138,7 @@ impl app::chat::Repository for ChatRepo {
 
     async fn find_message(
         &self,
-        _message_id: &domain_chat::MessageId,
+        _message_id: &domain_chat::message::Id,
     ) -> app::chat::Result<Option<domain_chat::Message>> {
         Ok(None)
     }
@@ -152,7 +152,7 @@ impl app::chat::Repository for ChatRepo {
 
     async fn add_membership(
         &self,
-        _room_id: &domain_chat::RoomId,
+        _room_id: &domain_chat::room::Id,
         _user_id: &domain_chat::UserId,
         _role: app::chat::RoomRole,
     ) -> app::chat::Result<()> {
@@ -161,7 +161,7 @@ impl app::chat::Repository for ChatRepo {
 
     async fn is_member(
         &self,
-        _room_id: &domain_chat::RoomId,
+        _room_id: &domain_chat::room::Id,
         _user_id: &domain_chat::UserId,
     ) -> app::chat::Result<bool> {
         Ok(true)
@@ -169,8 +169,8 @@ impl app::chat::Repository for ChatRepo {
 
     async fn update_message_status(
         &self,
-        _message_id: &domain_chat::MessageId,
-        _status: domain_chat::MessageStatus,
+        _message_id: &domain_chat::message::Id,
+        _status: domain_chat::message::Status,
     ) -> app::chat::Result<app::chat::PendingMutationResult> {
         Ok(app::chat::PendingMutationResult::Applied)
     }
@@ -182,7 +182,7 @@ struct ModerationQueue;
 impl app::chat::ModerationQueue for ModerationQueue {
     async fn enqueue(
         &self,
-        _message_id: &domain_chat::MessageId,
+        _message_id: &domain_chat::message::Id,
         _reason: &app::chat::ModerationReason,
     ) -> app::chat::Result<()> {
         Ok(())
@@ -197,7 +197,7 @@ impl app::chat::ModerationQueue for ModerationQueue {
 
     async fn complete_if_pending(
         &self,
-        _message_id: &domain_chat::MessageId,
+        _message_id: &domain_chat::message::Id,
         _reviewer_id: &domain_chat::UserId,
         _decision: app::chat::ModerationDecision,
         _reason: Option<app::chat::ModerationReason>,
@@ -212,7 +212,7 @@ struct RateLimiter;
 impl app::chat::RateLimiter for RateLimiter {
     async fn check(
         &self,
-        _room_id: &domain_chat::RoomId,
+        _room_id: &domain_chat::room::Id,
         _user_id: &domain_chat::UserId,
     ) -> app::chat::Result<()> {
         Ok(())
@@ -239,12 +239,12 @@ impl app::chat::Clock for Clock {
 struct Ids;
 
 impl app::chat::IdGenerator for Ids {
-    fn new_room_id(&self) -> domain_chat::RoomId {
-        domain_chat::RoomId::new_v4()
+    fn new_room_id(&self) -> domain_chat::room::Id {
+        domain_chat::room::Id::new_v4()
     }
 
-    fn new_message_id(&self) -> domain_chat::MessageId {
-        domain_chat::MessageId::new_v4()
+    fn new_message_id(&self) -> domain_chat::message::Id {
+        domain_chat::message::Id::new_v4()
     }
 }
 

@@ -1,7 +1,7 @@
 use secrecy::{ExposeSecret, SecretString};
 use statum::{machine, state, transition};
 
-use super::{Error, RegisterUser};
+use super::{Error, Register};
 use domain::user;
 
 #[derive(Clone, Debug, PartialEq)]
@@ -17,7 +17,7 @@ pub struct PasswordHashedData {
 
 #[derive(Clone, Debug, PartialEq)]
 pub struct PersistedData {
-    user_id: user::UserId,
+    user_id: user::Id,
 }
 
 #[state]
@@ -64,7 +64,7 @@ impl RegisterUserFlow<Incoming> {
         service: &super::Service,
     ) -> Result<RegisterUserFlow<Persisted>, Error> {
         let email_available = self.verify_email_availability(service).await?;
-        let materialized = email_available.materialize_user(user::UserId::new_v4());
+        let materialized = email_available.materialize_user(user::Id::new_v4());
         let hashed = materialized.hash_password(service.hasher.as_ref())?;
 
         hashed.persist(service.users.as_ref()).await
@@ -84,7 +84,7 @@ impl RegisterUserFlow<Incoming> {
 impl RegisterUserFlow<EmailAvailable> {
     pub(super) fn materialize_user(
         self,
-        user_id: user::UserId,
+        user_id: user::Id,
     ) -> RegisterUserFlow<UserMaterialized> {
         let data = UserMaterializedData {
             user: user::User {
@@ -122,8 +122,8 @@ impl RegisterUserFlow<PasswordHashed> {
 }
 
 impl RegisterUserFlow<Incoming> {
-    pub(super) fn from_command(command: RegisterUser) -> Self {
-        let RegisterUser {
+    pub(super) fn from_command(command: Register) -> Self {
+        let Register {
             username,
             email,
             password,
@@ -167,7 +167,7 @@ impl RegisterUserFlow<PasswordHashed> {
 }
 
 impl RegisterUserFlow<Persisted> {
-    pub(super) fn user_id(&self) -> user::UserId {
+    pub(super) fn user_id(&self) -> user::Id {
         self.state_data.user_id
     }
 }
@@ -213,8 +213,8 @@ mod tests {
 
     use super::*;
 
-    fn build_command() -> RegisterUser {
-        RegisterUser::builder()
+    fn build_command() -> Register {
+        Register::builder()
             .username(user::Username::try_new("person").expect("valid username"))
             .email(user::Email::try_new("person@example.com").expect("valid email"))
             .password(SecretString::new("password".to_string().into()))
@@ -223,7 +223,7 @@ mod tests {
 
     fn build_existing_user() -> user::User {
         user::User::builder()
-            .id(user::UserId::new_v4())
+            .id(user::Id::new_v4())
             .username(user::Username::try_new("person").expect("valid username"))
             .email(user::Email::try_new("person@example.com").expect("valid email"))
             .build()
@@ -245,7 +245,7 @@ mod tests {
             .classify_email_availability(None)
             .require_available()
             .expect("email available");
-        let materialized = available.materialize_user(user::UserId::new_v4());
+        let materialized = available.materialize_user(user::Id::new_v4());
         let expected_user_id = materialized.state_data.user.id;
 
         let hashed =
@@ -260,12 +260,12 @@ mod tests {
 
     struct TestRepository {
         existing_user: Option<user::User>,
-        created_users: Mutex<Vec<user::UserId>>,
+        created_users: Mutex<Vec<user::Id>>,
         create_outcome: CreateOutcome,
     }
 
     impl TestRepository {
-        fn created_users(&self) -> Vec<user::UserId> {
+        fn created_users(&self) -> Vec<user::Id> {
             self.created_users
                 .lock()
                 .expect("created_users lock")

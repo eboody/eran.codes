@@ -24,11 +24,11 @@ pub(super) struct BoundaryCheckPartialFlow<BoundaryCheckPartialState> {
 impl BoundaryCheckPartialFlow<Incoming> {
     pub(super) fn from_query(case: Option<Text>) -> Self {
         BoundaryCheckPartialFlow::<Incoming>::builder()
-            .maybe_case_text(case.map(|value| value.to_string()))
-            .maybe_label(None)
-            .maybe_username(None)
-            .maybe_email(None)
-            .maybe_result(None)
+            .case_text(case.map(|value| value.to_string()))
+            .label(None)
+            .username(None)
+            .email(None)
+            .result(None)
             .trace(Vec::new())
             .build()
     }
@@ -102,11 +102,11 @@ mod tests {
     #[test]
     fn evaluated_flow_renders_boundary_target() {
         let evaluated = BoundaryCheckPartialFlow::<ValidationEvaluated>::builder()
-            .maybe_case_text(None)
-            .label(Text::from("Valid input"))
-            .username(Text::from("demo_user"))
-            .email(Text::from("demo@example.com"))
-            .result(Text::from("ok"))
+            .case_text(None)
+            .label(Some(Text::from("Valid input")))
+            .username(Some(Text::from("demo_user")))
+            .email(Some(Text::from("demo@example.com")))
+            .result(Some(Text::from("ok")))
             .trace(Vec::new())
             .build();
 

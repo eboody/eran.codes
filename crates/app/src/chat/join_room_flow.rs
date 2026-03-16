@@ -13,7 +13,7 @@ pub enum JoinRoomState {
 
 #[machine]
 pub(super) struct JoinRoomFlow<JoinRoomState> {
-    room_id: chat::RoomId,
+    room_id: chat::room::Id,
     user_id: chat::UserId,
     role: RoomRole,
 }
@@ -54,7 +54,7 @@ impl JoinRoomFlow<Incoming> {
 }
 
 impl<S: JoinRoomStateTrait> JoinRoomFlow<S> {
-    pub(super) fn room_id(&self) -> chat::RoomId {
+    pub(super) fn room_id(&self) -> chat::room::Id {
         self.room_id
     }
 
@@ -138,7 +138,7 @@ mod tests {
 
     fn command() -> JoinRoom {
         JoinRoom::builder()
-            .room_id(chat::RoomId::new_v4())
+            .room_id(chat::room::Id::new_v4())
             .user_id(chat::UserId::new_v4())
             .role(RoomRole::Member)
             .build()

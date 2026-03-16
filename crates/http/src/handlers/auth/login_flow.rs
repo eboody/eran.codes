@@ -36,7 +36,7 @@ impl LoginFlow<Incoming> {
             .build();
 
         Ok(LoginFlow::<Incoming>::builder()
-            .maybe_next(next)
+            .next(next)
             .credentials(credentials)
             .build())
     }
@@ -132,7 +132,7 @@ mod tests {
 
     fn test_user() -> crate::auth::User {
         crate::auth::User::builder()
-            .id(crate::auth::UserId::from(domain::user::UserId::new_v4()))
+            .id(crate::auth::UserId::from(domain::user::Id::new_v4()))
             .username(domain::user::Username::try_new("person").expect("valid username"))
             .email(domain::user::Email::try_new("person@example.com").expect("valid email"))
             .session_hash_bytes(vec![1, 2, 3])

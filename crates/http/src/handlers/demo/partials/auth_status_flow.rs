@@ -24,11 +24,11 @@ pub(super) struct AuthStatusPartialFlow<AuthStatusPartialState> {
 impl AuthStatusPartialFlow<Incoming> {
     pub(super) fn new() -> Self {
         AuthStatusPartialFlow::<Incoming>::builder()
-            .maybe_user_id(None)
-            .maybe_username(None)
-            .maybe_email(None)
-            .maybe_session_id(None)
-            .maybe_expiry(None)
+            .user_id(None)
+            .username(None)
+            .email(None)
+            .session_id(None)
+            .expiry(None)
             .trace(Vec::new())
             .build()
     }
@@ -81,11 +81,11 @@ mod tests {
     #[test]
     fn prepared_flow_renders_auth_status_target() {
         let prepared = AuthStatusPartialFlow::<SnapshotPrepared>::builder()
-            .user_id(Text::from("user-1"))
-            .username(Text::from("demo"))
-            .email(Text::from("demo@example.com"))
-            .session_id(Text::from("session-1"))
-            .expiry(Text::from("in one hour"))
+            .user_id(Some(Text::from("user-1")))
+            .username(Some(Text::from("demo")))
+            .email(Some(Text::from("demo@example.com")))
+            .session_id(Some(Text::from("session-1")))
+            .expiry(Some(Text::from("in one hour")))
             .trace(Vec::new())
             .build();
 

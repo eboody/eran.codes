@@ -28,11 +28,11 @@ impl UuidGenerator {
 }
 
 impl IdGenerator for UuidGenerator {
-    fn new_room_id(&self) -> chat::RoomId {
-        chat::RoomId::new_v4()
+    fn new_room_id(&self) -> chat::room::Id {
+        chat::room::Id::new_v4()
     }
 
-    fn new_message_id(&self) -> chat::MessageId {
-        chat::MessageId::new_v4()
+    fn new_message_id(&self) -> chat::message::Id {
+        chat::message::Id::new_v4()
     }
 }

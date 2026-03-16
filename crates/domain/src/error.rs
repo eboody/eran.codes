@@ -39,7 +39,7 @@ mod tests {
 
     #[test]
     fn chat_errors_wrap_with_source() {
-        let source = crate::chat::RoomName::try_new("lobby")
+        let source = crate::chat::room::Name::try_new("lobby")
             .expect_err("room name should be rejected");
         let error = Error::from(crate::chat::Error::from(source));
 

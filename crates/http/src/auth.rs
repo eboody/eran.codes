@@ -86,17 +86,17 @@ impl From<app::auth::AuthenticatedUser> for User {
 pub struct UserId(String);
 
 impl UserId {
-    pub fn to_domain(&self) -> Result<domain::user::UserId, app::auth::Error> {
+    pub fn to_domain(&self) -> Result<domain::user::Id, app::auth::Error> {
         let parsed = self
             .to_string()
             .parse::<uuid::Uuid>()
             .map_err(|source| app::auth::Error::InvalidAuthenticatedUserId { source })?;
-        Ok(domain::user::UserId::from_uuid(parsed))
+        Ok(domain::user::Id::from_uuid(parsed))
     }
 }
 
-impl From<domain::user::UserId> for UserId {
-    fn from(value: domain::user::UserId) -> Self {
+impl From<domain::user::Id> for UserId {
+    fn from(value: domain::user::Id) -> Self {
         UserId::new(value.as_uuid().to_string())
     }
 }

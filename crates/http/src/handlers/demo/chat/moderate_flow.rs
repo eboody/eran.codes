@@ -2,7 +2,7 @@ use statum::{machine, state, transition};
 
 use super::ModerationForm;
 use crate::types::Text;
-
+use domain::chat;
 #[derive(Clone, Debug)]
 pub struct ParsedData {
     command: app::chat::ModerateMessage,
@@ -20,7 +20,7 @@ pub(super) struct ChatModerationFlow<ChatModerationState> {
     message_id_text: Text,
     decision_text: Text,
     reason_text: Option<Text>,
-    reviewer_id: domain::chat::UserId,
+    reviewer_id: chat::UserId,
 }
 
 impl ChatModerationFlow<Incoming> {
@@ -34,7 +34,7 @@ impl ChatModerationFlow<Incoming> {
         Ok(ChatModerationFlow::<Incoming>::builder()
             .message_id_text(form.message_id)
             .decision_text(form.decision)
-            .maybe_reason_text(form.reason)
+            .reason_text(form.reason)
             .reviewer_id(reviewer_id)
             .build())
     }
@@ -49,7 +49,7 @@ impl ChatModerationFlow<Incoming> {
         Ok(self.mark_parsed(command))
     }
 
-    fn message_id(&self) -> Result<domain::chat::MessageId, crate::error::Error> {
+    fn message_id(&self) -> Result<domain::chat::message::Id, crate::error::Error> {
         let id = self
             .message_id_text
             .to_string()
@@ -58,7 +58,7 @@ impl ChatModerationFlow<Incoming> {
                 crate::error::Error::from(app::chat::Error::invalid_message_id(error))
             })?;
 
-        Ok(domain::chat::MessageId::from_uuid(id))
+        Ok(domain::chat::message::Id::from_uuid(id))
     }
 
     fn decision(&self) -> Result<app::chat::ModerationDecision, crate::error::Error> {
@@ -126,6 +126,7 @@ pub(super) type IncomingFlow = ChatModerationFlow<Incoming>;
 #[cfg(test)]
 mod tests {
     use super::*;
+    use crate::types::Text;
 
     #[test]
     fn parse_rejects_invalid_message_id() {
@@ -148,7 +149,7 @@ mod tests {
         let flow = IncomingFlow::from_form(
             ModerationForm {
                 message_id: Text::from(
-                    domain::chat::MessageId::new_v4().as_uuid().to_string(),
+                    domain::chat::message::Id::new_v4().as_uuid().to_string(),
                 ),
                 decision: Text::from("approve"),
                 reason: Some(Text::from("looks good")),

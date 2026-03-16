@@ -3,7 +3,7 @@ use maud::Render;
 
 use crate::trace_log::TraceEntry;
 use crate::types::Text;
-use crate::views::partials::components::logs;
+use crate::views::partials::components;
 
 use super::vm;
 
@@ -15,12 +15,12 @@ pub struct ChatFlowPanel<'a> {
 impl Render for ChatFlowPanel<'_> {
     fn render(&self) -> maud::Markup {
         let body = if self.entries.is_empty() {
-            logs::primitives::PanelBody::Empty(Text::from(
+            components::logs::primitives::PanelBody::Empty(Text::from(
                 "No chat messages yet. Send a message to see request/response flow.",
             ))
         } else {
-            logs::primitives::PanelBody::Content(
-                logs::primitives::Table::builder()
+            components::logs::primitives::PanelBody::Content(
+                components::logs::primitives::Table::builder()
                     .headers(vec![
                         Text::from("Time"),
                         Text::from("Direction"),
@@ -30,13 +30,13 @@ impl Render for ChatFlowPanel<'_> {
                         Text::from("Body"),
                     ])
                     .rows(vm::chat_flow_rows(self.entries))
-                    .variant(logs::primitives::TableVariant::ChatFlow)
+                    .variant(components::logs::primitives::TableVariant::ChatFlow)
                     .build()
                     .render(),
             )
         };
 
-        logs::primitives::Panel::builder()
+        components::logs::primitives::Panel::builder()
             .title(Text::from("Chat message flow"))
             .body(body)
             .build()

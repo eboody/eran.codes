@@ -14,7 +14,7 @@ pub struct ChatContext {
 
 pub async fn load_chat_context(
     state: &crate::State,
-    user_id: Option<domain::user::UserId>,
+    user_id: Option<domain::user::Id>,
 ) -> Result<ChatContext, crate::error::Error> {
     let incoming = context_flow::IncomingFlow::from_viewer(user_id);
     let viewer_resolved = incoming.resolve_viewer(state).await?;

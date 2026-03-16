@@ -18,15 +18,15 @@ pub use error::{Error, RepositoryOperation, Result};
 
 #[derive(Clone, Debug, Builder)]
 pub struct PostMessage {
-    pub room_id: chat::RoomId,
+    pub room_id: chat::room::Id,
     pub user_id: chat::UserId,
-    pub body: chat::MessageBody,
+    pub body: chat::message::Body,
     pub client_id: Option<chat::ClientId>,
 }
 
 #[derive(Clone, Debug, Builder)]
 pub struct ListMessages {
-    pub room_id: chat::RoomId,
+    pub room_id: chat::room::Id,
     pub user_id: chat::UserId,
     #[builder(default = 50)]
     pub limit: usize,
@@ -34,13 +34,13 @@ pub struct ListMessages {
 
 #[derive(Clone, Debug, Builder)]
 pub struct CreateRoom {
-    pub name: chat::RoomName,
+    pub name: chat::room::Name,
     pub created_by: chat::UserId,
 }
 
 #[derive(Clone, Debug, Builder)]
 pub struct JoinRoom {
-    pub room_id: chat::RoomId,
+    pub room_id: chat::room::Id,
     pub user_id: chat::UserId,
     #[builder(default = RoomRole::Member)]
     pub role: RoomRole,
@@ -48,7 +48,7 @@ pub struct JoinRoom {
 
 #[derive(Clone, Debug, Builder)]
 pub struct ModerateMessage {
-    pub message_id: chat::MessageId,
+    pub message_id: chat::message::Id,
     pub reviewer_id: chat::UserId,
     pub decision: ModerationDecision,
     pub reason: Option<ModerationReason>,
@@ -56,11 +56,11 @@ pub struct ModerateMessage {
 
 #[derive(Clone, Debug, Builder)]
 pub struct ModerationItem {
-    pub message_id: chat::MessageId,
-    pub room_id: chat::RoomId,
-    pub room_name: chat::RoomName,
+    pub message_id: chat::message::Id,
+    pub room_id: chat::room::Id,
+    pub room_name: chat::room::Name,
     pub user_id: chat::UserId,
-    pub body: chat::MessageBody,
+    pub body: chat::message::Body,
     pub queue_status: ModerationQueueStatus,
     pub reason: ModerationReason,
     pub created_at: TimestampText,
@@ -82,7 +82,7 @@ pub enum PendingMutationResult {
 
 #[derive(Clone, Debug, Builder)]
 pub struct AuditEntry {
-    pub room_id: chat::RoomId,
+    pub room_id: chat::room::Id,
     pub actor_id: chat::UserId,
     pub action: AuditAction,
     pub metadata: Vec<(AuditKey, AuditValue)>,
@@ -162,33 +162,36 @@ pub struct AuditValue(String);
 #[async_trait]
 pub trait Repository: Send + Sync {
     async fn create_room(&self, room: &chat::Room) -> Result<()>;
-    async fn find_room(&self, room_id: &chat::RoomId) -> Result<Option<chat::Room>>;
-    async fn find_room_by_name(&self, name: &chat::RoomName) -> Result<Option<chat::Room>>;
+    async fn find_room(&self, room_id: &chat::room::Id) -> Result<Option<chat::Room>>;
+    async fn find_room_by_name(
+        &self,
+        name: &chat::room::Name,
+    ) -> Result<Option<chat::Room>>;
     async fn list_messages(
         &self,
-        room_id: &chat::RoomId,
+        room_id: &chat::room::Id,
         limit: usize,
     ) -> Result<Vec<chat::Message>>;
     async fn find_message(
         &self,
-        message_id: &chat::MessageId,
+        message_id: &chat::message::Id,
     ) -> Result<Option<chat::Message>>;
     async fn insert_message(&self, message: &chat::Message) -> Result<()>;
     async fn add_membership(
         &self,
-        room_id: &chat::RoomId,
+        room_id: &chat::room::Id,
         user_id: &chat::UserId,
         role: RoomRole,
     ) -> Result<()>;
     async fn is_member(
         &self,
-        room_id: &chat::RoomId,
+        room_id: &chat::room::Id,
         user_id: &chat::UserId,
     ) -> Result<bool>;
     async fn update_message_status(
         &self,
-        message_id: &chat::MessageId,
-        status: chat::MessageStatus,
+        message_id: &chat::message::Id,
+        status: chat::message::Status,
     ) -> Result<PendingMutationResult>;
 }
 
@@ -196,13 +199,13 @@ pub trait Repository: Send + Sync {
 pub trait ModerationQueue: Send + Sync {
     async fn enqueue(
         &self,
-        message_id: &chat::MessageId,
+        message_id: &chat::message::Id,
         reason: &ModerationReason,
     ) -> Result<()>;
     async fn list_pending(&self, limit: usize) -> Result<Vec<ModerationItem>>;
     async fn complete_if_pending(
         &self,
-        message_id: &chat::MessageId,
+        message_id: &chat::message::Id,
         reviewer_id: &chat::UserId,
         decision: ModerationDecision,
         reason: Option<ModerationReason>,
@@ -211,7 +214,7 @@ pub trait ModerationQueue: Send + Sync {
 
 #[async_trait]
 pub trait RateLimiter: Send + Sync {
-    async fn check(&self, room_id: &chat::RoomId, user_id: &chat::UserId) -> Result<()>;
+    async fn check(&self, room_id: &chat::room::Id, user_id: &chat::UserId) -> Result<()>;
 }
 
 #[async_trait]
@@ -224,8 +227,8 @@ pub trait Clock: Send + Sync {
 }
 
 pub trait IdGenerator: Send + Sync {
-    fn new_room_id(&self) -> chat::RoomId;
-    fn new_message_id(&self) -> chat::MessageId;
+    fn new_room_id(&self) -> chat::room::Id;
+    fn new_message_id(&self) -> chat::message::Id;
 }
 
 #[derive(Clone)]
@@ -289,7 +292,7 @@ impl Service {
     #[tracing::instrument(skip(self))]
     pub async fn find_room_by_name(
         &self,
-        name: chat::RoomName,
+        name: chat::room::Name,
     ) -> Result<Option<chat::Room>> {
         self.repo.find_room_by_name(&name).await
     }
@@ -314,7 +317,7 @@ impl Service {
 impl Service {
     fn audit_entry(
         &self,
-        room_id: chat::RoomId,
+        room_id: chat::room::Id,
         actor_id: chat::UserId,
         action: AuditAction,
         mut metadata: Vec<(AuditKey, AuditValue)>,

@@ -26,17 +26,17 @@ enum ChatPersistenceError {
         source: sqlx::Error,
     },
     #[snafu(display("failed to decode room name"))]
-    DecodeRoomName { source: chat::RoomNameError },
+    DecodeRoomName { source: chat::room::NameError },
     #[snafu(display("failed to decode client id"))]
     DecodeClientId { source: chat::ClientIdError },
     #[snafu(display("failed to decode message body"))]
-    DecodeMessageBody { source: chat::MessageBodyError },
+    DecodeMessageBody { source: chat::message::BodyError },
     #[snafu(display("invalid stored message status: {status}"))]
     InvalidStoredMessageStatus { status: String },
     #[snafu(display("failed to decode moderation room name"))]
-    DecodeModerationRoomName { source: chat::RoomNameError },
+    DecodeModerationRoomName { source: chat::room::NameError },
     #[snafu(display("failed to decode moderation message body"))]
-    DecodeModerationMessageBody { source: chat::MessageBodyError },
+    DecodeModerationMessageBody { source: chat::message::BodyError },
     #[snafu(display("invalid stored moderation status: {status}"))]
     InvalidStoredModerationStatus { status: String },
     #[snafu(display("failed to decode moderation reason"))]
@@ -95,28 +95,28 @@ impl SqlxChatRepository {
         Self { pg }
     }
 
-    fn status_from_db(value: &str) -> PersistenceResult<chat::MessageStatus> {
-        value.parse::<chat::MessageStatus>().map_err(|_| {
+    fn status_from_db(value: &str) -> PersistenceResult<chat::message::Status> {
+        value.parse::<chat::message::Status>().map_err(|_| {
             ChatPersistenceError::InvalidStoredMessageStatus {
                 status: value.to_owned(),
             }
         })
     }
 
-    fn status_to_db(status: chat::MessageStatus) -> &'static str {
+    fn status_to_db(status: chat::message::Status) -> &'static str {
         match status {
-            chat::MessageStatus::Visible => "visible",
-            chat::MessageStatus::Pending => "pending",
-            chat::MessageStatus::Removed => "removed",
+            chat::message::Status::Visible => "visible",
+            chat::message::Status::Pending => "pending",
+            chat::message::Status::Removed => "removed",
         }
     }
 
     fn room_from_row(row: &PgRow) -> PersistenceResult<chat::Room> {
         let name = row.get::<String, _>("name");
-        let name = chat::RoomName::try_new(name).context(DecodeRoomNameSnafu)?;
+        let name = chat::room::Name::try_new(name).context(DecodeRoomNameSnafu)?;
 
         Ok(chat::Room {
-            id: chat::RoomId::from_uuid(row.get::<uuid::Uuid, _>("id")),
+            id: chat::room::Id::from_uuid(row.get::<uuid::Uuid, _>("id")),
             name,
             created_by: chat::UserId::from_uuid(row.get::<uuid::Uuid, _>("created_by")),
         })
@@ -134,12 +134,12 @@ impl SqlxChatRepository {
 
     fn message_from_row(row: &PgRow) -> PersistenceResult<chat::Message> {
         let body = row.get::<String, _>("body");
-        let body = chat::MessageBody::try_new(body).context(DecodeMessageBodySnafu)?;
+        let body = chat::message::Body::try_new(body).context(DecodeMessageBodySnafu)?;
         let status = Self::status_from_db(row.get::<String, _>("status").as_str())?;
 
         Ok(chat::Message {
-            id: chat::MessageId::from_uuid(row.get::<uuid::Uuid, _>("id")),
-            room_id: chat::RoomId::from_uuid(row.get::<uuid::Uuid, _>("room_id")),
+            id: chat::message::Id::from_uuid(row.get::<uuid::Uuid, _>("id")),
+            room_id: chat::room::Id::from_uuid(row.get::<uuid::Uuid, _>("room_id")),
             user_id: chat::UserId::from_uuid(row.get::<uuid::Uuid, _>("user_id")),
             body,
             status,
@@ -177,7 +177,7 @@ impl app::chat::Repository for SqlxChatRepository {
         Ok(())
     }
 
-    async fn find_room(&self, room_id: &chat::RoomId) -> Result<Option<chat::Room>> {
+    async fn find_room(&self, room_id: &chat::room::Id) -> Result<Option<chat::Room>> {
         tracing::info!(
             target: "demo.db",
             message = "db query",
@@ -201,7 +201,10 @@ impl app::chat::Repository for SqlxChatRepository {
         Ok(record.as_ref().map(Self::room_from_row).transpose()?)
     }
 
-    async fn find_room_by_name(&self, name: &chat::RoomName) -> Result<Option<chat::Room>> {
+    async fn find_room_by_name(
+        &self,
+        name: &chat::room::Name,
+    ) -> Result<Option<chat::Room>> {
         tracing::info!(
             target: "demo.db",
             message = "db query",
@@ -226,7 +229,7 @@ impl app::chat::Repository for SqlxChatRepository {
 
     async fn list_messages(
         &self,
-        room_id: &chat::RoomId,
+        room_id: &chat::room::Id,
         limit: usize,
     ) -> Result<Vec<chat::Message>> {
         tracing::info!(
@@ -259,7 +262,7 @@ impl app::chat::Repository for SqlxChatRepository {
 
     async fn find_message(
         &self,
-        message_id: &chat::MessageId,
+        message_id: &chat::message::Id,
     ) -> Result<Option<chat::Message>> {
         tracing::info!(
             target: "demo.db",
@@ -327,7 +330,7 @@ impl app::chat::Repository for SqlxChatRepository {
 
     async fn add_membership(
         &self,
-        room_id: &chat::RoomId,
+        room_id: &chat::room::Id,
         user_id: &chat::UserId,
         role: RoomRole,
     ) -> Result<()> {
@@ -360,7 +363,7 @@ impl app::chat::Repository for SqlxChatRepository {
 
     async fn is_member(
         &self,
-        room_id: &chat::RoomId,
+        room_id: &chat::room::Id,
         user_id: &chat::UserId,
     ) -> Result<bool> {
         tracing::info!(
@@ -390,8 +393,8 @@ impl app::chat::Repository for SqlxChatRepository {
 
     async fn update_message_status(
         &self,
-        message_id: &chat::MessageId,
-        status: chat::MessageStatus,
+        message_id: &chat::message::Id,
+        status: chat::message::Status,
     ) -> Result<PendingMutationResult> {
         tracing::info!(
             target: "demo.db",
@@ -436,7 +439,7 @@ impl SqlxChatModerationQueue {
 impl app::chat::ModerationQueue for SqlxChatModerationQueue {
     async fn enqueue(
         &self,
-        message_id: &chat::MessageId,
+        message_id: &chat::message::Id,
         reason: &ModerationReason,
     ) -> Result<()> {
         tracing::info!(
@@ -496,10 +499,10 @@ impl app::chat::ModerationQueue for SqlxChatModerationQueue {
         let mut items = Vec::with_capacity(rows.len());
         for row in rows {
             let room_name = row.get::<String, _>("room_name");
-            let room_name = chat::RoomName::try_new(room_name)
+            let room_name = chat::room::Name::try_new(room_name)
                 .context(DecodeModerationRoomNameSnafu)?;
             let body = row.get::<String, _>("body");
-            let body = chat::MessageBody::try_new(body)
+            let body = chat::message::Body::try_new(body)
                 .context(DecodeModerationMessageBodySnafu)?;
             let queue_status = row.get::<String, _>("status");
             let queue_status =
@@ -516,10 +519,12 @@ impl app::chat::ModerationQueue for SqlxChatModerationQueue {
 
             items.push(
                 app::chat::ModerationItem::builder()
-                    .message_id(chat::MessageId::from_uuid(
+                    .message_id(chat::message::Id::from_uuid(
                         row.get::<uuid::Uuid, _>("message_id"),
                     ))
-                    .room_id(chat::RoomId::from_uuid(row.get::<uuid::Uuid, _>("room_id")))
+                    .room_id(chat::room::Id::from_uuid(
+                        row.get::<uuid::Uuid, _>("room_id"),
+                    ))
                     .room_name(room_name)
                     .user_id(chat::UserId::from_uuid(row.get::<uuid::Uuid, _>("user_id")))
                     .body(body)
@@ -535,7 +540,7 @@ impl app::chat::ModerationQueue for SqlxChatModerationQueue {
 
     async fn complete_if_pending(
         &self,
-        message_id: &chat::MessageId,
+        message_id: &chat::message::Id,
         reviewer_id: &chat::UserId,
         decision: app::chat::ModerationDecision,
         reason: Option<ModerationReason>,
@@ -605,7 +610,7 @@ fn offset_to_system_time(value: time::OffsetDateTime) -> std::time::SystemTime {
 
 #[async_trait]
 impl app::chat::RateLimiter for SqlxChatRateLimiter {
-    async fn check(&self, room_id: &chat::RoomId, user_id: &chat::UserId) -> Result<()> {
+    async fn check(&self, room_id: &chat::room::Id, user_id: &chat::UserId) -> Result<()> {
         tracing::info!(
             target: "demo.db",
             message = "db query",

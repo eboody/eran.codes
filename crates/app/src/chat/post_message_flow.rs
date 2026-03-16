@@ -53,9 +53,9 @@ pub enum PostMessageState {
 
 #[machine]
 pub(super) struct PostMessageFlow<PostMessageState> {
-    room_id: chat::RoomId,
+    room_id: chat::room::Id,
     user_id: chat::UserId,
-    body: chat::MessageBody,
+    body: chat::message::Body,
     client_id: Option<chat::ClientId>,
 }
 
@@ -84,22 +84,22 @@ impl PostMessageFlow<MembershipVerified> {
 impl PostMessageFlow<RateLimitPassed> {
     pub(super) fn build_visible(
         self,
-        message_id: chat::MessageId,
+        message_id: chat::message::Id,
         created_at: SystemTime,
     ) -> PostMessageFlow<BuiltVisible> {
         let message =
-            self.build_message(message_id, created_at, chat::MessageStatus::Visible);
+            self.build_message(message_id, created_at, chat::message::Status::Visible);
         self.transition_with(BuiltVisibleData { message })
     }
 
     pub(super) fn build_pending(
         self,
-        message_id: chat::MessageId,
+        message_id: chat::message::Id,
         created_at: SystemTime,
         moderation_reason: ModerationReason,
     ) -> PostMessageFlow<BuiltPending> {
         let message =
-            self.build_message(message_id, created_at, chat::MessageStatus::Pending);
+            self.build_message(message_id, created_at, chat::message::Status::Pending);
         self.transition_with(BuiltPendingData {
             message,
             moderation_reason,
@@ -159,7 +159,7 @@ impl PostMessageFlow<ModerationEnqueued> {
 }
 
 impl<S: PostMessageStateTrait> PostMessageFlow<S> {
-    pub(super) fn room_id(&self) -> &chat::RoomId {
+    pub(super) fn room_id(&self) -> &chat::room::Id {
         &self.room_id
     }
 
@@ -167,7 +167,7 @@ impl<S: PostMessageStateTrait> PostMessageFlow<S> {
         &self.user_id
     }
 
-    pub(super) fn body(&self) -> &chat::MessageBody {
+    pub(super) fn body(&self) -> &chat::message::Body {
         &self.body
     }
 }
@@ -185,7 +185,7 @@ impl PostMessageFlow<Incoming> {
             .room_id(room_id)
             .user_id(user_id)
             .body(body)
-            .maybe_client_id(client_id)
+            .client_id(client_id)
             .build()
     }
 
@@ -262,7 +262,7 @@ impl PostMessageFlow<MembershipVerified> {
 impl PostMessageFlow<RateLimitPassed> {
     pub(super) fn build(
         self,
-        message_id: chat::MessageId,
+        message_id: chat::message::Id,
         created_at: SystemTime,
         requires_moderation: bool,
     ) -> BuiltPostMessage {
@@ -285,9 +285,9 @@ impl PostMessageFlow<RateLimitPassed> {
 
     fn build_message(
         &self,
-        message_id: chat::MessageId,
+        message_id: chat::message::Id,
         created_at: SystemTime,
-        status: chat::MessageStatus,
+        status: chat::message::Status,
     ) -> chat::Message {
         chat::Message {
             id: message_id,
@@ -459,7 +459,7 @@ impl ReadyForAudit {
 
 pub(super) type IncomingFlow = PostMessageFlow<Incoming>;
 
-fn requires_moderation(body: &chat::MessageBody) -> bool {
+fn requires_moderation(body: &chat::message::Body) -> bool {
     let value = body.to_string();
     value.len() > 300 || LinkPrefix::is_present(&value)
 }
@@ -494,9 +494,9 @@ mod tests {
 
     fn build_command(body: &str) -> PostMessage {
         PostMessage::builder()
-            .room_id(chat::RoomId::new_v4())
+            .room_id(chat::room::Id::new_v4())
             .user_id(chat::UserId::new_v4())
-            .body(chat::MessageBody::try_new(body).expect("valid body"))
+            .body(chat::message::Body::try_new(body).expect("valid body"))
             .maybe_client_id(None)
             .build()
     }
@@ -513,12 +513,12 @@ mod tests {
         let rate_limited = to_rate_limited(build_command("hello"));
 
         let built =
-            rate_limited.build(chat::MessageId::new_v4(), SystemTime::UNIX_EPOCH, false);
+            rate_limited.build(chat::message::Id::new_v4(), SystemTime::UNIX_EPOCH, false);
         let BuiltPostMessage::Visible(visible) = built else {
             panic!("expected visible branch");
         };
 
-        assert_eq!(visible.message().status, chat::MessageStatus::Visible);
+        assert_eq!(visible.message().status, chat::message::Status::Visible);
     }
 
     #[test]
@@ -526,13 +526,13 @@ mod tests {
         let rate_limited = to_rate_limited(build_command("contains a link"));
 
         let built =
-            rate_limited.build(chat::MessageId::new_v4(), SystemTime::UNIX_EPOCH, true);
+            rate_limited.build(chat::message::Id::new_v4(), SystemTime::UNIX_EPOCH, true);
         let BuiltPostMessage::Pending(pending) = built else {
             panic!("expected pending branch");
         };
         let persisted = pending.mark_persisted();
 
-        assert_eq!(persisted.message().status, chat::MessageStatus::Pending);
+        assert_eq!(persisted.message().status, chat::message::Status::Pending);
         assert_eq!(persisted.moderation_reason().to_string(), "auto");
     }
 
@@ -557,7 +557,7 @@ mod tests {
     struct TestRepository {
         room_exists: bool,
         is_member: bool,
-        inserted: Mutex<Vec<chat::MessageId>>,
+        inserted: Mutex<Vec<chat::message::Id>>,
     }
 
     impl TestRepository {
@@ -569,7 +569,7 @@ mod tests {
             }
         }
 
-        fn inserted(&self) -> Vec<chat::MessageId> {
+        fn inserted(&self) -> Vec<chat::message::Id> {
             self.inserted.lock().expect("inserted lock").clone()
         }
     }
@@ -582,25 +582,25 @@ mod tests {
 
         async fn find_room(
             &self,
-            room_id: &chat::RoomId,
+            room_id: &chat::room::Id,
         ) -> super::super::Result<Option<chat::Room>> {
             Ok(self.room_exists.then_some(chat::Room {
                 id: *room_id,
-                name: chat::RoomName::Lobby,
+                name: chat::room::Name::Lobby,
                 created_by: chat::UserId::new_v4(),
             }))
         }
 
         async fn find_room_by_name(
             &self,
-            _name: &chat::RoomName,
+            _name: &chat::room::Name,
         ) -> super::super::Result<Option<chat::Room>> {
             unimplemented!("not used in this test")
         }
 
         async fn list_messages(
             &self,
-            _room_id: &chat::RoomId,
+            _room_id: &chat::room::Id,
             _limit: usize,
         ) -> super::super::Result<Vec<chat::Message>> {
             unimplemented!("not used in this test")
@@ -608,7 +608,7 @@ mod tests {
 
         async fn find_message(
             &self,
-            _message_id: &chat::MessageId,
+            _message_id: &chat::message::Id,
         ) -> super::super::Result<Option<chat::Message>> {
             unimplemented!("not used in this test")
         }
@@ -626,7 +626,7 @@ mod tests {
 
         async fn add_membership(
             &self,
-            _room_id: &chat::RoomId,
+            _room_id: &chat::room::Id,
             _user_id: &chat::UserId,
             _role: super::super::RoomRole,
         ) -> super::super::Result<()> {
@@ -635,7 +635,7 @@ mod tests {
 
         async fn is_member(
             &self,
-            _room_id: &chat::RoomId,
+            _room_id: &chat::room::Id,
             _user_id: &chat::UserId,
         ) -> super::super::Result<bool> {
             Ok(self.is_member)
@@ -643,19 +643,19 @@ mod tests {
 
         async fn update_message_status(
             &self,
-            _message_id: &chat::MessageId,
-            _status: chat::MessageStatus,
+            _message_id: &chat::message::Id,
+            _status: chat::message::Status,
         ) -> super::super::Result<super::super::PendingMutationResult> {
             unimplemented!("not used in this test")
         }
     }
 
     struct TestModerationQueue {
-        enqueued: Mutex<Vec<chat::MessageId>>,
+        enqueued: Mutex<Vec<chat::message::Id>>,
     }
 
     impl TestModerationQueue {
-        fn enqueued(&self) -> Vec<chat::MessageId> {
+        fn enqueued(&self) -> Vec<chat::message::Id> {
             self.enqueued.lock().expect("enqueued lock").clone()
         }
     }
@@ -664,7 +664,7 @@ mod tests {
     impl super::super::ModerationQueue for TestModerationQueue {
         async fn enqueue(
             &self,
-            message_id: &chat::MessageId,
+            message_id: &chat::message::Id,
             _reason: &super::super::ModerationReason,
         ) -> super::super::Result<()> {
             self.enqueued
@@ -683,7 +683,7 @@ mod tests {
 
         async fn complete_if_pending(
             &self,
-            _message_id: &chat::MessageId,
+            _message_id: &chat::message::Id,
             _reviewer_id: &chat::UserId,
             _decision: super::super::ModerationDecision,
             _reason: Option<super::super::ModerationReason>,
@@ -694,11 +694,11 @@ mod tests {
 
     #[derive(Default)]
     struct TestRateLimiter {
-        checks: Mutex<Vec<(chat::RoomId, chat::UserId)>>,
+        checks: Mutex<Vec<(chat::room::Id, chat::UserId)>>,
     }
 
     impl TestRateLimiter {
-        fn checks(&self) -> Vec<(chat::RoomId, chat::UserId)> {
+        fn checks(&self) -> Vec<(chat::room::Id, chat::UserId)> {
             self.checks.lock().expect("checks lock").clone()
         }
     }
@@ -707,7 +707,7 @@ mod tests {
     impl super::super::RateLimiter for TestRateLimiter {
         async fn check(
             &self,
-            room_id: &chat::RoomId,
+            room_id: &chat::room::Id,
             user_id: &chat::UserId,
         ) -> super::super::Result<()> {
             self.checks
@@ -749,15 +749,15 @@ mod tests {
     }
 
     struct FixedIds {
-        message_id: chat::MessageId,
+        message_id: chat::message::Id,
     }
 
     impl super::super::IdGenerator for FixedIds {
-        fn new_room_id(&self) -> chat::RoomId {
-            chat::RoomId::new_v4()
+        fn new_room_id(&self) -> chat::room::Id {
+            chat::room::Id::new_v4()
         }
 
-        fn new_message_id(&self) -> chat::MessageId {
+        fn new_message_id(&self) -> chat::message::Id {
             self.message_id
         }
     }
@@ -783,7 +783,7 @@ mod tests {
     async fn persist_visible_branch_inserts_message_and_keeps_visible_path() {
         let rate_limited = to_rate_limited(build_command("hello"));
         let built =
-            rate_limited.build(chat::MessageId::new_v4(), SystemTime::UNIX_EPOCH, false);
+            rate_limited.build(chat::message::Id::new_v4(), SystemTime::UNIX_EPOCH, false);
         let repo = TestRepository::available();
 
         let persisted = built.persist(&repo).await.expect("persisted");
@@ -796,7 +796,7 @@ mod tests {
     async fn pending_branch_enqueues_before_audit() {
         let rate_limited = to_rate_limited(build_command("contains a link"));
         let built =
-            rate_limited.build(chat::MessageId::new_v4(), SystemTime::UNIX_EPOCH, true);
+            rate_limited.build(chat::message::Id::new_v4(), SystemTime::UNIX_EPOCH, true);
         let repo = TestRepository::available();
         let moderation = TestModerationQueue {
             enqueued: Mutex::new(Vec::new()),
@@ -823,7 +823,7 @@ mod tests {
         });
         let rate_limiter = Arc::new(TestRateLimiter::default());
         let audit = Arc::new(TestAuditLog::default());
-        let message_id = chat::MessageId::new_v4();
+        let message_id = chat::message::Id::new_v4();
         let service = test_service(
             repo.clone(),
             moderation.clone(),
@@ -853,7 +853,7 @@ mod tests {
         });
         let rate_limiter = Arc::new(TestRateLimiter::default());
         let audit = Arc::new(TestAuditLog::default());
-        let message_id = chat::MessageId::new_v4();
+        let message_id = chat::message::Id::new_v4();
         let service = test_service(
             repo.clone(),
             moderation.clone(),
@@ -869,7 +869,10 @@ mod tests {
         .await
         .expect("posted");
 
-        assert_eq!(audited.into_message().status, chat::MessageStatus::Pending);
+        assert_eq!(
+            audited.into_message().status,
+            chat::message::Status::Pending
+        );
         assert_eq!(repo.inserted(), vec![message_id]);
         assert_eq!(moderation.enqueued(), vec![message_id]);
     }

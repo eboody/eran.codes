@@ -2,12 +2,11 @@ use std::str::FromStr;
 
 use crate::trace_log::TraceEntry;
 use crate::types::{LogFieldKey, Text};
-use crate::views::partials::components::logs;
-use crate::views::partials::components::Pill;
+use crate::views::partials::components;
 
 use super::{field_text, short_request_id};
 
-pub fn build_grouped_feed<'a, I>(entries: I) -> logs::composed::GroupedFeed
+pub fn build_grouped_feed<'a, I>(entries: I) -> components::logs::composed::GroupedFeed
 where
     I: IntoIterator<Item = &'a TraceEntry>,
 {
@@ -23,22 +22,24 @@ where
                 .entries
                 .iter()
                 .map(|entry| {
-                    logs::primitives::EventRow::builder()
+                    components::logs::primitives::EventRow::builder()
                         .timestamp(Text::from(entry.timestamp.clone()))
                         .message(Text::from(entry.message.clone()))
                         .pills(build_pills(entry))
                         .build()
                 })
                 .collect();
-            logs::composed::Group::builder()
-                .request_pill(Pill::fields(format!("request_id={}", request_label)))
+            components::logs::composed::Group::builder()
+                .request_pill(components::Pill::fields(format!("request_id={}", request_label)))
                 .count_label(Text::from(format!("{} events", group.entries.len())))
                 .rows(rows)
                 .build()
         })
         .collect();
 
-    logs::composed::GroupedFeed::builder().children(groups).build()
+    components::logs::composed::GroupedFeed::builder()
+        .children(groups)
+        .build()
 }
 
 struct LogGroup<'a> {
@@ -75,24 +76,24 @@ where
     groups
 }
 
-fn build_pills(entry: &TraceEntry) -> Vec<Pill> {
+fn build_pills(entry: &TraceEntry) -> Vec<components::Pill> {
     let mut pills = Vec::new();
-    pills.push(Pill::level(entry.level.clone()));
+    pills.push(components::Pill::level(entry.level.clone()));
     if let Some(status) = field_text(entry, LogFieldKey::Status) {
-        pills.push(Pill::status(status.clone()));
+        pills.push(components::Pill::status(status.clone()));
     }
     if let Some(method) = field_text(entry, LogFieldKey::Method) {
-        pills.push(Pill::method(method.clone()));
+        pills.push(components::Pill::method(method.clone()));
     }
     if let Some(path) = field_text(entry, LogFieldKey::Path) {
-        pills.push(Pill::path(path));
+        pills.push(components::Pill::path(path));
     }
-    pills.push(Pill::target(entry.target.clone()));
+    pills.push(components::Pill::target(entry.target.clone()));
     pills.extend(compact_fields(entry));
     pills
 }
 
-fn compact_fields(entry: &TraceEntry) -> Vec<Pill> {
+fn compact_fields(entry: &TraceEntry) -> Vec<components::Pill> {
     if entry.fields.is_empty() {
         return Vec::new();
     }
@@ -109,7 +110,7 @@ fn compact_fields(entry: &TraceEntry) -> Vec<Pill> {
                 return None;
             }
             let value = Text::from(value.to_string());
-            Some(Pill::fields(format!("{}={}", name, value)))
+            Some(components::Pill::fields(format!("{}={}", name, value)))
         })
         .take(2)
         .collect()

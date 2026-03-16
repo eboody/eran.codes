@@ -34,8 +34,8 @@ impl AuthPageGateFlow<Incoming> {
     ) -> Self {
         AuthPageGateFlow::<Incoming>::builder()
             .page(page)
-            .maybe_next_raw(next_raw)
-            .maybe_next_sanitized(None)
+            .next_raw(next_raw)
+            .next_sanitized(None)
             .is_authenticated(is_authenticated)
             .build()
     }

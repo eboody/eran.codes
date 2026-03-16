@@ -3,9 +3,7 @@ use maud::{Markup, Render};
 
 use crate::paths::Route;
 use crate::types::Text;
-use crate::views::partials::components::{
-    NavAuth, NavBar, NavBrand, NavLink, NavLinkList, NavLinkListRole, NavSignedIn,
-};
+use crate::views::partials;
 
 pub(crate) const PORTFOLIO_RESUME_URL: &str = "/static/resume.txt";
 pub(crate) const PORTFOLIO_GITHUB_URL: &str = "https://github.com/eboody/eran.codes";
@@ -21,7 +19,7 @@ pub struct UserNav {
 
 impl Render for UserNav {
     fn render(&self) -> Markup {
-        NavSignedIn::builder()
+        partials::components::NavSignedIn::builder()
             .username(self.username.clone())
             .account_href(Text::from(Route::Protected.as_str()))
             .logout_action(Text::from(Route::Logout.as_str()))
@@ -67,62 +65,62 @@ impl Render for Layout<'_> {
                 "{transportErrorSource: '', transportErrorKind: '', transportErrorTitle: '', transportErrorMessage: '', transportErrorStatus: 0, transportRetrying: false}".to_string()
             }
         };
-        let brand = NavBrand::builder()
+        let brand = partials::components::NavBrand::builder()
             .label(Text::from("eran.codes"))
             .href(Text::from(Route::Home.as_str()))
             .light_logo_src(Text::from("/static/eran.codes-light.svg"))
             .dark_logo_src(Text::from("/static/eran.codes-dark.svg"))
             .build();
-        let portfolio_links = NavLinkList::builder()
-            .role(NavLinkListRole::Primary)
+        let portfolio_links = partials::components::NavLinkList::builder()
+            .role(partials::components::NavLinkListRole::Primary)
             .children(vec![
-                NavLink::builder()
+                partials::components::NavLink::builder()
                     .label(Text::from("Work"))
                     .href(Text::from(Route::Work.as_str()))
                     .build(),
-                NavLink::builder()
+                partials::components::NavLink::builder()
                     .label(Text::from("Live Lab"))
                     .href(Text::from(Route::Lab.as_str()))
                     .build(),
-                NavLink::builder()
+                partials::components::NavLink::builder()
                     .label(Text::from("Resume"))
                     .href(Text::from(PORTFOLIO_RESUME_URL))
                     .build(),
-                NavLink::builder()
+                partials::components::NavLink::builder()
                     .label(Text::from("GitHub"))
                     .href(Text::from(PORTFOLIO_GITHUB_URL))
                     .external(true)
                     .build(),
-                NavLink::builder()
+                partials::components::NavLink::builder()
                     .label(Text::from("LinkedIn"))
                     .href(Text::from(PORTFOLIO_LINKEDIN_URL))
                     .external(true)
                     .build(),
-                NavLink::builder()
+                partials::components::NavLink::builder()
                     .label(Text::from("Contact"))
                     .href(Text::from(PORTFOLIO_CONTACT_URL))
                     .build(),
             ])
             .build();
         let auth = match self.nav_mode {
-            NavMode::Portfolio => NavAuth::Hidden,
+            NavMode::Portfolio => partials::components::NavAuth::Hidden,
             NavMode::App => match &self.user {
-                Some(user) => NavAuth::SignedIn(
-                    NavSignedIn::builder()
+                Some(user) => partials::components::NavAuth::SignedIn(
+                    partials::components::NavSignedIn::builder()
                         .username(user.username.clone())
                         .account_href(Text::from(Route::Protected.as_str()))
                         .logout_action(Text::from(Route::Logout.as_str()))
                         .build(),
                 ),
-                None => NavAuth::Guest(
-                    NavLinkList::builder()
-                        .role(NavLinkListRole::Auth)
+                None => partials::components::NavAuth::Guest(
+                    partials::components::NavLinkList::builder()
+                        .role(partials::components::NavLinkListRole::Auth)
                         .children(vec![
-                            NavLink::builder()
+                            partials::components::NavLink::builder()
                                 .label(Text::from("Sign in"))
                                 .href(Text::from(Route::Login.as_str()))
                                 .build(),
-                            NavLink::builder()
+                            partials::components::NavLink::builder()
                                 .label(Text::from("Create account"))
                                 .href(Text::from(Route::Register.as_str()))
                                 .build(),
@@ -131,7 +129,7 @@ impl Render for Layout<'_> {
                 ),
             },
         };
-        let nav_bar = NavBar::builder()
+        let nav_bar = partials::components::NavBar::builder()
             .brand(brand)
             .links(portfolio_links)
             .auth(auth)

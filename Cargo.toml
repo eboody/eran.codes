@@ -38,6 +38,13 @@ moddef = "0.3.0"
 strum = "0.27.2"
 strum_macros = "0.27.2"
 
+[patch.crates-io]
+statum = { path = "/home/eran/code/statum/statum" }
+statum-core = { path = "/home/eran/code/statum/statum-core" }
+statum-macros = { path = "/home/eran/code/statum/statum-macros" }
+macro_registry = { path = "/home/eran/code/statum/macro_registry" }
+module_path_extractor = { path = "/home/eran/code/statum/module_path_extractor" }
+
 [workspace.metadata.scripts]
 crs = "cargo run-script"
 migrate = "cargo with-db sqlx migrate run --source crates/infra/migrations"

@@ -10,7 +10,7 @@ pub mod sse;
 mod state;
 mod trace;
 pub mod trace_log;
-pub mod types;
+mod types;
 mod views;
 
 pub use error::{Error, Result};

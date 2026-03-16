@@ -3,7 +3,7 @@ use maud::{Markup, Render};
 use crate::trace_log::TraceEntry;
 use crate::trace_log::{LogMessageKind, LogMessageKnown, LogTargetKind, LogTargetKnown};
 use crate::types::{LogFieldKey, Text};
-use crate::views::partials::components::Pill;
+use crate::views::partials::components;
 
 use super::field_text;
 
@@ -79,34 +79,34 @@ pub fn chat_entries(entries: &[TraceEntry]) -> Vec<&TraceEntry> {
 
 fn method_pill(entry: &TraceEntry) -> Markup {
     match field_text(entry, LogFieldKey::Method) {
-        Some(method) => Pill::method(method).render(),
-        None => Pill::fields("-").render(),
+        Some(method) => components::Pill::method(method).render(),
+        None => components::Pill::fields("-").render(),
     }
 }
 
 fn path_pill(entry: &TraceEntry) -> Markup {
     match field_text(entry, LogFieldKey::Path) {
-        Some(path) => Pill::path(path).render(),
-        None => Pill::fields("-").render(),
+        Some(path) => components::Pill::path(path).render(),
+        None => components::Pill::fields("-").render(),
     }
 }
 
 fn status_pill(entry: &TraceEntry) -> Markup {
     match field_text(entry, LogFieldKey::Status) {
-        Some(status) => Pill::status(status).render(),
-        None => Pill::fields("-").render(),
+        Some(status) => components::Pill::status(status).render(),
+        None => components::Pill::fields("-").render(),
     }
 }
 
 fn latency_pill(entry: &TraceEntry) -> Option<Markup> {
     field_text(entry, LogFieldKey::LatencyMs)
-        .map(|value| Pill::fields(format!("latency_ms={}", value)).render())
+        .map(|value| components::Pill::fields(format!("latency_ms={}", value)).render())
 }
 
 fn source_pill(entry: &TraceEntry) -> Markup {
     match field_text(entry, LogFieldKey::Sender) {
-        Some(sender) => Pill::fields(format!("source={}", sender)).render(),
-        None => Pill::fields("source=unknown").render(),
+        Some(sender) => components::Pill::fields(format!("source={}", sender)).render(),
+        None => components::Pill::fields("source=unknown").render(),
     }
 }
 

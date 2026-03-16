@@ -11,7 +11,7 @@ use domain::user;
 pub use error::{Error, RepositoryOperation, Result};
 
 #[derive(Clone, Debug, Builder)]
-pub struct RegisterUser {
+pub struct Register {
     pub username: user::Username,
     pub email: user::Email,
     pub password: SecretString,
@@ -42,7 +42,7 @@ impl Service {
     }
 
     #[tracing::instrument(skip(self))]
-    pub async fn register_user(&self, command: RegisterUser) -> Result<user::UserId> {
+    pub async fn register_user(&self, command: Register) -> Result<user::Id> {
         let persisted = register_user_flow::IncomingFlow::from_command(command)
             .register(self)
             .await?;
@@ -152,7 +152,7 @@ mod tests {
         let service = service(None, CreateOutcome::EmailTaken, HashOutcome::Ok);
         let result = service
             .register_user(
-                RegisterUser::builder()
+                Register::builder()
                     .username(valid_username())
                     .email(valid_email())
                     .password(SecretString::new("password".to_string().into()))
@@ -173,7 +173,7 @@ mod tests {
         let service = service(None, CreateOutcome::Ok, HashOutcome::Ok);
         let result = service
             .register_user(
-                RegisterUser::builder()
+                Register::builder()
                     .username(valid_username())
                     .email(valid_email())
                     .password(SecretString::new("password".to_string().into()))
@@ -189,7 +189,7 @@ mod tests {
         let service = service(None, CreateOutcome::Ok, HashOutcome::Fail);
         let result = service
             .register_user(
-                RegisterUser::builder()
+                Register::builder()
                     .username(valid_username())
                     .email(valid_email())
                     .password(SecretString::new("password".to_string().into()))

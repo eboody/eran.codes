@@ -1,19 +1,19 @@
 use bon::Builder;
 use nutype::nutype;
 
-use super::room::{RoomId, UserId};
+use super::room;
 
 #[nutype(
     sanitize(trim),
     validate(not_empty, len_char_max = 1000),
     derive(Debug, Clone, PartialEq, Eq, Display)
 )]
-pub struct MessageBody(String);
+pub struct Body(String);
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
-pub struct MessageId(uuid::Uuid);
+pub struct Id(uuid::Uuid);
 
-impl MessageId {
+impl Id {
     pub fn new_v4() -> Self {
         Self(uuid::Uuid::new_v4())
     }
@@ -27,8 +27,10 @@ impl MessageId {
     }
 }
 
-#[derive(Debug, Clone, Copy, PartialEq, Eq, strum_macros::Display, strum_macros::EnumString)]
-pub enum MessageStatus {
+#[derive(
+    Debug, Clone, Copy, PartialEq, Eq, strum_macros::Display, strum_macros::EnumString,
+)]
+pub enum Status {
     #[strum(serialize = "visible")]
     Visible,
     #[strum(serialize = "pending")]
@@ -39,11 +41,11 @@ pub enum MessageStatus {
 
 #[derive(Debug, Clone, PartialEq, Builder)]
 pub struct Message {
-    pub id: MessageId,
-    pub room_id: RoomId,
-    pub user_id: UserId,
-    pub body: MessageBody,
-    pub status: MessageStatus,
+    pub id: Id,
+    pub room_id: room::Id,
+    pub user_id: room::UserId,
+    pub body: Body,
+    pub status: Status,
     pub client_id: Option<ClientId>,
     pub created_at: std::time::SystemTime,
 }
