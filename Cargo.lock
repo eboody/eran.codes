@@ -1936,7 +1936,7 @@ checksum = "112b39cec0b298b6c1999fee3e31427f74f676e4cb9879ed1a121b43661a4154"
 
 [[package]]
 name = "macro_registry"
-version = "0.5.4"
+version = "0.5.5"
 dependencies = [
  "module_path_extractor",
  "syn 2.0.117",
@@ -2057,7 +2057,7 @@ checksum = "4a0b3262dc837d2513fe2ef31ff8461352ef932dcca31ba0c0abe33547cf6b9b"
 
 [[package]]
 name = "module_path_extractor"
-version = "0.5.4"
+version = "0.5.5"
 dependencies = [
  "proc-macro2",
  "syn 2.0.117",
@@ -3492,7 +3492,7 @@ checksum = "6ce2be8dc25455e1f91df71bfa12ad37d7af1092ae736f3a6cd0e37bc7810596"
 
 [[package]]
 name = "statum"
-version = "0.5.4"
+version = "0.5.5"
 dependencies = [
  "bon",
  "statum-core",
@@ -3501,11 +3501,11 @@ dependencies = [
 
 [[package]]
 name = "statum-core"
-version = "0.5.4"
+version = "0.5.5"
 
 [[package]]
 name = "statum-macros"
-version = "0.5.4"
+version = "0.5.5"
 dependencies = [
  "macro_registry",
  "moddef 0.2.6",
