@@ -29,10 +29,7 @@ pub(crate) struct RequestContextFlow<RequestContextState> {
 }
 
 impl RequestContextFlow<Incoming> {
-    pub(crate) fn new(
-        headers: http::HeaderMap,
-        session_id: Option<SessionId>,
-    ) -> Self {
+    pub(crate) fn new(headers: http::HeaderMap, session_id: Option<SessionId>) -> Self {
         RequestContextFlow::<Incoming>::builder()
             .headers(headers)
             .session_id(session_id)

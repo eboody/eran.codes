@@ -1,7 +1,7 @@
 use axum::{http, response::IntoResponse};
 use datastar::prelude::{ElementPatchMode, PatchElements};
-use maud::Render;
 use domain::chat;
+use maud::Render;
 use statum::{machine, state, transition};
 
 use super::{ChatSignals, DemoChatSignals};
