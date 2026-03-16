@@ -125,12 +125,12 @@ me [data-nav-brand-mark-wrap]::before {
   content: "";
   position: absolute;
   inset: auto;
-  inline-size: 2.2rem;
-  block-size: 2.2rem;
+  inline-size: 2.6rem;
+  block-size: 2.6rem;
   top: 50%;
   left: 50%;
   z-index: 0;
-  border-radius: 0.72rem;
+  border-radius: 0.85rem;
   background-image: linear-gradient(
     -45deg,
     var(--_logo-glow-red) 50%,
@@ -143,8 +143,8 @@ me [data-nav-brand-mark-wrap]::before {
 
 me [data-nav-brand-mark] {
   display: block;
-  inline-size: 1.8rem;
-  block-size: 1.8rem;
+  inline-size: 2.1rem;
+  block-size: 2.1rem;
   flex: none;
   filter: drop-shadow(0.18rem 0.24rem 0.8rem color-mix(in srgb, black 18%, transparent));
 }
@@ -237,8 +237,8 @@ me [data-nav-auth-action] {
   }
 
   me [data-nav-brand-mark] {
-    inline-size: 1.6rem;
-    block-size: 1.6rem;
+    inline-size: 1.85rem;
+    block-size: 1.85rem;
   }
 
   me [data-nav-brand-text] {
@@ -346,8 +346,8 @@ impl Render for NavBrand {
                             img
                                 data-nav-brand-mark
                                 src=(&self.light_logo_src)
-                                width="34"
-                                height="34"
+                                width="40"
+                                height="40"
                                 alt=""
                                 aria-hidden="true";
                         }
