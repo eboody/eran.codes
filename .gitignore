@@ -1,5 +1,6 @@
 target
 .nvimlog
+.tmp-playwright/
 artifacts/visual/current
 artifacts/
 .playwright-browsers/
