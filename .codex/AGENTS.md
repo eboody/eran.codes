@@ -138,6 +138,7 @@ This repository uses a project-local multi-agent system for generating Rust Maud
   - Any `component_spec` decision contradicts docs-backed rules and `component_spec.override` is missing or invalid.
   - Generated output omits required file markers.
 - If verification fails, no downstream publish/accept step is allowed.
+- Downstream publish/accept verification must include a local `act` run against the relevant workflow job set; in this repo, `bash scripts/check_publish_dry_run.sh` is the default gate.
 
 ## Regeneration Safety Rules
 
