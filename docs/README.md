@@ -61,6 +61,8 @@ This repo has two documentation layers:
 
 - Before downstream publish or accept steps, run `bash scripts/check_publish_dry_run.sh`.
 - That gate includes both local workspace tests and a local `act -j repo-checks` run against the repo CI workflow.
+- `repo-checks` also verifies the Docker runtime image keeps the expected `/health` probe and includes both `curl` and `wget` for host-platform healthchecks.
+- This repo also ships a `.githooks/pre-push` hook for the same gate; enable it locally with `git config core.hooksPath .githooks`.
 
 ## Suggested Reading Paths
 

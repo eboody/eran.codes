@@ -37,6 +37,8 @@ jobs:
         run: scripts/ci/bon-usage-contract.sh
       - name: typed hasher errors
         run: scripts/ci/typed-hasher-errors.sh
+      - name: docker runtime healthcheck contract
+        run: scripts/ci/docker-runtime-healthcheck-contract.sh
       - name: datastar command+sse architecture
         run: scripts/ci/datastar-command-sse-architecture.sh
       - name: component spec content contract
