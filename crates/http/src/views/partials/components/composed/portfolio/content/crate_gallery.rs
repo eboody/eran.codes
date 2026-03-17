@@ -5,11 +5,11 @@ use crate::views::partials::components::primitives::Icon;
 use crate::views::partials::components::tab_set;
 
 #[derive(Clone, Debug, Deserialize)]
-pub struct CrateGalleryContent {
-    pub id: Text,
-    pub aria_label: Text,
-    pub signal_name: Text,
-    pub tabs: Vec<CrateGalleryTabContent>,
+pub(crate) struct CrateGalleryContent {
+    pub(crate) id: Text,
+    pub(crate) aria_label: Text,
+    pub(crate) signal_name: Text,
+    pub(crate) tabs: Vec<CrateGalleryTabContent>,
 }
 
 impl CrateGalleryContent {
@@ -25,12 +25,12 @@ impl CrateGalleryContent {
 }
 
 #[derive(Clone, Debug, Deserialize)]
-pub struct CrateGalleryTabContent {
-    pub id: Text,
-    pub label: CrateGalleryLabelContent,
-    pub icon: Option<Icon>,
-    pub preview: CrateGalleryPreviewContent,
-    pub body: CrateGalleryBodyContent,
+pub(crate) struct CrateGalleryTabContent {
+    pub(crate) id: Text,
+    pub(crate) label: CrateGalleryLabelContent,
+    pub(crate) icon: Option<Icon>,
+    pub(crate) preview: CrateGalleryPreviewContent,
+    pub(crate) body: CrateGalleryBodyContent,
 }
 
 impl CrateGalleryTabContent {
@@ -47,10 +47,10 @@ impl CrateGalleryTabContent {
 }
 
 #[derive(Clone, Debug, Deserialize)]
-pub struct CrateGalleryLabelContent {
-    pub primary: Text,
+pub(crate) struct CrateGalleryLabelContent {
+    pub(crate) primary: Text,
     #[serde(default)]
-    pub secondary: Option<Text>,
+    pub(crate) secondary: Option<Text>,
 }
 
 impl CrateGalleryLabelContent {
@@ -63,13 +63,13 @@ impl CrateGalleryLabelContent {
 }
 
 #[derive(Clone, Debug, Deserialize)]
-pub struct CrateGalleryPreviewContent {
+pub(crate) struct CrateGalleryPreviewContent {
     #[serde(default)]
-    pub code_examples: Vec<CrateGalleryCodeExampleContent>,
+    pub(crate) code_examples: Vec<CrateGalleryCodeExampleContent>,
     #[serde(default)]
-    pub image: Option<CrateGalleryImageContent>,
+    pub(crate) image: Option<CrateGalleryImageContent>,
     #[serde(default)]
-    pub badge: Option<CrateGalleryBadgeContent>,
+    pub(crate) badge: Option<CrateGalleryBadgeContent>,
 }
 
 impl CrateGalleryPreviewContent {
@@ -93,10 +93,10 @@ impl CrateGalleryPreviewContent {
 }
 
 #[derive(Clone, Debug, Deserialize)]
-pub struct CrateGalleryCodeExampleContent {
+pub(crate) struct CrateGalleryCodeExampleContent {
     #[serde(default)]
-    pub label: Option<Text>,
-    pub code: Text,
+    pub(crate) label: Option<Text>,
+    pub(crate) code: Text,
 }
 
 impl CrateGalleryCodeExampleContent {
@@ -109,10 +109,10 @@ impl CrateGalleryCodeExampleContent {
 }
 
 #[derive(Clone, Debug, Deserialize)]
-pub struct CrateGalleryImageContent {
-    pub asset_ref: Text,
+pub(crate) struct CrateGalleryImageContent {
+    pub(crate) asset_ref: Text,
     #[serde(default, rename = "alt")]
-    pub alt: Option<Text>,
+    pub(crate) alt: Option<Text>,
 }
 
 impl CrateGalleryImageContent {
@@ -125,8 +125,8 @@ impl CrateGalleryImageContent {
 }
 
 #[derive(Clone, Debug, Deserialize)]
-pub struct CrateGalleryBadgeContent {
-    pub text: Text,
+pub(crate) struct CrateGalleryBadgeContent {
+    pub(crate) text: Text,
 }
 
 impl CrateGalleryBadgeContent {
@@ -138,11 +138,11 @@ impl CrateGalleryBadgeContent {
 }
 
 #[derive(Clone, Debug, Deserialize)]
-pub struct CrateGalleryBodyContent {
-    pub title: Text,
+pub(crate) struct CrateGalleryBodyContent {
+    pub(crate) title: Text,
     #[serde(default)]
-    pub subtitle: Option<Text>,
-    pub features: Vec<CrateGalleryFeatureContent>,
+    pub(crate) subtitle: Option<Text>,
+    pub(crate) features: Vec<CrateGalleryFeatureContent>,
 }
 
 impl CrateGalleryBodyContent {
@@ -160,8 +160,8 @@ impl CrateGalleryBodyContent {
 }
 
 #[derive(Clone, Debug, Deserialize)]
-pub struct CrateGalleryFeatureContent {
-    pub text: Text,
+pub(crate) struct CrateGalleryFeatureContent {
+    pub(crate) text: Text,
 }
 
 impl CrateGalleryFeatureContent {

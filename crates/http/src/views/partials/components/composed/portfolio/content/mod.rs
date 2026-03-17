@@ -3,7 +3,7 @@ mod fixture_loader;
 mod types;
 mod validation;
 
-pub use crate_gallery::CrateGalleryContent;
+pub(crate) use crate_gallery::CrateGalleryContent;
 pub use fixture_loader::{
     open_source_index_content, portfolio_home_content, work_case_content, work_index_content,
 };
