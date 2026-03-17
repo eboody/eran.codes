@@ -23,4 +23,4 @@ echo "Running workspace tests (without doctests)..."
 cargo test --workspace --lib --tests
 
 echo "Running local GitHub Actions gate under act..."
-act -j stringy-check
+act -j repo-checks

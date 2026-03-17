@@ -60,7 +60,7 @@ This repo has two documentation layers:
 ## Release Gate
 
 - Before downstream publish or accept steps, run `bash scripts/check_publish_dry_run.sh`.
-- That gate includes both local workspace tests and a local `act -j stringy-check` run against the repo CI workflow.
+- That gate includes both local workspace tests and a local `act -j repo-checks` run against the repo CI workflow.
 
 ## Suggested Reading Paths
 

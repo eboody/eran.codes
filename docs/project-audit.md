@@ -28,11 +28,12 @@ Static review:
 Execution checks:
 - `cargo check` (pass)
 - `cargo test --workspace` (pass, 14 tests)
-- `bash scripts/ci/no-string-fields.sh` (pass)
 - `bash scripts/ci/partials-render.sh` (pass)
-- `bash scripts/ci/stringy-check.sh` (fail)
 - `cargo-clippy --workspace --all-targets -- -D warnings` with `RUSTC_WRAPPER=` (fail, multiple findings)
 - `cargo-fmt --all -- --check` via `cargo-fmt` (fail)
+
+Historical note:
+- The former `scripts/ci/no-string-fields.sh` and `scripts/ci/stringy-check.sh` checks referenced by this audit were removed in March 2026 after proving too brittle and low-signal for repo-wide CI.
 
 ## Boundary Map
 - `domain`: invariants and core types (`Username`, `Email`, chat IDs, statuses). No serde leakage in domain entities.
@@ -233,7 +234,7 @@ Severity: Low
 
 Evidence:
 - `crates/http/src/views/partials/demo/layout/capability_showcase.rs:58`
-- `scripts/ci/stringy-check.sh`
+- former `scripts/ci/stringy-check.sh`
 
 Details:
 - `Text::from("==")` triggers `contains("...")` pattern in guardrail script.

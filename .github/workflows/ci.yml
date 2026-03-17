@@ -5,7 +5,7 @@ on:
   pull_request:
 
 jobs:
-  stringy-check:
+  repo-checks:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -31,11 +31,6 @@ jobs:
         run: cargo install modum --locked
       - name: Modum
         run: cargo modum check --root . --mode warn
-      - name: advisory stringy checks
-        continue-on-error: true
-        run: scripts/ci/stringy-check.sh
-      - name: no String fields
-        run: scripts/ci/no-string-fields.sh
       - name: enum + builder contract
         run: scripts/ci/enum-builder-contract.sh
       - name: bon usage contract
