@@ -8,7 +8,7 @@ crate::views::scoped::inline_css!(
     r#"
 me {
   display: grid;
-  gap: var(--size-4);
+  gap: var(--space-4);
 }
 
 me[data-log-panels] {
@@ -18,9 +18,9 @@ me[data-log-panels] {
 me .ui-log-panel {
   display: flex;
   flex-direction: column;
-  gap: var(--log-panel-gap, var(--size-2));
+  gap: var(--log-panel-gap, var(--space-2));
   margin: 0;
-  padding: var(--log-panel-padding, var(--size-3) var(--size-4));
+  padding: var(--log-panel-padding, var(--space-3) var(--space-4));
   border-radius: var(--ui-radius-sm);
   border: var(--log-panel-border, var(--border-size-1) solid var(--ui-border-soft));
   background: var(--log-panel-background, var(--ui-surface-soft));
@@ -28,7 +28,7 @@ me .ui-log-panel {
 
 me [data-log-heading] h3 {
   margin: 0;
-  font-size: var(--log-panel-heading-size, 0.95rem);
+  font-size: var(--log-panel-heading-size, var(--text-size-body-lg));
   letter-spacing: var(--log-panel-heading-tracking, normal);
   text-transform: var(--log-panel-heading-transform, none);
   color: var(--log-panel-heading-color, inherit);
@@ -39,9 +39,9 @@ me .ui-log-scroll {
   overflow: auto;
   display: flex;
   flex-direction: column;
-  gap: var(--size-4);
+  gap: var(--space-4);
   min-height: 0;
-  padding: var(--log-scroll-padding, 0 var(--size-1) 0 0);
+  padding: var(--log-scroll-padding, 0 var(--space-1) 0 0);
   border: var(--log-scroll-border, 0);
   border-radius: var(--log-scroll-radius, 0);
   background: var(--log-scroll-background, transparent);
@@ -55,8 +55,8 @@ me .ui-log-scroll {
 
 me .ui-log-empty {
   margin: 0;
-  font-size: 0.86rem;
-  line-height: 1.45;
+  font-size: var(--text-size-body-xs);
+  line-height: var(--text-line-body);
   color: color-mix(in srgb, var(--ui-text-muted) 94%, var(--ui-text) 6%);
 }
 
@@ -66,21 +66,21 @@ me .ui-log-entries {
   padding: 0;
   display: flex;
   flex-direction: column;
-  gap: var(--size-3);
+  gap: var(--space-3);
 }
 
 me .ui-log-entry {
   display: flex;
   flex-wrap: wrap;
   align-items: center;
-  gap: var(--size-2);
+  gap: var(--space-2);
   width: 100%;
 }
 
 me [data-log-timestamp] {
   font-variant-numeric: tabular-nums;
-  font-size: 0.72rem;
-  line-height: 1;
+  font-size: var(--text-size-label-xs);
+  line-height: var(--text-line-flat);
 }
 
 me [data-log-message] {
@@ -89,25 +89,25 @@ me [data-log-message] {
 }
 
 me .ui-pill--log-fields {
-  font-size: 0.7rem;
-  letter-spacing: 0.01rem;
+  font-size: var(--text-size-label-2xs);
+  letter-spacing: var(--text-track-fixed-xs);
 }
 
 me .ui-pill-cluster {
   display: inline-flex;
   flex-wrap: wrap;
-  gap: 0.4rem;
+  gap: var(--space-2);
 }
 
 me .ui-log-table {
   width: 100%;
   border-collapse: collapse;
-  font-size: 0.8rem;
+  font-size: var(--text-size-meta-sm);
 }
 
 me .ui-log-table th,
 me .ui-log-table td {
-  padding: 0.45rem 0.4rem;
+  padding: var(--space-2);
   border-bottom: 1px solid color-mix(in srgb, var(--ui-text-muted) 28%, transparent);
   vertical-align: top;
 }
@@ -126,13 +126,13 @@ me .ui-log-table[data-chat-flow] td:last-child {
 me .ui-log-groups {
   display: flex;
   flex-direction: column;
-  gap: var(--size-2);
+  gap: var(--space-2);
 }
 
 me .ui-log-group {
   border: var(--border-size-1) solid color-mix(in srgb, var(--ui-text-muted) 24%, transparent);
   border-radius: var(--ui-radius-sm);
-  padding: var(--size-2) var(--size-3);
+  padding: var(--space-2) var(--space-3);
   background: color-mix(
     in srgb,
     var(--ui-surface-card) 88%,
@@ -143,28 +143,28 @@ me .ui-log-group {
 me .ui-log-group-header {
   display: flex;
   align-items: center;
-  gap: var(--size-2);
-  margin-bottom: var(--size-2);
+  gap: var(--space-2);
+  margin-bottom: var(--space-2);
 }
 
 me .ui-log-flow-shell {
   display: grid;
-  gap: var(--log-flow-shell-gap, var(--size-3));
+  gap: var(--log-flow-shell-gap, var(--space-3));
 }
 
 me .ui-log-flow-list {
   display: flex;
   flex-direction: column;
-  gap: var(--size-2);
+  gap: var(--space-2);
 }
 
 me .ui-log-flow-item {
   appearance: none;
   display: flex;
   flex-direction: column;
-  gap: var(--size-1);
+  gap: var(--space-1);
   margin: 0;
-  padding: var(--log-flow-item-padding, var(--size-2) var(--size-3));
+  padding: var(--log-flow-item-padding, var(--space-2) var(--space-3));
   border-radius: var(--log-flow-item-radius, var(--ui-radius-sm));
   border: var(
     --log-flow-item-border,
@@ -183,8 +183,7 @@ me .ui-log-flow-item {
   transition: var(--log-flow-item-transition, none);
 }
 
-me .ui-log-flow-item:hover,
-me .ui-log-flow-item:focus-visible {
+me .ui-log-flow-item:hover {
   outline: none;
   border-color: var(
     --log-flow-item-hover-border-color,
@@ -195,6 +194,19 @@ me .ui-log-flow-item:focus-visible {
     color-mix(in srgb, var(--portfolio-accent-a) 14%, transparent)
   );
   transform: var(--log-flow-item-hover-transform, none);
+  position: relative;
+  z-index: 1;
+}
+
+me .ui-log-flow-item:focus-visible {
+  outline: none;
+  border-color: var(
+    --log-flow-item-focus-border-color,
+    color-mix(in srgb, var(--portfolio-accent-a) 58%, transparent)
+  );
+  box-shadow:
+    0 0 0 0.22rem color-mix(in srgb, var(--portfolio-accent-a) 18%, transparent),
+    var(--log-flow-item-focus-shadow, none);
   position: relative;
   z-index: 1;
 }
@@ -212,25 +224,25 @@ me .ui-log-flow-item.is-default {
 }
 
 me .ui-log-flow-item-id {
-  font-size: 0.7rem;
-  letter-spacing: 0.01rem;
+  font-size: var(--text-size-label-2xs);
+  letter-spacing: var(--text-track-fixed-xs);
   color: var(--ui-text-muted);
 }
 
 me .ui-log-flow-item-title {
-  font-size: 0.84rem;
+  font-size: var(--text-size-meta-lg);
   font-weight: 600;
-  line-height: 1.3;
+  line-height: var(--text-line-snug);
 }
 
 me .ui-log-flow-item-meta {
   display: inline-flex;
   align-items: center;
-  gap: var(--size-2);
+  gap: var(--space-2);
 }
 
 me .ui-log-flow-item-time {
-  font-size: 0.72rem;
+  font-size: var(--text-size-label-xs);
   font-variant-numeric: tabular-nums;
   color: var(--ui-text-muted);
 }
@@ -247,7 +259,7 @@ me .ui-log-flow-details {
 me .ui-log-flow-detail {
   display: none;
   flex-direction: column;
-  gap: var(--size-2);
+  gap: var(--space-2);
 }
 
 me .ui-log-flow-detail.is-default {
@@ -268,7 +280,7 @@ me .ui-log-flow-detail-header {
   flex-wrap: wrap;
   align-items: center;
   justify-content: space-between;
-  gap: var(--size-2);
+  gap: var(--space-2);
   margin-bottom: var(--log-flow-detail-header-margin-block-end, 0);
   padding-bottom: var(--log-flow-detail-header-padding-block-end, 0);
   border-bottom: var(--log-flow-detail-header-border, 0);
@@ -276,13 +288,13 @@ me .ui-log-flow-detail-header {
 
 me .ui-log-flow-detail-title {
   margin: 0;
-  font-size: var(--log-flow-detail-title-size, 0.9rem);
+  font-size: var(--log-flow-detail-title-size, var(--control-font-size));
 }
 
 me .ui-log-flow-event {
   display: flex;
   flex-direction: column;
-  gap: var(--size-1);
+  gap: var(--space-1);
   padding-block: var(--log-flow-event-padding-block, 0);
   border-bottom: var(--log-flow-event-border, 0);
 }
@@ -295,20 +307,20 @@ me .ui-log-flow-event:last-child {
 me .ui-log-flow-event-head {
   display: flex;
   align-items: center;
-  gap: var(--size-2);
+  gap: var(--space-2);
 }
 
 me .ui-log-flow-event-summary {
   margin: 0;
-  font-size: 0.82rem;
-  line-height: 1.35;
+  font-size: var(--text-size-meta-md);
+  line-height: var(--text-line-summary);
 }
 
 me .ui-log-flow-event-summary-inline {
   display: flex;
   flex-wrap: wrap;
   align-items: center;
-  gap: var(--size-1);
+  gap: var(--space-1);
 }
 
 @media (min-width: 56.25rem) {
@@ -320,14 +332,14 @@ me .ui-log-flow-event-summary-inline {
   me .ui-log-flow-list {
     max-height: 18rem;
     overflow: auto;
-    padding-right: var(--size-1);
+    padding-right: var(--space-1);
   }
 }
 
 @media (max-width: 48rem) {
   me[data-log-panels] {
     grid-template-columns: 1fr;
-    gap: var(--size-3);
+    gap: var(--space-3);
   }
 
   me .ui-log-scroll {
@@ -358,7 +370,7 @@ me .ui-log-flow-event-summary-inline {
 
   me .ui-log-table {
     min-width: 32.5rem;
-    font-size: 0.74rem;
+    font-size: var(--text-size-label-sm);
   }
 
   me .ui-log-entry {

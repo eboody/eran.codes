@@ -52,6 +52,7 @@ pub struct Layout<'a> {
     pub sse_mode: SseMode,
     #[builder(default)]
     pub nav_mode: NavMode,
+    pub current_route: Option<Route>,
 }
 
 impl Render for Layout<'_> {
@@ -71,16 +72,24 @@ impl Render for Layout<'_> {
             .light_logo_src(Text::from("/static/eran.codes-light.svg"))
             .dark_logo_src(Text::from("/static/eran.codes-dark.svg"))
             .build();
+        let current_route = self.current_route;
         let portfolio_links = partials::components::NavLinkList::builder()
             .role(partials::components::NavLinkListRole::Primary)
             .children(vec![
                 partials::components::NavLink::builder()
                     .label(Text::from("Work"))
                     .href(Text::from(Route::Work.as_str()))
+                    .active(current_route == Some(Route::Work))
+                    .build(),
+                partials::components::NavLink::builder()
+                    .label(Text::from("Open Source"))
+                    .href(Text::from(Route::OpenSource.as_str()))
+                    .active(current_route == Some(Route::OpenSource))
                     .build(),
                 partials::components::NavLink::builder()
                     .label(Text::from("Live Lab"))
                     .href(Text::from(Route::Lab.as_str()))
+                    .active(current_route == Some(Route::Lab))
                     .build(),
                 partials::components::NavLink::builder()
                     .label(Text::from("Resume"))
@@ -119,10 +128,12 @@ impl Render for Layout<'_> {
                             partials::components::NavLink::builder()
                                 .label(Text::from("Sign in"))
                                 .href(Text::from(Route::Login.as_str()))
+                                .active(current_route == Some(Route::Login))
                                 .build(),
                             partials::components::NavLink::builder()
                                 .label(Text::from("Create account"))
                                 .href(Text::from(Route::Register.as_str()))
+                                .active(current_route == Some(Route::Register))
                                 .build(),
                         ])
                         .build(),

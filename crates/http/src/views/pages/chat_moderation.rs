@@ -11,7 +11,7 @@ me {
   display: grid;
   gap: var(--space-section);
   margin-top: clamp(1.1rem, 0.9rem + 0.9vw, 1.8rem);
-  padding-bottom: calc(var(--space-section) + var(--size-6));
+  padding-bottom: calc(var(--space-section) + var(--space-6));
 }
 
 me > :where(header, section) {
@@ -21,11 +21,10 @@ me > :where(header, section) {
 
 me [data-chat-moderation-hero] {
   display: grid;
-  gap: 0.85rem;
-  margin-top: 1.2rem;
-  margin-bottom: 1.35rem;
-  padding: 1.2rem;
-  border-radius: 18px;
+  gap: var(--space-3);
+  margin-block: var(--space-5) var(--space-6);
+  padding: var(--space-card);
+  border-radius: var(--radius-card);
   border: 1px solid var(--portfolio-surface-border);
   background:
     linear-gradient(
@@ -39,21 +38,21 @@ me [data-chat-moderation-hero] {
 
 me [data-chat-moderation-hero] h1 {
   margin: 0;
-  font-size: clamp(1.75rem, 1.32rem + 1.9vw, 2.4rem);
-  line-height: 1.08;
+  font-size: var(--text-size-hero-sm);
+  line-height: var(--text-line-heading-relaxed);
 }
 
 me [data-chat-moderation-flow] {
   overflow: visible;
   border: 1px dashed var(--ui-border-muted);
-  border-radius: 20px;
-  padding: 1.15rem;
+  border-radius: var(--radius-card);
+  padding: var(--space-card);
   background: var(--ui-surface-card);
 }
 
 me [data-chat-moderation-stack] {
   display: grid;
-  gap: 0.85rem;
+  gap: var(--space-3);
 }
 
 me [data-chat-moderation-card] {
@@ -61,11 +60,11 @@ me [data-chat-moderation-card] {
   border: 1px solid var(--ui-border-soft);
   border-radius: var(--ui-radius-md);
   background: var(--ui-surface-soft);
-  padding: 1rem;
+  padding: var(--space-4);
 }
 
 me [data-chat-moderation-card] > header h3 {
-  margin-bottom: 0.2rem;
+  margin-bottom: var(--space-1);
 }
 
 me [data-chat-moderation-card] .u-muted {
@@ -73,7 +72,7 @@ me [data-chat-moderation-card] .u-muted {
 }
 
 me [data-chat-moderation-flow] .ui-button-row {
-  margin-top: calc(0.75rem - var(--interactive-bleed));
+  margin-top: calc(var(--space-3) - var(--interactive-bleed));
 }
 
 me [data-chat-moderation-card] .button {
@@ -87,18 +86,6 @@ me [data-chat-moderation-card] .button:focus-visible {
 }
 
 @media (max-width: 768px) {
-  me [data-chat-moderation-hero] {
-    margin-top: 0.9rem;
-    margin-bottom: 1.05rem;
-    padding: 0.95rem;
-    border-radius: 16px;
-  }
-
-  me [data-chat-moderation-flow] {
-    padding: 0.9rem;
-    border-radius: 16px;
-  }
-
   me [data-chat-moderation-card] .button {
     width: 100%;
   }

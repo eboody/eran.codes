@@ -16,15 +16,15 @@ me > style + [data-section-header] {
 }
 
 me > style + [data-section-header] :is(h1, h2) {
-  font-size: clamp(1.6rem, 1.15rem + 1.2vw, 2.2rem);
-  line-height: 1.02;
+  font-size: var(--text-size-title-lg);
+  line-height: var(--text-line-title);
 }
 
 me > style + [data-section-header] .u-muted {
   margin: var(--space-1) 0 0;
   max-width: 58ch;
   color: var(--text-muted);
-  font-size: 0.96rem;
+  font-size: var(--text-size-body-lg);
 }
 
 me > style + [data-section-header] + [data-section-meta] {

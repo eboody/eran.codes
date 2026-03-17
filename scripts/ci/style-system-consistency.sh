@@ -219,6 +219,155 @@ if rg --no-heading --line-number '\bdata-muted\b' crates/http/src/views >/dev/nu
   status=1
 fi
 
+if ! python3 - <<'PY'
+from pathlib import Path
+import re
+import sys
+
+allowed_prefixes = (
+    "var(",
+    "inherit",
+    "normal",
+    "unset",
+    "initial",
+    "revert",
+)
+pattern = re.compile(r"^\s*(font-size|line-height|letter-spacing):\s*([^;]+);")
+matches = []
+
+for path in sorted(Path("crates/http/src/views").rglob("*.rs")):
+    for line_no, line in enumerate(path.read_text().splitlines(), start=1):
+        match = pattern.search(line)
+        if not match:
+            continue
+        value = match.group(2).strip()
+        if value.startswith(allowed_prefixes):
+            continue
+        matches.append(f"{path}:{line_no}: {match.group(1)}: {value}")
+
+if matches:
+    print(
+        "crates/http/src/views: typography declarations must resolve through semantic or local token aliases, not raw literals."
+    )
+    for item in matches:
+        print(item)
+    sys.exit(1)
+PY
+then
+  status=1
+fi
+
+if ! python3 - <<'PY'
+from pathlib import Path
+import re
+import sys
+
+target_props = {
+    "gap",
+    "row-gap",
+    "column-gap",
+    "margin",
+    "margin-top",
+    "margin-bottom",
+    "margin-block",
+    "margin-inline",
+    "padding",
+    "padding-top",
+    "padding-bottom",
+    "padding-left",
+    "padding-right",
+    "padding-block",
+    "padding-inline",
+    "padding-inline-end",
+    "outline-offset",
+    "top",
+    "bottom",
+    "left",
+    "right",
+}
+allowed_prefixes = ("var(", "calc(", "clamp(", "min(", "max(")
+pattern = re.compile(r"^\s*([a-zA-Z-]+)\s*:\s*([^;]+);")
+length_pattern = re.compile(r"(?<![\w-])(\d*\.\d+|\d+)(rem|px|em)\b")
+matches = []
+
+for path in sorted(Path("crates/http/src/views").rglob("*.rs")):
+    for line_no, line in enumerate(path.read_text().splitlines(), start=1):
+        stripped = line.strip()
+        match = pattern.match(stripped)
+        if not match:
+            continue
+        prop, value = match.groups()
+        if prop.startswith("--") or prop not in target_props:
+            continue
+        if value.strip().startswith(allowed_prefixes):
+            continue
+        if not length_pattern.search(value):
+            continue
+        matches.append(f"{path}:{line_no}: {prop}: {value.strip()}")
+
+if matches:
+    print(
+        "crates/http/src/views: rhythm and spacing literals should live in shared or local tokens, not direct declarations."
+    )
+    for item in matches:
+        print(item)
+    sys.exit(1)
+PY
+then
+  status=1
+fi
+
+if ! python3 - <<'PY'
+from pathlib import Path
+import re
+import sys
+
+definition_pattern = re.compile(
+    r"^\s*(--_[A-Za-z0-9-]+)\s*:\s*(var\(--[A-Za-z0-9-]+\))\s*;\s*$"
+)
+all_lines = {}
+
+for path in sorted(Path("crates/http/src/views").rglob("*.rs")):
+    all_lines[path] = path.read_text().splitlines()
+
+repo_occurrences = {}
+for lines in all_lines.values():
+    for line in lines:
+        for match in re.finditer(r"--_[A-Za-z0-9-]+", line):
+            name = match.group(0)
+            repo_occurrences[name] = repo_occurrences.get(name, 0) + 1
+
+matches = []
+for path, lines in all_lines.items():
+    for line_no, line in enumerate(lines, start=1):
+        match = definition_pattern.match(line.strip())
+        if not match:
+            continue
+        name, value = match.groups()
+        file_occurrences = sum(1 for candidate in lines if name in candidate)
+        file_definitions = sum(
+            1 for candidate in lines if re.search(rf"^\s*{re.escape(name)}\s*:", candidate.strip())
+        )
+        if file_occurrences != 2:
+            continue
+        if file_definitions != 1:
+            continue
+        if repo_occurrences.get(name, 0) != file_occurrences:
+            continue
+        matches.append(f"{path}:{line_no}: {name}: {value}")
+
+if matches:
+    print(
+        "crates/http/src/views: remove single-use pass-through local aliases that only rename one shared token."
+    )
+    for item in matches:
+        print(item)
+    sys.exit(1)
+PY
+then
+  status=1
+fi
+
 while IFS= read -r spec; do
   if ! jq -e '((.meta.target // []) | index("datastar")) != null' "$spec" >/dev/null 2>&1; then
     continue

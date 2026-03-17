@@ -7,8 +7,8 @@ use crate::views::partials::components::KeyValueList;
 crate::views::scoped::inline_css!(
     r#"
 me {
-  margin-top: 1rem;
-  padding: 1rem 1.15rem;
+  margin-top: var(--space-4);
+  --inset-card-padding: var(--ui-inset-card-padding-cozy);
 }
 
 me > p {

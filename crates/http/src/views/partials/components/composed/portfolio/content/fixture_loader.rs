@@ -1,7 +1,11 @@
 use std::sync::OnceLock;
 
-use super::types::{PortfolioHomeContent, WorkCaseContent, WorkCaseSlug, WorkIndexContent};
-use super::validation::{validate_portfolio_home, validate_work_case, validate_work_index};
+use super::types::{
+    OpenSourceIndexContent, PortfolioHomeContent, WorkCaseContent, WorkCaseSlug, WorkIndexContent,
+};
+use super::validation::{
+    validate_open_source_index, validate_portfolio_home, validate_work_case, validate_work_index,
+};
 
 pub fn portfolio_home_content() -> &'static PortfolioHomeContent {
     static CONTENT: OnceLock<PortfolioHomeContent> = OnceLock::new();
@@ -23,6 +27,18 @@ pub fn work_index_content() -> &'static WorkIndexContent {
             serde_json::from_str(include_str!("work_index.json"))
                 .expect("work_index fixture must be valid JSON");
         validate_work_index(&content);
+        content
+    })
+}
+
+pub fn open_source_index_content() -> &'static OpenSourceIndexContent {
+    static CONTENT: OnceLock<OpenSourceIndexContent> = OnceLock::new();
+
+    CONTENT.get_or_init(|| {
+        let content: OpenSourceIndexContent =
+            serde_json::from_str(include_str!("open_source_index.json"))
+                .expect("open_source_index fixture must be valid JSON");
+        validate_open_source_index(&content);
         content
     })
 }

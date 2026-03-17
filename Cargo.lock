@@ -932,7 +932,7 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "39cab71617ae0d63f51a36d69f866391735b51691dbda63cf6f96d042b63efeb"
 dependencies = [
  "libc",
- "windows-sys 0.52.0",
+ "windows-sys 0.61.2",
 ]
 
 [[package]]
@@ -1517,7 +1517,7 @@ dependencies = [
  "libc",
  "percent-encoding",
  "pin-project-lite",
- "socket2 0.5.10",
+ "socket2 0.6.1",
  "system-configuration 0.6.1",
  "tokio",
  "tower-service",
@@ -1754,7 +1754,7 @@ dependencies = [
  "portable-atomic",
  "portable-atomic-util",
  "serde_core",
- "windows-sys 0.52.0",
+ "windows-sys 0.61.2",
 ]
 
 [[package]]
@@ -1937,6 +1937,8 @@ checksum = "112b39cec0b298b6c1999fee3e31427f74f676e4cb9879ed1a121b43661a4154"
 [[package]]
 name = "macro_registry"
 version = "0.5.5"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "298cc01f0bce179388bed3db5d3994c261209813f916338df14245b8e221043b"
 dependencies = [
  "module_path_extractor",
  "syn 2.0.117",
@@ -2058,6 +2060,8 @@ checksum = "4a0b3262dc837d2513fe2ef31ff8461352ef932dcca31ba0c0abe33547cf6b9b"
 [[package]]
 name = "module_path_extractor"
 version = "0.5.5"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "57810c082eeea2cca7eb910adcbed97691b1dff1b870e782a3cd361c4fa4ce95"
 dependencies = [
  "proc-macro2",
  "syn 2.0.117",
@@ -2565,7 +2569,7 @@ dependencies = [
  "quinn-udp",
  "rustc-hash",
  "rustls",
- "socket2 0.5.10",
+ "socket2 0.6.1",
  "thiserror 2.0.17",
  "tokio",
  "tracing",
@@ -2603,9 +2607,9 @@ dependencies = [
  "cfg_aliases",
  "libc",
  "once_cell",
- "socket2 0.5.10",
+ "socket2 0.6.1",
  "tracing",
- "windows-sys 0.52.0",
+ "windows-sys 0.60.2",
 ]
 
 [[package]]
@@ -2883,7 +2887,7 @@ dependencies = [
  "errno",
  "libc",
  "linux-raw-sys",
- "windows-sys 0.52.0",
+ "windows-sys 0.61.2",
 ]
 
 [[package]]
@@ -2949,7 +2953,7 @@ dependencies = [
  "security-framework 3.5.1",
  "security-framework-sys",
  "webpki-root-certs",
- "windows-sys 0.52.0",
+ "windows-sys 0.61.2",
 ]
 
 [[package]]
@@ -3493,6 +3497,8 @@ checksum = "6ce2be8dc25455e1f91df71bfa12ad37d7af1092ae736f3a6cd0e37bc7810596"
 [[package]]
 name = "statum"
 version = "0.5.5"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "ca99c5ce929e2e11876e3836aeb98863569cab88fcb2f2aa4b4ad8e200f3d489"
 dependencies = [
  "bon",
  "statum-core",
@@ -3502,10 +3508,14 @@ dependencies = [
 [[package]]
 name = "statum-core"
 version = "0.5.5"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "8693b9c1b1bf5e9f3192d4eaf2e3e00c9d610dab96cee9254eab61e325247261"
 
 [[package]]
 name = "statum-macros"
 version = "0.5.5"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "43642f3826c401e60f3a36c6d9b68340570a74b5019ff0fc4211ad4433b7f339"
 dependencies = [
  "macro_registry",
  "moddef 0.2.6",
@@ -3694,10 +3704,10 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "0136791f7c95b1f6dd99f9cc786b91bb81c3800b639b3478e561ddb7be95e5f1"
 dependencies = [
  "fastrand",
- "getrandom 0.3.4",
+ "getrandom 0.4.2",
  "once_cell",
  "rustix",
- "windows-sys 0.52.0",
+ "windows-sys 0.61.2",
 ]
 
 [[package]]
@@ -4539,7 +4549,7 @@ version = "0.1.11"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "c2a7b1c03c876122aa43f3020e6c3c3ee5c05081c9a00739faf7503aeba10d22"
 dependencies = [
- "windows-sys 0.48.0",
+ "windows-sys 0.61.2",
 ]
 
 [[package]]

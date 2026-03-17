@@ -8,6 +8,9 @@ use crate::views::{page, partials};
 crate::views::scoped::inline_css!(
     r#"
 me {
+  --control-font-size: var(--text-size-body-lg);
+  --control-radius: var(--radius-pill);
+
   display: grid;
   gap: var(--space-section);
   align-items: start;
@@ -40,9 +43,9 @@ me [data-home-hero-copy] {
 
 me [data-home-hero-kicker] {
   margin: 0;
-  font-size: 0.74rem;
+  font-size: var(--text-size-label-sm);
   font-weight: 700;
-  letter-spacing: 0.16em;
+  letter-spacing: var(--text-track-caps-widest);
   text-transform: uppercase;
   color: var(--accent-warm);
 }
@@ -50,22 +53,22 @@ me [data-home-hero-kicker] {
 me p {
   margin: 0;
   max-width: 55ch;
-  font-size: clamp(1rem, 0.95rem + 0.25vw, 1.1rem);
+  font-size: var(--text-size-lead);
   color: color-mix(in srgb, var(--text-body) 90%, var(--text-muted) 10%);
 }
 
 me h1 {
   margin: 0;
   max-width: 11ch;
-  font-size: clamp(2.7rem, 1.9rem + 3vw, 4.2rem);
-  line-height: 0.92;
+  font-size: var(--text-size-display-lg);
+  line-height: var(--text-line-tightest);
   text-wrap: balance;
 }
 
 me [data-home-hero-tags] {
   display: flex;
   flex-wrap: wrap;
-  gap: 0.5rem 0.55rem;
+  gap: var(--space-2);
   margin-top: 0;
 }
 
@@ -81,7 +84,7 @@ me [data-home-hero-card] {
   align-content: start;
   inline-size: min(100%, 22rem);
   padding: clamp(1.2rem, 0.95rem + 0.8vw, 1.75rem);
-  border-radius: calc(var(--radius-card) - 2px);
+  border-radius: var(--ui-radius-md);
   border: 1px solid color-mix(in srgb, var(--accent-warm) 14%, var(--border-default));
   background:
     linear-gradient(
@@ -95,9 +98,9 @@ me [data-home-hero-card] {
 
 me [data-home-hero-card] h3 {
   margin: 0;
-  font-size: 0.74rem;
+  font-size: var(--text-size-label-sm);
   font-weight: 700;
-  letter-spacing: 0.14em;
+  letter-spacing: var(--text-track-caps-wider);
   text-transform: uppercase;
   color: var(--text-subtle);
 }
@@ -106,11 +109,35 @@ me [data-home-hero-card] .u-muted {
   color: color-mix(in srgb, var(--text-muted) 94%, var(--text-body) 6%);
 }
 
-me [data-button-row] {
+me [data-home-hero-copy] [data-button-row] {
   width: fit-content;
   margin-top: var(--space-1);
   padding-top: var(--space-3);
   border-top: 1px solid color-mix(in srgb, var(--border-subtle) 82%, transparent);
+}
+
+me [data-home-hero-card] [data-button-row] {
+  width: 100%;
+  margin: var(--space-2) 0 0 0;
+  padding: var(--space-2);
+  border: 1px solid color-mix(in srgb, var(--accent-warm) 16%, var(--border-subtle));
+  border-radius: var(--ui-radius-md);
+  background:
+    linear-gradient(
+      180deg,
+      color-mix(in srgb, white 26%, transparent),
+      transparent 60%
+    ),
+    color-mix(in srgb, var(--surface-field) 76%, var(--surface-raised));
+  box-shadow: inset 0 1px 0 var(--surface-edge-soft);
+}
+
+me [data-home-hero-card] [data-button-row] > * {
+  flex: 1 1 10rem;
+}
+
+me [data-home-hero-card] [data-button-row] :where(a.button, button, .button) {
+  width: 100%;
 }
 
 @media (min-width: 62rem) {
@@ -150,12 +177,20 @@ me [data-button-row] {
       inset 0 1px 0 var(--surface-edge-default),
       0 12px 20px color-mix(in srgb, black 24%, transparent);
   }
+
+  me [data-home-hero-card] [data-button-row] {
+    border-color: color-mix(in srgb, var(--accent-warm) 24%, var(--border-default));
+    background:
+      linear-gradient(180deg, var(--surface-wash-top-soft), transparent 46%),
+      color-mix(in srgb, var(--surface-field) 92%, black 8%);
+    box-shadow: inset 0 1px 0 var(--surface-edge-soft);
+  }
 }
 
 @media (max-width: 48rem) {
   me {
     padding: var(--space-card);
-    gap: var(--size-5);
+    gap: var(--space-5);
   }
 
   me [data-home-hero-copy] {
@@ -164,28 +199,28 @@ me [data-button-row] {
   }
 
   me h1 {
+    font-size: var(--text-size-display-md);
     max-width: 9ch;
-    font-size: clamp(2.15rem, 1.55rem + 3.4vw, 3rem);
   }
 
   me p {
-    font-size: 0.98rem;
+    font-size: var(--text-size-body-lg);
   }
 
   me [data-home-hero-card] {
     inline-size: 100%;
   }
 
-  me [data-button-row] {
+  me [data-home-hero-copy] [data-button-row] {
     width: 100%;
     padding-top: var(--space-2);
   }
 
-  me [data-button-row] > * {
+  me [data-home-hero-copy] [data-button-row] > * {
     flex: 1 1 12rem;
   }
 
-  me [data-button-row] :where(a.button, button, .button) {
+  me [data-home-hero-copy] [data-button-row] :where(a.button, button, .button) {
     width: 100%;
   }
 }
@@ -195,7 +230,7 @@ me [data-button-row] {
     max-width: 8ch;
   }
 
-  me [data-button-row] > * {
+  me [data-home-hero-copy] [data-button-row] > * {
     flex-basis: 100%;
   }
 }
@@ -245,10 +280,14 @@ impl Render for HomeHero {
                     @if let Some(user) = &self.user {
                         p { "Signed in as " strong { (&user.username) } "." }
                         p class="u-muted" { (&user.email) }
-                        (partials::button::Button::builder()
-                            .label(Text::from("Open account"))
-                            .variant(partials::button::Variant::Primary)
-                            .role(partials::button::Role::link(Route::Protected.as_str()))
+                        (partials::button::Row::builder()
+                            .items(vec![
+                                partials::button::Button::builder()
+                                    .label(Text::from("Open account"))
+                                    .variant(partials::button::Variant::Primary)
+                                    .role(partials::button::Role::link(Route::Protected.as_str()))
+                                    .build(),
+                            ])
                             .build())
                     } @else {
                         p { "No active session." }

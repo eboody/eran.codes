@@ -5,6 +5,8 @@ use serde::Deserialize;
 use crate::paths::Route;
 use crate::types::Text;
 
+use super::crate_gallery;
+
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Deserialize)]
 #[serde(rename_all = "snake_case")]
 pub enum WorkCaseSlug {
@@ -126,6 +128,8 @@ pub struct WorkSectionContent {
 pub struct CrateCardContent {
     pub name: Text,
     pub summary: Text,
+    pub highlights: Vec<Text>,
+    pub gallery: Option<crate_gallery::CrateGalleryContent>,
     pub repository_url: Text,
     pub repository_label: Text,
     pub docs_url: Option<Text>,
@@ -165,9 +169,17 @@ pub struct WorkIndexContent {
     pub eyebrow: Text,
     pub title: Text,
     pub summary: Text,
+    pub cases_title: Text,
+    pub cases_subtitle: Text,
     pub cases: Vec<WorkCardContent>,
-    #[serde(default)]
-    pub actions: Vec<CmsActionLink>,
+    pub open_source_teaser: ClosingContent,
+}
+
+#[derive(Clone, Debug, Deserialize)]
+pub struct OpenSourceIndexContent {
+    pub page_title: Text,
+    pub hero: PortfolioHeroContent,
+    pub crate_section: CrateSectionContent,
 }
 
 #[derive(Clone, Debug, Deserialize)]

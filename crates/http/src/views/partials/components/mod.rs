@@ -20,5 +20,5 @@ pub use composed::{
     SectionHeaderMetaText, StatusCard, StatusCardItem,
 };
 pub use logs::primitives::EmptyState;
-pub use primitives::{BadgeKind, KeyValueList, Pill};
+pub use primitives::{BadgeKind, CodeBlock, KeyValueList, Pill};
 pub(crate) use primitives::{Tab, TabInteraction};

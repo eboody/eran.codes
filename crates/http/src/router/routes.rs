@@ -141,6 +141,10 @@ fn pages_routes() -> Router {
         .route(Route::Lab.as_str(), get(crate::handlers::pages::lab))
         .route(Route::Work.as_str(), get(crate::handlers::pages::work))
         .route(
+            Route::OpenSource.as_str(),
+            get(crate::handlers::pages::open_source),
+        )
+        .route(
             Route::WorkChatRealtime.as_str(),
             get(crate::handlers::pages::work_chat_realtime),
         )

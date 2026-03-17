@@ -32,11 +32,6 @@ impl Icon {
             color: None,
         }
     }
-
-    pub(crate) fn with_color(mut self, color: ThemeColor) -> Self {
-        self.color = Some(color);
-        self
-    }
 }
 
 impl<'de> Deserialize<'de> for Icon {

@@ -7,8 +7,8 @@ use crate::views::partials::components::EmptyState;
 crate::views::scoped::inline_css!(
     r#"
 me {
-  margin-top: 1rem;
-  padding: 1rem 1.15rem;
+  margin-top: var(--space-4);
+  --inset-card-padding: var(--ui-inset-card-padding-cozy);
   color: color-mix(in srgb, var(--ui-text-muted) 94%, var(--ui-text) 6%);
 }
 "#

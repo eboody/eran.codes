@@ -23,6 +23,7 @@ impl Render for WorkCase {
             .title(&content.page_title.to_string())
             .content(body)
             .nav_mode(page::NavMode::Portfolio)
+            .current_route(crate::paths::Route::Work)
             .build()
             .render()
     }

@@ -28,19 +28,18 @@ pub(crate) struct Label {
     pub secondary: Option<Text>,
 }
 
-impl Label {
-    pub(crate) fn text(&self) -> Text {
-        self.secondary
-            .as_ref()
-            .map(|secondary| Text::from(format!("{} {}", self.primary, secondary)))
-            .unwrap_or_else(|| self.primary.clone())
-    }
+#[derive(Debug, Clone, Deserialize)]
+pub(crate) struct Preview {
+    #[serde(default)]
+    pub code_examples: Vec<CodeExample>,
+    pub image: Option<Image>,
+    pub badge: Option<Badge>,
 }
 
 #[derive(Debug, Clone, Deserialize)]
-pub(crate) struct Preview {
-    pub image: Option<Image>,
-    pub badge: Option<Badge>,
+pub(crate) struct CodeExample {
+    pub label: Option<Text>,
+    pub code: Text,
 }
 
 #[derive(Debug, Clone, Deserialize)]

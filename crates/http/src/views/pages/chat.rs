@@ -10,7 +10,7 @@ me {
   display: grid;
   gap: var(--space-section);
   margin-top: clamp(1.1rem, 0.9rem + 0.9vw, 1.8rem);
-  padding-bottom: calc(var(--space-section) + var(--size-6));
+  padding-bottom: calc(var(--space-section) + var(--space-6));
 }
 
 me > :where(header, section) {

@@ -5,7 +5,7 @@ crate::views::scoped::inline_css!(
 me {
   --inset-card-border: var(--ui-text-danger);
   --inset-card-bg: var(--ui-surface-danger);
-  padding: 1rem 1.15rem;
+  --inset-card-padding: var(--ui-inset-card-padding-cozy);
 }
 
 me strong {

@@ -13,7 +13,8 @@ pub(crate) struct Tab {
     pub palette: &'static Palette,
     pub is_selected: bool,
     pub icon: Option<Icon>,
-    pub text: Text,
+    pub primary_text: Text,
+    pub secondary_text: Option<Text>,
     pub interaction: TabInteraction,
 }
 
@@ -25,22 +26,8 @@ pub(crate) enum TabInteraction {
 impl Render for Tab {
     fn render(&self) -> maud::Markup {
         let tab_index = if self.is_selected { 0 } else { -1 };
-        let foreground_color = if self.is_selected {
-            self.palette.lighter.clone()
-        } else {
-            self.palette.main.clone()
-        };
-
-        let icon = self
-            .icon
-            .as_ref()
-            .map(|icon| icon.clone().with_color(foreground_color.clone()));
-
-        let style = format!(
-            "--tab-accent: {}; --tab-fg: {};",
-            self.palette.main.as_ref(),
-            foreground_color.as_ref()
-        );
+        let icon = self.icon.clone();
+        let style = format!("--tab-accent: {};", self.palette.main.as_ref());
 
         match &self.interaction {
             TabInteraction::DatastarLocal { signal, value } => {
@@ -63,7 +50,7 @@ impl Render for Tab {
                         data-attr:tabindex=(tabindex_attr)
                         data-on:click=(click_expr)
                         style=(style) {
-                        (render_content(&icon, &self.text))
+                        (render_content(&icon, &self.primary_text, self.secondary_text.as_ref()))
                     }
                 }
             }
@@ -71,12 +58,21 @@ impl Render for Tab {
     }
 }
 
-fn render_content(icon: &Option<Icon>, text: &Text) -> maud::Markup {
+fn render_content(
+    icon: &Option<Icon>,
+    primary_text: &Text,
+    secondary_text: Option<&Text>,
+) -> maud::Markup {
     maud::html! {
         @if let Some(icon) = icon {
             span class="tab-set__tab-icon" { (icon) }
         }
-        span class="tab-set__tab-line" { (text) }
+        span class="tab-set__tab-label" {
+            span class="tab-set__tab-line" { (primary_text) }
+            @if let Some(secondary_text) = secondary_text {
+                span class="tab-set__tab-secondary" { (secondary_text) }
+            }
+        }
     }
 }
 

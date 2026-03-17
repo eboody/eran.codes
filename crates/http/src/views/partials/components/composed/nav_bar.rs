@@ -7,21 +7,8 @@ use crate::types::Text;
 crate::views::scoped::inline_css!(
     r#"
 me {
-  --_nav-shell-padding-block: 0.8rem;
-  --_nav-shell-padding-inline: 1rem;
-  --_nav-shell-radius: var(--ui-radius-md);
-  --_nav-shell-radius-compact: calc(var(--ui-radius-md) - 2px);
-  --_nav-link-padding-block: calc(var(--control-padding-block) - 0.25rem);
-  --_nav-link-padding-inline: calc(var(--control-padding-inline) - 0.3rem);
-  --_nav-link-radius: calc(var(--control-radius) - 2px);
-  --_nav-link-font-size: 0.84rem;
-  --_nav-action-padding-block: var(--control-padding-block-compact);
-  --_nav-action-padding-inline: var(--control-padding-inline-compact);
-  --_nav-action-font-size: var(--control-font-size-compact);
-  --_nav-brand-gap: var(--control-gap);
-  --_nav-brand-focus-radius: calc(var(--control-radius) - 2px);
-  --_nav-brand-font-family: var(--ui-font-display);
-
+  --_nav-shell-padding: 0.8rem 1rem;
+  --_nav-link-font-size: var(--text-size-meta-lg);
   position: sticky;
   top: var(--nav-sticky-offset);
   z-index: 20;
@@ -36,9 +23,8 @@ me > [data-nav] {
   position: relative;
   isolation: isolate;
   gap: var(--space-2) var(--space-4);
-  padding-block: var(--_nav-shell-padding-block);
-  padding-inline: var(--_nav-shell-padding-inline);
-  border-radius: var(--_nav-shell-radius);
+  padding: var(--_nav-shell-padding);
+  border-radius: var(--ui-radius-md);
   border: 1px solid var(--border-default);
   background: var(--surface-fill-panel);
   box-shadow: var(--shadow-panel);
@@ -56,9 +42,10 @@ me [data-nav-list] {
 
 me [data-nav-link] {
   margin-bottom: 0;
-  padding-block: var(--_nav-link-padding-block);
-  padding-inline: var(--_nav-link-padding-inline);
-  border-radius: var(--_nav-link-radius);
+  padding-block: calc(var(--control-padding-block) - 0.25rem);
+  padding-inline: calc(var(--control-padding-inline) - 0.3rem);
+  border-radius: calc(var(--control-radius) - 2px);
+  border: 1px solid transparent;
   font-size: var(--_nav-link-font-size);
   position: relative;
   z-index: 0;
@@ -68,6 +55,21 @@ me [data-nav-link] {
     color var(--motion-fast),
     background-color var(--motion-fast),
     transform var(--motion-fast);
+}
+
+me [data-nav-link][aria-current="page"] {
+  color: var(--text-strong);
+  border-color: color-mix(in srgb, var(--accent-signal) 30%, var(--border-default));
+  background:
+    linear-gradient(
+      180deg,
+      color-mix(in srgb, var(--accent-signal-soft) 42%, transparent),
+      transparent 78%
+    ),
+    color-mix(in srgb, var(--surface-panel) 94%, var(--accent-signal-soft));
+  box-shadow:
+    inset 0 1px 0 var(--surface-edge-default),
+    0 0 0 1px color-mix(in srgb, var(--accent-signal) 10%, transparent);
 }
 
 me [data-nav-link]:focus-visible {
@@ -87,7 +89,7 @@ me [data-nav-brand] {
 me [data-nav-brand-link] {
   display: inline-flex;
   align-items: center;
-  gap: var(--_nav-brand-gap);
+  gap: var(--control-gap);
   position: relative;
   z-index: 0;
   color: var(--text-strong);
@@ -99,8 +101,8 @@ me [data-nav-brand-link] {
 
 me [data-nav-brand-link]:focus-visible {
   outline: 2px solid color-mix(in srgb, var(--accent-signal) 64%, white);
-  outline-offset: 0.35rem;
-  border-radius: var(--_nav-brand-focus-radius);
+  outline-offset: var(--interactive-bleed);
+  border-radius: calc(var(--control-radius) - 2px);
   z-index: 1;
 }
 
@@ -150,11 +152,11 @@ me [data-nav-brand-mark] {
 }
 
 me [data-nav-brand-text] {
-  font-family: var(--_nav-brand-font-family);
-  font-size: 1.08rem;
+  font-family: var(--ui-font-display);
+  font-size: var(--text-size-body-xl);
   font-weight: 600;
-  letter-spacing: -0.02em;
-  line-height: 1;
+  letter-spacing: var(--text-track-tight);
+  line-height: var(--text-line-flat);
 }
 
 me [data-nav-list='primary'] {
@@ -176,7 +178,7 @@ me [data-nav-list='auth'] li {
 }
 
 me [data-nav-auth-text] {
-  font-size: 0.84rem;
+  font-size: var(--_nav-link-font-size);
   color: var(--text-muted);
 }
 
@@ -189,13 +191,13 @@ me [data-nav-list='auth'] :where(button, [data-nav-link]) {
 }
 
 me [data-nav-auth-action] {
-  --_button-padding-block: var(--_nav-action-padding-block);
-  --_button-padding-inline: var(--_nav-action-padding-inline);
-  --_button-font-size: var(--_nav-action-font-size);
+  --_button-padding-block: var(--control-padding-block-compact);
+  --_button-padding-inline: var(--control-padding-inline-compact);
+  --_button-font-size: var(--control-font-size-compact);
 }
 
 @media (hover: hover) {
-  me [data-nav-link]:hover {
+  me [data-nav-link]:not([aria-current="page"]):hover {
     color: var(--text-strong);
     background: var(--accent-signal-soft);
     z-index: 1;
@@ -208,16 +210,16 @@ me [data-nav-auth-action] {
 
 @media (max-width: 48rem) {
   me {
-    top: 0.35rem;
-    --_nav-shell-padding-block: 0.65rem;
-    --_nav-shell-padding-inline: 0.8rem;
-    --_nav-link-font-size: 0.78rem;
+    --_nav-shell-padding: 0.65rem 0.8rem;
+    top: var(--interactive-bleed);
+    --_nav-link-font-size: var(--text-size-meta-xs);
   }
 
   me > [data-nav] {
     grid-template-columns: minmax(0, 1fr) auto;
-    border-radius: var(--_nav-shell-radius-compact);
-    gap: 0.45rem 0.75rem;
+    padding: var(--_nav-shell-padding);
+    border-radius: var(--ui-radius-md-inset);
+    gap: var(--space-2) var(--space-3);
   }
 
   me [data-nav-list='primary'] {
@@ -225,7 +227,7 @@ me [data-nav-auth-action] {
     justify-content: flex-start;
     overflow-x: auto;
     flex-wrap: nowrap;
-    padding-bottom: 0.15rem;
+    padding-bottom: calc(var(--interactive-bleed) * 0.5);
     scrollbar-width: thin;
   }
 
@@ -242,7 +244,11 @@ me [data-nav-auth-action] {
   }
 
   me [data-nav-brand-text] {
-    font-size: 0.96rem;
+    font-size: var(--text-size-body-lg);
+  }
+
+  me [data-nav-link][aria-current="page"] {
+    box-shadow: inset 0 1px 0 var(--surface-edge-default);
   }
 }
 
@@ -270,6 +276,8 @@ pub struct NavLink {
     pub href: Text,
     #[builder(default)]
     pub external: bool,
+    #[builder(default)]
+    pub active: bool,
 }
 
 impl Render for NavLink {
@@ -281,8 +289,14 @@ impl Render for NavLink {
                         (&self.label)
                     }
                 } @else {
-                    a data-nav-link href=(&self.href) {
-                        (&self.label)
+                    @if self.active {
+                        a data-nav-link href=(&self.href) aria-current="page" {
+                            (&self.label)
+                        }
+                    } @else {
+                        a data-nav-link href=(&self.href) {
+                            (&self.label)
+                        }
                     }
                 }
             }

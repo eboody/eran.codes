@@ -26,8 +26,6 @@ crate::views::scoped::inline_css!(
 me {
   --chat-space-1: var(--space-1);
   --chat-space-2: var(--space-2);
-  --chat-space-4: var(--space-card);
-  --chat-space-5: calc(var(--space-card) + var(--space-1));
   --chat-gap-columns: var(--space-3);
   --chat-window-height: clamp(15.5rem, 38vh, 21.25rem);
 
@@ -36,13 +34,15 @@ me {
   --chat-send-min-width: 7.25rem;
   --chat-readonly-pad-inline: 0.8rem;
 
-  --chat-font-label: 0.74rem;
-  --chat-font-micro: 0.66rem;
-  --chat-font-status: 0.64rem;
-  --chat-font-avatar: 0.68rem;
-  --chat-font-body: 0.92rem;
-  --chat-font-body-sm: 0.88rem;
-  --chat-line-body: 1.38;
+  --chat-font-label: var(--text-size-label-sm);
+  --chat-font-micro: var(--text-size-label-2xs);
+  --chat-font-status: var(--text-size-label-2xs);
+  --chat-font-avatar: var(--text-size-label-2xs);
+  --chat-font-body: var(--text-size-body-md);
+  --chat-font-body-sm: var(--text-size-body-sm);
+  --chat-line-body: var(--text-line-summary);
+  --chat-track-label: var(--text-track-fixed-sm);
+  --chat-line-meta: var(--text-line-control);
 
   --chat-space-dot-gap: 0.22rem;
   --chat-live-dot-size: 0.45rem;
@@ -113,7 +113,7 @@ me [data-chat-connection-row] {
   display: flex;
   flex-wrap: wrap;
   align-items: center;
-  gap: 0.4rem;
+  gap: var(--space-2);
   margin: 0;
 }
 
@@ -159,7 +159,7 @@ me > [data-chat-columns] > [data-chat-panel] > [data-chat-compose] > label > [da
   margin: 0;
   font-size: var(--chat-font-label);
   font-weight: 700;
-  letter-spacing: 0.05rem;
+  letter-spacing: var(--chat-track-label);
   text-transform: uppercase;
   color: color-mix(in srgb, var(--text-subtle) 92%, var(--text-body) 8%);
 }
@@ -215,7 +215,7 @@ me [data-chat-window] > header {
 me [data-chat-window] > header > [data-chat-role] {
   font-size: var(--chat-font-label);
   font-weight: 700;
-  letter-spacing: 0.04rem;
+  letter-spacing: var(--chat-track-label);
   text-transform: uppercase;
   color: var(--chat-shell-title);
 }
@@ -226,7 +226,7 @@ me [data-chat-window] > header > [data-chat-room-state="live"] {
   gap: var(--chat-space-dot-gap);
   font-size: var(--chat-font-micro);
   font-weight: 700;
-  letter-spacing: 0.05rem;
+  letter-spacing: var(--chat-track-label);
   text-transform: uppercase;
   color: var(--chat-shell-live);
 }
@@ -235,7 +235,7 @@ me [data-chat-window] > header > [data-chat-room-state="live"]::before {
   content: "";
   width: var(--chat-live-dot-size);
   height: var(--chat-live-dot-size);
-  border-radius: 999px;
+  border-radius: var(--radius-pill);
   background: var(--chat-shell-live-dot);
   box-shadow: 0 0 0 var(--chat-live-dot-ring-size) var(--chat-shell-live-ring);
 }
@@ -243,7 +243,7 @@ me [data-chat-window] > header > [data-chat-room-state="live"]::before {
 me [data-chat-window] > header > [data-chat-room-state="offline"] {
   font-size: var(--chat-font-micro);
   font-weight: 700;
-  letter-spacing: 0.05rem;
+  letter-spacing: var(--chat-track-label);
   text-transform: uppercase;
   color: color-mix(in srgb, var(--text-subtle) 90%, var(--chat-shell-title) 10%);
 }
@@ -278,7 +278,7 @@ me [data-chat-feed] > [data-chat-messages][data-chat-side="right"] > [data-chat-
 me [data-chat-feed] > [data-chat-messages] > [data-chat-message] > [data-chat-avatar] {
   width: var(--chat-avatar-size);
   height: var(--chat-avatar-size);
-  border-radius: 999px;
+  border-radius: var(--radius-pill);
   display: inline-flex;
   align-items: center;
   justify-content: center;
@@ -329,15 +329,15 @@ me [data-chat-feed] > [data-chat-messages] > [data-chat-message] > [data-chat-bu
 
 me [data-chat-feed] > [data-chat-messages] > [data-chat-message] > [data-chat-bubble] > [data-chat-meta] > [data-chat-timestamp] {
   font-size: var(--chat-font-micro);
-  line-height: 1.1;
+  line-height: var(--chat-line-meta);
   color: var(--chat-meta-fg-muted);
 }
 
 me [data-chat-feed] > [data-chat-messages] > [data-chat-message] > [data-chat-bubble] > [data-chat-meta] > [data-chat-status] {
   font-size: var(--chat-font-status);
-  line-height: 1.1;
-  padding: 0.1rem 0.32rem;
-  border-radius: 999px;
+  line-height: var(--chat-line-meta);
+  padding: 0 var(--space-1);
+  border-radius: var(--radius-pill);
   border: 1px solid color-mix(in srgb, var(--border-default) 92%, transparent);
   background: color-mix(in srgb, var(--surface-panel) 76%, transparent);
   color: color-mix(in srgb, var(--text-subtle) 92%, var(--text-body) 8%);
@@ -373,8 +373,6 @@ me [data-chat-feed] > [data-chat-messages] > [data-chat-message] > [data-chat-bu
 
 @media (max-width: 768px) {
   me {
-    --chat-space-4: 1rem;
-    --chat-space-5: 1.1rem;
     --chat-window-height: clamp(14rem, 35vh, 17.875rem);
   }
 }

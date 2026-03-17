@@ -4,7 +4,7 @@ use super::{LeadCopy, SectionCopy, Surface, render_actions};
 use crate::types::Text;
 use crate::views::partials;
 use crate::views::partials::components::portfolio::content::{
-    WorkCardContent, WorkIndexContent, WorkSectionContent,
+    ClosingContent, WorkCardContent, WorkIndexContent, WorkSectionContent,
 };
 
 pub struct WorkSection<'a> {
@@ -20,11 +20,6 @@ impl Render for WorkSection<'_> {
                     subtitle: &self.content.subtitle,
                 })
                 (WorkCards { cards: &self.content.cards })
-                @if !self.content.actions.is_empty() {
-                    div class="ui-portfolio-section-actions" {
-                        (render_actions(&self.content.actions))
-                    }
-                }
             }))
         }
     }
@@ -46,18 +41,27 @@ impl Render for WorkIndexSection<'_> {
             }).extra_class("ui-portfolio-lead-surface"))
             (Surface::section(maud::html! {
                 (SectionCopy {
-                    title: &self.content.title,
-                    subtitle: &self.content.summary,
+                    title: &self.content.cases_title,
+                    subtitle: &self.content.cases_subtitle,
                 })
-                (WorkCards {
-                    cards: &self.content.cases,
-                })
-                @if !self.content.actions.is_empty() {
-                    div class="ui-portfolio-section-actions" {
-                        (render_actions(&self.content.actions))
-                    }
-                }
-            }))
+                (WorkCards { cards: &self.content.cases })
+            }).extra_class("ui-portfolio-case-section"))
+        }
+    }
+}
+
+pub struct SupportingTeaserSection<'a> {
+    pub content: &'a ClosingContent,
+}
+
+impl Render for SupportingTeaserSection<'_> {
+    fn render(&self) -> maud::Markup {
+        maud::html! {
+            (Surface::section(maud::html! {
+                h2 { (&self.content.title) }
+                p class="ui-portfolio-summary" { (&self.content.summary) }
+                (render_actions(&self.content.actions))
+            }).extra_class("ui-portfolio-supporting-teaser"))
         }
     }
 }
@@ -87,36 +91,23 @@ impl Render for WorkCard<'_> {
         let route = self.content.slug.route();
 
         maud::html! {
-            article class="ui-portfolio-card" {
+            article class="ui-portfolio-card ui-portfolio-work-card u-inset-card" {
                 p class="ui-portfolio-card-kicker" { (&self.content.category) }
                 h3 { (&self.content.title) }
-                p class="ui-portfolio-card-summary" { (&self.content.summary) }
                 @if let Some(outcome) = &self.content.outcome {
-                    p class="ui-portfolio-card-outcome" { "Outcome: " (outcome) }
-                }
-                @if let Some(preview) = &self.content.preview {
-                    p class="ui-portfolio-card-preview" {
-                        span class="ui-portfolio-preview-key" { (&preview.asset_ref) }
-                        span class="ui-portfolio-preview-alt" { (&preview.alt) }
+                    p class="ui-portfolio-card-outcome" {
+                        span class="ui-portfolio-card-outcome-label" { "Outcome" }
+                        span class="ui-portfolio-card-outcome-text" { (outcome) }
                     }
                 }
-                @if !self.content.stack_tags.is_empty() {
-                    ul class="ui-portfolio-badges" {
-                        @for tag in &self.content.stack_tags {
-                            li { (tag) }
-                        }
-                    }
+                p class="ui-portfolio-card-summary" { (&self.content.summary) }
+                div class="ui-portfolio-work-card-footer" {
+                    (partials::button::Button::builder()
+                        .label(self.content.cta_label.clone())
+                        .variant(partials::button::Variant::Secondary)
+                        .role(partials::button::Role::link(Text::from(route.to_string())))
+                        .build())
                 }
-                ul class="ui-portfolio-list" {
-                    @for item in &self.content.highlights {
-                        li { (item) }
-                    }
-                }
-                (partials::button::Button::builder()
-                    .label(self.content.cta_label.clone())
-                    .variant(partials::button::Variant::Secondary)
-                    .role(partials::button::Role::link(Text::from(route.to_string())))
-                    .build())
             }
         }
     }

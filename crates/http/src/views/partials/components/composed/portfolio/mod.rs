@@ -5,8 +5,8 @@ crate::views::scoped::inline_css!(
 me {
   display: grid;
   gap: clamp(1.35rem, 1rem + 1.2vw, 2.3rem);
-  margin-top: var(--size-5);
-  padding-bottom: var(--size-8);
+  margin-top: var(--space-5);
+  padding-bottom: var(--space-8);
 }
 
 me .ui-portfolio-surface {
@@ -15,7 +15,7 @@ me .ui-portfolio-surface {
 }
 
 me .ui-portfolio-hero {
-  padding: var(--size-7);
+  padding: var(--space-7);
   border-radius: var(--radius-5);
   background:
     linear-gradient(
@@ -28,19 +28,20 @@ me .ui-portfolio-hero {
 
 me .ui-portfolio-lead-surface {
   align-content: start;
+  gap: clamp(0.85rem, 0.72rem + 0.45vw, 1.15rem);
 }
 
 me .ui-portfolio-lead-surface h1 {
-  max-width: 14ch;
-  font-size: clamp(2.35rem, 1.75rem + 2.35vw, 3.6rem);
-  line-height: 0.95;
+  max-width: 17ch;
+  font-size: var(--text-size-hero-lg);
+  line-height: var(--text-line-tight);
   text-wrap: balance;
 }
 
 me .ui-portfolio-eyebrow {
   margin: 0;
-  font-size: 0.8rem;
-  letter-spacing: 0.08em;
+  font-size: var(--text-size-meta-sm);
+  letter-spacing: var(--text-track-caps-sm);
   text-transform: uppercase;
   color: var(--ui-text-muted);
 }
@@ -53,7 +54,7 @@ me .ui-portfolio-summary {
 
 me .ui-portfolio-section-copy {
   display: grid;
-  gap: var(--size-2);
+  gap: var(--space-2);
 }
 
 me .ui-portfolio-section-copy h2,
@@ -72,32 +73,31 @@ me .ui-portfolio-badges {
   list-style: none;
   display: flex;
   flex-wrap: wrap;
-  gap: var(--size-2);
+  gap: var(--space-2);
 }
 
 me .ui-portfolio-badges li {
   border: var(--border-size-1) solid var(--ui-border-soft);
-  border-radius: var(--radius-4);
-  padding: var(--size-1) var(--size-2);
+  border-radius: var(--radius-pill);
+  padding: var(--space-1) var(--space-2);
   background: var(--ui-surface-soft);
-  font-size: 0.78rem;
+  font-size: var(--text-size-meta-xs);
   color: var(--ui-text-muted);
 }
 
 me .ui-portfolio-proof-strip {
   display: grid;
-  gap: var(--size-3);
+  gap: var(--space-3);
 }
 
 me .ui-portfolio-proof-item {
-  padding: var(--size-3);
-  border-radius: var(--ui-radius-md);
-  border: var(--border-size-1) solid var(--ui-border-soft);
-  background: var(--ui-surface-soft);
+  --inset-card-padding: var(--space-3);
+  --inset-card-border: var(--ui-border-soft);
+  --inset-card-bg: var(--ui-surface-soft);
 }
 
 me .ui-portfolio-proof-item h3 {
-  margin: 0 0 var(--size-2) 0;
+  margin: 0 0 var(--space-2) 0;
 }
 
 me .ui-portfolio-proof-item p {
@@ -115,25 +115,30 @@ me .ui-portfolio-proof-item[data-proof-kind="reliability"] {
 
 me .ui-portfolio-card-grid {
   display: grid;
-  gap: var(--size-3);
+  gap: var(--space-3);
   grid-template-columns: repeat(auto-fit, minmax(min(100%, 18rem), 1fr));
 }
 
-me .ui-portfolio-card {
+me .ui-portfolio-showcase-stack {
   display: grid;
-  gap: var(--size-2);
+  gap: clamp(1.1rem, 0.95rem + 0.8vw, 1.9rem);
+}
+
+me .ui-portfolio-card {
+  --inset-card-padding: var(--space-4);
+  --inset-card-border: var(--ui-border-soft);
+  --inset-card-bg: var(--ui-surface-soft);
+
+  display: grid;
+  gap: var(--space-2);
   align-content: start;
-  padding: var(--size-4);
-  border-radius: var(--ui-radius-md);
-  border: var(--border-size-1) solid var(--ui-border-soft);
-  background: var(--ui-surface-soft);
   overflow: visible;
 }
 
 me .ui-portfolio-card-kicker {
   margin: 0;
-  font-size: 0.78rem;
-  letter-spacing: 0.08em;
+  font-size: var(--text-size-meta-xs);
+  letter-spacing: var(--text-track-caps-sm);
   text-transform: uppercase;
   color: var(--ui-text-muted);
 }
@@ -147,47 +152,72 @@ me .ui-portfolio-card-summary {
   color: var(--ui-text-muted);
 }
 
+me .ui-portfolio-work-card {
+  gap: var(--space-3);
+}
+
+me .ui-portfolio-work-card .ui-portfolio-card-kicker {
+  color: color-mix(in srgb, var(--accent-signal) 52%, var(--ui-text-muted));
+}
+
+me .ui-portfolio-work-card h3 {
+  font-size: var(--text-size-title-sm);
+  line-height: var(--text-line-heading);
+  text-wrap: balance;
+}
+
+me .ui-portfolio-work-card .ui-portfolio-card-summary {
+  max-width: 40ch;
+}
+
 me .ui-portfolio-card-outcome {
   margin: 0;
-  padding: var(--size-2);
-  border-radius: var(--ui-radius-sm);
-  border: var(--border-size-1) solid
-    color-mix(in srgb, var(--portfolio-accent-a) 42%, transparent);
-  background: color-mix(in srgb, var(--portfolio-accent-a) 12%, transparent);
-  font-size: 0.85rem;
-}
-
-me .ui-portfolio-card-preview {
   display: grid;
-  gap: var(--size-1);
-  margin: 0;
-  padding: var(--size-2);
-  border-radius: var(--ui-radius-sm);
-  border: var(--border-size-1) dashed var(--ui-border-soft);
-  background: var(--ui-surface-soft-alt);
+  gap: var(--space-1);
+  padding: var(--space-3);
+  border-radius: var(--ui-radius-md-inset);
+  border: var(--border-size-1) solid
+    color-mix(in srgb, var(--portfolio-accent-a) 48%, transparent);
+  background:
+    linear-gradient(
+      180deg,
+      color-mix(in srgb, var(--portfolio-accent-a) 15%, transparent),
+      transparent 100%
+    ),
+    color-mix(in srgb, var(--portfolio-accent-a) 14%, transparent);
+  box-shadow: inset 0 1px 0 color-mix(in srgb, white 28%, transparent);
+  font-size: var(--text-size-body-md);
+  line-height: var(--text-line-body);
 }
 
-me .ui-portfolio-preview-key {
-  font-family: var(--ui-font-mono);
-  font-size: 0.76rem;
-}
-
-me .ui-portfolio-preview-alt {
-  font-size: 0.8rem;
+me .ui-portfolio-card-outcome-label {
+  font-size: var(--text-size-label-2xs);
+  font-weight: 600;
+  letter-spacing: var(--text-track-caps-md);
+  text-transform: uppercase;
   color: var(--ui-text-muted);
+}
+
+me .ui-portfolio-card-outcome-text {
+  color: color-mix(in srgb, var(--ui-text) 94%, var(--portfolio-accent-a) 6%);
+  font-weight: 600;
 }
 
 me .ui-portfolio-list {
   margin: 0;
-  padding-left: var(--size-4);
+  padding-left: var(--space-4);
   display: grid;
-  gap: var(--size-1);
+  gap: var(--space-1);
+}
+
+me .ui-portfolio-work-card .ui-portfolio-list {
+  gap: var(--space-2);
 }
 
 me .ui-portfolio-card-links {
   display: flex;
   flex-wrap: wrap;
-  gap: var(--size-2);
+  gap: var(--space-2);
   position: relative;
   isolation: isolate;
   align-items: center;
@@ -200,38 +230,333 @@ me .ui-portfolio-card-links > .button {
   width: fit-content;
 }
 
+me .ui-portfolio-work-card-footer {
+  display: grid;
+  gap: var(--space-2);
+  margin-top: auto;
+  padding-top: var(--space-2);
+  border-top: 1px solid color-mix(in srgb, var(--ui-border-soft) 82%, transparent);
+  align-content: start;
+  justify-items: start;
+}
+
+me .ui-portfolio-work-card-footer .ui-portfolio-badges {
+  gap: var(--space-1);
+}
+
+me .ui-portfolio-crate-showcase {
+  display: grid;
+  gap: clamp(1.25rem, 1.02rem + 0.78vw, 1.85rem);
+  padding: clamp(1.35rem, 1.1rem + 0.9vw, 2rem);
+  border-radius: var(--ui-radius-md-inset);
+  border: var(--border-size-1) solid
+    color-mix(in srgb, var(--portfolio-accent-a) 24%, var(--ui-border-soft));
+  background:
+    linear-gradient(
+      140deg,
+      color-mix(in srgb, var(--portfolio-accent-a) 10%, transparent),
+      transparent 38%
+    ),
+    linear-gradient(
+      180deg,
+      color-mix(in srgb, white 18%, transparent),
+      transparent 20%
+    ),
+    var(--ui-surface-soft);
+  box-shadow:
+    inset 0 1px 0 color-mix(in srgb, white 38%, transparent),
+    0 18px 40px -34px color-mix(in srgb, var(--portfolio-accent-a) 34%, transparent);
+}
+
+me .ui-portfolio-crate-showcase-header,
+me .ui-portfolio-crate-showcase-copy {
+  display: grid;
+  gap: var(--space-3);
+}
+
+me .ui-portfolio-crate-showcase-copy h3 {
+  margin: 0;
+  font-size: var(--text-size-title-sm);
+  line-height: var(--text-line-heading);
+  letter-spacing: var(--text-track-tight-sm);
+}
+
+me .ui-portfolio-crate-showcase-copy .ui-portfolio-card-summary {
+  max-width: 54ch;
+}
+
+me .ui-portfolio-inline-links {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-2);
+  align-items: center;
+}
+
+me .ui-portfolio-inline-link {
+  color: color-mix(in srgb, var(--ui-text) 84%, var(--accent-signal) 16%);
+  font-size: var(--text-size-meta-sm);
+  font-weight: 600;
+  letter-spacing: var(--text-track-ui);
+  text-decoration: none;
+}
+
+me .ui-portfolio-inline-link:hover,
+me .ui-portfolio-inline-link:focus-visible {
+  color: var(--accent-signal);
+  text-decoration: underline;
+  text-underline-offset: 0.16em;
+}
+
+me .ui-portfolio-crate-gallery {
+  margin-top: 0;
+  padding: clamp(0.9rem, 0.8rem + 0.55vw, 1.3rem);
+  border: var(--border-size-1) solid
+    color-mix(in srgb, var(--portfolio-accent-a) 28%, var(--ui-border-soft));
+  border-radius: var(--ui-radius-md);
+  background:
+    linear-gradient(
+      180deg,
+      color-mix(in srgb, var(--portfolio-accent-a) 14%, transparent),
+      transparent 40%
+    ),
+    linear-gradient(
+      160deg,
+      color-mix(in srgb, white 14%, transparent),
+      transparent 28%
+    ),
+    color-mix(in srgb, var(--ui-surface-card) 90%, transparent);
+  box-shadow:
+    inset 0 1px 0 color-mix(in srgb, white 30%, transparent),
+    inset 0 0 0 1px color-mix(in srgb, black 2%, transparent);
+}
+
+@media (prefers-color-scheme: dark) {
+  me .ui-portfolio-crate-showcase {
+    border-color: color-mix(in srgb, var(--ui-border-soft) 88%, transparent);
+    background:
+      linear-gradient(180deg, var(--surface-wash-top-soft), transparent 28%),
+      color-mix(in srgb, var(--surface-panel) 94%, black 6%);
+    box-shadow: inset 0 1px 0 var(--surface-edge-soft);
+  }
+
+  me .ui-portfolio-crate-gallery {
+    border-color: color-mix(in srgb, var(--ui-border-soft) 84%, transparent);
+    background:
+      linear-gradient(180deg, var(--surface-wash-top-soft), transparent 24%),
+      color-mix(in srgb, var(--surface-panel) 92%, black 8%);
+    box-shadow: inset 0 1px 0 var(--surface-edge-soft);
+  }
+}
+
 me .ui-portfolio-section-actions {
-  margin-top: var(--size-1);
+  margin-top: var(--space-1);
 }
 
 me .ui-portfolio-section-actions .ui-button-row,
 me .ui-portfolio-lead-surface .ui-button-row,
 me .ui-portfolio-closing .ui-button-row {
-  margin-top: calc(var(--size-2) - var(--interactive-bleed));
+  margin-top: calc(var(--space-2) - var(--interactive-bleed));
 }
 
 me .ui-portfolio-closing {
   justify-items: start;
-  gap: var(--size-3);
+  gap: var(--space-3);
+}
+
+me .ui-portfolio-supporting-teaser {
+  justify-items: start;
+  gap: var(--space-3);
+  border-color: color-mix(in srgb, var(--ui-border-soft) 84%, transparent);
+  background:
+    linear-gradient(
+      180deg,
+      color-mix(in srgb, var(--portfolio-accent-b) 4%, transparent),
+      transparent 18%
+    ),
+    color-mix(in srgb, var(--surface-fill-panel) 90%, transparent);
+}
+
+me .ui-portfolio-supporting-teaser h2 {
+  margin: 0;
+}
+
+me .ui-portfolio-supporting-teaser .ui-button-row {
+  margin-top: calc(var(--space-1) - var(--interactive-bleed));
 }
 
 me .ui-portfolio-case-grid {
   display: grid;
-  gap: var(--size-3);
+  gap: var(--space-3);
   grid-template-columns: repeat(auto-fit, minmax(min(100%, 17rem), 1fr));
+}
+
+me .ui-portfolio-case-section {
+  border-color: color-mix(
+    in srgb,
+    var(--portfolio-accent-a) 26%,
+    var(--portfolio-surface-border)
+  );
+  background:
+    linear-gradient(
+      180deg,
+      color-mix(in srgb, var(--portfolio-accent-a) 8%, transparent),
+      transparent 22%
+    ),
+    var(--surface-fill-panel);
 }
 
 me .ui-portfolio-case-section h2 {
   margin: 0;
 }
 
+me .ui-portfolio-case-section .ui-portfolio-section-copy {
+  gap: var(--space-1);
+}
+
+me .ui-portfolio-case-section .ui-portfolio-section-copy p {
+  max-width: 56ch;
+}
+
+me .ui-portfolio-crate-section {
+  border-color: color-mix(in srgb, var(--ui-border-soft) 88%, transparent);
+  background:
+    linear-gradient(
+      180deg,
+      color-mix(in srgb, var(--portfolio-accent-b) 5%, transparent),
+      transparent 20%
+    ),
+    color-mix(in srgb, var(--surface-fill-panel) 92%, transparent);
+}
+
+me .ui-portfolio-crate-section--standalone {
+  gap: var(--space-3);
+  margin-top: 0;
+  padding: clamp(0.9rem, 0.8rem + 0.5vw, 1.2rem);
+  border-color: color-mix(in srgb, var(--ui-border-soft) 76%, transparent);
+  background:
+    linear-gradient(
+      180deg,
+      color-mix(in srgb, var(--portfolio-accent-a) 5%, transparent),
+      transparent 24%
+    ),
+    color-mix(in srgb, var(--surface-fill-panel) 76%, transparent);
+  box-shadow: inset 0 1px 0 var(--surface-edge-soft);
+  max-inline-size: 72rem;
+  margin-inline: auto;
+}
+
+me .ui-portfolio-crate-section--standalone .ui-portfolio-crate-gallery {
+  padding: var(--space-2);
+  border: var(--border-size-1) solid
+    color-mix(in srgb, var(--portfolio-accent-a) 20%, var(--ui-border-soft));
+  border-radius: var(--ui-radius-md-inset);
+  background:
+    linear-gradient(
+      180deg,
+      color-mix(in srgb, var(--portfolio-accent-a) 7%, transparent),
+      transparent 30%
+    ),
+    color-mix(in srgb, var(--surface-fill-panel) 88%, transparent);
+  box-shadow: inset 0 1px 0 var(--surface-edge-soft);
+}
+
+me .ui-portfolio-crate-section--standalone .tab-set-showcase {
+  background: transparent;
+}
+
+me .ui-portfolio-crate-section--standalone .ui-portfolio-inline-links {
+  gap: var(--space-2);
+}
+
 @media (max-width: 48rem) {
+  me {
+    gap: var(--space-4);
+    margin-top: var(--space-4);
+    padding-bottom: var(--space-6);
+  }
+
+  me .ui-portfolio-surface {
+    gap: var(--space-3);
+  }
+
   me .ui-portfolio-hero {
-    padding: var(--size-4);
+    padding: var(--space-4);
+  }
+
+  me .ui-portfolio-lead-surface {
+    gap: var(--space-3);
   }
 
   me .ui-portfolio-lead-surface h1 {
-    max-width: 12ch;
+    font-size: var(--text-size-hero-md);
+    max-width: 13ch;
+  }
+
+  me .ui-portfolio-summary {
+    font-size: var(--text-size-body-lg);
+    line-height: var(--text-line-reading);
+  }
+
+  me .ui-portfolio-card-grid {
+    gap: var(--space-2);
+  }
+
+  me .ui-portfolio-showcase-stack {
+    gap: var(--space-3);
+  }
+
+  me .ui-portfolio-card {
+    gap: var(--space-2);
+    --inset-card-padding: var(--space-3);
+  }
+
+  me .ui-portfolio-work-card {
+    gap: var(--space-2);
+  }
+
+  me .ui-portfolio-card-outcome {
+    font-size: var(--text-size-body-sm);
+    gap: calc(var(--space-1) * 0.75);
+    padding: var(--space-2);
+  }
+
+  me .ui-portfolio-list {
+    padding-left: var(--space-3);
+  }
+
+  me .ui-portfolio-work-card .ui-portfolio-list {
+    gap: var(--space-1);
+  }
+
+  me .ui-portfolio-work-card-footer {
+    gap: var(--space-1);
+    padding-top: var(--space-1);
+  }
+
+  me .ui-portfolio-work-card-footer .ui-portfolio-badges {
+    display: none;
+  }
+
+  me .ui-portfolio-crate-showcase {
+    gap: var(--space-3);
+    padding: var(--space-3);
+  }
+
+  me .ui-portfolio-crate-showcase-copy,
+  me .ui-portfolio-crate-showcase-header {
+    gap: var(--space-1);
+  }
+
+  me .ui-portfolio-crate-gallery {
+    padding: var(--space-2);
+  }
+
+  me .ui-portfolio-supporting-teaser {
+    gap: var(--space-2);
+  }
+
+  me .ui-portfolio-crate-section--standalone {
+    gap: var(--space-2);
   }
 }
 
@@ -247,6 +572,7 @@ me .ui-portfolio-case-section h2 {
   me .ui-portfolio-case-grid {
     grid-template-columns: repeat(2, minmax(0, 1fr));
   }
+
 }
 
 @media (max-width: 768px) {
@@ -257,6 +583,11 @@ me .ui-portfolio-case-section h2 {
   me .ui-portfolio-closing .button {
     width: 100%;
   }
+
+  me .ui-portfolio-work-card-footer > .button {
+    width: fit-content;
+  }
+
 }
 "#
 );
@@ -265,8 +596,8 @@ pub mod content;
 mod sections;
 
 pub use sections::{
-    ClosingSection, CrateSection, PortfolioHero, ProofStrip, WorkCaseDetail,
-    WorkIndexSection, WorkSection,
+    ClosingSection, CrateSection, PortfolioHero, ProofStrip, SupportingTeaserSection,
+    WorkCaseDetail, WorkIndexSection, WorkSection,
 };
 
 pub struct Page {

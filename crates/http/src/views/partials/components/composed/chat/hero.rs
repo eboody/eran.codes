@@ -25,8 +25,8 @@ me [data-chat-hero-copy] > [data-section-header] {
 }
 
 me [data-chat-hero-copy] > [data-section-header] h1 {
-  font-size: clamp(1.9rem, 1.45rem + 2vw, 2.7rem);
-  line-height: 1.04;
+  font-size: var(--text-size-hero-md);
+  line-height: var(--text-line-heading);
 }
 
 me [data-chat-hero-copy] > [data-section-header] .u-muted {
@@ -35,17 +35,17 @@ me [data-chat-hero-copy] > [data-section-header] .u-muted {
 
 me [data-chat-hero-card] {
   --inset-card-border: var(--ui-border-soft);
+  --inset-card-padding: var(--space-4);
   display: grid;
   gap: var(--space-2);
   inline-size: min(100%, 21rem);
-  padding: 1rem;
 }
 
 me [data-chat-hero-card-title] {
   margin: 0;
-  font-size: 0.74rem;
+  font-size: var(--text-size-label-sm);
   font-weight: 700;
-  letter-spacing: 0.14em;
+  letter-spacing: var(--text-track-caps-wider);
   text-transform: uppercase;
   color: var(--text-subtle);
 }

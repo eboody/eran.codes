@@ -10,6 +10,8 @@ pub enum Route {
     Lab,
     #[strum(serialize = "/work")]
     Work,
+    #[strum(serialize = "/open-source")]
+    OpenSource,
     #[strum(serialize = "/work/chat-realtime")]
     WorkChatRealtime,
     #[strum(serialize = "/work/command-sse")]
@@ -62,6 +64,7 @@ impl Route {
             Route::Home => "/",
             Route::Lab => "/lab",
             Route::Work => "/work",
+            Route::OpenSource => "/open-source",
             Route::WorkChatRealtime => "/work/chat-realtime",
             Route::WorkCommandSse => "/work/command-sse",
             Route::WorkOperationalVisibility => "/work/operational-visibility",

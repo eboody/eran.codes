@@ -135,35 +135,49 @@
     ]
   },
   "crate_section": {
-    "title": "Open-source crates",
-    "subtitle": "Public Rust work that reflects engineering style and component discipline",
+    "title": "Open-source proof of how I think",
+    "subtitle": "These crates show the engineering traits I optimize for: explicit invariants, readable APIs, and architecture that makes incorrect states harder to express.",
     "cards": [
       {
         "name": "statum",
-        "summary": "State-oriented Rust patterns for predictable transitions and stronger domain invariants.",
+        "summary": "Compile-time typestate patterns for Rust systems where transitions, staged construction, and persistence need to stay explicit.",
+        "highlights": [
+          "Makes invalid transitions impossible to represent at the type level",
+          "Supports reconstructing machines from persisted data without dropping type safety",
+          "Reflects my bias toward APIs that encode workflow rules instead of documenting them"
+        ],
         "repository_url": "https://github.com/eboody/statum",
         "repository_label": "View repository",
-        "docs_url": null,
-        "docs_label": null,
-        "tags": ["rust", "state", "invariants"]
+        "docs_url": "https://docs.rs/statum",
+        "docs_label": "Read docs",
+        "tags": ["rust", "typestate", "invariants"]
       },
       {
-        "name": "maud-extensions",
-        "summary": "Composable Maud utilities focused on lean rendering APIs and reusable component ergonomics.",
-        "repository_url": "https://github.com/eboody/maud-extensions",
+        "name": "nestum",
+        "summary": "Nested enum paths and match ergonomics for domains where hierarchy is real and flattening the model makes code harder to read.",
+        "highlights": [
+          "Lets APIs read like the problem domain, such as Event::Documents::Update",
+          "Keeps nested invariants visible instead of hiding them behind conversion layers",
+          "Shows my preference for abstractions that remove friction without weakening meaning"
+        ],
+        "repository_url": "https://github.com/eboody/nestum",
+        "repository_label": "View repository",
+        "docs_url": "https://docs.rs/nestum",
+        "docs_label": "Read docs",
+        "tags": ["rust", "enums", "proc-macros"]
+      },
+      {
+        "name": "modum",
+        "summary": "A Rust workspace lint tool for naming, namespace shape, and API-surface rules that I want codebases to hold consistently.",
+        "highlights": [
+          "Turns readability and API-shape standards into an enforceable workspace check",
+          "Carries the same type-first, module-first standards used throughout this portfolio"
+        ],
+        "repository_url": "https://github.com/eboody/modum",
         "repository_label": "View repository",
         "docs_url": null,
         "docs_label": null,
-        "tags": ["rust", "maud", "components"]
-      },
-      {
-        "name": "eran.codes",
-        "summary": "This portfolio app: typed architecture, Datastar command+SSE flow, and operational observability surfaces.",
-        "repository_url": "https://github.com/eboody/eran.codes",
-        "repository_label": "View repository",
-        "docs_url": null,
-        "docs_label": null,
-        "tags": ["axum", "datastar", "sse"]
+        "tags": ["rust", "linting", "api-shape"]
       }
     ]
   },

@@ -17,7 +17,7 @@ impl Render for ProofStrip<'_> {
                 })
                 div class="ui-portfolio-proof-strip" {
                     @for item in &self.content.items {
-                        article class="ui-portfolio-proof-item" data-proof-kind=(proof_kind_attr(item.kind)) {
+                        article class="ui-portfolio-proof-item u-inset-card" data-proof-kind=(proof_kind_attr(item.kind)) {
                             h3 { (&item.title) }
                             p { (&item.text) }
                         }

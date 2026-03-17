@@ -9,6 +9,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
+      - uses: dtolnay/rust-toolchain@stable
       - name: install CI tooling
         run: |
           packages=()
@@ -26,6 +27,10 @@ jobs:
             $SUDO apt-get update
             $SUDO apt-get install -y "${packages[@]}"
           fi
+      - name: Install modum
+        run: cargo install modum --locked
+      - name: Modum
+        run: cargo modum check --root . --mode warn
       - name: advisory stringy checks
         continue-on-error: true
         run: scripts/ci/stringy-check.sh

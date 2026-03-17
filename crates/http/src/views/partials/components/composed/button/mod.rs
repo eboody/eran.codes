@@ -7,18 +7,13 @@ mod variant;
 
 const STYLES: &str = r#"
 .button[data-button] {
-  --_button-gap: var(--control-gap);
   --_button-padding-block: var(--control-padding-block);
   --_button-padding-inline: var(--control-padding-inline);
   --_button-font-size: var(--control-font-size);
-  --_button-font-weight: var(--control-font-weight);
-  --_button-line-height: var(--control-line-height);
-  --_button-letter-spacing: var(--control-letter-spacing);
-
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  gap: var(--_button-gap);
+  gap: var(--control-gap);
   margin: var(--control-margin);
   padding-block: var(--_button-padding-block);
   padding-inline: var(--_button-padding-inline);
@@ -27,9 +22,9 @@ const STYLES: &str = r#"
   font: var(--control-font);
   font-family: var(--font-ui);
   font-size: var(--_button-font-size);
-  font-weight: var(--_button-font-weight);
-  line-height: var(--_button-line-height);
-  letter-spacing: var(--_button-letter-spacing);
+  font-weight: var(--control-font-weight);
+  line-height: var(--control-line-height);
+  letter-spacing: var(--control-letter-spacing);
   text-decoration: none;
   position: relative;
   z-index: 0;

@@ -1,12 +1,16 @@
+mod crate_gallery;
 mod fixture_loader;
 mod types;
 mod validation;
 
-pub use fixture_loader::{portfolio_home_content, work_case_content, work_index_content};
+pub use crate_gallery::CrateGalleryContent;
+pub use fixture_loader::{
+    open_source_index_content, portfolio_home_content, work_case_content, work_index_content,
+};
 pub use types::{
-    CmsActionLink, CrateSectionContent, CtaKind, PortfolioHeroContent, ProofKind,
-    ProofStripContent, WorkCardContent, WorkCaseContent, WorkCaseSlug, WorkIndexContent,
-    WorkSectionContent,
+    ClosingContent, CmsActionLink, CrateCardContent, CrateSectionContent, CtaKind,
+    PortfolioHeroContent, ProofKind, ProofStripContent, WorkCardContent, WorkCaseContent,
+    WorkCaseSlug, WorkIndexContent, WorkSectionContent,
 };
 
 #[cfg(test)]
@@ -26,6 +30,17 @@ mod tests {
         let content = work_index_content();
 
         assert!(!content.cases.is_empty());
+        assert!(!content.cases_title.to_string().is_empty());
+        assert!(!content.open_source_teaser.title.to_string().is_empty());
+        assert!(!content.open_source_teaser.actions.is_empty());
+    }
+
+    #[test]
+    fn open_source_index_fixture_loads() {
+        let content = open_source_index_content();
+
+        assert!(!content.hero.title.to_string().is_empty());
+        assert!(!content.crate_section.cards.is_empty());
     }
 
     #[test]

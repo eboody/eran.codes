@@ -17,7 +17,7 @@ pub use closing::ClosingSection;
 pub use crate_section::CrateSection;
 pub use hero::PortfolioHero;
 pub use proof_strip::ProofStrip;
-pub use work::{WorkIndexSection, WorkSection};
+pub use work::{SupportingTeaserSection, WorkIndexSection, WorkSection};
 
 #[derive(Clone, Copy, Debug)]
 pub(super) struct SectionCopy<'a> {

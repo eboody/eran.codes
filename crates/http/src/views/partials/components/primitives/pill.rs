@@ -8,16 +8,18 @@ use crate::types::Text;
 
 const STYLES: &str = r#"
 .ui-pill {
+  --pill-padding-block: 0.18rem;
+  --pill-padding-inline: 0.55rem;
   display: inline-flex;
   align-items: center;
-  padding: 0.18rem 0.55rem;
-  border-radius: 999px;
+  padding: var(--pill-padding-block) var(--pill-padding-inline);
+  border-radius: var(--radius-pill);
   border: 1px solid var(--pill-accent, var(--ui-border-muted));
   background: color-mix(in srgb, var(--surface-field) 88%, transparent);
-  font-size: 0.71rem;
+  font-size: var(--text-size-label-xs);
   font-weight: 600;
-  letter-spacing: 0.02em;
-  line-height: 1.1;
+  letter-spacing: var(--text-track-label);
+  line-height: var(--text-line-control);
   color: var(--pill-accent, var(--text-muted));
 }
 
@@ -27,8 +29,8 @@ const STYLES: &str = r#"
 
 .ui-pill--path {
   font-family: var(--ui-font-mono);
-  font-size: 0.7rem;
-  letter-spacing: 0.02em;
+  font-size: var(--text-size-label-2xs);
+  letter-spacing: var(--text-track-label);
 }
 
 .ui-pill--method-get {

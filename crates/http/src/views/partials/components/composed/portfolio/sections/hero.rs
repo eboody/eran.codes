@@ -16,9 +16,11 @@ impl Render for PortfolioHero<'_> {
                     title: &self.content.title,
                     summary: &self.content.summary,
                 })
-                ul class="ui-portfolio-badges" {
-                    @for badge in &self.content.badges {
-                        li { (badge) }
+                @if !self.content.badges.is_empty() {
+                    ul class="ui-portfolio-badges" {
+                        @for badge in &self.content.badges {
+                            li { (badge) }
+                        }
                     }
                 }
                 @if !self.content.actions.is_empty() {

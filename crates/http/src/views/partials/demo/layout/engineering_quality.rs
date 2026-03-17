@@ -9,36 +9,36 @@ crate::views::scoped::inline_css!(
     r#"
 me [data-info-grid] {
   display: grid;
-  gap: var(--size-4);
+  gap: var(--space-4);
 }
 
 me [data-info-card] {
   overflow: visible;
   border: 1px solid var(--border-default);
-  border-radius: calc(var(--radius-card) - 2px);
+  border-radius: var(--ui-radius-md-inset);
   padding: var(--space-card);
   background: var(--surface-fill-field);
   box-shadow: inset 0 1px 0 var(--surface-edge-soft);
 }
 
 me [data-info-card] h3 {
-  margin: 0 0 0.45rem;
+  margin: 0 0 var(--space-2);
 }
 
 me [data-info-card] p {
   margin: 0;
-  font-size: 0.92rem;
-  line-height: 1.48;
+  font-size: var(--text-size-body-md);
+  line-height: var(--text-line-body);
   color: var(--text-muted);
 }
 
 me [data-info-card] ul {
-  margin: var(--size-3) 0 0;
-  padding-left: var(--size-4);
+  margin: var(--space-3) 0 0;
+  padding-left: var(--space-4);
   display: grid;
-  gap: var(--size-2);
-  font-size: 0.86rem;
-  line-height: 1.45;
+  gap: var(--space-2);
+  font-size: var(--text-size-body-xs);
+  line-height: var(--text-line-body);
   color: var(--text-muted);
 }
 

@@ -6,14 +6,14 @@ use crate::types::Text;
 crate::views::scoped::inline_css!(
     r#"
 me {
-  margin: 0.5rem 0 0;
-  padding-left: 1rem;
-  font-size: 0.82rem;
+  margin: var(--space-2) 0 0;
+  padding-left: var(--space-4);
+  font-size: var(--text-size-meta-md);
   color: var(--ui-text-muted);
 }
 
 me li {
-  margin: 0.2rem 0;
+  margin: var(--space-1) 0;
   word-break: break-word;
 }
 "#

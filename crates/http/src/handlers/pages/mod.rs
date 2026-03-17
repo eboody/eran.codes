@@ -24,6 +24,10 @@ pub async fn work() -> crate::Result<axum::response::Html<String>> {
     Ok(views::render(pages::Work))
 }
 
+pub async fn open_source() -> crate::Result<axum::response::Html<String>> {
+    Ok(views::render(pages::OpenSource))
+}
+
 pub async fn work_chat_realtime() -> crate::Result<axum::response::Html<String>> {
     Ok(views::render(
         pages::WorkCase::builder()

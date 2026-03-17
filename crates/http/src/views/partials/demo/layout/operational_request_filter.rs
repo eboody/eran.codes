@@ -16,9 +16,9 @@ me {
 
 me [data-op-filter-label] {
   margin: 0;
-  font-size: 0.72rem;
+  font-size: var(--text-size-label-xs);
   font-weight: 700;
-  letter-spacing: 0.12em;
+  letter-spacing: var(--text-track-caps-wide);
   text-transform: uppercase;
   color: var(--text-subtle);
 }
@@ -40,7 +40,7 @@ me [data-op-filter-row] > [data-button] {
 
 me [data-op-filter-meta] {
   margin: 0;
-  font-size: 0.82rem;
+  font-size: var(--text-size-meta-md);
   color: var(--text-muted);
 }
 

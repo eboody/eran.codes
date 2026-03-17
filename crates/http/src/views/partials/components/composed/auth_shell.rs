@@ -35,8 +35,8 @@ me [data-auth-summary] {
 me [data-auth-message] {
   --inset-card-border: var(--ui-text-danger);
   --inset-card-bg: var(--ui-surface-danger);
-  margin-top: 1rem;
-  padding: 1rem 1.15rem;
+  --inset-card-padding: var(--ui-inset-card-padding-cozy);
+  margin-top: var(--space-4);
 }
 
 me [data-auth-form] {
@@ -46,13 +46,13 @@ me [data-auth-form] {
 
 me [data-auth-field] {
   display: grid;
-  gap: 0.45rem;
+  gap: var(--space-2);
 }
 
 me [data-auth-field] > span {
-  font-size: 0.76rem;
+  font-size: var(--text-size-label-md);
   font-weight: 700;
-  letter-spacing: 0.12em;
+  letter-spacing: var(--text-track-caps-wide);
   text-transform: uppercase;
   color: var(--text-subtle);
 }
@@ -73,7 +73,7 @@ me [data-auth-note] a {
 me [data-account-actions] {
   display: flex;
   flex-wrap: wrap;
-  gap: 0.75rem;
+  gap: var(--space-3);
 }
 
 me [data-account-actions] > * {

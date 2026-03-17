@@ -16,13 +16,13 @@ me [data-burst-controls] {
 me [data-burst-slider] {
   display: grid;
   gap: var(--space-2);
-  font-size: 0.9rem;
+  font-size: var(--control-font-size);
   font-weight: 600;
 }
 
 me [data-burst-slider] > span {
-  font-size: 0.72rem;
-  letter-spacing: 0.12em;
+  font-size: var(--text-size-label-xs);
+  letter-spacing: var(--text-track-caps-wide);
   text-transform: uppercase;
   color: var(--text-subtle);
 }
@@ -38,9 +38,9 @@ me [data-burst-selected] {
   display: flex;
   flex-wrap: wrap;
   align-items: baseline;
-  gap: 0.3rem;
+  gap: var(--interactive-bleed);
   font-family: var(--font-display);
-  font-size: clamp(1.2rem, 1.05rem + 0.45vw, 1.5rem);
+  font-size: var(--text-size-title-sm);
   color: var(--text-body);
 }
 
@@ -62,18 +62,18 @@ me [data-burst-actions] {
 
 me [data-burst-actions] p {
   margin: 0;
-  font-size: 0.84rem;
+  font-size: var(--text-size-meta-lg);
 }
 
 me [data-burst-result] {
   margin: 0;
   border: 1px solid color-mix(in srgb, var(--accent-signal) 18%, var(--border-default));
   border-radius: var(--ui-radius-sm);
-  padding: 0.85rem 1rem;
+  padding: var(--space-3) var(--space-4);
   background: color-mix(in srgb, var(--accent-signal-soft) 38%, var(--surface-field));
   font-family: var(--ui-font-mono);
-  font-size: 0.8rem;
-  line-height: 1.5;
+  font-size: var(--text-size-meta-sm);
+  line-height: var(--text-line-body-loose);
   color: var(--text-body);
   overflow: visible;
 }

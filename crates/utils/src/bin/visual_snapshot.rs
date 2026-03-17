@@ -4,9 +4,9 @@ use std::path::PathBuf;
 use std::time::Duration;
 use std::time::Instant;
 
-use clap::Parser;
+use clap::{Parser, ValueEnum};
 use playwright::Playwright;
-use playwright::api::{Viewport, page};
+use playwright::api::{ColorScheme, Viewport, page};
 use tokio_stream::StreamExt;
 use tokio_stream::wrappers::errors::BroadcastStreamRecvError;
 use url::Url;
@@ -31,6 +31,8 @@ struct Args {
     viewport_height: i32,
     #[arg(long, default_value_t = 1200)]
     wait_ms: u64,
+    #[arg(long, value_enum)]
+    color_scheme: Option<SnapshotColorScheme>,
     #[arg(long)]
     element_selector: Option<String>,
     #[arg(long)]
@@ -80,6 +82,12 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
         height: args.viewport_height,
     })
     .await?;
+    if let Some(color_scheme) = args.color_scheme {
+        page.emulate_media_builder()
+            .color_scheme(color_scheme.into())
+            .emulate_media()
+            .await?;
+    }
     install_data_init_strip_script(&page, &args.remove_data_init_selector).await?;
     page.goto_builder(args.url.as_ref()).goto().await?;
     poll_page_events(&mut events, args.wait_ms, args.debug_events).await;
@@ -174,6 +182,23 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
     }
 
     Ok(())
+}
+
+#[derive(Clone, Copy, Debug, Eq, PartialEq, ValueEnum)]
+enum SnapshotColorScheme {
+    Light,
+    Dark,
+    NoPreference,
+}
+
+impl From<SnapshotColorScheme> for ColorScheme {
+    fn from(value: SnapshotColorScheme) -> Self {
+        match value {
+            SnapshotColorScheme::Light => Self::Light,
+            SnapshotColorScheme::Dark => Self::Dark,
+            SnapshotColorScheme::NoPreference => Self::NoPreference,
+        }
+    }
 }
 
 async fn capture_screenshot(
@@ -326,5 +351,26 @@ where
             Ok(None) => break,
             Err(_) => {}
         }
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn snapshot_color_scheme_maps_to_playwright_color_scheme() {
+        assert_eq!(
+            ColorScheme::from(SnapshotColorScheme::Light),
+            ColorScheme::Light
+        );
+        assert_eq!(
+            ColorScheme::from(SnapshotColorScheme::Dark),
+            ColorScheme::Dark
+        );
+        assert_eq!(
+            ColorScheme::from(SnapshotColorScheme::NoPreference),
+            ColorScheme::NoPreference
+        );
     }
 }

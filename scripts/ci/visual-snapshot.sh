@@ -9,6 +9,7 @@ baseline="${VISUAL_BASELINE:-$baseline_dir/home.png}"
 wait_ms="${VISUAL_WAIT_MS:-1200}"
 viewport_width="${VISUAL_VIEWPORT_WIDTH:-1440}"
 viewport_height="${VISUAL_VIEWPORT_HEIGHT:-1024}"
+color_scheme="${VISUAL_COLOR_SCHEME:-}"
 click_wait_ms="${VISUAL_CLICK_WAIT_MS:-800}"
 click_selector="${VISUAL_CLICK_SELECTOR:-}"
 element_selector="${VISUAL_ELEMENT_SELECTOR:-}"
@@ -39,6 +40,10 @@ run_snapshot() {
     --viewport-width "$viewport_width"
     --viewport-height "$viewport_height"
   )
+
+  if [[ -n "$color_scheme" ]]; then
+    args+=(--color-scheme "$color_scheme")
+  fi
 
   if [[ "$skip_baseline" != "1" ]]; then
     args+=(--baseline "$snapshot_baseline")

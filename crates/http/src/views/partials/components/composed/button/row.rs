@@ -8,7 +8,7 @@ crate::views::scoped::inline_css!(
 me {
   display: flex;
   flex-wrap: wrap;
-  gap: 0.75rem;
+  gap: var(--space-3);
   position: relative;
   isolation: isolate;
   padding: var(--interactive-bleed);
