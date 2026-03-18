@@ -5,6 +5,7 @@ use maud::Render;
 use statum::{machine, state, transition};
 
 use super::{ChatSignals, DemoChatSignals};
+use crate::chat_demo;
 use crate::trace_log::log::{message, target};
 use crate::types::{LogFieldKey, Text, UserIdText};
 use crate::views::partials;
@@ -84,16 +85,6 @@ impl ChatPostFlow<Incoming> {
         let room_id = Self::room_id_from_text(&signals.room_id.to_string())?;
         let chat_user_id = Self::chat_user_id_from_user_id(demo_user.id);
 
-        state
-            .chat
-            .join_room(
-                app::chat::JoinRoom::builder()
-                    .room_id(room_id)
-                    .user_id(chat_user_id)
-                    .build(),
-            )
-            .await?;
-
         let body_text = signals.bot_body.to_string();
 
         Ok(Self::new(
@@ -135,6 +126,7 @@ impl ChatPostFlow<Incoming> {
         self,
         state: &crate::State,
     ) -> Result<Response, crate::Error> {
+        self.verify_room_binding(state)?;
         let posted = self.mark_command_built().post_message(state).await?;
         let rendered = posted.record_incoming(state).render_message_html();
         let broadcasted = rendered.broadcast(state);
@@ -168,6 +160,33 @@ impl ChatPostFlow<Incoming> {
 
     fn chat_user_id_from_user_id(value: domain::user::Id) -> domain::chat::UserId {
         domain::chat::UserId::from_uuid(*value.as_uuid())
+    }
+
+    fn current_handle() -> Result<crate::sse::Handle, crate::Error> {
+        let Some(context) = request::current_context() else {
+            return Err(crate::Error::Internal);
+        };
+        let Some(session_id) = context.session_id else {
+            return Err(crate::Error::Internal);
+        };
+        let Some(tab_id) = context.sse_tab_id else {
+            return Err(crate::Error::ChatRoomBindingMissing);
+        };
+
+        Ok(crate::sse::Handle::with_tab(session_id, Some(tab_id)))
+    }
+
+    fn verify_room_binding(&self, state: &crate::State) -> Result<(), crate::Error> {
+        let handle = Self::current_handle()?;
+        match state
+            .demo
+            .chat_room_bindings
+            .matches(&handle, &self.room_id)
+        {
+            chat_demo::room::Match::Bound => Ok(()),
+            chat_demo::room::Match::Missing => Err(crate::Error::ChatRoomBindingMissing),
+            chat_demo::room::Match::Mismatch => Err(crate::Error::ChatRoomBindingMismatch),
+        }
     }
 }
 
@@ -337,18 +356,27 @@ impl ChatPostFlow<HtmlRendered> {
             .selector("[data-chat-messages]")
             .mode(ElementPatchMode::Prepend)
             .into_datastar_event();
+        let targets = state
+            .demo
+            .chat_room_bindings
+            .stream_keys_for_room(&self.room_id);
         tracing::info!(
             target: target::Known::DemoSse.as_str(),
             message = message::Known::ChatMessageBroadcast.as_str(),
             selector = "[data-chat-messages]",
             mode = "prepend",
-            payload_bytes = message_html.len() as u64
+            payload_bytes = message_html.len() as u64,
+            targets = targets.len()
         );
-        if let Err(error) = state.sse.broadcast(crate::sse::Event::from_event(event)) {
+        if let Err(error) = state
+            .sse
+            .send_to_stream_keys(targets, crate::sse::Event::from_event(event))
+        {
             tracing::warn!(
                 target: target::Known::DemoSse.as_str(),
                 ?error,
-                "chat broadcast could not reach active clients"
+                room_id = %self.room_id.as_uuid(),
+                "chat room fanout could not reach active clients"
             );
         }
 
@@ -387,7 +415,7 @@ impl ChatPostFlow<HtmlRendered> {
                     ),
                     (
                         crate::types::LogFieldName::from(LogFieldKey::Receiver),
-                        crate::types::LogFieldValue::new("clients"),
+                        crate::types::LogFieldValue::new("room-clients"),
                     ),
                     (
                         crate::types::LogFieldName::from(LogFieldKey::UserId),

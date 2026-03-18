@@ -1,11 +1,16 @@
 // ci: descriptive-module-import crate::chat_demo
 mod context_flow;
 mod demo_user_flow;
+mod room_bindings;
 
 use crate::views::partials;
 
 const DEMO_USER_EMAIL: &str = "demo.bot@example.com";
 const DEMO_USER_NAME: &str = "Demo Bot";
+
+pub mod room {
+    pub use super::room_bindings::{Match, RoomBindings as Bindings};
+}
 
 pub struct ChatContext {
     pub room: domain::chat::Room,

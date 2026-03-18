@@ -21,6 +21,10 @@ pub enum Error {
     ExtractJson {
         source: axum::extract::rejection::JsonRejection,
     },
+    #[snafu(display("chat room binding missing for current tab"))]
+    ChatRoomBindingMissing,
+    #[snafu(display("chat room does not match the current tab"))]
+    ChatRoomBindingMismatch,
     #[snafu(display("internal server error"))]
     Internal,
 }
@@ -136,6 +140,18 @@ impl Error {
                 status: axum::http::StatusCode::BAD_REQUEST,
                 title: "Bad request",
                 message: "Invalid request body.",
+            },
+            Error::ChatRoomBindingMissing => ErrorPresentation {
+                kind: "precondition",
+                status: axum::http::StatusCode::PRECONDITION_FAILED,
+                title: "Reconnect and retry",
+                message: "The live chat tab is not ready yet. Reconnect and retry.",
+            },
+            Error::ChatRoomBindingMismatch => ErrorPresentation {
+                kind: "conflict",
+                status: axum::http::StatusCode::CONFLICT,
+                title: "Wrong chat room",
+                message: "This tab is bound to a different chat room. Refresh and retry.",
             },
             Error::User {
                 source: app::user::Error::Domain { .. },

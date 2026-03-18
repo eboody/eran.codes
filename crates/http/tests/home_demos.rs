@@ -3,7 +3,7 @@ use std::sync::Arc;
 use async_trait::async_trait;
 use axum::{
     body::{Body, to_bytes},
-    http::Request,
+    http::{Request, header::SET_COOKIE},
 };
 use tower::ServiceExt;
 use tower_cookies::Key;
@@ -81,6 +81,51 @@ fn test_app() -> axum::Router {
         .build();
     let session_store = MemoryStore::default();
     app_http::router(state, session_store)
+}
+
+struct LabSessionContext {
+    cookie_header: String,
+    room_id: String,
+    sse_tab_id: String,
+}
+
+async fn load_lab_session_context(app: axum::Router) -> LabSessionContext {
+    let response = app
+        .oneshot(Request::get("/lab").body(Body::empty()).unwrap())
+        .await
+        .expect("lab page response");
+
+    let cookie_header = response
+        .headers()
+        .get_all(SET_COOKIE)
+        .iter()
+        .filter_map(|value| value.to_str().ok())
+        .find(|value| value.starts_with("session_id="))
+        .and_then(|value| value.split(';').next())
+        .map(str::to_string)
+        .expect("session_id cookie");
+
+    let body = to_bytes(response.into_body(), usize::MAX)
+        .await
+        .expect("lab body bytes");
+    let body = String::from_utf8(body.to_vec()).expect("lab body utf-8");
+
+    LabSessionContext {
+        cookie_header,
+        room_id: extract_attr(&body, "data-chat-room-id").expect("lab room id attribute"),
+        sse_tab_id: extract_between(&body, "sseTabId: '", "'").expect("lab sse tab id"),
+    }
+}
+
+fn extract_attr(body: &str, attr_name: &str) -> Option<String> {
+    extract_between(body, &format!("{attr_name}=\""), "\"")
+}
+
+fn extract_between(body: &str, start: &str, end: &str) -> Option<String> {
+    let start_index = body.find(start)? + start.len();
+    let remainder = &body[start_index..];
+    let end_index = remainder.find(end)?;
+    Some(remainder[..end_index].to_string())
 }
 
 struct ChatRepo;
@@ -468,4 +513,53 @@ async fn work_routes_render_successfully() {
             "route {route} should return 200",
         );
     }
+}
+
+#[tokio::test]
+async fn demo_chat_message_accepts_bound_room_for_current_tab() {
+    let app = test_app();
+    let context = load_lab_session_context(app.clone()).await;
+    let response = app
+        .oneshot(
+            Request::post("/demo/chat/messages/demo")
+                .header(axum::http::header::COOKIE, context.cookie_header)
+                .header(axum::http::header::CONTENT_TYPE, "application/json")
+                .header("datastar-request", "1")
+                .body(Body::from(format!(
+                    r#"{{"roomId":"{}","botBody":"hello","sseTabId":"{}"}}"#,
+                    context.room_id, context.sse_tab_id
+                )))
+                .unwrap(),
+        )
+        .await
+        .unwrap();
+
+    assert_eq!(response.status(), axum::http::StatusCode::ACCEPTED);
+}
+
+#[tokio::test]
+async fn demo_chat_message_rejects_room_mismatch_for_current_tab() {
+    let app = test_app();
+    let context = load_lab_session_context(app.clone()).await;
+    let response = app
+        .oneshot(
+            Request::post("/demo/chat/messages/demo")
+                .header(axum::http::header::COOKIE, context.cookie_header)
+                .header(axum::http::header::CONTENT_TYPE, "application/json")
+                .header("datastar-request", "1")
+                .body(Body::from(format!(
+                    r#"{{"roomId":"{}","botBody":"hello","sseTabId":"{}"}}"#,
+                    domain_chat::room::Id::new_v4().as_uuid(),
+                    context.sse_tab_id
+                )))
+                .unwrap(),
+        )
+        .await
+        .unwrap();
+
+    assert_eq!(response.status(), axum::http::StatusCode::OK);
+    let body = to_bytes(response.into_body(), usize::MAX).await.unwrap();
+    let body = String::from_utf8_lossy(&body);
+    assert!(body.contains("\"transportErrorStatus\":409"));
+    assert!(body.contains("\"transportErrorKind\":\"conflict\""));
 }

@@ -160,6 +160,7 @@ impl Render for Surface {
             div
                 class="u-surface-card"
                 data-chat-surface
+                data-chat-room-id=(self.room_id)
                 data-chat-surface-variant=(self.variant.as_ref())
                 data-signals=(self.signals())
             {
@@ -203,6 +204,7 @@ mod tests {
             .into_string();
 
         assert!(markup.contains("data-chat-surface"));
+        assert!(markup.contains("data-chat-room-id=\"room-1\""));
         assert!(markup.contains("class=\"u-surface-card\""));
         assert!(markup.contains("data-chat-surface-variant=\"lab\""));
         assert!(markup.contains("roomId"));

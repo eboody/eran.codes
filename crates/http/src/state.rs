@@ -18,6 +18,7 @@ pub struct State {
 pub struct DemoState {
     pub surreal: SurrealState,
     pub counter: CounterState,
+    pub chat_room_bindings: crate::chat_demo::room::Bindings,
 }
 
 impl DemoState {
@@ -31,6 +32,7 @@ impl Default for DemoState {
         Self {
             surreal: SurrealState::new(),
             counter: CounterState::new(),
+            chat_room_bindings: crate::chat_demo::room::Bindings::new(),
         }
     }
 }

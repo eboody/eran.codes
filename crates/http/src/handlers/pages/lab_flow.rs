@@ -92,10 +92,24 @@ impl LabPageFlow<ViewerResolved> {
 }
 
 impl LabPageFlow<ChatLoaded> {
-    pub(super) fn into_page(self) -> crate::views::pages::Lab {
+    pub(super) fn room_id(&self) -> domain::chat::room::Id {
+        self.state_data
+            .chat_demo
+            .room_id
+            .to_string()
+            .parse::<uuid::Uuid>()
+            .map(domain::chat::room::Id::from_uuid)
+            .expect("lab chat demo room id should be a valid uuid")
+    }
+
+    pub(super) fn into_page(
+        self,
+        sse_tab_id: crate::types::SseTabId,
+    ) -> crate::views::pages::Lab {
         crate::views::pages::Lab::builder()
             .maybe_user(self.state_data.maybe_user)
             .chat_demo(self.state_data.chat_demo)
+            .sse_tab_id(sse_tab_id)
             .build()
     }
 }

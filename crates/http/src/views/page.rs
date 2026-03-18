@@ -2,7 +2,7 @@ use bon::Builder;
 use maud::{Markup, Render};
 
 use crate::paths::Route;
-use crate::types::Text;
+use crate::types::{SseTabId, Text};
 use crate::views::partials;
 
 pub(crate) const PORTFOLIO_RESUME_URL: &str = "/static/resume.txt";
@@ -53,11 +53,15 @@ pub struct Layout<'a> {
     #[builder(default)]
     pub nav_mode: NavMode,
     pub current_route: Option<Route>,
+    pub sse_tab_id: Option<SseTabId>,
 }
 
 impl Render for Layout<'_> {
     fn render(&self) -> Markup {
-        let sse_tab_id = crate::types::SseTabId::new(uuid::Uuid::new_v4().to_string());
+        let sse_tab_id = self
+            .sse_tab_id
+            .clone()
+            .unwrap_or_else(|| crate::types::SseTabId::new(uuid::Uuid::new_v4().to_string()));
         let global_signals = match self.sse_mode {
             SseMode::Enabled => format!(
                 "{{sseTabId: '{sse_tab_id}', sseConnected: false, transportErrorSource: '', transportErrorKind: '', transportErrorTitle: '', transportErrorMessage: '', transportErrorStatus: 0, transportRetrying: false}}"

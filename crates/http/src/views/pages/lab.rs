@@ -132,6 +132,7 @@ me [data-operations-surface] {
 pub struct Lab {
     pub user: Option<page::UserNav>,
     pub chat_demo: Option<partials::chat::DemoSection>,
+    pub sse_tab_id: Option<crate::types::SseTabId>,
 }
 
 impl maud::Render for Lab {
@@ -212,6 +213,7 @@ impl maud::Render for Lab {
             .content(content)
             .sse_mode(page::SseMode::Enabled)
             .maybe_with_user(self.user.clone())
+            .maybe_sse_tab_id(self.sse_tab_id.clone())
             .build()
             .render()
     }

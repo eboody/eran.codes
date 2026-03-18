@@ -161,6 +161,45 @@ impl Registry {
         Ok(())
     }
 
+    pub fn send_to_stream_key(&self, key: &StreamKey, event: Event) -> send::Result<()> {
+        let Some(session) = self.sessions.get(key) else {
+            return Err(send::Error::SessionMissing);
+        };
+
+        if session.send(event).is_ok() {
+            return Ok(());
+        }
+
+        drop(session);
+        self.sessions.remove(key);
+        Err(send::Error::SendFailed)
+    }
+
+    pub fn send_to_stream_keys<I>(&self, keys: I, event: Event) -> send::Result<usize>
+    where
+        I: IntoIterator<Item = StreamKey>,
+    {
+        let mut sent = 0usize;
+        let mut had_targets = false;
+
+        for key in keys {
+            had_targets = true;
+            if self.send_to_stream_key(&key, event.clone()).is_ok() {
+                sent += 1;
+            }
+        }
+
+        if sent > 0 {
+            return Ok(sent);
+        }
+
+        if had_targets {
+            Err(send::Error::SendFailed)
+        } else {
+            Err(send::Error::SessionMissing)
+        }
+    }
+
     pub fn broadcast(&self, event: Event) -> send::Result<usize> {
         let event_type = format!("{:?}", event.as_datastar_event().event);
         let mut sent = 0;
@@ -306,5 +345,27 @@ mod tests {
 
         assert!(registry.has_handle(&tab_a));
         assert!(!registry.has_handle(&tab_b));
+    }
+
+    #[test]
+    fn send_to_stream_keys_only_reaches_selected_targets() {
+        let registry = Registry::new();
+        let session_id = SessionId::new("session-1");
+        let tab_a = Handle::with_tab(session_id.clone(), Some(SseTabId::new("tab-a")));
+        let tab_b = Handle::with_tab(session_id, Some(SseTabId::new("tab-b")));
+
+        let (mut rx_a, _guard_a) = registry.subscribe(&tab_a);
+        let (mut rx_b, _guard_b) = registry.subscribe(&tab_b);
+
+        let sent = registry
+            .send_to_stream_keys(
+                vec![tab_a.stream_key().clone()],
+                Event::patch_elements("ok"),
+            )
+            .expect("targeted send");
+
+        assert_eq!(sent, 1);
+        assert!(rx_a.try_recv().is_ok());
+        assert!(rx_b.try_recv().is_err());
     }
 }

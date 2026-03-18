@@ -106,6 +106,7 @@ impl EventsConnectionFlow<FilterApplied> {
             stream_key,
             self.state.demo.surreal.guard.clone(),
             self.state.demo.surreal.cancel.clone(),
+            self.state.demo.chat_room_bindings.clone(),
             self.state.trace_log.clone(),
         );
         let session_id = self.session_id().clone();
@@ -247,6 +248,7 @@ struct ConnectionCleanupGuard {
     surreal_cancel: std::sync::Arc<
         dashmap::DashMap<crate::sse::StreamKey, tokio_util::sync::CancellationToken>,
     >,
+    chat_room_bindings: crate::chat_demo::room::Bindings,
     trace_log: crate::trace_log::Store,
 }
 
@@ -259,12 +261,14 @@ impl ConnectionCleanupGuard {
         surreal_cancel: std::sync::Arc<
             dashmap::DashMap<crate::sse::StreamKey, tokio_util::sync::CancellationToken>,
         >,
+        chat_room_bindings: crate::chat_demo::room::Bindings,
         trace_log: crate::trace_log::Store,
     ) -> Self {
         Self {
             stream_key,
             surreal_guard,
             surreal_cancel,
+            chat_room_bindings,
             trace_log,
         }
     }
@@ -276,6 +280,7 @@ impl Drop for ConnectionCleanupGuard {
             token.cancel();
         }
         self.surreal_guard.remove(&self.stream_key);
+        self.chat_room_bindings.remove(&self.stream_key);
         self.trace_log.clear_stream_flow_filter(&self.stream_key);
     }
 }
@@ -343,12 +348,14 @@ mod tests {
             tab_a.stream_key().clone(),
             surreal_guard.clone(),
             surreal_cancel.clone(),
+            crate::chat_demo::room::Bindings::new(),
             trace_log.clone(),
         );
         let cleanup_b = ConnectionCleanupGuard::new(
             tab_b.stream_key().clone(),
             surreal_guard.clone(),
             surreal_cancel.clone(),
+            crate::chat_demo::room::Bindings::new(),
             trace_log.clone(),
         );
 
