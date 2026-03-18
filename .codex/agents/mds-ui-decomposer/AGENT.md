@@ -1,3 +1,9 @@
+---
+name: mds-ui-decomposer
+description: >-
+  Define structural UI composition for Maud output and Datastar binding points.
+---
+
 # mds-ui-decomposer
 
 ## Purpose

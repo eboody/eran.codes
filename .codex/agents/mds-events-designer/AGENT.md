@@ -1,3 +1,10 @@
+---
+name: mds-events-designer
+description: >-
+  Design event triggers, payloads, and state transitions for Datastar-driven UI
+  behavior.
+---
+
 # mds-events-designer
 
 ## Purpose

@@ -1,3 +1,10 @@
+---
+name: mds-codegen
+description: >-
+  Generate Rust Maud and Datastar component code from a verified component
+  spec.
+---
+
 # mds-codegen
 
 ## Purpose

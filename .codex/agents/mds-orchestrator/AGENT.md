@@ -1,3 +1,10 @@
+---
+name: mds-orchestrator
+description: >-
+  Coordinate agent execution, initialize component specs, and enforce section
+  ownership boundaries.
+---
+
 # mds-orchestrator
 
 ## Purpose

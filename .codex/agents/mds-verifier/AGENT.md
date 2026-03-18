@@ -1,3 +1,10 @@
+---
+name: mds-verifier
+description: >-
+  Validate complete component specs against schema, cross-references, docs
+  rules, and authority semantics.
+---
+
 # mds-verifier
 
 ## Purpose

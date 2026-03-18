@@ -1,3 +1,9 @@
+---
+name: mds-cms-content-modeler
+description: >-
+  Define and validate the CMS-shaped content contract for component generation.
+---
+
 # mds-cms-content-modeler
 
 ## Purpose

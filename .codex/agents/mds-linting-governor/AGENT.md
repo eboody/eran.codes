@@ -1,3 +1,10 @@
+---
+name: mds-linting-governor
+description: >-
+  Decide whether a repo rule belongs in linting or CI and choose the lightest
+  effective enforcement.
+---
+
 # mds-linting-governor
 
 ## Purpose

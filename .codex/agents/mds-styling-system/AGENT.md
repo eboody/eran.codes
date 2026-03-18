@@ -1,3 +1,10 @@
+---
+name: mds-styling-system
+description: >-
+  Apply the hybrid styling policy after code generation across global and
+  scoped component styles.
+---
+
 # mds-styling-system
 
 ## Purpose

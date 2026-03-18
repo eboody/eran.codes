@@ -1,3 +1,10 @@
+---
+name: mds-docs-librarian
+description: >-
+  Retrieve authoritative repo docs and extract rules upstream agents must
+  follow.
+---
+
 # mds-docs-librarian
 
 ## Purpose

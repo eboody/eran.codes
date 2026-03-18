@@ -1,3 +1,10 @@
+---
+name: mds-state-modeler
+description: >-
+  Define reactive state, initial values, and derived fields used by Datastar
+  interactions.
+---
+
 # mds-state-modeler
 
 ## Purpose

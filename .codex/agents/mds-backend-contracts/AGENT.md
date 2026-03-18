@@ -1,3 +1,10 @@
+---
+name: mds-backend-contracts
+description: >-
+  Define backend actions, types, and validation contracts required by UI
+  events.
+---
+
 # mds-backend-contracts
 
 ## Purpose
