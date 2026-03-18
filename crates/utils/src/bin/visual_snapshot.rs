@@ -5,6 +5,7 @@ use std::time::Duration;
 use std::time::Instant;
 
 use clap::{Parser, ValueEnum};
+use image::{ImageFormat, load_from_memory_with_format};
 use playwright::Playwright;
 use playwright::api::{ColorScheme, Viewport, page};
 use tokio_stream::StreamExt;
@@ -38,6 +39,8 @@ struct Args {
     #[arg(long)]
     remove_data_init_selector: Vec<String>,
     #[arg(long)]
+    normalize_text_selector: Vec<String>,
+    #[arg(long)]
     click_selector: Option<String>,
     #[arg(long, default_value_t = 600)]
     click_wait_ms: u64,
@@ -54,6 +57,9 @@ struct Args {
     #[arg(long, default_value_t = 1200)]
     post_wait_ms: u64,
 }
+
+const PIXEL_DIFF_TOLERANCE_ABSOLUTE: u64 = 16;
+const PIXEL_DIFF_TOLERANCE_RATIO: f64 = 0.000_01;
 
 #[tokio::main]
 async fn main() -> Result<(), Box<dyn std::error::Error>> {
@@ -93,6 +99,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
             .await?;
     }
     install_data_init_strip_script(&page, &args.remove_data_init_selector).await?;
+    install_text_normalizer_script(&page, &args.normalize_text_selector).await?;
     page.goto_builder(args.url.as_ref()).goto().await?;
     poll_page_events(&mut events, args.wait_ms, args.debug_events).await;
 
@@ -179,11 +186,14 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
         }
 
         let baseline_bytes = fs::read(&baseline)?;
-        if baseline_bytes != screenshot {
+        let comparison = compare_png_pixels(&baseline_bytes, &screenshot)?;
+        if !comparison.within_tolerance() {
             eprintln!(
-                "visual snapshot mismatch: current={} baseline={}",
+                "visual snapshot mismatch: current={} baseline={} differing_pixels={} allowed_pixels={}",
                 args.output.display(),
-                baseline.display()
+                baseline.display(),
+                comparison.differing_pixels,
+                comparison.allowed_pixels
             );
             std::process::exit(2);
         }
@@ -285,6 +295,63 @@ async fn install_data_init_strip_script(
     Ok(())
 }
 
+async fn install_text_normalizer_script(
+    page: &playwright::api::Page,
+    specs: &[String],
+) -> Result<(), Box<dyn std::error::Error>> {
+    if specs.is_empty() {
+        return Ok(());
+    }
+
+    let specs = specs
+        .iter()
+        .map(|value| {
+            let (selector, replacement) = value.split_once("=>").ok_or_else(|| {
+                io::Error::new(
+                    io::ErrorKind::InvalidInput,
+                    format!(
+                        "normalize-text-selector must use selector=>replacement: {value}"
+                    ),
+                )
+            })?;
+            Ok(serde_json::json!({
+                "selector": selector,
+                "replacement": replacement,
+            }))
+        })
+        .collect::<Result<Vec<_>, io::Error>>()?;
+    let specs = serde_json::to_string(&specs)?;
+    let script = format!(
+        r#"
+(() => {{
+  const specs = {specs};
+  const normalize = () => {{
+    for (const spec of specs) {{
+      for (const node of document.querySelectorAll(spec.selector)) {{
+        node.textContent = spec.replacement;
+      }}
+    }}
+  }};
+
+  if (document.readyState === 'loading') {{
+    document.addEventListener('DOMContentLoaded', normalize, {{ once: true }});
+  }} else {{
+    normalize();
+  }}
+
+  const observer = new MutationObserver(normalize);
+  observer.observe(document.documentElement, {{
+    childList: true,
+    subtree: true,
+    characterData: true,
+  }});
+}})();
+"#
+    );
+    page.add_init_script(&script).await?;
+    Ok(())
+}
+
 async fn stabilize_page_for_snapshot(
     page: &playwright::api::Page,
 ) -> Result<(), Box<dyn std::error::Error>> {
@@ -331,6 +398,48 @@ async fn assert_selectors_present(
     }
 
     Ok(())
+}
+
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+struct PixelComparison {
+    differing_pixels: u64,
+    allowed_pixels: u64,
+}
+
+impl PixelComparison {
+    fn within_tolerance(self) -> bool {
+        self.differing_pixels <= self.allowed_pixels
+    }
+}
+
+fn compare_png_pixels(
+    baseline_bytes: &[u8],
+    current_bytes: &[u8],
+) -> Result<PixelComparison, Box<dyn std::error::Error>> {
+    let baseline = load_from_memory_with_format(baseline_bytes, ImageFormat::Png)?.to_rgba8();
+    let current = load_from_memory_with_format(current_bytes, ImageFormat::Png)?.to_rgba8();
+
+    if baseline.dimensions() != current.dimensions() {
+        return Ok(PixelComparison {
+            differing_pixels: u64::MAX,
+            allowed_pixels: 0,
+        });
+    }
+
+    let differing_pixels = baseline
+        .pixels()
+        .zip(current.pixels())
+        .filter(|(left, right)| left != right)
+        .count() as u64;
+    let total_pixels = baseline.width() as u64 * baseline.height() as u64;
+    let allowed_pixels = PIXEL_DIFF_TOLERANCE_ABSOLUTE.max(
+        (total_pixels as f64 * PIXEL_DIFF_TOLERANCE_RATIO).ceil() as u64,
+    );
+
+    Ok(PixelComparison {
+        differing_pixels,
+        allowed_pixels,
+    })
 }
 
 async fn poll_page_events<S>(events: &mut S, wait_ms: u64, debug_events: bool)
@@ -410,5 +519,91 @@ mod tests {
             ColorScheme::from(SnapshotColorScheme::NoPreference),
             ColorScheme::NoPreference
         );
+    }
+
+    #[test]
+    fn png_pixel_match_ignores_png_encoding_differences() {
+        let image = image::RgbaImage::from_pixel(2, 1, image::Rgba([1, 2, 3, 255]));
+        let mut baseline = Vec::new();
+        let mut current = Vec::new();
+        image
+            .write_to(
+                &mut std::io::Cursor::new(&mut baseline),
+                image::ImageFormat::Png,
+            )
+            .expect("baseline png");
+        image
+            .write_to(
+                &mut std::io::Cursor::new(&mut current),
+                image::ImageFormat::Png,
+            )
+            .expect("current png");
+
+        let comparison = compare_png_pixels(&baseline, &current).expect("decode png");
+        assert!(comparison.within_tolerance());
+        assert_eq!(comparison.differing_pixels, 0);
+    }
+
+    #[test]
+    fn png_pixel_match_allows_tiny_raster_drift() {
+        let baseline = image::RgbaImage::from_pixel(100, 100, image::Rgba([1, 2, 3, 255]));
+        let mut current = baseline.clone();
+        current.put_pixel(0, 0, image::Rgba([9, 9, 9, 255]));
+
+        let mut baseline_png = Vec::new();
+        let mut current_png = Vec::new();
+        baseline
+            .write_to(
+                &mut std::io::Cursor::new(&mut baseline_png),
+                image::ImageFormat::Png,
+            )
+            .expect("baseline png");
+        current
+            .write_to(
+                &mut std::io::Cursor::new(&mut current_png),
+                image::ImageFormat::Png,
+            )
+            .expect("current png");
+
+        let comparison =
+            compare_png_pixels(&baseline_png, &current_png).expect("decode png");
+
+        assert!(comparison.within_tolerance());
+        assert_eq!(comparison.differing_pixels, 1);
+    }
+
+    #[test]
+    fn png_pixel_match_rejects_large_visual_changes() {
+        let baseline = image::RgbaImage::from_pixel(10, 10, image::Rgba([1, 2, 3, 255]));
+        let current = image::RgbaImage::from_pixel(10, 10, image::Rgba([9, 9, 9, 255]));
+        let mut baseline_png = Vec::new();
+        let mut current_png = Vec::new();
+        baseline
+            .write_to(
+                &mut std::io::Cursor::new(&mut baseline_png),
+                image::ImageFormat::Png,
+            )
+            .expect("baseline png");
+        current
+            .write_to(
+                &mut std::io::Cursor::new(&mut current_png),
+                image::ImageFormat::Png,
+            )
+            .expect("current png");
+
+        let comparison =
+            compare_png_pixels(&baseline_png, &current_png).expect("decode png");
+
+        assert!(!comparison.within_tolerance());
+    }
+
+    #[test]
+    fn normalize_text_selector_requires_mapping_syntax() {
+        let error = "missing-delimiter"
+            .split_once("=>")
+            .ok_or_else(|| std::io::Error::other("missing mapping"))
+            .expect_err("invalid mapping");
+
+        assert_eq!(error.to_string(), "missing mapping");
     }
 }

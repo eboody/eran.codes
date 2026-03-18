@@ -4,4 +4,11 @@ target
 rustc-ice-*.txt
 artifacts/visual/current
 artifacts/
+!artifacts/
+!artifacts/visual/
+artifacts/visual/*
+!artifacts/visual/baseline/
+!artifacts/visual/baseline/**
+artifacts/visual/baseline/portfolio-smoke/lab-desktop-light.png
+artifacts/visual/baseline/portfolio-smoke/lab-mobile-dark.png
 .playwright-browsers/

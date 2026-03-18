@@ -111,7 +111,6 @@ if [[ "$skip_browser_smoke" != "1" ]]; then
   echo "Running portfolio browser smoke against runtime image..."
   PORTFOLIO_SMOKE_BASE_URL="http://127.0.0.1:${host_port}" \
   PORTFOLIO_SMOKE_MODE="$browser_smoke_mode" \
-  PORTFOLIO_SMOKE_USE_BASELINES=0 \
   PORTFOLIO_SMOKE_CURRENT_DIR="${PORTFOLIO_SMOKE_CURRENT_DIR:-artifacts/visual/current/docker-smoke}" \
   bash scripts/check_portfolio_browser_smoke.sh
 fi

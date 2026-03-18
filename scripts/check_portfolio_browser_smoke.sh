@@ -11,7 +11,7 @@ mode="${PORTFOLIO_SMOKE_MODE:-smoke}"
 wait_ms="${PORTFOLIO_SMOKE_WAIT_MS:-1400}"
 click_wait_ms="${PORTFOLIO_SMOKE_CLICK_WAIT_MS:-900}"
 assert_timeout_ms="${PORTFOLIO_SMOKE_ASSERT_TIMEOUT_MS:-6000}"
-use_baselines="${PORTFOLIO_SMOKE_USE_BASELINES:-0}"
+use_baselines="${PORTFOLIO_SMOKE_USE_BASELINES:-1}"
 update_baselines="${PORTFOLIO_SMOKE_UPDATE_BASELINE:-0}"
 prune_current="${PORTFOLIO_SMOKE_PRUNE_CURRENT:-1}"
 desktop_width="${PORTFOLIO_SMOKE_DESKTOP_WIDTH:-1920}"
@@ -33,7 +33,8 @@ run_case() {
   local viewport_height="$4"
   local color_scheme="$5"
   local click_selector="${6:-}"
-  shift 6
+  local element_selector="${7:-}"
+  shift 7
 
   local output="$current_dir/${name}.png"
   local html="$current_dir/${name}.html"
@@ -54,12 +55,26 @@ run_case() {
     args+=(--click-selector "$click_selector" --click-wait-ms "$click_wait_ms")
   fi
 
+  if [[ -n "$element_selector" ]]; then
+    args+=(--element-selector "$element_selector")
+  fi
+
+  if [[ "$path" == "/lab" ]]; then
+    args+=(
+      --normalize-text-selector '.ui-log-flow-item-id=>request'
+      --normalize-text-selector '.ui-log-flow-item-time=>time'
+      --normalize-text-selector '.ui-log-flow-detail-header .ui-pill=>request_id=req'
+      --normalize-text-selector '[data-log-timestamp]=>time'
+      --normalize-text-selector '.ui-log-flow-event .ui-pill-cluster .ui-pill:last-child=>latency_ms=xx'
+    )
+  fi
+
   while [[ $# -gt 0 ]]; do
     args+=(--assert-selector "$1")
     shift
   done
 
-  if [[ "$use_baselines" == "1" ]]; then
+  if [[ "$use_baselines" == "1" && "$path" != "/lab" ]]; then
     args+=(--baseline "$baseline_dir/${name}.png")
     if [[ "$update_baselines" == "1" ]]; then
       args+=(--update-baseline)
@@ -110,25 +125,26 @@ run_theme_matrix() {
   local selector_group_name="$3"
   local -n selector_group="$selector_group_name"
 
-  run_case "${slug}-desktop-light" "$path" "$desktop_width" "$desktop_height" light "" "${selector_group[@]}"
-  run_case "${slug}-desktop-dark" "$path" "$desktop_width" "$desktop_height" dark "" "${selector_group[@]}"
-  run_case "${slug}-mobile-light" "$path" "$mobile_width" "$mobile_height" light "" "${selector_group[@]}"
-  run_case "${slug}-mobile-dark" "$path" "$mobile_width" "$mobile_height" dark "" "${selector_group[@]}"
+  run_case "${slug}-desktop-light" "$path" "$desktop_width" "$desktop_height" light "" "" "${selector_group[@]}"
+  run_case "${slug}-desktop-dark" "$path" "$desktop_width" "$desktop_height" dark "" "" "${selector_group[@]}"
+  run_case "${slug}-mobile-light" "$path" "$mobile_width" "$mobile_height" light "" "" "${selector_group[@]}"
+  run_case "${slug}-mobile-dark" "$path" "$mobile_width" "$mobile_height" dark "" "" "${selector_group[@]}"
 }
 
 case "$mode" in
   smoke)
-    run_case "home-desktop-light" "/" "$desktop_width" "$desktop_height" light "" "${home_assertions[@]}"
-    run_case "work-desktop-light" "/work" "$desktop_width" "$desktop_height" light "" "${work_assertions[@]}"
-    run_case "open-source-desktop-light" "/open-source" "$desktop_width" "$desktop_height" light "" "${open_source_assertions[@]}"
+    run_case "home-desktop-light" "/" "$desktop_width" "$desktop_height" light "" "" "${home_assertions[@]}"
+    run_case "work-desktop-light" "/work" "$desktop_width" "$desktop_height" light "" "" "${work_assertions[@]}"
+    run_case "open-source-desktop-light" "/open-source" "$desktop_width" "$desktop_height" light "" "" "${open_source_assertions[@]}"
     run_case "open-source-modum-desktop-light" "/open-source" "$desktop_width" "$desktop_height" light \
       '[data-portfolio-crate-switcher-nav] [data-tab-id="crate_2"]' \
+      "" \
       "${open_source_modum_assertions[@]}"
-    run_case "lab-desktop-light" "/lab" "$desktop_width" "$desktop_height" light "" "${lab_assertions[@]}"
-    run_case "home-mobile-dark" "/" "$mobile_width" "$mobile_height" dark "" "${home_assertions[@]}"
-    run_case "work-mobile-dark" "/work" "$mobile_width" "$mobile_height" dark "" "${work_assertions[@]}"
-    run_case "open-source-mobile-dark" "/open-source" "$mobile_width" "$mobile_height" dark "" "${open_source_assertions[@]}"
-    run_case "lab-mobile-dark" "/lab" "$mobile_width" "$mobile_height" dark "" "${lab_assertions[@]}"
+    run_case "lab-desktop-light" "/lab" "$desktop_width" "$desktop_height" light "" "#operations-surface" "${lab_assertions[@]}"
+    run_case "home-mobile-dark" "/" "$mobile_width" "$mobile_height" dark "" "" "${home_assertions[@]}"
+    run_case "work-mobile-dark" "/work" "$mobile_width" "$mobile_height" dark "" "" "${work_assertions[@]}"
+    run_case "open-source-mobile-dark" "/open-source" "$mobile_width" "$mobile_height" dark "" "" "${open_source_assertions[@]}"
+    run_case "lab-mobile-dark" "/lab" "$mobile_width" "$mobile_height" dark "" "#operations-surface" "${lab_assertions[@]}"
     ;;
   matrix)
     run_theme_matrix "home" "/" home_assertions
@@ -136,11 +152,16 @@ case "$mode" in
     run_theme_matrix "open-source" "/open-source" open_source_assertions
     run_case "open-source-modum-desktop-light" "/open-source" "$desktop_width" "$desktop_height" light \
       '[data-portfolio-crate-switcher-nav] [data-tab-id="crate_2"]' \
+      "" \
       "${open_source_modum_assertions[@]}"
     run_case "open-source-modum-mobile-dark" "/open-source" "$mobile_width" "$mobile_height" dark \
       '[data-portfolio-crate-switcher-nav] [data-tab-id="crate_2"]' \
+      "" \
       "${open_source_modum_assertions[@]}"
-    run_theme_matrix "lab" "/lab" lab_assertions
+    run_case "lab-desktop-light" "/lab" "$desktop_width" "$desktop_height" light "" "#operations-surface" "${lab_assertions[@]}"
+    run_case "lab-desktop-dark" "/lab" "$desktop_width" "$desktop_height" dark "" "#operations-surface" "${lab_assertions[@]}"
+    run_case "lab-mobile-light" "/lab" "$mobile_width" "$mobile_height" light "" "#operations-surface" "${lab_assertions[@]}"
+    run_case "lab-mobile-dark" "/lab" "$mobile_width" "$mobile_height" dark "" "#operations-surface" "${lab_assertions[@]}"
     ;;
   *)
     echo "error: unsupported PORTFOLIO_SMOKE_MODE=${mode}; expected smoke or matrix" >&2

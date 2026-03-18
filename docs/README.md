@@ -61,9 +61,12 @@ This repo has two documentation layers:
 
 - Before downstream publish or accept steps, run `bash scripts/check_publish_dry_run.sh`.
 - That gate includes local workspace tests, a Docker runtime build-and-boot smoke check that hits `/health` and then renders the live portfolio routes, and a local `act -j repo-checks` run against the repo CI workflow.
+- The portfolio browser smoke now compares the stable portfolio routes against committed baselines by default under `artifacts/visual/baseline/portfolio-smoke`, so visual regressions fail the local publish gate instead of staying advisory.
+- `/lab` stays in the smoke path for live route/assertion coverage, but its operations timeline is still treated as a volatile surface rather than a pixel-locked baseline.
 - `repo-checks` also verifies the Docker runtime image keeps the expected `/health` probe and includes both `curl` and `wget` for host-platform healthchecks.
 - This repo also ships a `.githooks/pre-push` hook for the same gate; enable it locally with `git config core.hooksPath .githooks`.
-- For a heavier visual pass, run `PORTFOLIO_SMOKE_MODE=matrix PORTFOLIO_SMOKE_USE_BASELINES=1 bash scripts/check_portfolio_browser_smoke.sh`, and add `PORTFOLIO_SMOKE_UPDATE_BASELINE=1` when you intentionally refresh the saved local baselines under `artifacts/visual/baseline/portfolio-smoke`.
+- To refresh the default baselines intentionally, run `PORTFOLIO_SMOKE_UPDATE_BASELINE=1 bash scripts/check_portfolio_browser_smoke.sh`.
+- For a heavier visual pass, run `PORTFOLIO_SMOKE_MODE=matrix bash scripts/check_portfolio_browser_smoke.sh`, and add `PORTFOLIO_SMOKE_UPDATE_BASELINE=1` when you intentionally refresh the wider matrix under `artifacts/visual/baseline/portfolio-smoke`.
 
 ## Suggested Reading Paths
 
