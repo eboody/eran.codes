@@ -14,6 +14,8 @@ image_tag="eran_codes-smoke:${USER:-local}-$$"
 network_name="${project}_net"
 postgres_container="${project}_postgres"
 app_container="${project}_app"
+browser_smoke_mode="${DOCKER_SMOKE_BROWSER_MODE:-smoke}"
+skip_browser_smoke="${DOCKER_SMOKE_SKIP_BROWSER_SMOKE:-0}"
 session_secret="${DOCKER_SMOKE_SESSION_SECRET:-BwcHBwcHBwcHBwcHBwcHBwcHBwcHBwcHBwcHBwcHBwcHBwcHBwcHBwcHBwcHBwcHBwcHBwcHBwcHBwcHBwcHBw}"
 database_url="postgresql://app:app@postgres:5432/app"
 
@@ -104,3 +106,12 @@ if [[ "$health_status" != "healthy" ]]; then
 fi
 
 curl --fail --silent --show-error "http://127.0.0.1:${host_port}/health" >/dev/null
+
+if [[ "$skip_browser_smoke" != "1" ]]; then
+  echo "Running portfolio browser smoke against runtime image..."
+  PORTFOLIO_SMOKE_BASE_URL="http://127.0.0.1:${host_port}" \
+  PORTFOLIO_SMOKE_MODE="$browser_smoke_mode" \
+  PORTFOLIO_SMOKE_USE_BASELINES=0 \
+  PORTFOLIO_SMOKE_CURRENT_DIR="${PORTFOLIO_SMOKE_CURRENT_DIR:-artifacts/visual/current/docker-smoke}" \
+  bash scripts/check_portfolio_browser_smoke.sh
+fi

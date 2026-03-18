@@ -42,6 +42,10 @@ struct Args {
     #[arg(long, default_value_t = 600)]
     click_wait_ms: u64,
     #[arg(long)]
+    assert_selector: Vec<String>,
+    #[arg(long, default_value_t = 5_000)]
+    assert_timeout_ms: u64,
+    #[arg(long)]
     dump_html: Option<PathBuf>,
     #[arg(long, default_value_t = false)]
     debug_events: bool,
@@ -134,6 +138,13 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
     }
 
     stabilize_page_for_snapshot(&page).await?;
+    assert_selectors_present(
+        &page,
+        &args.assert_selector,
+        args.assert_timeout_ms,
+        args.debug_events,
+    )
+    .await?;
 
     if let Some(path) = &args.dump_html {
         if let Some(parent) = path.parent() {
@@ -292,6 +303,33 @@ html {
         None,
     )
     .await?;
+    Ok(())
+}
+
+async fn assert_selectors_present(
+    page: &playwright::api::Page,
+    selectors: &[String],
+    timeout_ms: u64,
+    debug_events: bool,
+) -> Result<(), Box<dyn std::error::Error>> {
+    for selector in selectors {
+        if debug_events {
+            eprintln!("[browser:assert] selector={selector}");
+        }
+        let found = page
+            .wait_for_selector_builder(selector)
+            .timeout(timeout_ms as f64)
+            .wait_for_selector()
+            .await?;
+        if found.is_none() {
+            return Err(io::Error::new(
+                io::ErrorKind::NotFound,
+                format!("assert selector not found: {selector}"),
+            )
+            .into());
+        }
+    }
+
     Ok(())
 }
 

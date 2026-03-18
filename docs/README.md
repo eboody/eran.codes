@@ -60,9 +60,10 @@ This repo has two documentation layers:
 ## Release Gate
 
 - Before downstream publish or accept steps, run `bash scripts/check_publish_dry_run.sh`.
-- That gate includes local workspace tests, a Docker runtime build-and-boot `/health` smoke check, and a local `act -j repo-checks` run against the repo CI workflow.
+- That gate includes local workspace tests, a Docker runtime build-and-boot smoke check that hits `/health` and then renders the live portfolio routes, and a local `act -j repo-checks` run against the repo CI workflow.
 - `repo-checks` also verifies the Docker runtime image keeps the expected `/health` probe and includes both `curl` and `wget` for host-platform healthchecks.
 - This repo also ships a `.githooks/pre-push` hook for the same gate; enable it locally with `git config core.hooksPath .githooks`.
+- For a heavier visual pass, run `PORTFOLIO_SMOKE_MODE=matrix PORTFOLIO_SMOKE_USE_BASELINES=1 bash scripts/check_portfolio_browser_smoke.sh`, and add `PORTFOLIO_SMOKE_UPDATE_BASELINE=1` when you intentionally refresh the saved local baselines under `artifacts/visual/baseline/portfolio-smoke`.
 
 ## Suggested Reading Paths
 
