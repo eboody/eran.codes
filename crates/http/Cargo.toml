@@ -44,7 +44,7 @@ strum = { workspace = true }
 strum_macros = { workspace = true }
 syntect = "5.3.0"
 modum = "0.3.1"
-statum = "0.6.0"
+statum = "0.6.1"
 
 [dev-dependencies]
 async-trait = "0.1.89"
