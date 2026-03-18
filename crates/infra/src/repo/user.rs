@@ -111,7 +111,7 @@ impl AppUserRepository for SqlxUserRepository {
     async fn create_with_credentials(
         &self,
         user: &user::User,
-        password_hash: &auth::PasswordHash,
+        password_hash: &auth::password::Hash,
     ) -> app::user::Result<()> {
         let user_id = user.id.as_uuid().to_string();
         let username = user.username.to_string();

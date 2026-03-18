@@ -1,12 +1,12 @@
 use super::build_flow_event;
-use crate::trace_log::TraceEntry;
+use crate::trace_log::store;
 use crate::types::{
     LogFieldName, LogFieldValue, LogLevelText, LogMessageText, LogTargetText, TimestampText,
 };
 use crate::views::partials::demo::log;
 
-fn entry(target: &str, message: &str, fields: Vec<(&str, &str)>) -> TraceEntry {
-    TraceEntry::builder()
+fn entry(target: &str, message: &str, fields: Vec<(&str, &str)>) -> store::TraceEntry {
+    store::TraceEntry::builder()
         .timestamp(TimestampText::new("2026-03-08 22:15:27"))
         .level(LogLevelText::new("INFO"))
         .target(LogTargetText::new(target))

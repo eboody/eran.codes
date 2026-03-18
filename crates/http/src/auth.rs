@@ -1,4 +1,10 @@
-use axum::{body::Body, http, middleware::Next, response, response::IntoResponse};
+use axum::{
+    body::Body,
+    http,
+    middleware::Next,
+    response::IntoResponse,
+    response::{Redirect, Response},
+};
 use axum_login::{AuthSession, AuthUser, AuthnBackend};
 use bon::Builder;
 use nutype::nutype;
@@ -107,7 +113,7 @@ pub async fn set_user_context_middleware(
     auth_session: Session,
     req: http::Request<Body>,
     next: Next,
-) -> response::Response {
+) -> Response {
     if let Some(user) = auth_session.user.as_ref() {
         request::set_user_id(user.id.to_string());
     }
@@ -119,7 +125,7 @@ pub async fn require_auth_middleware(
     auth_session: Session,
     req: http::Request<Body>,
     next: Next,
-) -> response::Response {
+) -> Response {
     if auth_session.user.is_some() {
         return next.run(req).await;
     }
@@ -134,5 +140,5 @@ pub async fn require_auth_middleware(
         Route::Login.as_str(),
         urlencoding::encode(next_path)
     );
-    response::Redirect::to(&redirect).into_response()
+    Redirect::to(&redirect).into_response()
 }

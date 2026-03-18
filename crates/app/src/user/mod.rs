@@ -23,20 +23,20 @@ pub trait Repository: Send + Sync {
     async fn create_with_credentials(
         &self,
         user: &user::User,
-        password_hash: &crate::auth::PasswordHash,
+        password_hash: &crate::auth::password::Hash,
     ) -> Result<()>;
 }
 
 #[derive(Clone)]
 pub struct Service {
     users: Arc<dyn Repository>,
-    hasher: Arc<dyn crate::auth::PasswordHasher>,
+    hasher: Arc<dyn crate::auth::password::Hasher>,
 }
 
 impl Service {
     pub fn new(
         users: Arc<dyn Repository>,
-        hasher: Arc<dyn crate::auth::PasswordHasher>,
+        hasher: Arc<dyn crate::auth::password::Hasher>,
     ) -> Self {
         Self { users, hasher }
     }
@@ -93,7 +93,7 @@ mod tests {
         async fn create_with_credentials(
             &self,
             _user: &user::User,
-            _password_hash: &crate::auth::PasswordHash,
+            _password_hash: &crate::auth::password::Hash,
         ) -> Result<()> {
             match self.create_outcome {
                 CreateOutcome::Ok => Ok(()),
@@ -106,10 +106,13 @@ mod tests {
         hash_outcome: HashOutcome,
     }
 
-    impl crate::auth::PasswordHasher for TestHasher {
-        fn hash(&self, _password: &str) -> crate::auth::Result<crate::auth::PasswordHash> {
+    impl crate::auth::password::Hasher for TestHasher {
+        fn hash(
+            &self,
+            _password: &str,
+        ) -> crate::auth::Result<crate::auth::password::Hash> {
             match self.hash_outcome {
-                HashOutcome::Ok => Ok(crate::auth::PasswordHash::new("hash")),
+                HashOutcome::Ok => Ok(crate::auth::password::Hash::new("hash")),
                 HashOutcome::Fail => Err(crate::auth::Error::hash_password(
                     std::io::Error::other("hash failed"),
                 )),
@@ -119,7 +122,7 @@ mod tests {
         fn verify(
             &self,
             _password: &str,
-            _password_hash: &crate::auth::PasswordHash,
+            _password_hash: &crate::auth::password::Hash,
         ) -> crate::auth::Result<bool> {
             Ok(true)
         }

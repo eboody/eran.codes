@@ -96,7 +96,7 @@ mod tests {
             .id(user::Id::new_v4())
             .username(user::Username::try_new("person").expect("valid username"))
             .email(user::Email::try_new("person@example.com").expect("valid email"))
-            .password_hash(super::super::PasswordHash::new("hash"))
+            .password_hash(super::super::password::Hash::new("hash"))
             .session_hash(super::super::SessionHash::new("session"))
             .build()
     }

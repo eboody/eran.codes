@@ -1,7 +1,7 @@
 use secrecy::{ExposeSecret, SecretString};
 use statum::{machine, state, transition};
 
-use super::{AuthenticatedUser, Credentials, PasswordHash, PasswordHasher, Record, Result};
+use super::{AuthenticatedUser, Credentials, Record, Result, password};
 use domain::user;
 
 #[derive(Clone, Debug)]
@@ -69,13 +69,13 @@ impl AuthenticateFlow<Incoming> {
 }
 
 impl AuthenticateFlow<RecordFound> {
-    pub(super) fn password_hash(&self) -> &PasswordHash {
+    pub(super) fn password_hash(&self) -> &password::Hash {
         &self.state_data.record.password_hash
     }
 
     pub(super) fn verify_password(
         self,
-        hasher: &dyn PasswordHasher,
+        hasher: &dyn password::Hasher,
     ) -> Result<PasswordCheckOutcome> {
         let verified =
             hasher.verify(self.password().expose_secret(), self.password_hash())?;
@@ -137,7 +137,7 @@ pub(super) enum PasswordCheckOutcome {
 impl LookupOutcome {
     pub(super) fn authenticate(
         self,
-        hasher: &dyn PasswordHasher,
+        hasher: &dyn password::Hasher,
     ) -> Result<Option<AuthenticatedUser>> {
         match self {
             Self::Found(found) => Ok(found.verify_password(hasher)?.into_user_option()),
@@ -174,7 +174,7 @@ mod tests {
             .id(user::Id::new_v4())
             .username(test_username())
             .email(test_email())
-            .password_hash(PasswordHash::new("hash"))
+            .password_hash(password::Hash::new("hash"))
             .session_hash(super::super::SessionHash::new("session"))
             .build()
     }
@@ -190,12 +190,12 @@ mod tests {
         ok: bool,
     }
 
-    impl PasswordHasher for TestHasher {
-        fn hash(&self, _password: &str) -> Result<PasswordHash> {
-            Ok(PasswordHash::new("unused"))
+    impl password::Hasher for TestHasher {
+        fn hash(&self, _password: &str) -> Result<password::Hash> {
+            Ok(password::Hash::new("unused"))
         }
 
-        fn verify(&self, _password: &str, _password_hash: &PasswordHash) -> Result<bool> {
+        fn verify(&self, _password: &str, _password_hash: &password::Hash) -> Result<bool> {
             Ok(self.ok)
         }
     }

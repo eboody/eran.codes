@@ -1,6 +1,6 @@
+pub mod name;
+
 use bon::Builder;
-use nutype::nutype;
-use snafu::prelude::*;
 use strum_macros::{Display, EnumString};
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, Display, EnumString)]
@@ -13,28 +13,13 @@ pub enum Name {
     Support,
 }
 
-#[nutype(
-    sanitize(trim),
-    validate(not_empty, len_char_max = 64),
-    derive(Debug, Clone, PartialEq, Eq, Display)
-)]
-pub struct NameText(String);
-
-#[derive(Debug, Clone, PartialEq, Snafu)]
-pub enum NameError {
-    #[snafu(display("{source}"))]
-    Invalid { source: NameTextError },
-    #[snafu(display("{value}"))]
-    Unknown { value: NameText },
-}
-
 impl Name {
-    pub fn try_new(value: impl AsRef<str>) -> Result<Self, NameError> {
-        let raw = NameText::try_new(value.as_ref())
-            .map_err(|source| NameError::Invalid { source })?;
+    pub fn try_new(value: impl AsRef<str>) -> Result<Self, name::Error> {
+        let raw = name::Text::try_new(value.as_ref())
+            .map_err(|source| name::Error::Invalid { source })?;
         raw.to_string()
             .parse()
-            .map_err(|_| NameError::Unknown { value: raw })
+            .map_err(|_| name::Error::Unknown { value: raw })
     }
 }
 
@@ -81,7 +66,7 @@ pub struct Room {
 
 #[cfg(test)]
 mod tests {
-    use super::{Name, NameError};
+    use super::{Name, name};
 
     #[test]
     fn room_name_accepts_known_values() {
@@ -94,11 +79,11 @@ mod tests {
     fn room_name_rejects_unknown_values() {
         assert!(matches!(
             Name::try_new("lobby"),
-            Err(NameError::Unknown { .. })
+            Err(name::Error::Unknown { .. })
         ));
         assert!(matches!(
             Name::try_new("random-room"),
-            Err(NameError::Unknown { .. })
+            Err(name::Error::Unknown { .. })
         ));
     }
 }

@@ -296,7 +296,7 @@ mod tests {
         async fn create_with_credentials(
             &self,
             _user: &domain::user::User,
-            _password_hash: &auth::PasswordHash,
+            _password_hash: &auth::password::Hash,
         ) -> user::Result<()> {
             Ok(())
         }
@@ -304,15 +304,15 @@ mod tests {
 
     struct TestHasher;
 
-    impl auth::PasswordHasher for TestHasher {
-        fn hash(&self, _password: &str) -> auth::Result<auth::PasswordHash> {
-            Ok(auth::PasswordHash::new("hash"))
+    impl auth::password::Hasher for TestHasher {
+        fn hash(&self, _password: &str) -> auth::Result<auth::password::Hash> {
+            Ok(auth::password::Hash::new("hash"))
         }
 
         fn verify(
             &self,
             _password: &str,
-            _password_hash: &auth::PasswordHash,
+            _password_hash: &auth::password::Hash,
         ) -> auth::Result<bool> {
             Ok(true)
         }
@@ -423,11 +423,11 @@ mod tests {
     struct ModerationQueue;
 
     #[async_trait]
-    impl app::chat::ModerationQueue for ModerationQueue {
+    impl app::chat::moderation::Queue for ModerationQueue {
         async fn enqueue(
             &self,
             _message_id: &domain::chat::message::Id,
-            _reason: &app::chat::ModerationReason,
+            _reason: &app::chat::moderation::Reason,
         ) -> app::chat::Result<()> {
             Ok(())
         }
@@ -435,7 +435,7 @@ mod tests {
         async fn list_pending(
             &self,
             _limit: usize,
-        ) -> app::chat::Result<Vec<app::chat::ModerationItem>> {
+        ) -> app::chat::Result<Vec<app::chat::moderation::Item>> {
             Ok(Vec::new())
         }
 
@@ -443,8 +443,8 @@ mod tests {
             &self,
             _message_id: &domain::chat::message::Id,
             _reviewer_id: &domain::chat::UserId,
-            _decision: app::chat::ModerationDecision,
-            _reason: Option<app::chat::ModerationReason>,
+            _decision: app::chat::moderation::Decision,
+            _reason: Option<app::chat::moderation::Reason>,
         ) -> app::chat::Result<app::chat::PendingMutationResult> {
             Ok(app::chat::PendingMutationResult::Applied)
         }
@@ -466,8 +466,8 @@ mod tests {
     struct AuditLog;
 
     #[async_trait]
-    impl app::chat::AuditLog for AuditLog {
-        async fn record(&self, _entry: app::chat::AuditEntry) -> app::chat::Result<()> {
+    impl app::chat::audit::Log for AuditLog {
+        async fn record(&self, _entry: app::chat::audit::Entry) -> app::chat::Result<()> {
             Ok(())
         }
     }

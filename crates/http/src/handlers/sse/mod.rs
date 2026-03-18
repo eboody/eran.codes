@@ -283,7 +283,7 @@ impl Drop for ConnectionCleanupGuard {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::trace_log::TraceEntry;
+    use crate::trace_log::store::TraceEntry;
     use crate::types::{
         LogLevelText, LogMessageText, LogTargetText, RequestId, SessionId, TimestampText,
     };

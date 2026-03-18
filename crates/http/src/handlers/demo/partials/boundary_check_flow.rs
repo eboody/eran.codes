@@ -18,7 +18,7 @@ pub(super) struct BoundaryCheckPartialFlow<BoundaryCheckPartialState> {
     username: Option<Text>,
     email: Option<Text>,
     result: Option<Text>,
-    trace: Vec<crate::trace_log::TraceEntry>,
+    trace: Vec<crate::trace_log::store::TraceEntry>,
 }
 
 impl BoundaryCheckPartialFlow<Incoming> {

@@ -3,6 +3,7 @@ mod moderate_flow;
 mod post_flow;
 
 use axum::extract::Extension;
+use axum::response::Response;
 use datastar::axum::ReadSignals;
 use serde::Deserialize;
 
@@ -77,7 +78,7 @@ pub async fn post_chat_message(
     Extension(state): Extension<crate::State>,
     auth_session: crate::auth::Session,
     ReadSignals(signals): ReadSignals<ChatSignals>,
-) -> Result<axum::response::Response, crate::error::Error> {
+) -> Result<Response, crate::Error> {
     if let Some(tab_id) = signals.sse_tab_id.clone() {
         request::set_sse_tab_id(tab_id);
     }
@@ -93,7 +94,7 @@ pub async fn post_chat_message(
 pub async fn post_demo_chat_message(
     Extension(state): Extension<crate::State>,
     ReadSignals(signals): ReadSignals<DemoChatSignals>,
-) -> Result<axum::response::Response, crate::error::Error> {
+) -> Result<Response, crate::Error> {
     if let Some(tab_id) = signals.sse_tab_id.clone() {
         request::set_sse_tab_id(tab_id);
     }

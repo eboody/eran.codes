@@ -7,6 +7,7 @@ if ! command -v rg >/dev/null 2>&1; then
 fi
 
 status=0
+trace_log_root="crates/http/src/trace_log"
 
 count_matches() {
   local pattern="$1"
@@ -19,18 +20,18 @@ count_matches() {
 # Legacy type names should not remain after rename.
 if rg --no-heading --line-number '\b(LiveLog|NetworkLog|TraceLog)\b' \
   crates/http/src/views/partials \
-  crates/http/src/trace_log.rs \
+  "${trace_log_root}" \
   >/dev/null; then
   echo "log-componentization-contract: found legacy log type names (LiveLog/NetworkLog/TraceLog)."
   rg --no-heading --line-number '\b(LiveLog|NetworkLog|TraceLog)\b' \
     crates/http/src/views/partials \
-    crates/http/src/trace_log.rs || true
+    "${trace_log_root}" || true
   status=1
 fi
 
 # Trace log store should patch using renamed log composite.
-if ! rg --no-heading --line-number 'TransportLogSet::builder\(\)' crates/http/src/trace_log.rs >/dev/null; then
-  echo "crates/http/src/trace_log.rs: expected TransportLogSet::builder() usage."
+if ! rg --no-heading --line-number 'TransportLogSet::builder\(\)' "${trace_log_root}/store.rs" >/dev/null; then
+  echo "${trace_log_root}/store.rs: expected TransportLogSet::builder() usage."
   status=1
 fi
 
@@ -56,13 +57,13 @@ if [[ "${count_chat_request_id}" -lt "2" ]]; then
   status=1
 fi
 
-if ! rg --no-heading --line-number 'upsert_context_field\(fields,\s*LogFieldKey::RequestId' crates/http/src/trace_log.rs >/dev/null; then
-  echo "crates/http/src/trace_log.rs: expected append_context_fields to inject request ids into traced events."
+if ! rg --no-heading --line-number 'upsert_context_field\(fields,\s*LogFieldKey::RequestId' "${trace_log_root}/layer.rs" >/dev/null; then
+  echo "${trace_log_root}/layer.rs: expected append_context_fields to inject request ids into traced events."
   status=1
 fi
 
-if ! rg --no-heading --line-number 'append_context_fields_does_not_duplicate_existing_request_id' crates/http/src/trace_log.rs >/dev/null; then
-  echo "crates/http/src/trace_log.rs: expected regression test for pre-existing request ids in append_context_fields."
+if ! rg --no-heading --line-number 'append_context_fields_does_not_duplicate_existing_request_id' "${trace_log_root}/layer.rs" >/dev/null; then
+  echo "${trace_log_root}/layer.rs: expected regression test for pre-existing request ids in append_context_fields."
   status=1
 fi
 

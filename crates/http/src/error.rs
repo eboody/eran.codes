@@ -332,7 +332,7 @@ mod tests {
     #[test]
     fn auth_repository_errors_map_to_internal_server_error() {
         let response = Error::from(app::auth::Error::query_repository(
-            app::auth::RepositoryOperation::FindByEmail,
+            app::auth::repository::Operation::FindByEmail,
             std::io::Error::other("db unavailable"),
         ))
         .error_response_for_kind(crate::request::Kind::Page);

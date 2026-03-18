@@ -12,7 +12,7 @@ pub struct UserMaterializedData {
 #[derive(Clone, Debug, PartialEq)]
 pub struct PasswordHashedData {
     user: user::User,
-    password_hash: crate::auth::PasswordHash,
+    password_hash: crate::auth::password::Hash,
 }
 
 #[derive(Clone, Debug, PartialEq)]
@@ -101,7 +101,7 @@ impl RegisterUserFlow<EmailAvailable> {
 impl RegisterUserFlow<UserMaterialized> {
     pub(super) fn attach_password_hash(
         self,
-        password_hash: crate::auth::PasswordHash,
+        password_hash: crate::auth::password::Hash,
     ) -> RegisterUserFlow<PasswordHashed> {
         let data = PasswordHashedData {
             user: self.state_data.user.clone(),
@@ -152,7 +152,7 @@ impl RegisterUserFlow<PasswordHashed> {
         &self.state_data.user
     }
 
-    pub(super) fn password_hash(&self) -> &crate::auth::PasswordHash {
+    pub(super) fn password_hash(&self) -> &crate::auth::password::Hash {
         &self.state_data.password_hash
     }
 
@@ -175,7 +175,7 @@ impl RegisterUserFlow<Persisted> {
 impl RegisterUserFlow<UserMaterialized> {
     fn hash_password(
         self,
-        hasher: &dyn crate::auth::PasswordHasher,
+        hasher: &dyn crate::auth::password::Hasher,
     ) -> Result<RegisterUserFlow<PasswordHashed>, Error> {
         let password_hash = hasher
             .hash(self.password().expose_secret())
@@ -249,7 +249,7 @@ mod tests {
         let expected_user_id = materialized.state_data.user.id;
 
         let hashed =
-            materialized.attach_password_hash(crate::auth::PasswordHash::new("hash"));
+            materialized.attach_password_hash(crate::auth::password::Hash::new("hash"));
 
         assert_eq!(hashed.user().id, expected_user_id);
         assert_eq!(hashed.password_hash().to_string(), "hash");
@@ -285,7 +285,7 @@ mod tests {
         async fn create_with_credentials(
             &self,
             user: &user::User,
-            _password_hash: &crate::auth::PasswordHash,
+            _password_hash: &crate::auth::password::Hash,
         ) -> super::super::Result<()> {
             self.created_users
                 .lock()
@@ -308,10 +308,13 @@ mod tests {
         hash_outcome: HashOutcome,
     }
 
-    impl crate::auth::PasswordHasher for TestHasher {
-        fn hash(&self, _password: &str) -> crate::auth::Result<crate::auth::PasswordHash> {
+    impl crate::auth::password::Hasher for TestHasher {
+        fn hash(
+            &self,
+            _password: &str,
+        ) -> crate::auth::Result<crate::auth::password::Hash> {
             match self.hash_outcome {
-                HashOutcome::Ok => Ok(crate::auth::PasswordHash::new("hash")),
+                HashOutcome::Ok => Ok(crate::auth::password::Hash::new("hash")),
                 HashOutcome::Fail => Err(crate::auth::Error::hash_password(
                     std::io::Error::other("hash failed"),
                 )),
@@ -321,7 +324,7 @@ mod tests {
         fn verify(
             &self,
             _password: &str,
-            _password_hash: &crate::auth::PasswordHash,
+            _password_hash: &crate::auth::password::Hash,
         ) -> crate::auth::Result<bool> {
             unimplemented!("not used in this test")
         }

@@ -1,10 +1,10 @@
-use crate::trace_log::TraceEntry;
+use crate::trace_log::store;
 use crate::types::{LogFieldKey, Text};
 use crate::views::partials::components;
 use crate::views::partials::demo::log;
 
 pub(super) fn request_end_event(
-    entry: &TraceEntry,
+    entry: &store::TraceEntry,
 ) -> (Text, Text, Vec<components::Pill>) {
     let method = log::vm::request_flow::pills::method_or_unknown(entry);
     let path = log::vm::request_flow::pills::path_or_root(entry);
@@ -29,7 +29,7 @@ pub(super) fn request_end_event(
 }
 
 pub(super) fn request_start_event(
-    entry: &TraceEntry,
+    entry: &store::TraceEntry,
 ) -> (Text, Text, Vec<components::Pill>) {
     let method = log::vm::request_flow::pills::method_or_unknown(entry);
     let path = log::vm::request_flow::pills::path_or_root(entry);

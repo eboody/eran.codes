@@ -1,7 +1,7 @@
 use bon::Builder;
 use maud::Render;
 
-use crate::trace_log::TraceEntry;
+use crate::trace_log::store;
 use crate::types::Text;
 use crate::views::partials::components;
 
@@ -9,7 +9,7 @@ use super::vm;
 
 #[derive(Builder)]
 pub struct RequestTraceLog<'a> {
-    pub entries: &'a [TraceEntry],
+    pub entries: &'a [store::TraceEntry],
 }
 
 impl Render for RequestTraceLog<'_> {

@@ -19,7 +19,7 @@ pub enum Error {
     InvalidModerationDecision { decision: String },
     #[snafu(display("invalid moderation reason: {source}"))]
     InvalidModerationReason {
-        source: super::ModerationReasonError,
+        source: super::moderation::ReasonError,
     },
     #[snafu(display("invalid stored message status: {status}"))]
     InvalidStoredMessageStatus { status: String },
@@ -78,17 +78,19 @@ pub enum RepositoryError {
     },
     #[snafu(display("failed to decode room name: {source}"))]
     DecodeRoomName {
-        source: domain::chat::room::NameError,
+        source: domain::chat::room::name::Error,
     },
     #[snafu(display("failed to decode client id: {source}"))]
-    DecodeClientId { source: domain::chat::ClientIdError },
+    DecodeClientId {
+        source: domain::chat::client::IdError,
+    },
     #[snafu(display("failed to decode message body: {source}"))]
     DecodeMessageBody {
         source: domain::chat::message::BodyError,
     },
     #[snafu(display("failed to decode moderation room name: {source}"))]
     DecodeModerationRoomName {
-        source: domain::chat::room::NameError,
+        source: domain::chat::room::name::Error,
     },
     #[snafu(display("failed to decode moderation message body: {source}"))]
     DecodeModerationMessageBody {
@@ -96,7 +98,7 @@ pub enum RepositoryError {
     },
     #[snafu(display("failed to decode moderation reason: {source}"))]
     DecodeModerationReason {
-        source: super::ModerationReasonError,
+        source: super::moderation::ReasonError,
     },
     #[snafu(display("failed to decode moderation timestamp: {source}"))]
     DecodeModerationTimestamp { source: super::TimestampTextError },
@@ -125,13 +127,13 @@ impl Error {
         }
     }
 
-    pub fn decode_room_name(source: domain::chat::room::NameError) -> Self {
+    pub fn decode_room_name(source: domain::chat::room::name::Error) -> Self {
         Self::Repository {
             source: RepositoryError::DecodeRoomName { source },
         }
     }
 
-    pub fn decode_client_id(source: domain::chat::ClientIdError) -> Self {
+    pub fn decode_client_id(source: domain::chat::client::IdError) -> Self {
         Self::Repository {
             source: RepositoryError::DecodeClientId { source },
         }
@@ -143,7 +145,7 @@ impl Error {
         }
     }
 
-    pub fn decode_moderation_room_name(source: domain::chat::room::NameError) -> Self {
+    pub fn decode_moderation_room_name(source: domain::chat::room::name::Error) -> Self {
         Self::Repository {
             source: RepositoryError::DecodeModerationRoomName { source },
         }
@@ -157,7 +159,7 @@ impl Error {
         }
     }
 
-    pub fn decode_moderation_reason(source: super::ModerationReasonError) -> Self {
+    pub fn decode_moderation_reason(source: super::moderation::ReasonError) -> Self {
         Self::Repository {
             source: RepositoryError::DecodeModerationReason { source },
         }
@@ -183,7 +185,7 @@ impl Error {
         }
     }
 
-    pub fn invalid_moderation_reason(source: super::ModerationReasonError) -> Self {
+    pub fn invalid_moderation_reason(source: super::moderation::ReasonError) -> Self {
         Self::InvalidModerationReason { source }
     }
 
@@ -241,7 +243,7 @@ mod tests {
 
     #[test]
     fn invalid_moderation_reason_preserves_source() {
-        let source = super::super::ModerationReason::try_new("x".repeat(201))
+        let source = super::super::moderation::Reason::try_new("x".repeat(201))
             .expect_err("invalid moderation reason");
         let error = Error::invalid_moderation_reason(source);
 

@@ -18,7 +18,7 @@ pub(super) struct AuthStatusPartialFlow<AuthStatusPartialState> {
     email: Option<Text>,
     session_id: Option<Text>,
     expiry: Option<Text>,
-    trace: Vec<crate::trace_log::TraceEntry>,
+    trace: Vec<crate::trace_log::store::TraceEntry>,
 }
 
 impl AuthStatusPartialFlow<Incoming> {

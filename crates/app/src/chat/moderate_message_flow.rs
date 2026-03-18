@@ -1,9 +1,6 @@
 use statum::{machine, state, transition};
 
-use super::{
-    AuditKey, AuditValue, Error, ModerateMessage, ModerationDecision, ModerationReason,
-    PendingMutationResult,
-};
+use super::{Error, ModerateMessage, PendingMutationResult, audit, moderation};
 use domain::chat;
 
 #[derive(Clone, Debug, PartialEq)]
@@ -26,7 +23,7 @@ pub struct ResolutionData {
 #[derive(Clone, Debug, PartialEq)]
 pub struct AuditPreparedData {
     room_id: chat::room::Id,
-    metadata: Vec<(AuditKey, AuditValue)>,
+    metadata: Vec<(audit::Key, audit::Value)>,
 }
 
 #[state]
@@ -45,8 +42,8 @@ pub enum ModerateMessageState {
 pub(super) struct ModerateMessageFlow<ModerateMessageState> {
     message_id: chat::message::Id,
     reviewer_id: chat::UserId,
-    decision: ModerationDecision,
-    reason: Option<ModerationReason>,
+    decision: moderation::Decision,
+    reason: Option<moderation::Reason>,
 }
 
 #[transition]
@@ -128,8 +125,8 @@ impl ModerateMessageFlow<MessageLoaded> {
 impl ModerateMessageFlow<PendingVerified> {
     pub(super) fn resolve(self) -> ModerateMessageFlow<Resolved> {
         let message_status = match self.decision {
-            ModerationDecision::Approve => chat::message::Status::Visible,
-            ModerationDecision::Remove => chat::message::Status::Removed,
+            moderation::Decision::Approve => chat::message::Status::Visible,
+            moderation::Decision::Remove => chat::message::Status::Removed,
         };
         let data = ResolutionData {
             room_id: self.state_data.room_id,
@@ -187,19 +184,19 @@ impl ModerateMessageFlow<QueueCompletionApplied> {
         let room_id = self.state_data.room_id;
         let metadata = vec![
             (
-                AuditKey::MessageId,
-                AuditValue::new(self.message_id.as_uuid().to_string()),
+                audit::Key::MessageId,
+                audit::Value::new(self.message_id.as_uuid().to_string()),
             ),
             (
-                AuditKey::Decision,
-                AuditValue::new(self.decision.to_string()),
+                audit::Key::Decision,
+                audit::Value::new(self.decision.to_string()),
             ),
             (
-                AuditKey::Reason,
+                audit::Key::Reason,
                 self.reason
                     .clone()
-                    .map(|reason| AuditValue::new(reason.to_string()))
-                    .unwrap_or_else(|| AuditValue::new("")),
+                    .map(|reason| audit::Value::new(reason.to_string()))
+                    .unwrap_or_else(|| audit::Value::new("")),
             ),
         ];
         self.transition_with(AuditPreparedData { room_id, metadata })
@@ -215,11 +212,11 @@ impl<S: ModerateMessageStateTrait> ModerateMessageFlow<S> {
         self.reviewer_id
     }
 
-    pub(super) fn decision(&self) -> ModerationDecision {
+    pub(super) fn decision(&self) -> moderation::Decision {
         self.decision
     }
 
-    pub(super) fn reason(&self) -> Option<&ModerationReason> {
+    pub(super) fn reason(&self) -> Option<&moderation::Reason> {
         self.reason.as_ref()
     }
 }
@@ -266,7 +263,7 @@ impl ModerateMessageFlow<AuditPrepared> {
         self.state_data.room_id
     }
 
-    pub(super) fn audit_metadata(&self) -> Vec<(AuditKey, AuditValue)> {
+    pub(super) fn audit_metadata(&self) -> Vec<(audit::Key, audit::Value)> {
         self.state_data.metadata.clone()
     }
 
@@ -279,7 +276,7 @@ impl ModerateMessageFlow<AuditPrepared> {
             .record(service.audit_entry(
                 self.room_id(),
                 self.reviewer_id(),
-                super::AuditAction::MessageModerate,
+                super::audit::Action::MessageModerate,
                 self.audit_metadata(),
             ))
             .await?;
@@ -400,7 +397,7 @@ mod tests {
 
     fn build_command(
         message_id: chat::message::Id,
-        decision: ModerationDecision,
+        decision: moderation::Decision,
     ) -> ModerateMessage {
         ModerateMessage::builder()
             .message_id(message_id)
@@ -496,23 +493,23 @@ mod tests {
 
     #[derive(Default)]
     struct TestModerationQueue {
-        completions: Mutex<Vec<(chat::message::Id, chat::UserId, ModerationDecision)>>,
+        completions: Mutex<Vec<(chat::message::Id, chat::UserId, moderation::Decision)>>,
     }
 
     impl TestModerationQueue {
         fn completions(
             &self,
-        ) -> Vec<(chat::message::Id, chat::UserId, ModerationDecision)> {
+        ) -> Vec<(chat::message::Id, chat::UserId, moderation::Decision)> {
             self.completions.lock().expect("completions lock").clone()
         }
     }
 
     #[async_trait]
-    impl super::super::ModerationQueue for TestModerationQueue {
+    impl super::super::moderation::Queue for TestModerationQueue {
         async fn enqueue(
             &self,
             _message_id: &chat::message::Id,
-            _reason: &super::super::ModerationReason,
+            _reason: &super::super::moderation::Reason,
         ) -> super::super::Result<()> {
             unimplemented!("not used in this test")
         }
@@ -520,7 +517,7 @@ mod tests {
         async fn list_pending(
             &self,
             _limit: usize,
-        ) -> super::super::Result<Vec<super::super::ModerationItem>> {
+        ) -> super::super::Result<Vec<super::super::moderation::Item>> {
             unimplemented!("not used in this test")
         }
 
@@ -528,8 +525,8 @@ mod tests {
             &self,
             message_id: &chat::message::Id,
             reviewer_id: &chat::UserId,
-            decision: ModerationDecision,
-            _reason: Option<super::super::ModerationReason>,
+            decision: moderation::Decision,
+            _reason: Option<super::super::moderation::Reason>,
         ) -> super::super::Result<PendingMutationResult> {
             self.completions.lock().expect("completions lock").push((
                 *message_id,
@@ -542,20 +539,20 @@ mod tests {
 
     #[derive(Default)]
     struct TestAuditLog {
-        entries: Mutex<Vec<super::super::AuditEntry>>,
+        entries: Mutex<Vec<super::super::audit::Entry>>,
     }
 
     impl TestAuditLog {
-        fn entries(&self) -> Vec<super::super::AuditEntry> {
+        fn entries(&self) -> Vec<super::super::audit::Entry> {
             self.entries.lock().expect("entries lock").clone()
         }
     }
 
     #[async_trait]
-    impl super::super::AuditLog for TestAuditLog {
+    impl super::super::audit::Log for TestAuditLog {
         async fn record(
             &self,
-            entry: super::super::AuditEntry,
+            entry: super::super::audit::Entry,
         ) -> super::super::Result<()> {
             self.entries.lock().expect("entries lock").push(entry);
             Ok(())
@@ -613,7 +610,7 @@ mod tests {
     #[test]
     fn ensure_pending_rejects_non_pending_messages() {
         let message = build_message(chat::message::Status::Visible);
-        let command = build_command(message.id, ModerationDecision::Approve);
+        let command = build_command(message.id, moderation::Decision::Approve);
 
         let loaded = ModerateMessageFlow::<Incoming>::from_command(command)
             .load_lookup(Some(message))
@@ -626,7 +623,7 @@ mod tests {
     #[test]
     fn resolve_maps_decision_to_message_status() {
         let message = build_message(chat::message::Status::Pending);
-        let command = build_command(message.id, ModerationDecision::Remove);
+        let command = build_command(message.id, moderation::Decision::Remove);
 
         let pending = ModerateMessageFlow::<Incoming>::from_command(command)
             .load_lookup(Some(message))
@@ -637,13 +634,13 @@ mod tests {
         let resolved = pending.resolve();
 
         assert_eq!(resolved.message_status(), chat::message::Status::Removed);
-        assert_eq!(resolved.decision(), ModerationDecision::Remove);
+        assert_eq!(resolved.decision(), moderation::Decision::Remove);
     }
 
     #[test]
     fn applied_markers_require_applied_mutation_result() {
         let message = build_message(chat::message::Status::Pending);
-        let command = build_command(message.id, ModerationDecision::Approve);
+        let command = build_command(message.id, moderation::Decision::Approve);
         let pending = ModerateMessageFlow::<Incoming>::from_command(command)
             .load_lookup(Some(message))
             .expect("loaded")
@@ -661,7 +658,7 @@ mod tests {
     #[test]
     fn load_lookup_rejects_missing_message() {
         let command =
-            build_command(chat::message::Id::new_v4(), ModerationDecision::Approve);
+            build_command(chat::message::Id::new_v4(), moderation::Decision::Approve);
         let incoming = ModerateMessageFlow::<Incoming>::from_command(command);
 
         let result = incoming.load_lookup(None);
@@ -671,7 +668,7 @@ mod tests {
     #[test]
     fn prepare_audit_contains_message_id_metadata() {
         let message = build_message(chat::message::Status::Pending);
-        let command = build_command(message.id, ModerationDecision::Approve);
+        let command = build_command(message.id, moderation::Decision::Approve);
         let prepared = ModerateMessageFlow::<Incoming>::from_command(command)
             .load_lookup(Some(message))
             .expect("loaded")
@@ -691,7 +688,7 @@ mod tests {
             prepared
                 .audit_metadata()
                 .iter()
-                .any(|(key, _)| *key == AuditKey::MessageId)
+                .any(|(key, _)| *key == audit::Key::MessageId)
         );
     }
 
@@ -709,7 +706,7 @@ mod tests {
 
         let result = ModerateMessageFlow::<Incoming>::from_command(build_command(
             message.id,
-            ModerationDecision::Approve,
+            moderation::Decision::Approve,
         ))
         .moderate(&service)
         .await;
@@ -723,7 +720,7 @@ mod tests {
         assert_eq!(audit.entries().len(), 1);
         assert_eq!(
             audit.entries()[0].action,
-            super::super::AuditAction::MessageModerate
+            super::super::audit::Action::MessageModerate
         );
     }
 }

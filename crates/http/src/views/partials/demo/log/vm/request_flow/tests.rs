@@ -1,6 +1,6 @@
 use super::request_flows;
 
-use crate::trace_log::TraceEntry;
+use crate::trace_log::store;
 use crate::types::{
     LogFieldName, LogFieldValue, LogLevelText, LogMessageText, LogTargetText,
     SseTabId, TimestampText,
@@ -11,8 +11,8 @@ fn entry(
     target: &str,
     message: &str,
     fields: Vec<(&str, &str)>,
-) -> TraceEntry {
-    TraceEntry::builder()
+) -> store::TraceEntry {
+    store::TraceEntry::builder()
         .timestamp(TimestampText::new(timestamp))
         .level(LogLevelText::new("INFO"))
         .target(LogTargetText::new(target))

@@ -1,7 +1,7 @@
-use crate::trace_log::TraceEntry;
+use crate::trace_log::store;
 use crate::types::{LogFieldKey, LogFieldName, LogFieldValue, Text};
 
-pub fn field_text(entry: &TraceEntry, key: LogFieldKey) -> Option<Text> {
+pub fn field_text(entry: &store::TraceEntry, key: LogFieldKey) -> Option<Text> {
     let name = LogFieldName::from(key);
     entry
         .fields

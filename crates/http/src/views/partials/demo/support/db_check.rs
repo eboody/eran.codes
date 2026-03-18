@@ -8,7 +8,7 @@ use crate::views::partials;
 pub struct DbCheck {
     pub email: Text,
     pub result: Text,
-    pub trace: Vec<crate::trace_log::TraceEntry>,
+    pub trace: Vec<crate::trace_log::store::TraceEntry>,
 }
 
 impl Render for DbCheck {

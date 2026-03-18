@@ -1,6 +1,6 @@
 use statum::{machine, state, transition};
 
-use super::{AuditAction, AuditKey, AuditValue, CreateRoom, RoomRole};
+use super::{CreateRoom, RoomRole, audit};
 use domain::chat;
 
 #[derive(Clone, Debug, PartialEq)]
@@ -123,10 +123,10 @@ impl CreateRoomFlow<OwnerMembershipAdded> {
             .record(service.audit_entry(
                 room_id,
                 created_by,
-                AuditAction::RoomCreate,
+                audit::Action::RoomCreate,
                 vec![(
-                    AuditKey::RoomId,
-                    AuditValue::new(room_id.as_uuid().to_string()),
+                    audit::Key::RoomId,
+                    audit::Value::new(room_id.as_uuid().to_string()),
                 )],
             ))
             .await?;

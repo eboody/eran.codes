@@ -17,7 +17,7 @@ pub(super) struct RequestMetaPartialFlow<RequestMetaPartialState> {
     user_id: Option<Text>,
     client_ip: Option<Text>,
     user_agent: Option<Text>,
-    trace: Vec<crate::trace_log::TraceEntry>,
+    trace: Vec<crate::trace_log::store::TraceEntry>,
 }
 
 impl RequestMetaPartialFlow<Incoming> {

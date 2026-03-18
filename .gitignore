@@ -1,6 +1,7 @@
 target
 .nvimlog
 .tmp-playwright/
+rustc-ice-*.txt
 artifacts/visual/current
 artifacts/
 .playwright-browsers/

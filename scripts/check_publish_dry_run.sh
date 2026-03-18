@@ -22,5 +22,8 @@ export DOCKER_TMPDIR="$docker_tmp_root"
 echo "Running workspace tests (without doctests)..."
 cargo test --workspace --lib --tests
 
+echo "Running Docker runtime smoke check..."
+bash scripts/check_docker_runtime_smoke.sh
+
 echo "Running local GitHub Actions gate under act..."
 act -j repo-checks

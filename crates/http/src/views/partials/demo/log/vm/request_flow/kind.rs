@@ -1,5 +1,6 @@
 use crate::trace_log::{
-    LogMessageKind, LogMessageKnown, LogTargetKind, LogTargetKnown, TraceEntry,
+    store,
+    log::{message, target},
 };
 use crate::types::LogFieldKey;
 use crate::views::partials::demo::log;
@@ -14,34 +15,34 @@ pub(super) enum FlowEvent {
     Backend,
 }
 
-pub(super) fn flow_event(entry: &TraceEntry) -> Option<FlowEvent> {
-    let target_kind = LogTargetKind::parse(&entry.target.to_string());
-    let message_kind = LogMessageKind::parse(&entry.message.to_string());
+pub(super) fn flow_event(entry: &store::TraceEntry) -> Option<FlowEvent> {
+    let target_kind = target::Kind::parse(&entry.target.to_string());
+    let message_kind = message::Kind::parse(&entry.message.to_string());
 
     match (target_kind, message_kind) {
         (
-            LogTargetKind::Known(LogTargetKnown::DemoRequest),
-            LogMessageKind::Known(LogMessageKnown::RequestEnd),
+            target::Kind::Known(target::Known::DemoRequest),
+            message::Kind::Known(message::Known::RequestEnd),
         ) => Some(FlowEvent::RequestEnd),
         (
-            LogTargetKind::Known(LogTargetKnown::DemoRequestDiagnostic),
-            LogMessageKind::Known(LogMessageKnown::RequestStart),
+            target::Kind::Known(target::Known::DemoRequestDiagnostic),
+            message::Kind::Known(message::Known::RequestStart),
         ) => Some(FlowEvent::RequestStart),
         (
-            LogTargetKind::Known(LogTargetKnown::DemoChat),
-            LogMessageKind::Known(LogMessageKnown::ChatMessageIncoming),
+            target::Kind::Known(target::Known::DemoChat),
+            message::Kind::Known(message::Known::ChatMessageIncoming),
         ) => Some(FlowEvent::ChatIncoming),
         (
-            LogTargetKind::Known(LogTargetKnown::DemoSse),
-            LogMessageKind::Known(LogMessageKnown::ChatMessageBroadcast),
+            target::Kind::Known(target::Known::DemoSse),
+            message::Kind::Known(message::Known::ChatMessageBroadcast),
         ) => Some(FlowEvent::ChatBroadcast),
-        (LogTargetKind::Known(LogTargetKnown::DemoSse), _) => Some(FlowEvent::Sse),
-        (LogTargetKind::Known(LogTargetKnown::DemoRequest), _)
-        | (LogTargetKind::Known(LogTargetKnown::DemoRequestDiagnostic), _)
-        | (LogTargetKind::Known(LogTargetKnown::DemoChat), _) => {
+        (target::Kind::Known(target::Known::DemoSse), _) => Some(FlowEvent::Sse),
+        (target::Kind::Known(target::Known::DemoRequest), _)
+        | (target::Kind::Known(target::Known::DemoRequestDiagnostic), _)
+        | (target::Kind::Known(target::Known::DemoChat), _) => {
             Some(FlowEvent::Backend)
         }
-        (LogTargetKind::Other(_), _)
+        (target::Kind::Other(_), _)
             if log::vm::field_text(entry, LogFieldKey::RequestId).is_some() =>
         {
             Some(FlowEvent::Backend)

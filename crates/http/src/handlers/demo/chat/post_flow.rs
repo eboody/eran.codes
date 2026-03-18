@@ -1,11 +1,11 @@
-use axum::{http, response::IntoResponse};
+use axum::{http, response::IntoResponse, response::Response};
 use datastar::prelude::{ElementPatchMode, PatchElements};
 use domain::chat;
 use maud::Render;
 use statum::{machine, state, transition};
 
 use super::{ChatSignals, DemoChatSignals};
-use crate::trace_log::{LogMessageKnown, LogTargetKnown};
+use crate::trace_log::log::{message, target};
 use crate::types::{LogFieldKey, Text, UserIdText};
 use crate::views::partials;
 use crate::{paths::Route, request};
@@ -134,7 +134,7 @@ impl ChatPostFlow<Incoming> {
     pub(super) async fn post_and_respond(
         self,
         state: &crate::State,
-    ) -> Result<axum::response::Response, crate::error::Error> {
+    ) -> Result<Response, crate::Error> {
         let posted = self.mark_command_built().post_message(state).await?;
         let rendered = posted.record_incoming(state).render_message_html();
         let broadcasted = rendered.broadcast(state);
@@ -149,11 +149,9 @@ impl ChatPostFlow<Incoming> {
             .unwrap_or_else(|| Text::from(format!("fallback-{}", uuid::Uuid::new_v4())))
     }
 
-    fn room_id_from_text(
-        value: &str,
-    ) -> Result<domain::chat::room::Id, crate::error::Error> {
+    fn room_id_from_text(value: &str) -> Result<domain::chat::room::Id, crate::Error> {
         let id = value.parse::<uuid::Uuid>().map_err(|error| {
-            crate::error::Error::from(app::chat::Error::invalid_room_id(error))
+            crate::Error::from(app::chat::Error::invalid_room_id(error))
         })?;
 
         Ok(domain::chat::room::Id::from_uuid(id))
@@ -161,11 +159,11 @@ impl ChatPostFlow<Incoming> {
 
     fn message_body_from_text(
         value: &str,
-    ) -> Result<domain::chat::message::Body, crate::error::Error> {
+    ) -> Result<domain::chat::message::Body, crate::Error> {
         domain::chat::message::Body::try_new(value)
             .map_err(domain::chat::Error::from)
             .map_err(app::chat::Error::from)
-            .map_err(crate::error::Error::from)
+            .map_err(crate::Error::from)
     }
 
     fn chat_user_id_from_user_id(value: domain::user::Id) -> domain::chat::UserId {
@@ -206,7 +204,7 @@ impl ChatPostFlow<CommandBuilt> {
     pub(super) async fn post_message(
         self,
         state: &crate::State,
-    ) -> Result<ChatPostFlow<MessagePosted>, crate::error::Error> {
+    ) -> Result<ChatPostFlow<MessagePosted>, crate::Error> {
         let message = state.chat.post_message(self.command()).await?;
         Ok(self.mark_message_posted(message))
     }
@@ -241,12 +239,12 @@ impl ChatPostFlow<MessagePosted> {
             request::current_context()
                 .and_then(|value| value.session_id)
                 .as_ref(),
-            crate::trace_log::TraceEntry::builder()
+            crate::trace_log::store::TraceEntry::builder()
                 .timestamp(crate::trace_log::now_timestamp_short())
                 .level(crate::types::LogLevelText::new("INFO"))
-                .target(crate::types::LogTargetText::from(LogTargetKnown::DemoChat))
+                .target(crate::types::LogTargetText::from(target::Known::DemoChat))
                 .message(crate::types::LogMessageText::from(
-                    LogMessageKnown::ChatMessageIncoming,
+                    message::Known::ChatMessageIncoming,
                 ))
                 .fields(vec![
                     (
@@ -340,15 +338,15 @@ impl ChatPostFlow<HtmlRendered> {
             .mode(ElementPatchMode::Prepend)
             .into_datastar_event();
         tracing::info!(
-            target: LogTargetKnown::DemoSse.as_str(),
-            message = LogMessageKnown::ChatMessageBroadcast.as_str(),
+            target: target::Known::DemoSse.as_str(),
+            message = message::Known::ChatMessageBroadcast.as_str(),
             selector = "[data-chat-messages]",
             mode = "prepend",
             payload_bytes = message_html.len() as u64
         );
         if let Err(error) = state.sse.broadcast(crate::sse::Event::from_event(event)) {
             tracing::warn!(
-                target: LogTargetKnown::DemoSse.as_str(),
+                target: target::Known::DemoSse.as_str(),
                 ?error,
                 "chat broadcast could not reach active clients"
             );
@@ -359,12 +357,12 @@ impl ChatPostFlow<HtmlRendered> {
         let sse_tab_id = context.and_then(|value| value.sse_tab_id);
         state.trace_log.record_sse_event(
             session_id.as_ref(),
-            crate::trace_log::TraceEntry::builder()
+            crate::trace_log::store::TraceEntry::builder()
                 .timestamp(crate::trace_log::now_timestamp_short())
                 .level(crate::types::LogLevelText::new("INFO"))
-                .target(crate::types::LogTargetText::from(LogTargetKnown::DemoSse))
+                .target(crate::types::LogTargetText::from(target::Known::DemoSse))
                 .message(crate::types::LogMessageText::from(
-                    LogMessageKnown::ChatMessageBroadcast,
+                    message::Known::ChatMessageBroadcast,
                 ))
                 .fields(vec![
                     (

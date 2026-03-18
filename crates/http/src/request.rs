@@ -1,4 +1,4 @@
-use axum::{body::Body, extract::Extension, http, middleware::Next, response};
+use axum::{body::Body, extract::Extension, http, middleware::Next, response::Response};
 
 use crate::sse::{self, SESSION_COOKIE};
 use crate::types::{ClientIp, RequestId, SessionId, SseTabId, UserAgent, UserIdText};
@@ -41,7 +41,7 @@ pub async fn set_context_middleware(
     Extension(state): Extension<crate::State>,
     req: http::Request<Body>,
     next: Next,
-) -> response::Response {
+) -> Response {
     let context = context_from_request(&req, &state.cookie_key);
     let mut req = req;
     req.extensions_mut().insert(context.clone());

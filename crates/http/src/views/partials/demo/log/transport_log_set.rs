@@ -1,7 +1,7 @@
 use bon::Builder;
 use maud::Render;
 
-use crate::trace_log::TraceEntry;
+use crate::trace_log::store;
 use crate::types::Text;
 use crate::views::partials::components;
 
@@ -9,7 +9,7 @@ use super::vm;
 
 #[derive(Builder)]
 pub struct TransportLogSet<'a> {
-    pub entries: &'a [TraceEntry],
+    pub entries: &'a [store::TraceEntry],
     pub active_tab_id: Option<crate::types::SseTabId>,
     #[builder(default)]
     pub excluded_terms: Vec<Text>,
@@ -69,8 +69,8 @@ mod tests {
         target: &str,
         message: &str,
         fields: Vec<(&str, &str)>,
-    ) -> TraceEntry {
-        TraceEntry::builder()
+    ) -> store::TraceEntry {
+        store::TraceEntry::builder()
             .timestamp(TimestampText::new(timestamp))
             .level(LogLevelText::new("INFO"))
             .target(LogTargetText::new(target))

@@ -1,10 +1,13 @@
-use crate::trace_log::{LogTargetKind, LogTargetKnown, TraceEntry};
+use crate::trace_log::{
+    store,
+    log::target,
+};
 use crate::types::{LogFieldKey, Text};
 use crate::views::partials::components;
 use crate::views::partials::demo::log;
 
 pub(super) fn backend_event(
-    entry: &TraceEntry,
+    entry: &store::TraceEntry,
 ) -> (Text, Text, Vec<components::Pill>) {
     let summary = db_backend_summary(entry)
         .unwrap_or_else(|| Text::from(format!("{}: {}", entry.target, entry.message)));
@@ -16,10 +19,10 @@ pub(super) fn backend_event(
     )
 }
 
-fn db_backend_summary(entry: &TraceEntry) -> Option<Text> {
+fn db_backend_summary(entry: &store::TraceEntry) -> Option<Text> {
     if !matches!(
-        LogTargetKind::parse(&entry.target.to_string()),
-        LogTargetKind::Known(LogTargetKnown::DemoDb)
+        target::Kind::parse(&entry.target.to_string()),
+        target::Kind::Known(target::Known::DemoDb)
     ) {
         return None;
     }

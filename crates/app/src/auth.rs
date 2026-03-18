@@ -1,5 +1,7 @@
 mod authenticate_flow;
 mod get_user_flow;
+pub mod password;
+pub mod repository;
 
 use std::sync::Arc;
 
@@ -8,7 +10,6 @@ use bon::Builder;
 use nutype::nutype;
 use secrecy::SecretString;
 use snafu::prelude::*;
-use strum_macros::Display;
 
 use domain::user;
 
@@ -19,49 +20,13 @@ type BoxError = Box<dyn std::error::Error + Send + Sync + 'static>;
 #[derive(Debug, Snafu)]
 pub enum Error {
     #[snafu(display("{source}"))]
-    Repository { source: RepositoryError },
+    Repository { source: repository::Error },
     #[snafu(display("auth password hashing failed: {source}"))]
-    HashPassword { source: PasswordHashError },
+    HashPassword { source: password::HashError },
     #[snafu(display("stored password hash parsing failed: {source}"))]
-    ParseStoredPasswordHash { source: PasswordHashError },
+    ParseStoredPasswordHash { source: password::HashError },
     #[snafu(display("invalid authenticated user id: {source}"))]
     InvalidAuthenticatedUserId { source: uuid::Error },
-}
-
-#[derive(Clone, Copy, Debug, Display)]
-pub enum RepositoryOperation {
-    #[strum(serialize = "find auth record by email")]
-    FindByEmail,
-    #[strum(serialize = "find auth record by id")]
-    FindById,
-}
-
-#[derive(Debug, Snafu)]
-pub enum RepositoryError {
-    #[snafu(display("auth repository query failed while {operation}: {source}"))]
-    Query {
-        operation: RepositoryOperation,
-        source: BoxError,
-    },
-    #[snafu(display("failed to decode auth username: {source}"))]
-    DecodeUsername { source: user::UsernameError },
-    #[snafu(display("failed to decode auth email: {source}"))]
-    DecodeEmail { source: user::EmailError },
-}
-
-#[derive(Debug)]
-pub struct PasswordHashError(BoxError);
-
-impl core::fmt::Display for PasswordHashError {
-    fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
-        write!(f, "{}", self.0)
-    }
-}
-
-impl std::error::Error for PasswordHashError {
-    fn source(&self) -> Option<&(dyn std::error::Error + 'static)> {
-        Some(&*self.0)
-    }
 }
 
 fn box_error(source: impl std::error::Error + Send + Sync + 'static) -> BoxError {
@@ -70,11 +35,11 @@ fn box_error(source: impl std::error::Error + Send + Sync + 'static) -> BoxError
 
 impl Error {
     pub fn query_repository(
-        operation: RepositoryOperation,
+        operation: repository::Operation,
         source: impl std::error::Error + Send + Sync + 'static,
     ) -> Self {
         Self::Repository {
-            source: RepositoryError::Query {
+            source: repository::Error::Query {
                 operation,
                 source: box_error(source),
             },
@@ -83,19 +48,19 @@ impl Error {
 
     pub fn decode_username(source: user::UsernameError) -> Self {
         Self::Repository {
-            source: RepositoryError::DecodeUsername { source },
+            source: repository::Error::DecodeUsername { source },
         }
     }
 
     pub fn decode_email(source: user::EmailError) -> Self {
         Self::Repository {
-            source: RepositoryError::DecodeEmail { source },
+            source: repository::Error::DecodeEmail { source },
         }
     }
 
     pub fn hash_password(source: impl std::error::Error + Send + Sync + 'static) -> Self {
         Self::HashPassword {
-            source: PasswordHashError(box_error(source)),
+            source: password::HashError(box_error(source)),
         }
     }
 
@@ -103,7 +68,7 @@ impl Error {
         source: impl std::error::Error + Send + Sync + 'static,
     ) -> Self {
         Self::ParseStoredPasswordHash {
-            source: PasswordHashError(box_error(source)),
+            source: password::HashError(box_error(source)),
         }
     }
 }
@@ -127,7 +92,7 @@ pub struct Record {
     pub id: user::Id,
     pub username: user::Username,
     pub email: user::Email,
-    pub password_hash: PasswordHash,
+    pub password_hash: password::Hash,
     pub session_hash: SessionHash,
 }
 
@@ -190,19 +155,14 @@ pub trait Repository: Send + Sync {
     async fn find_by_id(&self, user_id: &user::Id) -> Result<Option<Record>>;
 }
 
-pub trait PasswordHasher: Send + Sync {
-    fn hash(&self, password: &str) -> Result<PasswordHash>;
-    fn verify(&self, password: &str, password_hash: &PasswordHash) -> Result<bool>;
-}
-
 #[derive(Clone)]
 pub struct ProviderImpl {
     repo: Arc<dyn Repository>,
-    hasher: Arc<dyn PasswordHasher>,
+    hasher: Arc<dyn password::Hasher>,
 }
 
 impl ProviderImpl {
-    pub fn new(repo: Arc<dyn Repository>, hasher: Arc<dyn PasswordHasher>) -> Self {
+    pub fn new(repo: Arc<dyn Repository>, hasher: Arc<dyn password::Hasher>) -> Self {
         Self { repo, hasher }
     }
 }
@@ -228,9 +188,6 @@ impl Provider for ProviderImpl {
 }
 
 #[nutype(sanitize(trim), derive(Clone, Debug, PartialEq, Display))]
-pub struct PasswordHash(String);
-
-#[nutype(sanitize(trim), derive(Clone, Debug, PartialEq, Display))]
 pub struct SessionHash(String);
 
 #[cfg(test)]
@@ -249,7 +206,7 @@ mod tests {
     #[test]
     fn repository_error_preserves_source() {
         let error = Error::query_repository(
-            RepositoryOperation::FindByEmail,
+            repository::Operation::FindByEmail,
             std::io::Error::other("db unavailable"),
         );
 
@@ -311,8 +268,8 @@ mod tests {
         user::Id::from_uuid(uuid::Uuid::new_v4())
     }
 
-    fn test_password_hash() -> PasswordHash {
-        PasswordHash::new("hash")
+    fn test_password_hash() -> password::Hash {
+        password::Hash::new("hash")
     }
 
     fn test_session_hash() -> SessionHash {
@@ -338,12 +295,12 @@ mod tests {
         ok: bool,
     }
 
-    impl PasswordHasher for TestHasher {
-        fn hash(&self, _password: &str) -> Result<PasswordHash> {
+    impl password::Hasher for TestHasher {
+        fn hash(&self, _password: &str) -> Result<password::Hash> {
             Ok(test_password_hash())
         }
 
-        fn verify(&self, _password: &str, _password_hash: &PasswordHash) -> Result<bool> {
+        fn verify(&self, _password: &str, _password_hash: &password::Hash) -> Result<bool> {
             Ok(self.ok)
         }
     }

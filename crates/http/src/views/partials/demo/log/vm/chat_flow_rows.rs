@@ -2,14 +2,14 @@ use std::str::FromStr;
 
 use maud::{Markup, Render};
 
-use crate::trace_log::TraceEntry;
+use crate::trace_log::store;
 use crate::types::{LogFieldKey, Text};
 use crate::views::partials::components;
 use strum_macros::{Display, EnumString};
 
 use super::field_text;
 
-pub fn chat_flow_rows(entries: &[&TraceEntry]) -> Vec<Vec<Markup>> {
+pub fn chat_flow_rows(entries: &[&store::TraceEntry]) -> Vec<Vec<Markup>> {
     entries
         .iter()
         .rev()
@@ -27,7 +27,7 @@ pub fn chat_flow_rows(entries: &[&TraceEntry]) -> Vec<Vec<Markup>> {
         .collect()
 }
 
-fn direction_pill(entry: &TraceEntry) -> Markup {
+fn direction_pill(entry: &store::TraceEntry) -> Markup {
     match FlowDirection::from_entry(entry) {
         FlowDirection::Incoming => components::Pill::fields("incoming").render(),
         FlowDirection::Outgoing => components::Pill::fields("outgoing").render(),
@@ -35,7 +35,7 @@ fn direction_pill(entry: &TraceEntry) -> Markup {
     }
 }
 
-fn sender_pill(entry: &TraceEntry) -> Markup {
+fn sender_pill(entry: &store::TraceEntry) -> Markup {
     let sender = ChatSender::from_entry(entry);
     let (label, kind) = match sender {
         ChatSender::You => (Text::from("You"), components::BadgeKind::You),
@@ -45,14 +45,14 @@ fn sender_pill(entry: &TraceEntry) -> Markup {
     components::Pill::badge(label, kind).render()
 }
 
-fn receiver_pill(entry: &TraceEntry) -> Markup {
+fn receiver_pill(entry: &store::TraceEntry) -> Markup {
     match field_text(entry, LogFieldKey::Receiver) {
         Some(receiver) => components::Pill::fields(format!("to:{}", receiver)).render(),
         None => components::Pill::fields("to:unknown").render(),
     }
 }
 
-fn user_pill(entry: &TraceEntry) -> Markup {
+fn user_pill(entry: &store::TraceEntry) -> Markup {
     let Some(user_id) = field_text(entry, LogFieldKey::UserId) else {
         return components::Pill::fields("user:unknown").render();
     };
@@ -75,7 +75,7 @@ enum ChatSender {
 }
 
 impl ChatSender {
-    fn from_entry(entry: &TraceEntry) -> Self {
+    fn from_entry(entry: &store::TraceEntry) -> Self {
         let Some(sender) = field_text(entry, LogFieldKey::Sender) else {
             return Self::Unknown;
         };
@@ -118,7 +118,7 @@ enum FlowDirection {
 }
 
 impl FlowDirection {
-    fn from_entry(entry: &TraceEntry) -> Self {
+    fn from_entry(entry: &store::TraceEntry) -> Self {
         let Some(direction) = field_text(entry, LogFieldKey::Direction) else {
             return Self::Unknown;
         };
@@ -145,8 +145,8 @@ mod tests {
         TimestampText,
     };
 
-    fn entry(timestamp: &str, fields: Vec<(&str, &str)>) -> TraceEntry {
-        TraceEntry::builder()
+    fn entry(timestamp: &str, fields: Vec<(&str, &str)>) -> store::TraceEntry {
+        store::TraceEntry::builder()
             .timestamp(TimestampText::new(timestamp))
             .level(LogLevelText::new("INFO"))
             .target(LogTargetText::new("demo.chat"))

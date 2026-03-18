@@ -1,22 +1,22 @@
-use crate::trace_log::TraceEntry;
+use crate::trace_log::store;
 use crate::types::{LogFieldKey, LogFieldValue, Text};
 use crate::views::partials::components;
 use crate::views::partials::demo::log;
 
-pub(super) fn method_or_unknown(entry: &TraceEntry) -> Text {
+pub(super) fn method_or_unknown(entry: &store::TraceEntry) -> Text {
     log::vm::field_text(entry, LogFieldKey::Method)
         .unwrap_or_else(|| Text::from("UNKNOWN"))
 }
 
-pub(super) fn path_or_root(entry: &TraceEntry) -> Text {
+pub(super) fn path_or_root(entry: &store::TraceEntry) -> Text {
     log::vm::field_text(entry, LogFieldKey::Path).unwrap_or_else(|| Text::from("/"))
 }
 
-pub(super) fn status_or_dash(entry: &TraceEntry) -> Text {
+pub(super) fn status_or_dash(entry: &store::TraceEntry) -> Text {
     log::vm::field_text(entry, LogFieldKey::Status).unwrap_or_else(|| Text::from("-"))
 }
 
-pub(super) fn field_pills(entry: &TraceEntry) -> Vec<components::Pill> {
+pub(super) fn field_pills(entry: &store::TraceEntry) -> Vec<components::Pill> {
     let mut pills = Vec::new();
 
     if let Some(method) = log::vm::field_text(entry, LogFieldKey::Method) {
@@ -53,7 +53,7 @@ pub(super) fn field_pills(entry: &TraceEntry) -> Vec<components::Pill> {
 
 pub(super) fn push_fields_as_pills(
     pills: &mut Vec<components::Pill>,
-    entry: &TraceEntry,
+    entry: &store::TraceEntry,
     fields: &[(LogFieldKey, &'static str)],
 ) {
     for (key, name) in fields {
@@ -63,13 +63,13 @@ pub(super) fn push_fields_as_pills(
     }
 }
 
-fn push_db_bind_pills(pills: &mut Vec<components::Pill>, entry: &TraceEntry) {
+fn push_db_bind_pills(pills: &mut Vec<components::Pill>, entry: &store::TraceEntry) {
     for (index, value) in db_bind_values(entry) {
         pills.push(components::Pill::fields(format!("${index}={value}")));
     }
 }
 
-pub(super) fn db_bind_values(entry: &TraceEntry) -> Vec<(usize, Text)> {
+pub(super) fn db_bind_values(entry: &store::TraceEntry) -> Vec<(usize, Text)> {
     let mut values: Vec<(usize, Text)> = entry
         .fields
         .iter()

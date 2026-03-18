@@ -1,4 +1,4 @@
-use crate::trace_log::TraceEntry;
+use crate::trace_log::store;
 use crate::types::Text;
 use crate::views::partials::components;
 use crate::views::partials::demo::log;
@@ -11,7 +11,7 @@ mod tests;
 
 pub(super) fn build_flow_event(
     kind: log::vm::request_flow::kind::FlowEvent,
-    entry: &TraceEntry,
+    entry: &store::TraceEntry,
 ) -> components::logs::composed::FlowEvent {
     let (summary, stage_label, pills) = match kind {
         log::vm::request_flow::kind::FlowEvent::RequestEnd => {

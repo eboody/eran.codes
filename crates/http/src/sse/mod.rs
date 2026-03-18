@@ -11,6 +11,16 @@ mod session;
 
 pub use session::{Handle, Session};
 
+pub mod send {
+    #[derive(Debug)]
+    pub enum Error {
+        SessionMissing,
+        SendFailed,
+    }
+
+    pub type Result<T> = core::result::Result<T, Error>;
+}
+
 #[derive(Clone, Debug, PartialEq, Eq, Hash)]
 pub struct StreamKey {
     session_id: SessionId,
@@ -66,14 +76,6 @@ impl Event {
     }
 }
 
-#[derive(Debug)]
-pub enum SendError {
-    SessionMissing,
-    SendFailed,
-}
-
-pub type SendResult<T> = Result<T, SendError>;
-
 #[derive(Clone, Default)]
 pub struct Registry {
     sessions: Arc<DashMap<StreamKey, Session>>,
@@ -92,7 +94,7 @@ impl Registry {
         (receiver, guard)
     }
 
-    pub fn send(&self, handle: &Handle, event: Event) -> SendResult<()> {
+    pub fn send(&self, handle: &Handle, event: Event) -> send::Result<()> {
         let event_type = format!("{:?}", event.as_datastar_event().event);
         let session_id = handle.id();
         let tab_id = handle
@@ -111,19 +113,19 @@ impl Registry {
             if handle.tab_id().is_none() {
                 return self.send_by_id(&session_id, event);
             }
-            return Err(SendError::SessionMissing);
+            return Err(send::Error::SessionMissing);
         };
 
         let result = session.send(event).map(|_| ());
         if result.is_err() {
             drop(session);
             self.sessions.remove(handle.stream_key());
-            return Err(SendError::SendFailed);
+            return Err(send::Error::SendFailed);
         }
         Ok(())
     }
 
-    pub fn send_by_id(&self, session_id: &SessionId, event: Event) -> SendResult<()> {
+    pub fn send_by_id(&self, session_id: &SessionId, event: Event) -> send::Result<()> {
         let event_type = format!("{:?}", event.as_datastar_event().event);
         tracing::debug!(
             target: "demo.sse",
@@ -133,7 +135,7 @@ impl Registry {
         );
         let keys = self.stream_keys_for_session(session_id);
         if keys.is_empty() {
-            return Err(SendError::SessionMissing);
+            return Err(send::Error::SessionMissing);
         }
 
         let mut sent = 0usize;
@@ -153,13 +155,13 @@ impl Registry {
         }
 
         if sent == 0 {
-            return Err(SendError::SendFailed);
+            return Err(send::Error::SendFailed);
         }
 
         Ok(())
     }
 
-    pub fn broadcast(&self, event: Event) -> SendResult<usize> {
+    pub fn broadcast(&self, event: Event) -> send::Result<usize> {
         let event_type = format!("{:?}", event.as_datastar_event().event);
         let mut sent = 0;
         let mut failed = Vec::new();
@@ -184,7 +186,7 @@ impl Registry {
         }
 
         if sent == 0 && !self.sessions.is_empty() {
-            return Err(SendError::SendFailed);
+            return Err(send::Error::SendFailed);
         }
 
         Ok(sent)
@@ -268,7 +270,7 @@ mod tests {
 
         drop(guard2);
         let send_result = registry.send(&handle, Event::patch_elements("ok"));
-        assert!(matches!(send_result, Err(SendError::SessionMissing)));
+        assert!(matches!(send_result, Err(send::Error::SessionMissing)));
     }
 
     #[test]

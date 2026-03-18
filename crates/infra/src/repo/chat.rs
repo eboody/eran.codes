@@ -1,11 +1,5 @@
-pub use SqlxChatAuditLog as AuditLog;
-pub use SqlxChatModerationQueue as ModerationQueue;
-pub use SqlxChatRateLimiter as RateLimiter;
-pub use SqlxChatRepository as Repository;
-
 use app::chat::{
-    AuditEntry, ModerationQueueStatus, ModerationReason, PendingMutationResult,
-    RepositoryOperation, Result, RoomRole,
+    PendingMutationResult, RepositoryOperation, Result, RoomRole, audit, moderation,
 };
 use async_trait::async_trait;
 use domain::chat;
@@ -26,22 +20,22 @@ enum ChatPersistenceError {
         source: sqlx::Error,
     },
     #[snafu(display("failed to decode room name"))]
-    DecodeRoomName { source: chat::room::NameError },
+    DecodeRoomName { source: chat::room::name::Error },
     #[snafu(display("failed to decode client id"))]
-    DecodeClientId { source: chat::ClientIdError },
+    DecodeClientId { source: chat::client::IdError },
     #[snafu(display("failed to decode message body"))]
     DecodeMessageBody { source: chat::message::BodyError },
     #[snafu(display("invalid stored message status: {status}"))]
     InvalidStoredMessageStatus { status: String },
     #[snafu(display("failed to decode moderation room name"))]
-    DecodeModerationRoomName { source: chat::room::NameError },
+    DecodeModerationRoomName { source: chat::room::name::Error },
     #[snafu(display("failed to decode moderation message body"))]
     DecodeModerationMessageBody { source: chat::message::BodyError },
     #[snafu(display("invalid stored moderation status: {status}"))]
     InvalidStoredModerationStatus { status: String },
     #[snafu(display("failed to decode moderation reason"))]
     DecodeModerationReason {
-        source: app::chat::ModerationReasonError,
+        source: app::chat::moderation::ReasonError,
     },
     #[snafu(display("failed to decode moderation timestamp"))]
     DecodeModerationTimestamp {
@@ -86,11 +80,11 @@ impl From<ChatPersistenceError> for app::chat::Error {
     }
 }
 
-pub struct SqlxChatRepository {
+pub struct Repository {
     pg: PgPool,
 }
 
-impl SqlxChatRepository {
+impl Repository {
     pub fn new(pg: PgPool) -> Self {
         Self { pg }
     }
@@ -124,10 +118,10 @@ impl SqlxChatRepository {
 
     fn client_id_from_db(
         value: Option<String>,
-    ) -> PersistenceResult<Option<chat::ClientId>> {
+    ) -> PersistenceResult<Option<chat::client::Id>> {
         value
             .map(|client_id| {
-                chat::ClientId::try_new(client_id).context(DecodeClientIdSnafu)
+                chat::client::Id::try_new(client_id).context(DecodeClientIdSnafu)
             })
             .transpose()
     }
@@ -152,7 +146,7 @@ impl SqlxChatRepository {
 }
 
 #[async_trait]
-impl app::chat::Repository for SqlxChatRepository {
+impl app::chat::Repository for Repository {
     async fn create_room(&self, room: &chat::Room) -> Result<()> {
         tracing::info!(
             target: "demo.db",
@@ -425,22 +419,22 @@ impl app::chat::Repository for SqlxChatRepository {
     }
 }
 
-pub struct SqlxChatModerationQueue {
+pub struct ModerationQueue {
     pg: PgPool,
 }
 
-impl SqlxChatModerationQueue {
+impl ModerationQueue {
     pub fn new(pg: PgPool) -> Self {
         Self { pg }
     }
 }
 
 #[async_trait]
-impl app::chat::ModerationQueue for SqlxChatModerationQueue {
+impl app::chat::moderation::Queue for ModerationQueue {
     async fn enqueue(
         &self,
         message_id: &chat::message::Id,
-        reason: &ModerationReason,
+        reason: &moderation::Reason,
     ) -> Result<()> {
         tracing::info!(
             target: "demo.db",
@@ -464,7 +458,7 @@ impl app::chat::ModerationQueue for SqlxChatModerationQueue {
         Ok(())
     }
 
-    async fn list_pending(&self, limit: usize) -> Result<Vec<app::chat::ModerationItem>> {
+    async fn list_pending(&self, limit: usize) -> Result<Vec<app::chat::moderation::Item>> {
         tracing::info!(
             target: "demo.db",
             message = "db query",
@@ -506,19 +500,19 @@ impl app::chat::ModerationQueue for SqlxChatModerationQueue {
                 .context(DecodeModerationMessageBodySnafu)?;
             let queue_status = row.get::<String, _>("status");
             let queue_status =
-                queue_status.parse::<ModerationQueueStatus>().map_err(|_| {
-                    ChatPersistenceError::InvalidStoredModerationStatus {
+                queue_status
+                    .parse::<moderation::QueueStatus>()
+                    .map_err(|_| ChatPersistenceError::InvalidStoredModerationStatus {
                         status: queue_status.clone(),
-                    }
-                })?;
-            let reason = ModerationReason::try_new(row.get::<String, _>("reason"))
+                    })?;
+            let reason = moderation::Reason::try_new(row.get::<String, _>("reason"))
                 .context(DecodeModerationReasonSnafu)?;
             let created_at =
                 app::chat::TimestampText::try_new(row.get::<String, _>("created_at"))
                     .context(DecodeModerationTimestampSnafu)?;
 
             items.push(
-                app::chat::ModerationItem::builder()
+                app::chat::moderation::Item::builder()
                     .message_id(chat::message::Id::from_uuid(
                         row.get::<uuid::Uuid, _>("message_id"),
                     ))
@@ -542,12 +536,12 @@ impl app::chat::ModerationQueue for SqlxChatModerationQueue {
         &self,
         message_id: &chat::message::Id,
         reviewer_id: &chat::UserId,
-        decision: app::chat::ModerationDecision,
-        reason: Option<ModerationReason>,
+        decision: app::chat::moderation::Decision,
+        reason: Option<moderation::Reason>,
     ) -> Result<PendingMutationResult> {
         let status = match decision {
-            app::chat::ModerationDecision::Approve => ModerationQueueStatus::Approved,
-            app::chat::ModerationDecision::Remove => ModerationQueueStatus::Removed,
+            app::chat::moderation::Decision::Approve => moderation::QueueStatus::Approved,
+            app::chat::moderation::Decision::Remove => moderation::QueueStatus::Removed,
         };
 
         tracing::info!(
@@ -584,11 +578,11 @@ impl app::chat::ModerationQueue for SqlxChatModerationQueue {
     }
 }
 
-pub struct SqlxChatRateLimiter {
+pub struct RateLimiter {
     pg: PgPool,
 }
 
-impl SqlxChatRateLimiter {
+impl RateLimiter {
     pub fn new(pg: PgPool) -> Self {
         Self { pg }
     }
@@ -609,7 +603,7 @@ fn offset_to_system_time(value: time::OffsetDateTime) -> std::time::SystemTime {
 }
 
 #[async_trait]
-impl app::chat::RateLimiter for SqlxChatRateLimiter {
+impl app::chat::RateLimiter for RateLimiter {
     async fn check(&self, room_id: &chat::room::Id, user_id: &chat::UserId) -> Result<()> {
         tracing::info!(
             target: "demo.db",
@@ -662,19 +656,19 @@ impl app::chat::RateLimiter for SqlxChatRateLimiter {
     }
 }
 
-pub struct SqlxChatAuditLog {
+pub struct AuditLog {
     pg: PgPool,
 }
 
-impl SqlxChatAuditLog {
+impl AuditLog {
     pub fn new(pg: PgPool) -> Self {
         Self { pg }
     }
 }
 
 #[async_trait]
-impl app::chat::AuditLog for SqlxChatAuditLog {
-    async fn record(&self, entry: AuditEntry) -> Result<()> {
+impl app::chat::audit::Log for AuditLog {
+    async fn record(&self, entry: audit::Entry) -> Result<()> {
         let room_id = entry.room_id.as_uuid().to_string();
         let actor_id = entry.actor_id.as_uuid().to_string();
         let action = entry.action.to_string();

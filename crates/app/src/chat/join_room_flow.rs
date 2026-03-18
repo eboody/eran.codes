@@ -1,6 +1,6 @@
 use statum::{machine, state, transition};
 
-use super::{AuditAction, AuditKey, AuditValue, Error, JoinRoom, RoomRole};
+use super::{Error, JoinRoom, RoomRole, audit};
 use domain::chat;
 
 #[state]
@@ -108,8 +108,8 @@ impl JoinRoomFlow<MembershipAdded> {
             .record(service.audit_entry(
                 self.room_id(),
                 self.user_id(),
-                AuditAction::RoomJoin,
-                vec![(AuditKey::Role, AuditValue::new(self.role().to_string()))],
+                audit::Action::RoomJoin,
+                vec![(audit::Key::Role, audit::Value::new(self.role().to_string()))],
             ))
             .await?;
         Ok(self.mark_audited())

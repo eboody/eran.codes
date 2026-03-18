@@ -1,10 +1,10 @@
-use crate::trace_log::TraceEntry;
+use crate::trace_log::store;
 use crate::types::{LogFieldKey, Text};
 use crate::views::partials::components;
 use crate::views::partials::demo::log;
 
 pub(super) fn chat_incoming_event(
-    entry: &TraceEntry,
+    entry: &store::TraceEntry,
 ) -> (Text, Text, Vec<components::Pill>) {
     let sender = log::vm::field_text(entry, LogFieldKey::Sender)
         .unwrap_or_else(|| Text::from("unknown"));
@@ -28,7 +28,7 @@ pub(super) fn chat_incoming_event(
 }
 
 pub(super) fn chat_broadcast_event(
-    entry: &TraceEntry,
+    entry: &store::TraceEntry,
 ) -> (Text, Text, Vec<components::Pill>) {
     let selector = log::vm::field_text(entry, LogFieldKey::Selector)
         .unwrap_or_else(|| Text::from("[unknown-selector]"));

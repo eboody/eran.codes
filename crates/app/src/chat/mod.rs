@@ -1,8 +1,10 @@
+pub mod audit;
 mod create_room_flow;
 mod error;
 mod join_room_flow;
 mod list_messages_flow;
 mod moderate_message_flow;
+pub mod moderation;
 mod post_message_flow;
 
 use std::sync::Arc;
@@ -21,7 +23,7 @@ pub struct PostMessage {
     pub room_id: chat::room::Id,
     pub user_id: chat::UserId,
     pub body: chat::message::Body,
-    pub client_id: Option<chat::ClientId>,
+    pub client_id: Option<chat::client::Id>,
 }
 
 #[derive(Clone, Debug, Builder)]
@@ -50,42 +52,14 @@ pub struct JoinRoom {
 pub struct ModerateMessage {
     pub message_id: chat::message::Id,
     pub reviewer_id: chat::UserId,
-    pub decision: ModerationDecision,
-    pub reason: Option<ModerationReason>,
-}
-
-#[derive(Clone, Debug, Builder)]
-pub struct ModerationItem {
-    pub message_id: chat::message::Id,
-    pub room_id: chat::room::Id,
-    pub room_name: chat::room::Name,
-    pub user_id: chat::UserId,
-    pub body: chat::message::Body,
-    pub queue_status: ModerationQueueStatus,
-    pub reason: ModerationReason,
-    pub created_at: TimestampText,
-}
-
-#[derive(Clone, Copy, Debug, PartialEq, Eq, Display, EnumString)]
-pub enum ModerationDecision {
-    #[strum(serialize = "approve")]
-    Approve,
-    #[strum(serialize = "remove")]
-    Remove,
+    pub decision: moderation::Decision,
+    pub reason: Option<moderation::Reason>,
 }
 
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 pub enum PendingMutationResult {
     Applied,
     NotPendingOrMissing,
-}
-
-#[derive(Clone, Debug, Builder)]
-pub struct AuditEntry {
-    pub room_id: chat::room::Id,
-    pub actor_id: chat::UserId,
-    pub action: AuditAction,
-    pub metadata: Vec<(AuditKey, AuditValue)>,
 }
 
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Display, EnumString)]
@@ -96,68 +70,12 @@ pub enum RoomRole {
     Owner,
 }
 
-#[derive(Clone, Copy, Debug, PartialEq, Eq, Display, EnumString)]
-pub enum ModerationQueueStatus {
-    #[strum(serialize = "pending")]
-    Pending,
-    #[strum(serialize = "approved")]
-    Approved,
-    #[strum(serialize = "removed")]
-    Removed,
-}
-
-#[nutype(
-    sanitize(trim),
-    validate(len_char_max = 200),
-    derive(Clone, Debug, PartialEq, Display)
-)]
-pub struct ModerationReason(String);
-
-impl ModerationReason {
-    pub fn auto() -> Self {
-        Self::try_new("auto").expect("valid static moderation reason")
-    }
-}
-
 #[nutype(
     sanitize(trim),
     validate(len_char_max = 32),
     derive(Clone, Debug, PartialEq, Display)
 )]
 pub struct TimestampText(String);
-
-#[derive(Clone, Copy, Debug, PartialEq, Eq, Display, EnumString)]
-pub enum AuditAction {
-    #[strum(serialize = "chat.room.create")]
-    RoomCreate,
-    #[strum(serialize = "chat.room.join")]
-    RoomJoin,
-    #[strum(serialize = "chat.message.post")]
-    MessagePost,
-    #[strum(serialize = "chat.message.moderate")]
-    MessageModerate,
-}
-
-#[derive(Clone, Copy, Debug, PartialEq, Eq, Display, EnumString)]
-pub enum AuditKey {
-    #[strum(serialize = "room_id")]
-    RoomId,
-    #[strum(serialize = "message_id")]
-    MessageId,
-    #[strum(serialize = "status")]
-    Status,
-    #[strum(serialize = "decision")]
-    Decision,
-    #[strum(serialize = "reason")]
-    Reason,
-    #[strum(serialize = "timestamp_ms")]
-    TimestampMs,
-    #[strum(serialize = "role")]
-    Role,
-}
-
-#[nutype(sanitize(trim), derive(Clone, Debug, PartialEq, Display))]
-pub struct AuditValue(String);
 
 #[async_trait]
 pub trait Repository: Send + Sync {
@@ -196,30 +114,8 @@ pub trait Repository: Send + Sync {
 }
 
 #[async_trait]
-pub trait ModerationQueue: Send + Sync {
-    async fn enqueue(
-        &self,
-        message_id: &chat::message::Id,
-        reason: &ModerationReason,
-    ) -> Result<()>;
-    async fn list_pending(&self, limit: usize) -> Result<Vec<ModerationItem>>;
-    async fn complete_if_pending(
-        &self,
-        message_id: &chat::message::Id,
-        reviewer_id: &chat::UserId,
-        decision: ModerationDecision,
-        reason: Option<ModerationReason>,
-    ) -> Result<PendingMutationResult>;
-}
-
-#[async_trait]
 pub trait RateLimiter: Send + Sync {
     async fn check(&self, room_id: &chat::room::Id, user_id: &chat::UserId) -> Result<()>;
-}
-
-#[async_trait]
-pub trait AuditLog: Send + Sync {
-    async fn record(&self, entry: AuditEntry) -> Result<()>;
 }
 
 pub trait Clock: Send + Sync {
@@ -234,9 +130,9 @@ pub trait IdGenerator: Send + Sync {
 #[derive(Clone)]
 pub struct Service {
     repo: Arc<dyn Repository>,
-    moderation: Arc<dyn ModerationQueue>,
+    moderation: Arc<dyn moderation::Queue>,
     rate_limiter: Arc<dyn RateLimiter>,
-    audit: Arc<dyn AuditLog>,
+    audit: Arc<dyn audit::Log>,
     clock: Arc<dyn Clock>,
     ids: Arc<dyn IdGenerator>,
 }
@@ -244,9 +140,9 @@ pub struct Service {
 impl Service {
     pub fn new(
         repo: Arc<dyn Repository>,
-        moderation: Arc<dyn ModerationQueue>,
+        moderation: Arc<dyn moderation::Queue>,
         rate_limiter: Arc<dyn RateLimiter>,
-        audit: Arc<dyn AuditLog>,
+        audit: Arc<dyn audit::Log>,
         clock: Arc<dyn Clock>,
         ids: Arc<dyn IdGenerator>,
     ) -> Self {
@@ -285,7 +181,10 @@ impl Service {
     }
 
     #[tracing::instrument(skip(self))]
-    pub async fn list_moderation_queue(&self, limit: usize) -> Result<Vec<ModerationItem>> {
+    pub async fn list_moderation_queue(
+        &self,
+        limit: usize,
+    ) -> Result<Vec<moderation::Item>> {
         self.moderation.list_pending(limit).await
     }
 
@@ -319,9 +218,9 @@ impl Service {
         &self,
         room_id: chat::room::Id,
         actor_id: chat::UserId,
-        action: AuditAction,
-        mut metadata: Vec<(AuditKey, AuditValue)>,
-    ) -> AuditEntry {
+        action: audit::Action,
+        mut metadata: Vec<(audit::Key, audit::Value)>,
+    ) -> audit::Entry {
         let timestamp = self
             .clock
             .now()
@@ -329,9 +228,9 @@ impl Service {
             .map(|value| value.as_millis().to_string())
             .unwrap_or_else(|_| "0".to_string());
 
-        metadata.push((AuditKey::TimestampMs, AuditValue::new(timestamp)));
+        metadata.push((audit::Key::TimestampMs, audit::Value::new(timestamp)));
 
-        AuditEntry::builder()
+        audit::Entry::builder()
             .room_id(room_id)
             .actor_id(actor_id)
             .action(action)
@@ -346,10 +245,10 @@ impl Service {
     pub fn builder(
         #[builder(setters(name = with_repo))] repo: Arc<dyn Repository>,
         #[builder(setters(name = with_moderation_queue))] moderation: Arc<
-            dyn ModerationQueue,
+            dyn moderation::Queue,
         >,
         #[builder(setters(name = with_rate_limiter))] rate_limiter: Arc<dyn RateLimiter>,
-        #[builder(setters(name = with_audit_log))] audit: Arc<dyn AuditLog>,
+        #[builder(setters(name = with_audit_log))] audit: Arc<dyn audit::Log>,
         #[builder(setters(name = with_clock))] clock: Arc<dyn Clock>,
         #[builder(setters(name = with_id_generator))] ids: Arc<dyn IdGenerator>,
     ) -> Self {

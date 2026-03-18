@@ -26,7 +26,7 @@ pub struct AuthStatus {
     pub email: Option<Text>,
     pub session_id: Option<Text>,
     pub expiry: Option<Text>,
-    pub trace: Vec<crate::trace_log::TraceEntry>,
+    pub trace: Vec<crate::trace_log::store::TraceEntry>,
 }
 
 impl Render for AuthStatus {

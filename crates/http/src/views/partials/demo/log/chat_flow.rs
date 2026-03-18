@@ -1,7 +1,7 @@
 use bon::Builder;
 use maud::Render;
 
-use crate::trace_log::TraceEntry;
+use crate::trace_log::store;
 use crate::types::Text;
 use crate::views::partials::components;
 
@@ -9,7 +9,7 @@ use super::vm;
 
 #[derive(Clone, Debug, Builder)]
 pub struct ChatFlowPanel<'a> {
-    pub entries: &'a [&'a TraceEntry],
+    pub entries: &'a [&'a store::TraceEntry],
 }
 
 impl Render for ChatFlowPanel<'_> {
@@ -51,8 +51,8 @@ mod tests {
         LogFieldName, LogFieldValue, LogLevelText, LogMessageText, LogTargetText, TimestampText,
     };
 
-    fn entry(timestamp: &str, fields: Vec<(&str, &str)>) -> TraceEntry {
-        TraceEntry::builder()
+    fn entry(timestamp: &str, fields: Vec<(&str, &str)>) -> store::TraceEntry {
+        store::TraceEntry::builder()
             .timestamp(TimestampText::new(timestamp))
             .level(LogLevelText::new("INFO"))
             .target(LogTargetText::new("demo.chat"))

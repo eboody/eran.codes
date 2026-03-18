@@ -15,7 +15,7 @@ pub enum SessionStatusPartialState {
 pub(super) struct SessionStatusPartialFlow<SessionStatusPartialState> {
     session_id: Option<Text>,
     expiry: Option<Text>,
-    trace: Vec<crate::trace_log::TraceEntry>,
+    trace: Vec<crate::trace_log::store::TraceEntry>,
 }
 
 impl SessionStatusPartialFlow<Incoming> {

@@ -1,6 +1,6 @@
 use std::str::FromStr;
 
-use crate::trace_log::TraceEntry;
+use crate::trace_log::store;
 use crate::types::{LogFieldKey, Text};
 use crate::views::partials::components;
 
@@ -8,7 +8,7 @@ use super::{field_text, short_request_id};
 
 pub fn build_grouped_feed<'a, I>(entries: I) -> components::logs::composed::GroupedFeed
 where
-    I: IntoIterator<Item = &'a TraceEntry>,
+    I: IntoIterator<Item = &'a store::TraceEntry>,
 {
     let groups = group_by_request(entries)
         .into_iter()
@@ -44,16 +44,16 @@ where
 
 struct LogGroup<'a> {
     request_id: Option<Text>,
-    entries: Vec<&'a TraceEntry>,
+    entries: Vec<&'a store::TraceEntry>,
 }
 
 fn group_by_request<'a, I>(entries: I) -> Vec<LogGroup<'a>>
 where
-    I: IntoIterator<Item = &'a TraceEntry>,
+    I: IntoIterator<Item = &'a store::TraceEntry>,
 {
     let mut groups: Vec<LogGroup<'a>> = Vec::new();
     let mut order: Vec<Option<Text>> = Vec::new();
-    let mut map: std::collections::HashMap<Option<Text>, Vec<&'a TraceEntry>> =
+    let mut map: std::collections::HashMap<Option<Text>, Vec<&'a store::TraceEntry>> =
         std::collections::HashMap::new();
 
     for entry in entries {
@@ -76,7 +76,7 @@ where
     groups
 }
 
-fn build_pills(entry: &TraceEntry) -> Vec<components::Pill> {
+fn build_pills(entry: &store::TraceEntry) -> Vec<components::Pill> {
     let mut pills = Vec::new();
     pills.push(components::Pill::level(entry.level.clone()));
     if let Some(status) = field_text(entry, LogFieldKey::Status) {
@@ -93,7 +93,7 @@ fn build_pills(entry: &TraceEntry) -> Vec<components::Pill> {
     pills
 }
 
-fn compact_fields(entry: &TraceEntry) -> Vec<components::Pill> {
+fn compact_fields(entry: &store::TraceEntry) -> Vec<components::Pill> {
     if entry.fields.is_empty() {
         return Vec::new();
     }
@@ -119,12 +119,12 @@ fn compact_fields(entry: &TraceEntry) -> Vec<components::Pill> {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::trace_log::TraceEntry;
+    use crate::trace_log::store;
     use crate::types::{LogFieldName, LogFieldValue, LogLevelText, LogMessageText, LogTargetText, TimestampText};
     use maud::Render;
 
-    fn entry(request_id: &str, message: &str) -> TraceEntry {
-        TraceEntry::builder()
+    fn entry(request_id: &str, message: &str) -> store::TraceEntry {
+        store::TraceEntry::builder()
             .timestamp(TimestampText::new("12:00:00"))
             .level(LogLevelText::new("info"))
             .target(LogTargetText::new("demo.request"))

@@ -7,13 +7,13 @@ pub type Result<T> = std::result::Result<T, Error>;
 #[derive(Debug, Snafu)]
 pub enum Error {
     #[snafu(display("invalid room name: {source}"))]
-    RoomName { source: room::NameError },
+    RoomName { source: room::name::Error },
     #[snafu(display("invalid message body: {source}"))]
     MessageBody { source: message::BodyError },
 }
 
-impl From<room::NameError> for Error {
-    fn from(source: room::NameError) -> Self {
+impl From<room::name::Error> for Error {
+    fn from(source: room::name::Error) -> Self {
         Self::RoomName { source }
     }
 }

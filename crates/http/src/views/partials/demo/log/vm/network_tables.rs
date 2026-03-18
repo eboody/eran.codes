@@ -1,22 +1,22 @@
 use maud::{Markup, Render};
 
-use crate::trace_log::TraceEntry;
-use crate::trace_log::{LogMessageKind, LogMessageKnown, LogTargetKind, LogTargetKnown};
+use crate::trace_log::store;
+use crate::trace_log::log::{message, target};
 use crate::types::{LogFieldKey, Text};
 use crate::views::partials::components;
 
 use super::field_text;
 
-pub fn request_rows(entries: &[TraceEntry]) -> Vec<Vec<Markup>> {
+pub fn request_rows(entries: &[store::TraceEntry]) -> Vec<Vec<Markup>> {
     entries
         .iter()
         .filter(|entry| {
             matches!(
-                LogTargetKind::parse(&entry.target.to_string()),
-                LogTargetKind::Known(LogTargetKnown::DemoRequest)
+                target::Kind::parse(&entry.target.to_string()),
+                target::Kind::Known(target::Known::DemoRequest)
             ) && matches!(
-                LogMessageKind::parse(&entry.message.to_string()),
-                LogMessageKind::Known(LogMessageKnown::RequestEnd)
+                message::Kind::parse(&entry.message.to_string()),
+                message::Kind::Known(message::Known::RequestEnd)
             )
         })
         .rev()
@@ -34,13 +34,13 @@ pub fn request_rows(entries: &[TraceEntry]) -> Vec<Vec<Markup>> {
         .collect()
 }
 
-pub fn sse_rows(entries: &[TraceEntry]) -> Vec<Vec<Markup>> {
+pub fn sse_rows(entries: &[store::TraceEntry]) -> Vec<Vec<Markup>> {
     entries
         .iter()
         .filter(|entry| {
             matches!(
-                LogTargetKind::parse(&entry.target.to_string()),
-                LogTargetKind::Known(LogTargetKnown::DemoSse)
+                target::Kind::parse(&entry.target.to_string()),
+                target::Kind::Known(target::Known::DemoSse)
             )
         })
         .rev()
@@ -57,53 +57,53 @@ pub fn sse_rows(entries: &[TraceEntry]) -> Vec<Vec<Markup>> {
         .collect()
 }
 
-pub fn chat_entries(entries: &[TraceEntry]) -> Vec<&TraceEntry> {
+pub fn chat_entries(entries: &[store::TraceEntry]) -> Vec<&store::TraceEntry> {
     entries
         .iter()
         .filter(|entry| {
-            let target_kind = LogTargetKind::parse(&entry.target.to_string());
-            let message_kind = LogMessageKind::parse(&entry.message.to_string());
+            let target_kind = target::Kind::parse(&entry.target.to_string());
+            let message_kind = message::Kind::parse(&entry.message.to_string());
             matches!(
                 (target_kind, message_kind),
                 (
-                    LogTargetKind::Known(LogTargetKnown::DemoChat),
-                    LogMessageKind::Known(LogMessageKnown::ChatMessageIncoming)
+                    target::Kind::Known(target::Known::DemoChat),
+                    message::Kind::Known(message::Known::ChatMessageIncoming)
                 ) | (
-                    LogTargetKind::Known(LogTargetKnown::DemoSse),
-                    LogMessageKind::Known(LogMessageKnown::ChatMessageBroadcast)
+                    target::Kind::Known(target::Known::DemoSse),
+                    message::Kind::Known(message::Known::ChatMessageBroadcast)
                 )
             )
         })
         .collect()
 }
 
-fn method_pill(entry: &TraceEntry) -> Markup {
+fn method_pill(entry: &store::TraceEntry) -> Markup {
     match field_text(entry, LogFieldKey::Method) {
         Some(method) => components::Pill::method(method).render(),
         None => components::Pill::fields("-").render(),
     }
 }
 
-fn path_pill(entry: &TraceEntry) -> Markup {
+fn path_pill(entry: &store::TraceEntry) -> Markup {
     match field_text(entry, LogFieldKey::Path) {
         Some(path) => components::Pill::path(path).render(),
         None => components::Pill::fields("-").render(),
     }
 }
 
-fn status_pill(entry: &TraceEntry) -> Markup {
+fn status_pill(entry: &store::TraceEntry) -> Markup {
     match field_text(entry, LogFieldKey::Status) {
         Some(status) => components::Pill::status(status).render(),
         None => components::Pill::fields("-").render(),
     }
 }
 
-fn latency_pill(entry: &TraceEntry) -> Option<Markup> {
+fn latency_pill(entry: &store::TraceEntry) -> Option<Markup> {
     field_text(entry, LogFieldKey::LatencyMs)
         .map(|value| components::Pill::fields(format!("latency_ms={}", value)).render())
 }
 
-fn source_pill(entry: &TraceEntry) -> Markup {
+fn source_pill(entry: &store::TraceEntry) -> Markup {
     match field_text(entry, LogFieldKey::Sender) {
         Some(sender) => components::Pill::fields(format!("source={}", sender)).render(),
         None => components::Pill::fields("source=unknown").render(),
@@ -123,8 +123,8 @@ mod tests {
         target: &str,
         message: &str,
         fields: Vec<(&str, &str)>,
-    ) -> TraceEntry {
-        TraceEntry::builder()
+    ) -> store::TraceEntry {
+        store::TraceEntry::builder()
             .timestamp(TimestampText::new(timestamp))
             .level(LogLevelText::new("INFO"))
             .target(LogTargetText::new(target))

@@ -1,6 +1,6 @@
 use std::collections::{HashMap, HashSet};
 
-use crate::trace_log::TraceEntry;
+use crate::trace_log::store;
 use crate::types::{LogFieldKey, SseTabId, Text};
 use crate::views::partials::components;
 
@@ -15,7 +15,7 @@ mod tests;
 use event_builder::build_flow_event;
 
 pub fn request_flows(
-    entries: &[TraceEntry],
+    entries: &[store::TraceEntry],
     max_flows: usize,
     active_tab_id: Option<&SseTabId>,
 ) -> Vec<components::logs::composed::Flow> {
@@ -112,7 +112,7 @@ struct FlowAggregate {
 
 fn hydrate_request_fields(
     aggregate: &mut FlowAggregate,
-    entry: &TraceEntry,
+    entry: &store::TraceEntry,
     kind: kind::FlowEvent,
 ) {
     if matches!(kind, kind::FlowEvent::RequestEnd | kind::FlowEvent::RequestStart) {
@@ -139,7 +139,7 @@ fn flow_title(flow: &FlowAggregate) -> Text {
     }
 }
 
-fn flow_id(entry: &TraceEntry, index: usize) -> Text {
+fn flow_id(entry: &store::TraceEntry, index: usize) -> Text {
     field_text(entry, LogFieldKey::RequestId).unwrap_or_else(|| {
         Text::from(format!(
             "orphan-{}-{index}",

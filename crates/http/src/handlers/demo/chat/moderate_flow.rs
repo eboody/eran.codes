@@ -39,7 +39,7 @@ impl ChatModerationFlow<Incoming> {
             .build())
     }
 
-    pub(super) fn parse(self) -> Result<ChatModerationFlow<Parsed>, crate::error::Error> {
+    pub(super) fn parse(self) -> Result<ChatModerationFlow<Parsed>, crate::Error> {
         let command = app::chat::ModerateMessage::builder()
             .message_id(self.message_id()?)
             .reviewer_id(self.reviewer_id)
@@ -49,29 +49,29 @@ impl ChatModerationFlow<Incoming> {
         Ok(self.mark_parsed(command))
     }
 
-    fn message_id(&self) -> Result<domain::chat::message::Id, crate::error::Error> {
+    fn message_id(&self) -> Result<domain::chat::message::Id, crate::Error> {
         let id = self
             .message_id_text
             .to_string()
             .parse::<uuid::Uuid>()
             .map_err(|error| {
-                crate::error::Error::from(app::chat::Error::invalid_message_id(error))
+                crate::Error::from(app::chat::Error::invalid_message_id(error))
             })?;
 
         Ok(domain::chat::message::Id::from_uuid(id))
     }
 
-    fn decision(&self) -> Result<app::chat::ModerationDecision, crate::error::Error> {
+    fn decision(&self) -> Result<app::chat::moderation::Decision, crate::Error> {
         match crate::views::partials::ModerationAction::parse(
             &self.decision_text.to_string(),
         ) {
             Some(crate::views::partials::ModerationAction::Approve) => {
-                Ok(app::chat::ModerationDecision::Approve)
+                Ok(app::chat::moderation::Decision::Approve)
             }
             Some(crate::views::partials::ModerationAction::Remove) => {
-                Ok(app::chat::ModerationDecision::Remove)
+                Ok(app::chat::moderation::Decision::Remove)
             }
-            None => Err(crate::error::Error::from(
+            None => Err(crate::Error::from(
                 app::chat::Error::invalid_moderation_decision(
                     self.decision_text.to_string(),
                 ),
@@ -79,14 +79,12 @@ impl ChatModerationFlow<Incoming> {
         }
     }
 
-    fn reason(&self) -> Result<Option<app::chat::ModerationReason>, crate::error::Error> {
+    fn reason(&self) -> Result<Option<app::chat::moderation::Reason>, crate::Error> {
         self.reason_text
             .clone()
             .map(|value| {
-                app::chat::ModerationReason::try_new(value.to_string()).map_err(|error| {
-                    crate::error::Error::from(app::chat::Error::invalid_moderation_reason(
-                        error,
-                    ))
+                app::chat::moderation::Reason::try_new(value.to_string()).map_err(|error| {
+                    crate::Error::from(app::chat::Error::invalid_moderation_reason(error))
                 })
             })
             .transpose()
@@ -107,7 +105,7 @@ impl ChatModerationFlow<Parsed> {
     pub(super) async fn apply(
         self,
         state: &crate::State,
-    ) -> Result<ChatModerationFlow<Applied>, crate::error::Error> {
+    ) -> Result<ChatModerationFlow<Applied>, crate::Error> {
         let command = self.state_data.command.clone();
         state.chat.moderate_message(command).await?;
         Ok(self.mark_applied())

@@ -101,7 +101,7 @@ me [data-chat-moderation-card] .button:focus-visible {
 
 #[derive(Builder)]
 pub struct ChatModeration {
-    pub entries: Vec<app::chat::ModerationItem>,
+    pub entries: Vec<app::chat::moderation::Item>,
     #[builder(setters(name = with_user))]
     pub user: Option<page::UserNav>,
 }

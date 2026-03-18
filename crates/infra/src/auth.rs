@@ -39,11 +39,11 @@ enum RepositoryError {
 fn map_repository_error(error: RepositoryError) -> app::auth::Error {
     match error {
         RepositoryError::FindByEmail { source } => app::auth::Error::query_repository(
-            app::auth::RepositoryOperation::FindByEmail,
+            app::auth::repository::Operation::FindByEmail,
             source,
         ),
         RepositoryError::FindById { source } => app::auth::Error::query_repository(
-            app::auth::RepositoryOperation::FindById,
+            app::auth::repository::Operation::FindById,
             source,
         ),
         RepositoryError::DecodeUsername { source } => {
@@ -72,7 +72,8 @@ impl Repository {
             .context(DecodeUsernameSnafu)?;
         let email = user::Email::try_new(row.get::<String, _>("email"))
             .context(DecodeEmailSnafu)?;
-        let password_hash = auth::PasswordHash::new(row.get::<String, _>("password_hash"));
+        let password_hash =
+            auth::password::Hash::new(row.get::<String, _>("password_hash"));
         let credential_updated_at =
             row.get::<time::OffsetDateTime, _>("credential_updated_at");
 
@@ -180,8 +181,8 @@ impl Argon2Hasher {
     }
 }
 
-impl auth::PasswordHasher for Argon2Hasher {
-    fn hash(&self, password: &str) -> auth::Result<auth::PasswordHash> {
+impl auth::password::Hasher for Argon2Hasher {
+    fn hash(&self, password: &str) -> auth::Result<auth::password::Hash> {
         let salt = password_hash::SaltString::generate(&mut OsRng);
         let hash = self
             .inner
@@ -189,13 +190,13 @@ impl auth::PasswordHasher for Argon2Hasher {
             .map_err(PasswordHashError)
             .map_err(auth::Error::hash_password)?
             .to_string();
-        Ok(auth::PasswordHash::new(hash))
+        Ok(auth::password::Hash::new(hash))
     }
 
     fn verify(
         &self,
         password: &str,
-        password_hash: &auth::PasswordHash,
+        password_hash: &auth::password::Hash,
     ) -> auth::Result<bool> {
         let hash_text = password_hash.to_string();
         let parsed = ArgonPasswordHash::new(&hash_text)

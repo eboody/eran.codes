@@ -128,10 +128,10 @@ impl CounterSyncFlow<CounterUpdated> {
 
         match sse.send(session, event) {
             Ok(_) => DispatchOutcome::Dispatched(self.mark_patch_dispatched()),
-            Err(crate::sse::SendError::SessionMissing) => {
+            Err(crate::sse::send::Error::SessionMissing) => {
                 DispatchOutcome::Unavailable(self.mark_session_unavailable())
             }
-            Err(crate::sse::SendError::SendFailed) => {
+            Err(crate::sse::send::Error::SendFailed) => {
                 DispatchOutcome::Failed(self.mark_dispatch_failed())
             }
         }

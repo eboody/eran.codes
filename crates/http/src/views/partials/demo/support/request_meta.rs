@@ -11,7 +11,7 @@ pub struct RequestMeta {
     pub user_id: Option<Text>,
     pub client_ip: Option<Text>,
     pub user_agent: Option<Text>,
-    pub trace: Vec<crate::trace_log::TraceEntry>,
+    pub trace: Vec<crate::trace_log::store::TraceEntry>,
 }
 
 impl Render for RequestMeta {

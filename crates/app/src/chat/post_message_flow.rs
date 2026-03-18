@@ -2,7 +2,7 @@ use std::time::SystemTime;
 
 use statum::{machine, state, transition};
 
-use super::{AuditAction, AuditKey, AuditValue, Error, ModerationReason, PostMessage};
+use super::{Error, PostMessage, audit, moderation};
 use domain::chat;
 
 #[derive(Clone, Debug, PartialEq)]
@@ -13,7 +13,7 @@ pub struct BuiltVisibleData {
 #[derive(Clone, Debug, PartialEq)]
 pub struct BuiltPendingData {
     message: chat::Message,
-    moderation_reason: ModerationReason,
+    moderation_reason: moderation::Reason,
 }
 
 #[derive(Clone, Debug, PartialEq)]
@@ -24,7 +24,7 @@ pub struct PersistedVisibleData {
 #[derive(Clone, Debug, PartialEq)]
 pub struct PersistedPendingData {
     message: chat::Message,
-    moderation_reason: ModerationReason,
+    moderation_reason: moderation::Reason,
 }
 
 #[derive(Clone, Debug, PartialEq)]
@@ -56,7 +56,7 @@ pub(super) struct PostMessageFlow<PostMessageState> {
     room_id: chat::room::Id,
     user_id: chat::UserId,
     body: chat::message::Body,
-    client_id: Option<chat::ClientId>,
+    client_id: Option<chat::client::Id>,
 }
 
 #[transition]
@@ -96,7 +96,7 @@ impl PostMessageFlow<RateLimitPassed> {
         self,
         message_id: chat::message::Id,
         created_at: SystemTime,
-        moderation_reason: ModerationReason,
+        moderation_reason: moderation::Reason,
     ) -> PostMessageFlow<BuiltPending> {
         let message =
             self.build_message(message_id, created_at, chat::message::Status::Pending);
@@ -267,7 +267,7 @@ impl PostMessageFlow<RateLimitPassed> {
         requires_moderation: bool,
     ) -> BuiltPostMessage {
         if requires_moderation {
-            let reason = ModerationReason::auto();
+            let reason = moderation::Reason::auto();
             BuiltPostMessage::Pending(self.build_pending(message_id, created_at, reason))
         } else {
             BuiltPostMessage::Visible(self.build_visible(message_id, created_at))
@@ -324,7 +324,7 @@ impl PostMessageFlow<PersistedPending> {
         &self.state_data.message
     }
 
-    pub(super) fn moderation_reason(&self) -> &ModerationReason {
+    pub(super) fn moderation_reason(&self) -> &moderation::Reason {
         &self.state_data.moderation_reason
     }
 }
@@ -396,7 +396,7 @@ pub(super) enum PersistedPostMessage {
 impl PersistedPostMessage {
     pub(super) async fn enqueue_if_pending(
         self,
-        moderation: &dyn super::ModerationQueue,
+        moderation: &dyn super::moderation::Queue,
     ) -> Result<ReadyForAudit, Error> {
         match self {
             Self::Visible(visible) => Ok(ReadyForAudit::Visible(visible)),
@@ -443,13 +443,13 @@ impl ReadyForAudit {
             .record(service.audit_entry(
                 room_id,
                 user_id,
-                AuditAction::MessagePost,
+                audit::Action::MessagePost,
                 vec![
                     (
-                        AuditKey::MessageId,
-                        AuditValue::new(message_id.as_uuid().to_string()),
+                        audit::Key::MessageId,
+                        audit::Value::new(message_id.as_uuid().to_string()),
                     ),
-                    (AuditKey::Status, AuditValue::new(status.to_string())),
+                    (audit::Key::Status, audit::Value::new(status.to_string())),
                 ],
             ))
             .await?;
@@ -661,11 +661,11 @@ mod tests {
     }
 
     #[async_trait]
-    impl super::super::ModerationQueue for TestModerationQueue {
+    impl super::super::moderation::Queue for TestModerationQueue {
         async fn enqueue(
             &self,
             message_id: &chat::message::Id,
-            _reason: &super::super::ModerationReason,
+            _reason: &super::super::moderation::Reason,
         ) -> super::super::Result<()> {
             self.enqueued
                 .lock()
@@ -677,7 +677,7 @@ mod tests {
         async fn list_pending(
             &self,
             _limit: usize,
-        ) -> super::super::Result<Vec<super::super::ModerationItem>> {
+        ) -> super::super::Result<Vec<super::super::moderation::Item>> {
             unimplemented!("not used in this test")
         }
 
@@ -685,8 +685,8 @@ mod tests {
             &self,
             _message_id: &chat::message::Id,
             _reviewer_id: &chat::UserId,
-            _decision: super::super::ModerationDecision,
-            _reason: Option<super::super::ModerationReason>,
+            _decision: super::super::moderation::Decision,
+            _reason: Option<super::super::moderation::Reason>,
         ) -> super::super::Result<super::super::PendingMutationResult> {
             unimplemented!("not used in this test")
         }
@@ -720,20 +720,20 @@ mod tests {
 
     #[derive(Default)]
     struct TestAuditLog {
-        entries: Mutex<Vec<super::super::AuditEntry>>,
+        entries: Mutex<Vec<super::super::audit::Entry>>,
     }
 
     impl TestAuditLog {
-        fn entries(&self) -> Vec<super::super::AuditEntry> {
+        fn entries(&self) -> Vec<super::super::audit::Entry> {
             self.entries.lock().expect("entries lock").clone()
         }
     }
 
     #[async_trait]
-    impl super::super::AuditLog for TestAuditLog {
+    impl super::super::audit::Log for TestAuditLog {
         async fn record(
             &self,
-            entry: super::super::AuditEntry,
+            entry: super::super::audit::Entry,
         ) -> super::super::Result<()> {
             self.entries.lock().expect("entries lock").push(entry);
             Ok(())
@@ -842,7 +842,7 @@ mod tests {
         assert_eq!(rate_limiter.checks().len(), 1);
         assert!(moderation.enqueued().is_empty());
         assert_eq!(audit.entries().len(), 1);
-        assert_eq!(audit.entries()[0].action, AuditAction::MessagePost);
+        assert_eq!(audit.entries()[0].action, audit::Action::MessagePost);
     }
 
     #[tokio::test]
