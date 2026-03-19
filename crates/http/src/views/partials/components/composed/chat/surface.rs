@@ -37,7 +37,7 @@ impl Role {
                 input_label: "Message as you",
                 placeholder: "Say something...",
                 action: Route::ChatMessages,
-                input_signal: "body",
+                input_signal: "chatDraftBody",
                 button_label: "Send",
                 button_variant: partials::button::Variant::Primary,
                 side: chat::Side::Right,
@@ -48,7 +48,7 @@ impl Role {
                 input_label: "Message as demo user",
                 placeholder: "Send as demo user...",
                 action: Route::ChatMessagesDemo,
-                input_signal: "botBody",
+                input_signal: "chatDemoDraftBody",
                 button_label: "Send as demo",
                 button_variant: partials::button::Variant::Secondary,
                 side: chat::Side::Left,
@@ -145,10 +145,8 @@ impl Surface {
 
     fn signals(&self) -> String {
         json!({
-            "roomId": self.room_id.to_string(),
-            "body": "",
-            "botBody": "",
-            "sseConnected": false
+            "chatDraftBody": "",
+            "chatDemoDraftBody": ""
         })
         .to_string()
     }
@@ -207,9 +205,10 @@ mod tests {
         assert!(markup.contains("data-chat-room-id=\"room-1\""));
         assert!(markup.contains("class=\"u-surface-card\""));
         assert!(markup.contains("data-chat-surface-variant=\"lab\""));
-        assert!(markup.contains("roomId"));
-        assert!(markup.contains("room-1"));
-        assert!(markup.contains("sseConnected"));
+        assert!(markup.contains("chatDraftBody"));
+        assert!(markup.contains("chatDemoDraftBody"));
+        assert!(!markup.contains("\"roomId\""));
+        assert!(!markup.contains("\"sseConnected\""));
         assert!(markup.contains("data-chat-connection-row"));
         assert_eq!(markup.matches("<div data-chat-panel>").count(), 2);
         assert!(markup.contains("/static/chat-demo.js"));

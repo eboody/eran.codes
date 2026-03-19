@@ -35,6 +35,15 @@ impl RoomBindings {
         }
     }
 
+    pub fn room_id_for(
+        &self,
+        handle: &crate::sse::Handle,
+    ) -> Option<domain::chat::room::Id> {
+        self.bindings
+            .get(handle.stream_key())
+            .map(|entry| *entry.value())
+    }
+
     pub fn stream_keys_for_room(
         &self,
         room_id: &domain::chat::room::Id,
@@ -102,5 +111,18 @@ mod tests {
         let room_a_keys = bindings.stream_keys_for_room(&room_a);
 
         assert_eq!(room_a_keys, vec![handle_a.stream_key().clone()]);
+    }
+
+    #[test]
+    fn returns_bound_room_for_handle() {
+        let bindings = RoomBindings::new();
+        let room_id = domain::chat::room::Id::new_v4();
+        let handle = crate::sse::Handle::with_tab(
+            SessionId::new("session-1"),
+            Some(SseTabId::new("tab-a")),
+        );
+        bindings.bind(&handle, room_id);
+
+        assert_eq!(bindings.room_id_for(&handle), Some(room_id));
     }
 }

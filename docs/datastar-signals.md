@@ -5,7 +5,8 @@ Use this as a concise reference when building Datastar-driven UI in this repo.
 ## Core Principles
 - Backend drives state; frontend is a projection of server truth.
 - Patch elements and signals rather than manually mutating DOM.
-- Use signals for user-driven, short-lived UI state.
+- Use Datastar signals for request-coupled, short-lived UI state.
+- Use a small local controller for purely local presentation behavior such as shared tabs or other DOM-only selectors.
 
 ## Signals
 - Signals are reactive variables prefixed with `$`.
@@ -35,4 +36,5 @@ Use this as a concise reference when building Datastar-driven UI in this repo.
 ## Practical Guidance
 - Prefer `@get()`/`@post()` actions for backend interaction.
 - Use `data-show` with initial `style="display: none"` to avoid flash.
+- Keep signals narrow and intentional; avoid treating the page-global signal store as a generic local state bag.
 - Don’t manage browser history; use normal links and redirects.

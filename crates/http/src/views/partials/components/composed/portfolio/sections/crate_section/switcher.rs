@@ -6,8 +6,6 @@ use crate::views::partials::components::portfolio::content::CrateCardContent;
 use crate::views::partials::components::{Tab, TabInteraction};
 use crate::views::proper_theme::THEME;
 
-const ACTIVE_CRATE_SIGNAL: &str = "active_crate_id";
-
 crate::views::scoped::inline_css!(
     r#"
 me {
@@ -113,12 +111,11 @@ pub(super) struct CrateShowcaseSwitcher<'a> {
 
 impl Render for CrateShowcaseSwitcher<'_> {
     fn render(&self) -> maud::Markup {
-        let signal_name = Text::from(ACTIVE_CRATE_SIGNAL);
-        let active_crate_id = tab_value(0);
-        let signals = switcher_signals(&signal_name, &active_crate_id);
-
         maud::html! {
-            section data-portfolio-crate-switcher data-signals=(signals) {
+            section
+                data-portfolio-crate-switcher
+                data-local-tabs-root
+                data-local-tabs-active=(tab_value(0)) {
                 (css())
                 nav data-portfolio-crate-switcher-nav role="tablist" aria-label="Open source crate selection" {
                     @for (index, card) in self.cards.iter().enumerate() {
@@ -130,8 +127,7 @@ impl Render for CrateShowcaseSwitcher<'_> {
                             icon: None,
                             primary_text: card.name.clone(),
                             secondary_text: None,
-                            interaction: TabInteraction::DatastarLocal {
-                                signal: signal_name.clone(),
+                            interaction: TabInteraction::LocalTabs {
                                 value: tab_value(index),
                             },
                         })
@@ -140,7 +136,6 @@ impl Render for CrateShowcaseSwitcher<'_> {
                 @for (index, card) in self.cards.iter().enumerate() {
                     (CrateShowcasePanel {
                         card,
-                        signal_name: &signal_name,
                         tab_index: index,
                     })
                 }
@@ -151,16 +146,11 @@ impl Render for CrateShowcaseSwitcher<'_> {
 
 struct CrateShowcasePanel<'a> {
     card: &'a CrateCardContent,
-    signal_name: &'a Text,
     tab_index: usize,
 }
 
 impl Render for CrateShowcasePanel<'_> {
     fn render(&self) -> maud::Markup {
-        let value = tab_value(self.tab_index);
-        let show_expr = show_expr(self.signal_name, &value);
-        let tabindex_expr = format!("{show_expr} ? '0' : '-1'");
-
         maud::html! {
             section
                 id=(panel_dom_id(self.tab_index))
@@ -168,8 +158,8 @@ impl Render for CrateShowcasePanel<'_> {
                 role="tabpanel"
                 aria-labelledby=(tab_dom_id(self.tab_index))
                 data-portfolio-crate-panel
-                data-show=(show_expr)
-                data-attr:tabindex=(tabindex_expr) {
+                tabindex=(if self.tab_index == 0 { 0 } else { -1 })
+                hidden[self.tab_index != 0] {
                 (CrateShowcase { card: self.card })
             }
         }
@@ -188,38 +178,32 @@ fn panel_dom_id(index: usize) -> Text {
     Text::from(format!("portfolio-crate-panel-{index}"))
 }
 
-fn show_expr(signal_name: &Text, value: &Text) -> String {
-    format!("${} == {}", signal_name, json_literal(value))
-}
-
-fn switcher_signals(signal_name: &Text, active_crate_id: &Text) -> String {
-    let mut signals = serde_json::Map::new();
-    signals.insert(
-        signal_name.to_string(),
-        serde_json::Value::String(active_crate_id.to_string()),
-    );
-    serde_json::Value::Object(signals).to_string()
-}
-
-fn json_literal(value: &Text) -> String {
-    serde_json::to_string(&value.to_string()).unwrap_or_else(|_| "\"\"".to_string())
-}
-
 #[cfg(test)]
 mod tests {
     use super::*;
 
     #[test]
-    fn switcher_signals_use_json_encoding() {
-        let signals = switcher_signals(&Text::from("active_crate_id"), &Text::from("crate'\"0"));
-        assert_eq!(signals, "{\"active_crate_id\":\"crate'\\\"0\"}");
-    }
+    fn switcher_uses_local_tab_root_and_initial_selection() {
+        let markup = CrateShowcaseSwitcher {
+            cards: &[CrateCardContent {
+                name: Text::from("statum"),
+                summary: Text::from("summary"),
+                highlights: vec![Text::from("highlight")],
+                gallery: None,
+                repository_url: Text::from("https://example.com"),
+                repository_label: Text::from("Repository"),
+                docs_url: None,
+                docs_label: None,
+                tags: vec![],
+            }],
+        }
+        .render()
+        .into_string();
 
-    #[test]
-    fn show_expression_uses_json_literal() {
-        assert_eq!(
-            show_expr(&Text::from("active_crate_id"), &Text::from("crate'\"1")),
-            "$active_crate_id == \"crate'\\\"1\"",
-        );
+        assert!(markup.contains("data-local-tabs-root"));
+        assert!(markup.contains("data-local-tabs-active=\"crate_0\""));
+        assert!(markup.contains("data-local-tab-value=\"crate_0\""));
+        assert!(!markup.contains("data-signals="));
+        assert!(!markup.contains("data-show="));
     }
 }

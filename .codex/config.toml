@@ -4,22 +4,25 @@ version = "0.1.0"
 entry = ".codex/AGENTS.md"
 
 [agents]
-mds-orchestrator = { definition = ".codex/agents/mds-orchestrator/AGENT.md" }
-mds-docs-librarian = { definition = ".codex/agents/mds-docs-librarian/AGENT.md" }
-mds-ui-decomposer = { definition = ".codex/agents/mds-ui-decomposer/AGENT.md" }
-mds-cms-content-modeler = { definition = ".codex/agents/mds-cms-content-modeler/AGENT.md" }
-mds-state-modeler = { definition = ".codex/agents/mds-state-modeler/AGENT.md" }
-mds-events-designer = { definition = ".codex/agents/mds-events-designer/AGENT.md" }
-mds-backend-contracts = { definition = ".codex/agents/mds-backend-contracts/AGENT.md" }
-mds-linting-governor = { definition = ".codex/agents/mds-linting-governor/AGENT.md" }
-mds-verifier = { definition = ".codex/agents/mds-verifier/AGENT.md" }
-mds-codegen = { definition = ".codex/agents/mds-codegen/AGENT.md" }
-mds-styling-system = { definition = ".codex/agents/mds-styling-system/AGENT.md" }
+mds-orchestrator = { definition = ".codex/agents/mds-orchestrator/AGENT.md", description = "Coordinate agent execution, initialize component specs, and enforce section ownership boundaries." }
+mds-docs-librarian = { definition = ".codex/agents/mds-docs-librarian/AGENT.md", description = "Retrieve authoritative repo docs and extract rules upstream agents must follow." }
+mds-ui-decomposer = { definition = ".codex/agents/mds-ui-decomposer/AGENT.md", description = "Define structural UI composition for Maud output and Datastar binding points." }
+mds-cms-content-modeler = { definition = ".codex/agents/mds-cms-content-modeler/AGENT.md", description = "Define and validate the CMS-shaped content contract for component generation." }
+mds-state-modeler = { definition = ".codex/agents/mds-state-modeler/AGENT.md", description = "Define reactive state, initial values, and derived fields used by Datastar interactions." }
+mds-events-designer = { definition = ".codex/agents/mds-events-designer/AGENT.md", description = "Design event triggers, payloads, and state transitions for Datastar-driven UI behavior." }
+mds-backend-contracts = { definition = ".codex/agents/mds-backend-contracts/AGENT.md", description = "Define backend actions, types, and validation contracts required by UI events." }
+mds-linting-governor = { definition = ".codex/agents/mds-linting-governor/AGENT.md", description = "Decide whether a repo rule belongs in linting or CI and choose the lightest effective enforcement." }
+mds-verifier = { definition = ".codex/agents/mds-verifier/AGENT.md", description = "Validate complete component specs against schema, cross-references, docs rules, and authority semantics." }
+mds-codegen = { definition = ".codex/agents/mds-codegen/AGENT.md", description = "Generate Rust Maud and Datastar component code from a verified component spec." }
+mds-styling-system = { definition = ".codex/agents/mds-styling-system/AGENT.md", description = "Apply the hybrid styling policy after code generation across global and scoped component styles." }
+mds-datastar-reviewer = { definition = ".codex/agents/mds-datastar-reviewer/AGENT.md", description = "Review Datastar handlers, SSE flows, and bound UI surfaces against the local Datastar docs and repo Datastar rules." }
 
 [skills]
-mds-component-spec = { definition = ".codex/skills/mds-component-spec/SKILL.md" }
-mds-repo-docs-index = { definition = ".codex/skills/mds-repo-docs-index/SKILL.md" }
-mds-maud-patterns = { definition = ".codex/skills/mds-maud-patterns/SKILL.md" }
-mds-datastar-patterns = { definition = ".codex/skills/mds-datastar-patterns/SKILL.md" }
-mds-axum-integration = { definition = ".codex/skills/mds-axum-integration/SKILL.md" }
-mds-css-conventions = { definition = ".codex/skills/mds-css-conventions/SKILL.md" }
+mds-component-spec = { definition = ".codex/skills/mds-component-spec/SKILL.md", description = "JSON schema and contracts for component_spec, including ui/app authority, transitions, mappings, and codegen markers." }
+mds-repo-docs-index = { definition = ".codex/skills/mds-repo-docs-index/SKILL.md", description = "Docs-first policy and curated lookup index for /docs, including allowlist, denylist, and conflict resolution rules." }
+mds-maud-patterns = { definition = ".codex/skills/mds-maud-patterns/SKILL.md", description = "Maud patterns and conventions used in this repo for view composition, escaping, partials, and Render usage." }
+mds-datastar-patterns = { definition = ".codex/skills/mds-datastar-patterns/SKILL.md", description = "Datastar attribute, signal, event, and SSE patch patterns used in this repo." }
+mds-axum-integration = { definition = ".codex/skills/mds-axum-integration/SKILL.md", description = "Axum integration patterns for routing, extractors, SSE endpoints, and response mapping in this repo." }
+mds-css-conventions = { definition = ".codex/skills/mds-css-conventions/SKILL.md", description = "CSS conventions for generated components, including class naming, layout expectations, and minimal styling rules." }
+mds-datastar-architecture = { definition = ".codex/skills/mds-datastar-architecture/SKILL.md", description = "Canonical command plus global SSE architecture for Datastar components in this repo." }
+mds-datastar-idiom-audit = { definition = ".codex/skills/mds-datastar-idiom-audit/SKILL.md", description = "Docs-backed Datastar idiom audit workflow for this repo." }

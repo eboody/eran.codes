@@ -416,7 +416,8 @@ fn compare_png_pixels(
     baseline_bytes: &[u8],
     current_bytes: &[u8],
 ) -> Result<PixelComparison, Box<dyn std::error::Error>> {
-    let baseline = load_from_memory_with_format(baseline_bytes, ImageFormat::Png)?.to_rgba8();
+    let baseline =
+        load_from_memory_with_format(baseline_bytes, ImageFormat::Png)?.to_rgba8();
     let current = load_from_memory_with_format(current_bytes, ImageFormat::Png)?.to_rgba8();
 
     if baseline.dimensions() != current.dimensions() {
@@ -432,9 +433,8 @@ fn compare_png_pixels(
         .filter(|(left, right)| left != right)
         .count() as u64;
     let total_pixels = baseline.width() as u64 * baseline.height() as u64;
-    let allowed_pixels = PIXEL_DIFF_TOLERANCE_ABSOLUTE.max(
-        (total_pixels as f64 * PIXEL_DIFF_TOLERANCE_RATIO).ceil() as u64,
-    );
+    let allowed_pixels = PIXEL_DIFF_TOLERANCE_ABSOLUTE
+        .max((total_pixels as f64 * PIXEL_DIFF_TOLERANCE_RATIO).ceil() as u64);
 
     Ok(PixelComparison {
         differing_pixels,

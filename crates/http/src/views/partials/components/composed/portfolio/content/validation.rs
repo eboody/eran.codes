@@ -201,7 +201,6 @@ fn validate_crate_card(content: &CrateCardContent, path: &str) {
 fn validate_crate_gallery(content: &CrateGalleryContent, path: &str) {
     assert_non_empty(&format!("{path}.id"), &content.id);
     assert_non_empty(&format!("{path}.aria_label"), &content.aria_label);
-    assert_non_empty(&format!("{path}.signal_name"), &content.signal_name);
     assert_min_len(&format!("{path}.tabs"), &content.tabs, 1);
 
     let mut tab_ids = HashSet::new();
@@ -318,19 +317,6 @@ mod tests {
             .preview
             .code_examples
             .clear();
-
-        validate_open_source_index(&content);
-    }
-
-    #[test]
-    #[should_panic(expected = "open_source.crate_section.cards[].gallery.signal_name")]
-    fn open_source_index_requires_gallery_signal_name() {
-        let mut content = super::super::fixture_loader::open_source_index_content().clone();
-        content.crate_section.cards[0]
-            .gallery
-            .as_mut()
-            .unwrap()
-            .signal_name = Text::from("");
 
         validate_open_source_index(&content);
     }

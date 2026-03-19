@@ -44,7 +44,7 @@ mod tests {
                 .input_label(Text::from("Message as demo user"))
                 .input_name(Text::from("body"))
                 .input_id(Text::from("chat-input-demo"))
-                .input_signal(Text::from("botBody"))
+                .input_signal(Text::from("chatDemoDraftBody"))
                 .placeholder(Text::from("Send as demo user..."))
                 .submit(
                     partials::button::Button::builder()

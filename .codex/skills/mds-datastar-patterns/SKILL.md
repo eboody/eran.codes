@@ -22,6 +22,7 @@ Apply repo-approved Datastar signal, attribute, expression, and SSE interaction 
   - `authority = "ui"` fields may use local `data-on:*` expressions.
   - `authority = "app"` fields must be updated only via SSE mappings (`datastar-patch-signals`), never by local UI expressions.
 - Tabs/selectors are presentation concerns by default; do not require backend commands unless explicit app-level semantics are requested.
-- For tabbed UI composition, prefer `ui_local` signal updates and reuse shared tab primitives with Datastar interaction mode rather than duplicating tab markup.
+- For tabbed UI composition, prefer a shared local controller (`Surreal` or small DOM-local JS) behind shared tab primitives rather than `ui_local` Datastar signals when the state never leaves the DOM.
+- Keep `ui_local` Datastar for tabs only when the tab state is part of a larger Datastar component contract that already needs local signals for other reasons.
 - Prefer namespace-style component usage for tab families (`use ...::tab_set; tab_set::tab::Set`) rather than leaf-importing companion types.
 - If Datastar behavior is still functionally incomplete after an implementation pass (for example: signals not converging, event wiring drift), require an explicit next-pass request instead of presenting final completion.

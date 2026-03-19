@@ -17,7 +17,7 @@ pub struct Composer {
 
 impl Render for Composer {
     fn render(&self) -> maud::Markup {
-        let submit_action = format!("@post('{}'); ${} = ''", self.action, self.input_signal);
+        let submit_action = self.submit_action();
 
         maud::html! {
             form method="post" action=(&self.action) data-chat-compose data-on:submit=(submit_action) {
@@ -36,5 +36,64 @@ impl Render for Composer {
                 }
             }
         }
+    }
+}
+
+impl Composer {
+    fn submit_action(&self) -> String {
+        let signal_name = self.input_signal.to_string();
+        let include_pattern = format!(
+            "/^(?:{}|sseTabId)$/",
+            regex_literal_fragment(signal_name.as_str())
+        );
+
+        format!(
+            "@post('{}', {{filterSignals: {{include: {include_pattern}}}}}); ${signal_name} = ''",
+            self.action
+        )
+    }
+}
+
+fn regex_literal_fragment(value: &str) -> String {
+    let mut escaped = String::with_capacity(value.len());
+    for ch in value.chars() {
+        match ch {
+            '\\' | '.' | '+' | '*' | '?' | '^' | '$' | '(' | ')' | '[' | ']' | '{'
+            | '}' | '|' => {
+                escaped.push('\\');
+                escaped.push(ch);
+            }
+            _ => escaped.push(ch),
+        }
+    }
+    escaped
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn submit_action_filters_to_draft_signal_and_sse_tab() {
+        let composer = Composer::builder()
+            .action(Text::from("/demo/chat/messages"))
+            .input_label(Text::from("Message as you"))
+            .input_name(Text::from("body"))
+            .input_id(Text::from("chat-input-you"))
+            .input_signal(Text::from("chatDraftBody"))
+            .placeholder(Text::from("Say something..."))
+            .submit(
+                partials::button::Button::builder()
+                    .label(Text::from("Send"))
+                    .variant(partials::button::Variant::Primary)
+                    .role(partials::button::Role::submit())
+                    .build(),
+            )
+            .build();
+
+        let markup = composer.render().into_string();
+
+        assert!(markup.contains("@post('/demo/chat/messages', {filterSignals: {include: /^(?:chatDraftBody|sseTabId)$/}})"));
+        assert!(markup.contains("$chatDraftBody = ''"));
     }
 }

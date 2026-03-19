@@ -1,6 +1,4 @@
 use maud::Render;
-use serde_json::json;
-
 use crate::types::Text;
 use crate::views::proper_theme::Palette;
 
@@ -20,7 +18,7 @@ pub(crate) struct Tab {
 
 #[derive(Clone, Debug)]
 pub(crate) enum TabInteraction {
-    DatastarLocal { signal: Text, value: Text },
+    LocalTabs { value: Text },
 }
 
 impl Render for Tab {
@@ -30,12 +28,7 @@ impl Render for Tab {
         let style = format!("--tab-accent: {};", self.palette.main.as_ref());
 
         match &self.interaction {
-            TabInteraction::DatastarLocal { signal, value } => {
-                let selected_expr = format!("${} == {}", signal, json_literal(value));
-                let selected_attr = format!("{} ? 'true' : 'false'", selected_expr);
-                let tabindex_attr = format!("{} ? '0' : '-1'", selected_expr);
-                let click_expr = format!("${} = {}", signal, json_literal(value));
-
+            TabInteraction::LocalTabs { value } => {
                 maud::html! {
                     button.tab-set__tab.is-selected[self.is_selected]
                         type="button"
@@ -45,10 +38,7 @@ impl Render for Tab {
                         aria-selected=(self.is_selected)
                         tabindex=(tab_index)
                         data-tab-id=(value)
-                        data-class:is-selected=(selected_expr)
-                        data-attr:aria-selected=(selected_attr)
-                        data-attr:tabindex=(tabindex_attr)
-                        data-on:click=(click_expr)
+                        data-local-tab-value=(value)
                         style=(style) {
                         (render_content(&icon, &self.primary_text, self.secondary_text.as_ref()))
                     }
@@ -76,21 +66,29 @@ fn render_content(
     }
 }
 
-fn json_literal(value: &Text) -> String {
-    json!(value.to_string()).to_string()
-}
-
 #[cfg(test)]
 mod tests {
     use super::*;
 
     #[test]
-    fn datastar_local_interaction_uses_json_literal_for_signal_value() {
-        let value = Text::from("sso'and\"quotes");
-        let selected_expr = format!("$active_tab_id == {}", json_literal(&value));
-        let click_expr = format!("$active_tab_id = {}", json_literal(&value));
+    fn local_tabs_interaction_renders_static_tab_value() {
+        let markup = Tab {
+            id: Text::from("example-tab"),
+            controls: Text::from("example-panel"),
+            palette: &crate::views::proper_theme::THEME.gray,
+            is_selected: true,
+            icon: None,
+            primary_text: Text::from("Example"),
+            secondary_text: None,
+            interaction: TabInteraction::LocalTabs {
+                value: Text::from("sso'and\"quotes"),
+            },
+        }
+        .render()
+        .into_string();
 
-        assert_eq!(selected_expr, "$active_tab_id == \"sso'and\\\"quotes\"");
-        assert_eq!(click_expr, "$active_tab_id = \"sso'and\\\"quotes\"");
+        assert!(markup.contains("data-tab-id=\"sso'and&quot;quotes\""));
+        assert!(markup.contains("data-local-tab-value=\"sso'and&quot;quotes\""));
+        assert!(!markup.contains("data-on:click"));
     }
 }

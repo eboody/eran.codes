@@ -206,7 +206,7 @@ This policy applies by default when a user asks to create/build/add a component 
   - Reuse primitives composition-first (for example `Tab` composes `Icon`) instead of duplicating leaf markup.
   - Behavior variants must be typed (enum/struct fields), not ad-hoc string flags.
   - Prefer namespace imports and qualified usage (`use ...::tab_set; ... tab_set::pane::Body`) over leaf imports that hide ownership context.
-  - Tab interactions default to `ui_local` Datastar for presentation concerns unless explicitly overridden.
+  - Tab interactions default to a small local controller behind shared primitives for presentation concerns unless explicit Datastar-local contract state is needed.
 - Log componentization contract:
   - Shared log rendering primitives must live in `crates/http/src/views/partials/components/logs`.
   - Demo/request-specific filtering and trace-entry mapping must live in `crates/http/src/views/partials/demo/log/vm`.

@@ -6,7 +6,8 @@ Use this as a concise reference for backend requests and SSE patterns in this re
 - By default, all non-local signals (not starting with `_`) are sent with every request.
 - `GET`: signals are sent as the `datastar` query param (JSON).
 - Other methods: signals are sent as JSON in the request body.
-- Avoid partial signals; use filtering only when necessary.
+- In this repo, use `filterSignals` when a request has a narrow typed contract and should not carry unrelated page state.
+- Keep the request-side filter explicit in the view so the backend signal struct and the frontend payload stay aligned.
 
 ## Nesting Signals
 - Dot notation: `data-signals:foo.bar="1"`.
@@ -23,6 +24,7 @@ Use this as a concise reference for backend requests and SSE patterns in this re
 - Use `PatchElements` and `PatchSignals` for DOM and signal updates.
 - Prefer SSE for multi-event workflows or real-time updates.
 - For per-tab identity in this repo, keep `sseTabId` in page-level `data-signals` so `/events` and follow-up actions carry the same typed tab id.
+- Only include extra page-level signals in the `/events` bootstrap when stream setup genuinely depends on them.
 
 ## data-indicator
 - `data-indicator:fetching` toggles `$fetching` true while the request is in flight.
@@ -31,3 +33,4 @@ Use this as a concise reference for backend requests and SSE patterns in this re
 ## Backend Actions
 - Use `@get()`, `@post()`, `@put()`, `@patch()`, `@delete()`.
 - Keep responses declarative (HTML/JSON/SSE), let the backend decide next UI state.
+- Use Datastar requests for backend-coupled interaction state, not for DOM-only tab or disclosure behavior.

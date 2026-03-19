@@ -5,7 +5,6 @@ use maud::Render;
 use statum::{machine, state, transition};
 
 use super::{ChatSignals, DemoChatSignals};
-use crate::chat_demo;
 use crate::trace_log::log::{message, target};
 use crate::types::{LogFieldKey, Text, UserIdText};
 use crate::views::partials;
@@ -60,13 +59,15 @@ pub(super) struct ChatPostFlow<ChatPostState> {
 
 impl ChatPostFlow<Incoming> {
     pub(super) fn from_authenticated_signals(
+        state: &crate::State,
         signals: ChatSignals,
         user: &crate::auth::User,
     ) -> crate::Result<Self> {
-        let body_text = signals.body.to_string();
+        let room_id = Self::room_id_from_binding(state)?;
+        let body_text = signals.draft_body.to_string();
 
         Ok(Self::new(
-            Self::room_id_from_text(&signals.room_id.to_string())?,
+            room_id,
             Self::chat_user_id_from_user_id(user.id.to_domain()?),
             Self::message_body_from_text(&body_text)?,
             body_text,
@@ -82,10 +83,9 @@ impl ChatPostFlow<Incoming> {
         signals: DemoChatSignals,
     ) -> crate::Result<Self> {
         let demo_user = crate::chat_demo::ensure_demo_user(state).await?;
-        let room_id = Self::room_id_from_text(&signals.room_id.to_string())?;
+        let room_id = Self::room_id_from_binding(state)?;
         let chat_user_id = Self::chat_user_id_from_user_id(demo_user.id);
-
-        let body_text = signals.bot_body.to_string();
+        let body_text = signals.draft_body.to_string();
 
         Ok(Self::new(
             room_id,
@@ -126,7 +126,6 @@ impl ChatPostFlow<Incoming> {
         self,
         state: &crate::State,
     ) -> Result<Response, crate::Error> {
-        self.verify_room_binding(state)?;
         let posted = self.mark_command_built().post_message(state).await?;
         let rendered = posted.record_incoming(state).render_message_html();
         let broadcasted = rendered.broadcast(state);
@@ -139,14 +138,6 @@ impl ChatPostFlow<Incoming> {
             .and_then(|context| context.request_id)
             .map(|request_id| Text::from(request_id.to_string()))
             .unwrap_or_else(|| Text::from(format!("fallback-{}", uuid::Uuid::new_v4())))
-    }
-
-    fn room_id_from_text(value: &str) -> Result<domain::chat::room::Id, crate::Error> {
-        let id = value.parse::<uuid::Uuid>().map_err(|error| {
-            crate::Error::from(app::chat::Error::invalid_room_id(error))
-        })?;
-
-        Ok(domain::chat::room::Id::from_uuid(id))
     }
 
     fn message_body_from_text(
@@ -176,17 +167,15 @@ impl ChatPostFlow<Incoming> {
         Ok(crate::sse::Handle::with_tab(session_id, Some(tab_id)))
     }
 
-    fn verify_room_binding(&self, state: &crate::State) -> Result<(), crate::Error> {
+    fn room_id_from_binding(
+        state: &crate::State,
+    ) -> Result<domain::chat::room::Id, crate::Error> {
         let handle = Self::current_handle()?;
-        match state
+        state
             .demo
             .chat_room_bindings
-            .matches(&handle, &self.room_id)
-        {
-            chat_demo::room::Match::Bound => Ok(()),
-            chat_demo::room::Match::Missing => Err(crate::Error::ChatRoomBindingMissing),
-            chat_demo::room::Match::Mismatch => Err(crate::Error::ChatRoomBindingMismatch),
-        }
+            .room_id_for(&handle)
+            .ok_or(crate::Error::ChatRoomBindingMissing)
     }
 }
 
@@ -485,7 +474,6 @@ pub(super) type IncomingFlow = ChatPostFlow<Incoming>;
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::types::SseTabId;
 
     fn sample_body() -> domain::chat::message::Body {
         domain::chat::message::Body::try_new("hello").expect("valid body")
@@ -500,15 +488,6 @@ mod tests {
             .status(domain::chat::message::Status::Visible)
             .maybe_client_id(None)
             .created_at(std::time::SystemTime::UNIX_EPOCH)
-            .build()
-    }
-
-    fn auth_user() -> crate::auth::User {
-        crate::auth::User::builder()
-            .id(crate::auth::UserId::from(domain::user::Id::new_v4()))
-            .username(domain::user::Username::try_new("person").expect("valid username"))
-            .email(domain::user::Email::try_new("person@example.com").expect("valid email"))
-            .session_hash_bytes(vec![1, 2, 3])
             .build()
     }
 
@@ -542,27 +521,5 @@ mod tests {
 
         assert!(markup.contains("person"));
         assert!(markup.contains("hello"));
-    }
-
-    #[test]
-    fn authenticated_constructor_parses_signals_into_command() {
-        let user = auth_user();
-        let incoming = IncomingFlow::from_authenticated_signals(
-            ChatSignals {
-                room_id: Text::from(domain::chat::room::Id::new_v4().as_uuid().to_string()),
-                body: Text::from("hello"),
-                sse_tab_id: Some(SseTabId::new("tab-1")),
-            },
-            &user,
-        )
-        .expect("incoming");
-
-        let command = incoming.mark_command_built().command();
-
-        assert_eq!(command.body.to_string(), "hello");
-        assert_eq!(
-            command.user_id.as_uuid(),
-            user.id.to_domain().unwrap().as_uuid()
-        );
     }
 }

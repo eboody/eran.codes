@@ -72,7 +72,7 @@ mod tests {
                 .input_label(Text::from("Message as you"))
                 .input_name(Text::from("body"))
                 .input_id(Text::from("chat-input-you"))
-                .input_signal(Text::from("body"))
+                .input_signal(Text::from("chatDraftBody"))
                 .placeholder(Text::from("Say something..."))
                 .submit(
                     partials::button::Button::builder()

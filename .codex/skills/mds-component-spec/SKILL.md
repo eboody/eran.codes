@@ -84,7 +84,7 @@ Every component spec must declare `design.render_contract`:
 - `composable_render`: `true`
 - `children_as_props`: `true`
 - `primitive_reuse`: array of primitive component ids reused by composition (for example `["icon", "tab"]`)
-- `interaction_mode`: string describing the component interaction model (for example `ui_local_datastar`)
+- `interaction_mode`: string describing the component interaction model (for example `ui_local_controller`)
 
 Semantics:
 - Parent/child render composition is explicit and typed.
@@ -160,7 +160,7 @@ Each `state.fields[]` entry must define:
 
 Semantics:
 - `authority = "ui"`
-  - May be mutated by Datastar local expressions (`data-on:*`) and by `events.ui_transitions`.
+  - May be mutated by Datastar local expressions (`data-on:*`), other repo-approved local controllers, and `events.ui_transitions`.
 - `authority = "app"`
   - MUST NOT be mutated by local `data-on:*` expressions.
   - MUST NOT be mutated by `events.ui_transitions`.
@@ -252,7 +252,7 @@ This declares semantic dispatch style. Projects may still use local Datastar exp
   "content": {"source": "cms", "root_type": "ExampleContent", "fixture_path": "tests/fixtures/cms/example.json"},
   "design": {
     "reuse_scan": {"checked_components": ["crates/http/src/views/partials/components/primitives/tab.rs"], "reused": ["tab"], "created": []},
-    "render_contract": {"composable_render": true, "children_as_props": true, "primitive_reuse": ["tab"], "interaction_mode": "ui_local_datastar"},
+    "render_contract": {"composable_render": true, "children_as_props": true, "primitive_reuse": ["tab"], "interaction_mode": "ui_local_controller"},
     "protocol_model": {
       "decision": "runtime",
       "staged_entity": "ExampleFlow",

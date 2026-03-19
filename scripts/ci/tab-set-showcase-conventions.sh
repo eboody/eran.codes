@@ -45,8 +45,11 @@ require_pattern 'pub\(crate\)\s+struct\s+ContentProps<' \
 require_pattern 'pub\(crate\)\s+fn\s+from_content\(props:\s+ContentProps<' \
   "expected Component::from_content(...) helper" \
   "$component_file"
-require_pattern 'component_signals\(&self\.signal_name,\s*&self\.active_tab_id\)' \
-  "component render should emit signals from the configured signal_name" \
+require_pattern 'data-local-tabs-root' \
+  "component render should expose the local tab controller root" \
+  "$component_file"
+require_pattern 'data-local-tabs-active=\(&self\.active_tab_id\)' \
+  "component render should expose the initial active tab id for the local controller" \
   "$component_file"
 require_pattern 'tabs_from_content\(' \
   "tab_set should assemble tabs behind the component boundary" \
@@ -54,8 +57,17 @@ require_pattern 'tabs_from_content\(' \
 require_pattern 'panes_from_content\(' \
   "tab_set should assemble panes behind the component boundary" \
   "$component_file"
-require_pattern 'show_expr\(&self\.signal_name,\s*&self\.tab_value\)' \
-  "pane visibility should follow the configured tab signal" \
+forbid_pattern 'data-signals=' \
+  "tab_set component should not seed local Datastar signals for purely local tab state" \
+  "$component_file"
+require_pattern 'hidden\[\!self\.is_selected\]' \
+  "pane visibility should follow the initial selected tab state" \
+  "$pane_item_file"
+require_pattern 'tabindex=\(tab_index\)' \
+  "pane tabindex should follow the initial selected tab state" \
+  "$pane_item_file"
+forbid_pattern 'data-show=' \
+  "tab panes should not depend on local Datastar visibility expressions" \
   "$pane_item_file"
 
 require_pattern '^use crate::views::partials::components::tab_set;' \

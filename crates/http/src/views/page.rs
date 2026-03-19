@@ -190,12 +190,13 @@ impl Render for Layout<'_> {
                     (crate::views::partials::components::head_styles())
                     script src="/static/css-scope-inline.js" {}
                     script type="module" src="/static/datastar.js" {}
+                    script src="/static/local-tabs.js" {}
                     script type="module" src="/static/transport-errors.js" {}
                     script src="/static/surreal.js" {}
                 }
                 @match self.sse_mode {
                     SseMode::Enabled => {
-                        body data-signals=(global_signals) data-init=(format!("@get('{}')", Route::Events)) { (body_content) }
+                        body data-signals=(global_signals) data-init=(events_init_action()) { (body_content) }
                     }
                     SseMode::Disabled => {
                         body data-signals=(global_signals) { (body_content) }
@@ -204,6 +205,13 @@ impl Render for Layout<'_> {
             }
         }
     }
+}
+
+fn events_init_action() -> String {
+    format!(
+        "@get('{}', {{filterSignals: {{include: /^(sseTabId|operations_filter_query)$/}}}})",
+        Route::Events
+    )
 }
 
 #[derive(Debug, Builder)]
@@ -235,5 +243,30 @@ impl Render for Error {
             .maybe_with_user(self.user.clone())
             .build()
             .render()
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn events_init_action_limits_signals_to_transport_contract() {
+        assert_eq!(
+            events_init_action(),
+            "@get('/events', {filterSignals: {include: /^(sseTabId|operations_filter_query)$/}})"
+        );
+    }
+
+    #[test]
+    fn layout_includes_local_tabs_controller() {
+        let markup = Layout::builder()
+            .title("Example")
+            .content(maud::html! { main {} })
+            .build()
+            .render()
+            .into_string();
+
+        assert!(markup.contains("/static/local-tabs.js"));
     }
 }

@@ -22,7 +22,6 @@
         "gallery": {
           "id": "crate-gallery-statum",
           "aria_label": "statum feature gallery",
-          "signal_name": "statum_active_tab_id",
           "tabs": [
             {
               "id": "transition_api",
@@ -139,7 +138,6 @@
         "gallery": {
           "id": "crate-gallery-nestum",
           "aria_label": "nestum feature gallery",
-          "signal_name": "nestum_active_tab_id",
           "tabs": [
             {
               "id": "nested_paths",
@@ -248,7 +246,6 @@
         "gallery": {
           "id": "crate-gallery-modum",
           "aria_label": "modum feature gallery",
-          "signal_name": "modum_active_tab_id",
           "tabs": [
             {
               "id": "namespace_policy",

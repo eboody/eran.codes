@@ -8,7 +8,6 @@ use crate::views::partials::components::tab_set;
 pub(crate) struct CrateGalleryContent {
     pub(crate) id: Text,
     pub(crate) aria_label: Text,
-    pub(crate) signal_name: Text,
     pub(crate) tabs: Vec<CrateGalleryTabContent>,
 }
 

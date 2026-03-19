@@ -491,7 +491,6 @@ pub(crate) mod tab;
 pub(crate) struct Component<'a> {
     pub id: &'a str,
     pub class: &'a str,
-    pub signal_name: Text,
     pub active_tab_id: Text,
     pub tabs: tab::Set,
     pub panes: pane::List,
@@ -504,15 +503,11 @@ pub(crate) struct ContentProps<'a> {
     pub aria_label: Text,
     pub content: &'a content::TabSetContent,
     pub active_tab_id: Option<Text>,
-    pub signal_name: Option<Text>,
     pub palette: Option<&'static Palette>,
 }
 
 impl<'a> Component<'a> {
     pub(crate) fn from_content(props: ContentProps<'a>) -> Self {
-        let signal_name = props
-            .signal_name
-            .unwrap_or_else(|| Text::from("active_tab_id"));
         let palette = props.palette.unwrap_or(&THEME.gray);
         let active_tab_id = props.active_tab_id.unwrap_or_else(|| {
             props
@@ -524,17 +519,15 @@ impl<'a> Component<'a> {
         });
         let tabs = tabs_from_content(
             props.id,
-            &signal_name,
             palette,
             &active_tab_id,
             props.content,
         );
-        let panes = panes_from_content(&signal_name, props.content, &tabs);
+        let panes = panes_from_content(&active_tab_id, props.content, &tabs);
 
         Self {
             id: props.id,
             class: props.class,
-            signal_name,
             active_tab_id,
             tabs: tab::Set {
                 aria_label: props.aria_label,
@@ -547,12 +540,12 @@ impl<'a> Component<'a> {
 
 impl Render for Component<'_> {
     fn render(&self) -> maud::Markup {
-        let signals = component_signals(&self.signal_name, &self.active_tab_id);
         maud::html! {
             section
                 id=(self.id)
                 class=(self.class)
-                data-signals=(signals) {
+                data-local-tabs-root
+                data-local-tabs-active=(&self.active_tab_id) {
                 (css())
                 (self.tabs)
                 (self.panes)
@@ -563,7 +556,6 @@ impl Render for Component<'_> {
 
 fn tabs_from_content(
     root_id: &str,
-    signal_name: &Text,
     palette: &'static Palette,
     active_tab_id: &Text,
     content: &content::TabSetContent,
@@ -580,8 +572,7 @@ fn tabs_from_content(
             icon: tab.icon.clone(),
             primary_text: tab.label.primary.clone(),
             secondary_text: tab.label.secondary.clone(),
-            interaction: TabInteraction::DatastarLocal {
-                signal: signal_name.clone(),
+            interaction: TabInteraction::LocalTabs {
                 value: tab.id.clone(),
             },
         })
@@ -589,7 +580,7 @@ fn tabs_from_content(
 }
 
 fn panes_from_content(
-    signal_name: &Text,
+    active_tab_id: &Text,
     content: &content::TabSetContent,
     tabs: &[Tab],
 ) -> Vec<pane::Item> {
@@ -598,18 +589,9 @@ fn panes_from_content(
         .iter()
         .zip(tabs.iter())
         .map(|(tab_content, tab)| {
-            pane::Item::from_content(signal_name, tab, tab_content.id.clone(), tab_content)
+            pane::Item::from_content(tab, tab_content, tab_content.id == *active_tab_id)
         })
         .collect()
-}
-
-fn component_signals(signal_name: &Text, active_tab_id: &Text) -> String {
-    let mut signals = serde_json::Map::new();
-    signals.insert(
-        signal_name.to_string(),
-        serde_json::Value::String(active_tab_id.to_string()),
-    );
-    serde_json::Value::Object(signals).to_string()
 }
 
 #[cfg(test)]
@@ -617,14 +599,26 @@ mod tests {
     use super::*;
 
     #[test]
-    fn component_data_signals_uses_dynamic_signal_name_and_json_encoding() {
-        let signals =
-            component_signals(&Text::from("selected_tab"), &Text::from("alpha'\"beta"));
-        assert_eq!(signals, "{\"selected_tab\":\"alpha'\\\"beta\"}");
+    fn component_renders_local_tabs_root_and_active_tab() {
+        let markup = Component {
+            id: "tab-set",
+            class: "tab-set-showcase",
+            active_tab_id: Text::from("alpha'\"beta"),
+            tabs: tab::Set {
+                aria_label: Text::from("Example tabs"),
+                tabs: tab::List { children: vec![] },
+            },
+            panes: pane::List { children: vec![] },
+        }
+        .render()
+        .into_string();
+
+        assert!(markup.contains("data-local-tabs-root"));
+        assert!(markup.contains("data-local-tabs-active=\"alpha'&quot;beta\""));
     }
 
     #[test]
-    fn from_content_defaults_to_first_tab_and_default_signal_name() {
+    fn from_content_defaults_to_first_tab() {
         let content = content::TabSetContent {
             tabs: vec![content::Tab {
                 id: Text::from("policy"),
@@ -655,7 +649,6 @@ mod tests {
                 .build(),
         );
 
-        assert_eq!(component.signal_name, Text::from("active_tab_id"));
         assert_eq!(component.active_tab_id, Text::from("policy"));
         assert_eq!(component.tabs.tabs.children.len(), 1);
         assert_eq!(component.panes.children.len(), 1);

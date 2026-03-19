@@ -38,7 +38,6 @@ fn render_gallery(content: &CrateGalleryContent) -> Markup {
             .id(gallery_id.as_str())
             .class("tab-set-showcase ui-portfolio-crate-gallery ui-portfolio-crate-gallery--flat")
             .aria_label(content.aria_label.clone())
-            .signal_name(content.signal_name.clone())
             .content(&gallery_content)
             .build(),
     )

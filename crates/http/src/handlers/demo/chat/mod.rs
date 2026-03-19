@@ -14,16 +14,16 @@ use post_flow::IncomingFlow as ChatPostIncomingFlow;
 #[derive(Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct ChatSignals {
-    pub room_id: Text,
-    pub body: Text,
+    #[serde(rename = "chatDraftBody")]
+    pub draft_body: Text,
     pub sse_tab_id: Option<SseTabId>,
 }
 
 #[derive(Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct DemoChatSignals {
-    pub room_id: Text,
-    pub bot_body: Text,
+    #[serde(rename = "chatDemoDraftBody")]
+    pub draft_body: Text,
     pub sse_tab_id: Option<SseTabId>,
 }
 
@@ -87,7 +87,7 @@ pub async fn post_chat_message(
         .as_ref()
         .ok_or(crate::error::Error::Internal)?;
 
-    let incoming = ChatPostIncomingFlow::from_authenticated_signals(signals, user)?;
+    let incoming = ChatPostIncomingFlow::from_authenticated_signals(&state, signals, user)?;
     incoming.post_and_respond(&state).await
 }
 

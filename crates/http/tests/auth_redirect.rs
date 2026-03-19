@@ -386,7 +386,7 @@ async fn login_sets_session_cookie_and_allows_chat_moderation() {
 }
 
 #[tokio::test]
-async fn invalid_chat_room_id_returns_bad_request() {
+async fn chat_message_without_bound_lab_tab_returns_precondition_failed() {
     let app = test_app();
     let cookie_header = login_cookie(app.clone()).await;
     let response = app
@@ -394,13 +394,13 @@ async fn invalid_chat_room_id_returns_bad_request() {
             Request::post("/demo/chat/messages")
                 .header(axum::http::header::COOKIE, cookie_header)
                 .header(axum::http::header::CONTENT_TYPE, "application/json")
-                .body(Body::from(r#"{"roomId":"not-a-uuid","body":"hello"}"#))
+                .body(Body::from(r#"{"chatDraftBody":"hello"}"#))
                 .unwrap(),
         )
         .await
         .unwrap();
 
-    assert_eq!(response.status(), StatusCode::BAD_REQUEST);
+    assert_eq!(response.status(), StatusCode::PRECONDITION_FAILED);
 }
 
 #[tokio::test]

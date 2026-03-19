@@ -85,7 +85,6 @@ fn test_app() -> axum::Router {
 
 struct LabSessionContext {
     cookie_header: String,
-    room_id: String,
     sse_tab_id: String,
 }
 
@@ -112,13 +111,8 @@ async fn load_lab_session_context(app: axum::Router) -> LabSessionContext {
 
     LabSessionContext {
         cookie_header,
-        room_id: extract_attr(&body, "data-chat-room-id").expect("lab room id attribute"),
         sse_tab_id: extract_between(&body, "sseTabId: '", "'").expect("lab sse tab id"),
     }
-}
-
-fn extract_attr(body: &str, attr_name: &str) -> Option<String> {
-    extract_between(body, &format!("{attr_name}=\""), "\"")
 }
 
 fn extract_between(body: &str, start: &str, end: &str) -> Option<String> {
@@ -526,8 +520,8 @@ async fn demo_chat_message_accepts_bound_room_for_current_tab() {
                 .header(axum::http::header::CONTENT_TYPE, "application/json")
                 .header("datastar-request", "1")
                 .body(Body::from(format!(
-                    r#"{{"roomId":"{}","botBody":"hello","sseTabId":"{}"}}"#,
-                    context.room_id, context.sse_tab_id
+                    r#"{{"chatDemoDraftBody":"hello","sseTabId":"{}"}}"#,
+                    context.sse_tab_id
                 )))
                 .unwrap(),
         )
@@ -538,7 +532,7 @@ async fn demo_chat_message_accepts_bound_room_for_current_tab() {
 }
 
 #[tokio::test]
-async fn demo_chat_message_rejects_room_mismatch_for_current_tab() {
+async fn demo_chat_message_rejects_unbound_tab_for_current_tab() {
     let app = test_app();
     let context = load_lab_session_context(app.clone()).await;
     let response = app
@@ -548,9 +542,8 @@ async fn demo_chat_message_rejects_room_mismatch_for_current_tab() {
                 .header(axum::http::header::CONTENT_TYPE, "application/json")
                 .header("datastar-request", "1")
                 .body(Body::from(format!(
-                    r#"{{"roomId":"{}","botBody":"hello","sseTabId":"{}"}}"#,
-                    domain_chat::room::Id::new_v4().as_uuid(),
-                    context.sse_tab_id
+                    r#"{{"chatDemoDraftBody":"hello","sseTabId":"{}"}}"#,
+                    uuid::Uuid::new_v4()
                 )))
                 .unwrap(),
         )
@@ -560,6 +553,6 @@ async fn demo_chat_message_rejects_room_mismatch_for_current_tab() {
     assert_eq!(response.status(), axum::http::StatusCode::OK);
     let body = to_bytes(response.into_body(), usize::MAX).await.unwrap();
     let body = String::from_utf8_lossy(&body);
-    assert!(body.contains("\"transportErrorStatus\":409"));
-    assert!(body.contains("\"transportErrorKind\":\"conflict\""));
+    assert!(body.contains("\"transportErrorStatus\":412"));
+    assert!(body.contains("\"transportErrorKind\":\"precondition\""));
 }
