@@ -57,21 +57,13 @@ pub async fn lab(
     Extension(cookies): Extension<Cookies>,
     auth_session: crate::auth::Session,
 ) -> crate::Result<axum::response::Html<String>> {
-    let incoming = lab_flow::IncomingFlow::from_auth_user(auth_session.user.clone());
-    let viewer_resolved = incoming.resolve_viewer()?;
-    let chat_loaded = viewer_resolved.load_chat_context(&state).await?;
-    let sse_tab_id = SseTabId::new(uuid::Uuid::new_v4().to_string());
-    let session = crate::sse::Handle::from_cookies_with_tab(
-        &cookies,
-        &state.cookie_key,
-        Some(sse_tab_id.clone()),
-    );
-    state
-        .demo
-        .chat_room_bindings
-        .bind(&session, chat_loaded.room_id());
+    let page_ready = lab_flow::IncomingFlow::from_auth_user(auth_session.user.clone())
+        .resolve_viewer()?
+        .load_chat_context(&state)
+        .await?
+        .bind_live_tab(&cookies, &state.cookie_key, &state.demo.chat_room_bindings);
 
-    Ok(views::render(chat_loaded.into_page(sse_tab_id)))
+    Ok(views::render(page_ready.into_page()))
 }
 
 pub async fn error_test() -> crate::Result<axum::response::Html<String>> {
