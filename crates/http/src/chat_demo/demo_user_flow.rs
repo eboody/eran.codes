@@ -29,6 +29,21 @@ impl DemoUserEnsureFlow<Incoming> {
     pub(super) fn new() -> Self {
         DemoUserEnsureFlow::<Incoming>::builder().build()
     }
+
+    pub(super) async fn ensure(
+        self,
+        state: &crate::State,
+        email_literal: &str,
+        username_literal: &str,
+    ) -> crate::Result<domain::user::User> {
+        let identity = self.prepare_identity(email_literal, username_literal)?;
+        let existing = state.user.find_by_email(identity.email().clone()).await?;
+
+        identity
+            .classify_existing(existing)
+            .resolve_user(state)
+            .await
+    }
 }
 
 #[transition]

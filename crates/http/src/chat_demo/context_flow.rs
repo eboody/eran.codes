@@ -51,6 +51,18 @@ impl ChatDemoContextFlow<Incoming> {
             .build()
     }
 
+    pub(super) async fn load(
+        self,
+        state: &crate::State,
+    ) -> crate::Result<super::ChatContext> {
+        let viewer_resolved = self.resolve_viewer(state).await?;
+        let room_ready = viewer_resolved.ensure_room(state).await?;
+        let messages_loaded = room_ready.load_messages(state).await?;
+        let context_built = messages_loaded.build_context(state).await;
+
+        Ok(context_built.into_context())
+    }
+
     pub(super) async fn resolve_viewer(
         self,
         state: &crate::State,
@@ -636,18 +648,9 @@ mod tests {
         let viewer = domain::user::Id::from_uuid(uuid::Uuid::from_u128(0x7777));
 
         let context = IncomingFlow::from_viewer(Some(viewer))
-            .resolve_viewer(&state)
+            .load(&state)
             .await
-            .expect("viewer resolved")
-            .ensure_room(&state)
-            .await
-            .expect("room ensured")
-            .load_messages(&state)
-            .await
-            .expect("messages loaded")
-            .build_context(&state)
-            .await
-            .into_context();
+            .expect("context loaded");
 
         assert_eq!(context.room, room);
         assert_eq!(context.messages.len(), 1);

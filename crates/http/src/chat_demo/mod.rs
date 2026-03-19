@@ -21,24 +21,16 @@ pub async fn load_chat_context(
     state: &crate::State,
     user_id: Option<domain::user::Id>,
 ) -> Result<ChatContext, crate::Error> {
-    let incoming = context_flow::IncomingFlow::from_viewer(user_id);
-    let viewer_resolved = incoming.resolve_viewer(state).await?;
-    let room_ready = viewer_resolved.ensure_room(state).await?;
-    let messages_loaded = room_ready.load_messages(state).await?;
-    let context_built = messages_loaded.build_context(state).await;
-
-    Ok(context_built.into_context())
+    context_flow::IncomingFlow::from_viewer(user_id)
+        .load(state)
+        .await
 }
 
 pub async fn ensure_demo_user(
     state: &crate::State,
 ) -> Result<domain::user::User, crate::Error> {
-    let identity = demo_user_flow::IncomingFlow::new()
-        .prepare_identity(DEMO_USER_EMAIL, DEMO_USER_NAME)?;
-    let existing = state.user.find_by_email(identity.email().clone()).await?;
-    identity
-        .classify_existing(existing)
-        .resolve_user(state)
+    demo_user_flow::IncomingFlow::new()
+        .ensure(state, DEMO_USER_EMAIL, DEMO_USER_NAME)
         .await
 }
 
