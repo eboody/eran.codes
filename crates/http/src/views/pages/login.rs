@@ -58,6 +58,7 @@ impl Render for Login<'_> {
                 .footer(footer)
                 .build())
         };
+        let content = page::Frame::builder().content(content).build().render();
 
         page::Layout::builder()
             .title("Sign in")

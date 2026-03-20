@@ -14,6 +14,7 @@ me {
   gap: var(--space-card);
   align-items: start;
   margin-top: 0;
+  view-transition-name: chat-hero;
 }
 
 me [data-chat-hero-copy] {

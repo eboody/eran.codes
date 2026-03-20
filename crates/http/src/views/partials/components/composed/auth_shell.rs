@@ -15,6 +15,7 @@ me > [data-auth-card] {
   inline-size: min(100%, 34rem);
   margin-top: clamp(0.9rem, 0.6rem + 0.8vw, 1.35rem);
   gap: var(--space-4);
+  view-transition-name: auth-shell-card;
 }
 
 me > [data-auth-card][data-auth-card-variant='account'] {
@@ -125,7 +126,7 @@ pub struct AuthShell {
 impl Render for AuthShell {
     fn render(&self) -> maud::Markup {
         maud::html! {
-            main class="u-container" data-auth-shell {
+            div data-auth-shell data-page-section {
                 (css())
                 article class="u-surface-card" data-auth-card data-auth-card-variant=(self.variant.attr_value()) {
                     header data-auth-header {

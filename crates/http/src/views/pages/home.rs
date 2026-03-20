@@ -29,10 +29,11 @@ impl Render for Home {
             },
         }
         .render();
+        let page_content = page::Frame::builder().content(body).build().render();
 
         page::Layout::builder()
             .title(&content.page_title.to_string())
-            .content(body)
+            .content(page_content)
             .nav_mode(page::NavMode::Portfolio)
             .current_route(crate::paths::Route::Home)
             .build()

@@ -175,6 +175,18 @@
   --control-icon-size: 1em;
 }
 
+@view-transition {
+  navigation: auto;
+}
+
+::view-transition-group(app-nav),
+::view-transition-group(app-main),
+::view-transition-group(portfolio-hero),
+::view-transition-group(lab-hero) {
+  animation-duration: var(--motion-standard);
+  animation-timing-function: var(--ease-3);
+}
+
 html {
   background-color: var(--surface-page);
   color-scheme: light;
@@ -409,5 +421,14 @@ input[type="password"] {
 @media (max-width: 38rem) {
   :root {
     --nav-scroll-offset: 10.25rem;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  ::view-transition-group(app-nav),
+  ::view-transition-group(app-main),
+  ::view-transition-group(portfolio-hero),
+  ::view-transition-group(lab-hero) {
+    animation-duration: 1ms;
   }
 }

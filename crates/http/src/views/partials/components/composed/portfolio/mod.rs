@@ -24,6 +24,7 @@ me .ui-portfolio-hero {
       transparent 60%
     ),
     var(--portfolio-surface);
+  view-transition-name: portfolio-hero;
 }
 
 me .ui-portfolio-lead-surface {
@@ -607,7 +608,7 @@ pub struct Page {
 impl Render for Page {
     fn render(&self) -> Markup {
         maud::html! {
-            main class="u-container" data-portfolio-page {
+            div data-portfolio-page data-page-section {
                 (css())
                 (&self.content)
             }

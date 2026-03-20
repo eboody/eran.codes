@@ -16,18 +16,6 @@ me {
 me > :where(header, section) {
   margin-top: 0;
   scroll-margin-top: var(--nav-scroll-offset);
-  transition:
-    opacity var(--motion-standard),
-    transform var(--motion-standard),
-    border-color var(--motion-standard),
-    box-shadow var(--motion-standard);
-}
-
-@starting-style {
-  me > :where(header, section) {
-    opacity: 0;
-    transform: translateY(0.8rem);
-  }
 }
 
 me [data-operations-surface] {
@@ -138,7 +126,7 @@ pub struct Lab {
 impl maud::Render for Lab {
     fn render(&self) -> maud::Markup {
         let content = maud::html! {
-            main class="u-container" data-lab-page {
+            div data-lab-page data-page-section {
                 (css())
                 (partials::HomeHero::builder().maybe_user(self.user.clone()).build())
 
@@ -207,6 +195,7 @@ impl maud::Render for Lab {
                 (partials::EngineeringQuality::builder().build())
             }
         };
+        let content = page::Frame::builder().content(content).build().render();
 
         page::Layout::builder()
             .title("Live Lab")

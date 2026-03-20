@@ -62,6 +62,7 @@ impl Render for Register<'_> {
                 .footer(footer)
                 .build())
         };
+        let content = page::Frame::builder().content(content).build().render();
 
         page::Layout::builder()
             .title("Create account")

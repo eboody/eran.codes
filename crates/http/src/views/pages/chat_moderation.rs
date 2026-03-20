@@ -34,6 +34,7 @@ me [data-chat-moderation-hero] {
     ),
     var(--portfolio-surface);
   box-shadow: var(--portfolio-shadow);
+  view-transition-name: chat-hero;
 }
 
 me [data-chat-moderation-hero] h1 {
@@ -109,7 +110,7 @@ pub struct ChatModeration {
 impl Render for ChatModeration {
     fn render(&self) -> maud::Markup {
         let content = maud::html! {
-            main class="u-container" data-chat-page data-chat-moderation-page {
+            div data-chat-page data-chat-moderation-page data-page-section {
                 (css())
                 header data-chat-moderation-hero {
                     div {
@@ -166,6 +167,7 @@ impl Render for ChatModeration {
                 }
             }
         };
+        let content = page::Frame::builder().content(content).build().render();
 
         page::Layout::builder()
             .title("Chat moderation")

@@ -32,7 +32,7 @@ pub struct Chat {
 impl Render for Chat {
     fn render(&self) -> maud::Markup {
         let content = maud::html! {
-            main class="u-container" data-chat-page {
+            div data-chat-page data-page-section {
                 (css())
                 ({
                     partials::components::chat::Hero::builder()
@@ -48,6 +48,7 @@ impl Render for Chat {
                     .build())
             }
         };
+        let content = page::Frame::builder().content(content).build().render();
 
         page::Layout::builder()
             .title("Chat room")

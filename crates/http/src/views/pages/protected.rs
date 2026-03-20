@@ -32,6 +32,7 @@ impl Render for Protected {
                 .variant(partials::AuthShellVariant::Account)
                 .build())
         };
+        let content = page::Frame::builder().content(content).build().render();
 
         page::Layout::builder()
             .title("Protected")

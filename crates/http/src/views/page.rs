@@ -11,6 +11,31 @@ pub(crate) const PORTFOLIO_LINKEDIN_URL: &str =
     "https://www.linkedin.com/search/results/all/?keywords=Eran%20Boodnero";
 pub(crate) const PORTFOLIO_CONTACT_URL: &str = "mailto:eboodnero@gmail.com";
 
+crate::views::scoped::inline_css!(
+    r#"
+me > [data-page-section] > :where(header, section, article, div) {
+  transition:
+    opacity var(--motion-standard),
+    transform var(--motion-standard),
+    border-color var(--motion-standard),
+    box-shadow var(--motion-standard);
+}
+
+@starting-style {
+  me > [data-page-section] > :where(header, section, article, div) {
+    opacity: 0;
+    transform: translateY(0.8rem);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  me > [data-page-section] > :where(header, section, article, div) {
+    transition: none;
+  }
+}
+"#
+);
+
 #[derive(Clone, Debug, Builder)]
 pub struct UserNav {
     pub username: Text,
@@ -25,6 +50,22 @@ impl Render for UserNav {
             .logout_action(Text::from(Route::Logout.as_str()))
             .build()
             .render()
+    }
+}
+
+#[derive(Debug, Builder)]
+pub struct Frame {
+    pub content: Markup,
+}
+
+impl Render for Frame {
+    fn render(&self) -> Markup {
+        maud::html! {
+            main class="u-container" data-page-frame {
+                (css())
+                (&self.content)
+            }
+        }
     }
 }
 
@@ -225,17 +266,20 @@ pub struct Error {
 
 impl Render for Error {
     fn render(&self) -> Markup {
-        let content = maud::html! {
-            main class="u-container" {
-                article {
-                    header {
-                        h1 { (self.title) }
+        let content = Frame::builder()
+            .content(maud::html! {
+                div data-page-section {
+                    article {
+                        header {
+                            h1 { (self.title) }
+                        }
+                        p { (self.message) }
+                        p { "Status: " (self.status) }
                     }
-                    p { (self.message) }
-                    p { "Status: " (self.status) }
                 }
-            }
-        };
+            })
+            .build()
+            .render();
 
         Layout::builder()
             .title(self.title)
@@ -268,5 +312,21 @@ mod tests {
             .into_string();
 
         assert!(markup.contains("/static/local-tabs.js"));
+    }
+
+    #[test]
+    fn frame_renders_page_container() {
+        let markup = Frame::builder()
+            .content(maud::html! {
+                div data-page-section {
+                    section { "example" }
+                }
+            })
+            .build()
+            .render()
+            .into_string();
+
+        assert!(markup.contains("data-page-frame"));
+        assert!(markup.contains("data-page-section"));
     }
 }
