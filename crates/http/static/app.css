@@ -117,6 +117,10 @@
   --shadow-panel:
     0 1px 0 color-mix(in srgb, white 72%, transparent),
     0 18px 38px color-mix(in srgb, #142033 10%, transparent);
+  --shadow-panel-hover:
+    inset 0 1px 0 var(--surface-edge-soft),
+    0 12px 20px color-mix(in srgb, #142033 10%, transparent);
+  --motion-lift-subtle: translateY(-2px);
   --motion-fast: 140ms var(--ease-3);
   --motion-standard: 220ms var(--ease-3);
   --shell-max-inline: 1180px;
@@ -180,7 +184,6 @@
 }
 
 ::view-transition-group(app-nav),
-::view-transition-group(app-main),
 ::view-transition-group(portfolio-hero),
 ::view-transition-group(lab-hero) {
   animation-duration: var(--motion-standard);
@@ -246,6 +249,9 @@ html {
     --shadow-panel:
       0 1px 0 color-mix(in srgb, white 14%, transparent),
       0 12px 22px color-mix(in srgb, black 24%, transparent);
+    --shadow-panel-hover:
+      inset 0 1px 0 var(--surface-edge-soft),
+      0 14px 22px color-mix(in srgb, black 24%, transparent);
 
     --ui-surface-card: var(--surface-panel);
     --ui-text: var(--text-body);
@@ -391,6 +397,11 @@ input[type="password"] {
   background-image: var(--surface-fill-panel);
   box-shadow: var(--shadow-panel);
   overflow: visible;
+  transition:
+    border-color var(--motion-fast),
+    background-color var(--motion-fast),
+    box-shadow var(--motion-fast),
+    transform var(--motion-fast);
 }
 
 .u-inset-card {
@@ -406,6 +417,11 @@ input[type="password"] {
   background-image: var(--inset-card-bg);
   box-shadow: var(--inset-card-shadow);
   overflow: visible;
+  transition:
+    border-color var(--motion-fast),
+    background-color var(--motion-fast),
+    box-shadow var(--motion-fast),
+    transform var(--motion-fast);
 }
 
 @media (max-width: 48rem) {
@@ -425,8 +441,16 @@ input[type="password"] {
 }
 
 @media (prefers-reduced-motion: reduce) {
+  :root {
+    --motion-lift-subtle: none;
+  }
+
+  .u-surface-card,
+  .u-inset-card {
+    transition: none;
+  }
+
   ::view-transition-group(app-nav),
-  ::view-transition-group(app-main),
   ::view-transition-group(portfolio-hero),
   ::view-transition-group(lab-hero) {
     animation-duration: 1ms;

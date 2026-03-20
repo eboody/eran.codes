@@ -19,6 +19,11 @@ me [data-info-card] {
   padding: var(--space-card);
   background: var(--surface-fill-field);
   box-shadow: inset 0 1px 0 var(--surface-edge-soft);
+  transition:
+    border-color var(--motion-fast),
+    background-color var(--motion-fast),
+    box-shadow var(--motion-fast),
+    transform var(--motion-fast);
 }
 
 me [data-info-card] h3 {
@@ -48,9 +53,17 @@ me [data-info-card] ul {
   }
 }
 
-@media (prefers-color-scheme: dark) {
+@media (hover: hover) {
+  me [data-info-card]:hover {
+    transform: var(--motion-lift-subtle);
+    border-color: color-mix(in srgb, var(--accent-signal) 18%, var(--border-default));
+    box-shadow: var(--shadow-panel-hover);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
   me [data-info-card] {
-    box-shadow: inset 0 1px 0 var(--surface-edge-soft);
+    transition: none;
   }
 }
 "#

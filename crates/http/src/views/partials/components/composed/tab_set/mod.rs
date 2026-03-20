@@ -13,6 +13,7 @@ me.tab-set-showcase {
   --_tab-set-shell-padding: clamp(0.95rem, 0.82rem + 0.55vw, 1.3rem);
   --_tab-set-code-stack-gap: clamp(0.8rem, 0.72rem + 0.35vw, 1.05rem);
   --_tab-set-badge-padding: 0.35rem 0.65rem;
+  --_tab-set-panel-enter-offset: calc(var(--space-2) * 0.5);
 
   background:
     linear-gradient(
@@ -145,8 +146,25 @@ me .tab-set__panel[hidden] {
   display: none;
 }
 
+me .tab-set__panel[data-local-tab-entering] {
+  animation: tab-set-panel-enter var(--motion-standard) var(--ease-3);
+  transform-origin: top center;
+}
+
 me .tab-set__panel > * {
   min-width: 0;
+}
+
+@keyframes tab-set-panel-enter {
+  from {
+    opacity: 0;
+    transform: translateY(var(--_tab-set-panel-enter-offset));
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
 }
 
 me .tab-set__preview-frame {
@@ -477,6 +495,12 @@ me .tab-set__subtitle {
 
   me .tab-set__badge {
     font-size: var(--text-size-label-sm);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  me .tab-set__panel[data-local-tab-entering] {
+    animation: none;
   }
 }
 "#

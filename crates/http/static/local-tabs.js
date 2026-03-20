@@ -4,6 +4,7 @@
 
   const isButton = (value) => value instanceof HTMLButtonElement;
   const isPanel = (value) => value instanceof HTMLElement;
+  const prefersReducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)');
 
   const panelForTab = (root, tab) => {
     if (!isButton(tab)) return null;
@@ -15,6 +16,24 @@
     if (!isPanel(panel) || !root.contains(panel)) return null;
 
     return panel;
+  };
+
+  const animatePanelEnter = (panel) => {
+    if (!isPanel(panel)) return;
+
+    delete panel.dataset.localTabEntering;
+
+    if (prefersReducedMotion.matches) return;
+
+    void panel.offsetWidth;
+    panel.dataset.localTabEntering = '1';
+    panel.addEventListener(
+      'animationend',
+      () => {
+        delete panel.dataset.localTabEntering;
+      },
+      { once: true },
+    );
   };
 
   const bindRoot = (root) => {
@@ -31,7 +50,8 @@
 
     root.dataset.localTabsBound = '1';
 
-    const select = (value, focus = false) => {
+    const select = (value, focus = false, animate = false) => {
+      const previousValue = root.dataset.localTabsActive;
       root.dataset.localTabsActive = value;
 
       tabs.forEach((tab) => {
@@ -44,6 +64,12 @@
         if (panel) {
           panel.hidden = !selected;
           panel.tabIndex = selected ? 0 : -1;
+
+          if (selected && animate && value !== previousValue) {
+            animatePanelEnter(panel);
+          } else if (!selected) {
+            delete panel.dataset.localTabEntering;
+          }
         }
 
         if (selected && focus) {
@@ -65,7 +91,7 @@
       tab.addEventListener('click', () => {
         const value = tab.dataset.localTabValue;
         if (value) {
-          select(value);
+          select(value, false, true);
         }
       });
 
@@ -95,7 +121,7 @@
 
         const nextValue = tabs[nextIndex]?.dataset.localTabValue;
         if (nextValue) {
-          select(nextValue, true);
+          select(nextValue, true, true);
         }
       });
     });

@@ -95,6 +95,11 @@ me .ui-portfolio-proof-item {
   --inset-card-padding: var(--space-3);
   --inset-card-border: var(--ui-border-soft);
   --inset-card-bg: var(--ui-surface-soft);
+  transition:
+    border-color var(--motion-fast),
+    background-color var(--motion-fast),
+    box-shadow var(--motion-fast),
+    transform var(--motion-fast);
 }
 
 me .ui-portfolio-proof-item h3 {
@@ -134,6 +139,11 @@ me .ui-portfolio-card {
   gap: var(--space-2);
   align-content: start;
   overflow: visible;
+  transition:
+    border-color var(--motion-fast),
+    background-color var(--motion-fast),
+    box-shadow var(--motion-fast),
+    transform var(--motion-fast);
 }
 
 me .ui-portfolio-card-kicker {
@@ -245,6 +255,41 @@ me .ui-portfolio-work-card-footer .ui-portfolio-badges {
   gap: var(--space-1);
 }
 
+@media (hover: hover) {
+  me .ui-portfolio-card:hover,
+  me .ui-portfolio-proof-item:hover {
+    transform: var(--motion-lift-subtle);
+    box-shadow: var(--shadow-panel-hover);
+  }
+
+  me .ui-portfolio-crate-showcase:hover {
+    border-color: color-mix(in srgb, var(--portfolio-accent-a) 30%, var(--ui-border-soft));
+  }
+
+  me .ui-portfolio-card:hover {
+    border-color: color-mix(in srgb, var(--portfolio-accent-a) 22%, var(--ui-border-soft));
+  }
+
+  me .ui-portfolio-proof-item:hover {
+    border-color: color-mix(in srgb, var(--portfolio-accent-a) 20%, var(--ui-border-soft));
+  }
+
+  me .ui-portfolio-proof-item[data-proof-kind="reliability"]:hover {
+    border-color: color-mix(in srgb, var(--portfolio-accent-b) 26%, var(--ui-border-soft));
+  }
+}
+
+me .ui-portfolio-card:focus-within {
+  transform: var(--motion-lift-subtle);
+  border-color: color-mix(in srgb, var(--portfolio-accent-a) 24%, var(--ui-border-soft));
+  box-shadow: var(--shadow-panel-hover);
+}
+
+me .ui-portfolio-crate-showcase:focus-within,
+me .ui-portfolio-crate-gallery:focus-within {
+  border-color: color-mix(in srgb, var(--portfolio-accent-a) 34%, var(--ui-border-soft));
+}
+
 me .ui-portfolio-crate-showcase {
   display: grid;
   gap: clamp(1.25rem, 1.02rem + 0.78vw, 1.85rem);
@@ -267,6 +312,10 @@ me .ui-portfolio-crate-showcase {
   box-shadow:
     inset 0 1px 0 color-mix(in srgb, white 38%, transparent),
     0 18px 40px -34px color-mix(in srgb, var(--portfolio-accent-a) 34%, transparent);
+  transition:
+    border-color var(--motion-fast),
+    background-color var(--motion-fast),
+    box-shadow var(--motion-fast);
 }
 
 me .ui-portfolio-crate-showcase-header,
@@ -329,6 +378,10 @@ me .ui-portfolio-crate-gallery {
   box-shadow:
     inset 0 1px 0 color-mix(in srgb, white 30%, transparent),
     inset 0 0 0 1px color-mix(in srgb, black 2%, transparent);
+  transition:
+    border-color var(--motion-fast),
+    background-color var(--motion-fast),
+    box-shadow var(--motion-fast);
 }
 
 @media (prefers-color-scheme: dark) {
@@ -589,6 +642,13 @@ me .ui-portfolio-crate-section--standalone .ui-portfolio-inline-links {
     width: fit-content;
   }
 
+}
+
+@media (prefers-reduced-motion: reduce) {
+  me .ui-portfolio-card,
+  me .ui-portfolio-proof-item {
+    transition: none;
+  }
 }
 "#
 );

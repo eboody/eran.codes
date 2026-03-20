@@ -9,6 +9,8 @@ use crate::views::proper_theme::THEME;
 crate::views::scoped::inline_css!(
     r#"
 me {
+  --_crate-switcher-panel-enter-offset: calc(var(--space-2) * 0.5);
+
   display: grid;
   gap: var(--space-3);
 }
@@ -69,6 +71,23 @@ me [data-portfolio-crate-panel] {
   align-content: start;
 }
 
+me [data-portfolio-crate-panel][data-local-tab-entering] {
+  animation: crate-switcher-panel-enter var(--motion-standard) var(--ease-3);
+  transform-origin: top center;
+}
+
+@keyframes crate-switcher-panel-enter {
+  from {
+    opacity: 0;
+    transform: translateY(var(--_crate-switcher-panel-enter-offset));
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
 @media (prefers-color-scheme: dark) {
   me [data-portfolio-crate-switcher-nav] .tab-set__tab {
     background: color-mix(in srgb, var(--surface-field) 92%, black 8%);
@@ -100,6 +119,12 @@ me [data-portfolio-crate-panel] {
 
   me [data-portfolio-crate-switcher-nav] .tab-set__tab {
     padding: var(--control-padding-block-compact) var(--control-padding-inline-compact);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  me [data-portfolio-crate-panel][data-local-tab-entering] {
+    animation: none;
   }
 }
 "#
