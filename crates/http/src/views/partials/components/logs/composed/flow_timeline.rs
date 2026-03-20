@@ -2,6 +2,8 @@ use bon::Builder;
 use maud::Render;
 use std::collections::BTreeMap;
 
+use crate::trace_log::db_bind;
+use crate::trace_log::demo_db;
 use crate::types::Text;
 use crate::views::partials::components::{Pill, logs};
 
@@ -135,9 +137,9 @@ fn detail_class(is_default: bool) -> &'static str {
     }
 }
 
-pub fn flow_matches_any_search_term(flow: &Flow, terms: &[String]) -> bool {
+pub fn flow_matches_any_search_term(flow: &Flow, terms: &[Text]) -> bool {
     let search = flow_search_text(flow);
-    terms.iter().any(|term| search.contains(term))
+    terms.iter().any(|term| search.contains(&term.to_string()))
 }
 
 fn flow_search_text(flow: &Flow) -> String {
@@ -157,7 +159,7 @@ fn flow_search_text(flow: &Flow) -> String {
 }
 
 fn event_summary_class(event: &FlowEvent) -> &'static str {
-    if is_db_query_summary(&event.summary) {
+    if demo_db::is_summary_text(&event.summary) {
         "ui-log-flow-event-summary ui-log-flow-event-summary-inline"
     } else {
         "ui-log-flow-event-summary"
@@ -165,7 +167,7 @@ fn event_summary_class(event: &FlowEvent) -> &'static str {
 }
 
 fn event_summary_markup(event: &FlowEvent) -> maud::Markup {
-    if !is_db_query_summary(&event.summary) {
+    if !demo_db::is_summary_text(&event.summary) {
         return maud::html! { (&event.summary) };
     }
 
@@ -192,7 +194,7 @@ fn event_summary_markup(event: &FlowEvent) -> maud::Markup {
 }
 
 fn visible_event_pills(event: &FlowEvent) -> Vec<&Pill> {
-    if !is_db_query_summary(&event.summary) {
+    if !demo_db::is_summary_text(&event.summary) {
         return event.pills.iter().collect();
     }
     event
@@ -200,11 +202,6 @@ fn visible_event_pills(event: &FlowEvent) -> Vec<&Pill> {
         .iter()
         .filter(|pill| bind_index(pill).is_none())
         .collect()
-}
-
-fn is_db_query_summary(summary: &Text) -> bool {
-    let summary = summary.to_string();
-    summary.starts_with("DB query:") || summary.starts_with("DB query complete:")
 }
 
 fn bind_pills_by_index(pills: &[Pill]) -> BTreeMap<usize, &Pill> {
@@ -218,10 +215,7 @@ fn bind_pills_by_index(pills: &[Pill]) -> BTreeMap<usize, &Pill> {
 }
 
 fn bind_index(pill: &Pill) -> Option<usize> {
-    let text = pill.text.to_string();
-    let rest = text.strip_prefix('$')?;
-    let (index, _) = rest.split_once('=')?;
-    index.parse::<usize>().ok()
+    db_bind::Index::from_pill_text(&pill.text.to_string()).map(db_bind::Index::get)
 }
 
 enum SummaryPart<'a> {
@@ -234,32 +228,21 @@ fn summary_parts_with_inline_bind_pills<'a>(
     bind_pills: &'a BTreeMap<usize, &'a Pill>,
 ) -> Vec<SummaryPart<'a>> {
     let mut parts = Vec::new();
-    let bytes = summary.as_bytes();
-    let mut cursor = 0usize;
     let mut segment_start = 0usize;
 
-    while cursor < bytes.len() {
-        if bytes[cursor] == b'$' {
-            let mut end = cursor + 1;
-            while end < bytes.len() && bytes[end].is_ascii_digit() {
-                end += 1;
-            }
-            if end > cursor + 1
-                && let Ok(index) = summary[cursor + 1..end].parse::<usize>()
-                && let Some(pill) = bind_pills.get(&index)
-            {
-                if segment_start < cursor {
-                    parts.push(SummaryPart::Text(
-                        summary[segment_start..cursor].to_string(),
-                    ));
-                }
-                parts.push(SummaryPart::Pill(*pill));
-                segment_start = end;
-                cursor = end;
-                continue;
-            }
+    for reference in db_bind::summary_references(summary) {
+        let Some(pill) = bind_pills.get(&reference.index().get()) else {
+            continue;
+        };
+
+        if segment_start < reference.start() {
+            parts.push(SummaryPart::Text(
+                summary[segment_start..reference.start()].to_string(),
+            ));
         }
-        cursor += 1;
+
+        parts.push(SummaryPart::Pill(pill));
+        segment_start = reference.end();
     }
 
     if segment_start < summary.len() {

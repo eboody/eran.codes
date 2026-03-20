@@ -25,9 +25,10 @@ impl WorkCaseSlug {
     }
 }
 
-#[derive(Clone, Copy, Debug, PartialEq, Eq, Deserialize)]
+#[derive(Clone, Copy, Debug, Default, PartialEq, Eq, Deserialize)]
 #[serde(rename_all = "snake_case")]
 pub enum LinkKind {
+    #[default]
     Internal,
     External,
 }
@@ -35,12 +36,6 @@ pub enum LinkKind {
 impl LinkKind {
     pub fn is_external(self) -> bool {
         matches!(self, Self::External)
-    }
-}
-
-impl Default for LinkKind {
-    fn default() -> Self {
-        Self::Internal
     }
 }
 

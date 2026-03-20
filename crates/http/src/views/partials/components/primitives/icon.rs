@@ -25,10 +25,10 @@ pub(crate) struct Icon {
     pub color: Option<ThemeColor>,
 }
 
-impl Icon {
-    pub(crate) fn from_token(token: impl Into<Text>) -> Self {
+impl From<Text> for Icon {
+    fn from(token: Text) -> Self {
         Self {
-            token: normalize_icon_token(token.into()),
+            token: normalize_icon_token(token),
             color: None,
         }
     }
@@ -51,7 +51,7 @@ impl<'de> Deserialize<'de> for Icon {
             RawIcon::Object { key } => key,
         };
 
-        Ok(Self::from_token(token))
+        Ok(Self::from(token))
     }
 }
 

@@ -78,7 +78,7 @@ impl Repository {
             row.get::<time::OffsetDateTime, _>("credential_updated_at");
 
         Ok(auth::Record::builder()
-            .id(user::Id::from_uuid(user_id))
+            .id(user::Id::from(user_id))
             .username(username)
             .email(email)
             .password_hash(password_hash)
@@ -121,7 +121,7 @@ impl Repository {
             WHERE u.id = $1
             "#,
         )
-        .bind(user_id.as_uuid())
+        .bind(user_id.as_ref())
         .fetch_optional(&self.pg)
         .await
         .context(FindByIdSnafu)?;

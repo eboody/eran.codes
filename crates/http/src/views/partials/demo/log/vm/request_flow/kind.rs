@@ -3,7 +3,6 @@ use crate::trace_log::{
     log::{message, target},
 };
 use crate::types::LogFieldKey;
-use crate::views::partials::demo::log;
 
 #[derive(Clone, Copy, Debug)]
 pub(super) enum FlowEvent {
@@ -16,8 +15,7 @@ pub(super) enum FlowEvent {
 }
 
 pub(super) fn flow_event(entry: &store::TraceEntry) -> Option<FlowEvent> {
-    let target_kind = target::Kind::parse(&entry.target.to_string());
-    let message_kind = message::Kind::parse(&entry.message.to_string());
+    let (target_kind, message_kind) = entry.kinds();
 
     match (target_kind, message_kind) {
         (
@@ -43,7 +41,7 @@ pub(super) fn flow_event(entry: &store::TraceEntry) -> Option<FlowEvent> {
             Some(FlowEvent::Backend)
         }
         (target::Kind::Other(_), _)
-            if log::vm::field_text(entry, LogFieldKey::RequestId).is_some() =>
+            if entry.field_text(LogFieldKey::RequestId).is_some() =>
         {
             Some(FlowEvent::Backend)
         }

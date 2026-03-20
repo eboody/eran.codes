@@ -6,19 +6,11 @@ use std::cell::RefCell;
 use tower_cookies::{Cookies, Key};
 use tracing::Span;
 
-#[derive(Clone, Copy, Debug)]
+#[derive(Clone, Copy, Debug, strum_macros::AsRefStr)]
+#[strum(serialize_all = "lowercase")]
 pub enum Kind {
     Page,
     Datastar,
-}
-
-impl Kind {
-    pub fn as_str(self) -> &'static str {
-        match self {
-            Kind::Page => "page",
-            Kind::Datastar => "datastar",
-        }
-    }
 }
 
 tokio::task_local! {

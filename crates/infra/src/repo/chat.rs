@@ -110,9 +110,9 @@ impl Repository {
         let name = chat::room::Name::try_new(name).context(DecodeRoomNameSnafu)?;
 
         Ok(chat::Room {
-            id: chat::room::Id::from_uuid(row.get::<uuid::Uuid, _>("id")),
+            id: chat::room::Id::from(row.get::<uuid::Uuid, _>("id")),
             name,
-            created_by: chat::UserId::from_uuid(row.get::<uuid::Uuid, _>("created_by")),
+            created_by: chat::UserId::from(row.get::<uuid::Uuid, _>("created_by")),
         })
     }
 
@@ -132,9 +132,9 @@ impl Repository {
         let status = Self::status_from_db(row.get::<String, _>("status").as_str())?;
 
         Ok(chat::Message {
-            id: chat::message::Id::from_uuid(row.get::<uuid::Uuid, _>("id")),
-            room_id: chat::room::Id::from_uuid(row.get::<uuid::Uuid, _>("room_id")),
-            user_id: chat::UserId::from_uuid(row.get::<uuid::Uuid, _>("user_id")),
+            id: chat::message::Id::from(row.get::<uuid::Uuid, _>("id")),
+            room_id: chat::room::Id::from(row.get::<uuid::Uuid, _>("room_id")),
+            user_id: chat::UserId::from(row.get::<uuid::Uuid, _>("user_id")),
             body,
             status,
             client_id: Self::client_id_from_db(row.get::<Option<String>, _>("client_id"))?,
@@ -159,9 +159,9 @@ impl app::chat::Repository for Repository {
             VALUES ($1, $2, $3)
             "#,
         )
-        .bind(room.id.as_uuid())
+        .bind(room.id.as_ref())
         .bind(room.name.to_string())
-        .bind(room.created_by.as_uuid())
+        .bind(room.created_by.as_ref())
         .execute(&self.pg)
         .await
         .context(QuerySnafu {
@@ -176,7 +176,7 @@ impl app::chat::Repository for Repository {
             target: "demo.db",
             message = "db query",
             db_statement = "SELECT id, name, created_by FROM chat_rooms WHERE id = $1",
-            db_bind_1 = %room_id.as_uuid()
+            db_bind_1 = %room_id.as_ref()
         );
         let record = sqlx::query(
             r#"
@@ -185,7 +185,7 @@ impl app::chat::Repository for Repository {
             WHERE id = $1
             "#,
         )
-        .bind(room_id.as_uuid())
+        .bind(room_id.as_ref())
         .fetch_optional(&self.pg)
         .await
         .context(QuerySnafu {
@@ -240,7 +240,7 @@ impl app::chat::Repository for Repository {
             LIMIT $2
             "#,
         )
-        .bind(room_id.as_uuid())
+        .bind(room_id.as_ref())
         .bind(limit as i64)
         .fetch_all(&self.pg)
         .await
@@ -270,7 +270,7 @@ impl app::chat::Repository for Repository {
             WHERE id = $1
             "#,
         )
-        .bind(message_id.as_uuid())
+        .bind(message_id.as_ref())
         .fetch_optional(&self.pg)
         .await
         .context(QuerySnafu {
@@ -292,9 +292,9 @@ impl app::chat::Repository for Repository {
             target: "demo.db",
             message = "db query",
             db_statement = "INSERT INTO chat_messages (id, room_id, user_id, body, status, client_id, created_at) VALUES ($1, $2, $3, $4, $5, $6, $7)",
-            db_bind_1 = %message.id.as_uuid(),
-            db_bind_2 = %message.room_id.as_uuid(),
-            db_bind_3 = %message.user_id.as_uuid(),
+            db_bind_1 = %message.id.as_ref(),
+            db_bind_2 = %message.room_id.as_ref(),
+            db_bind_3 = %message.user_id.as_ref(),
             db_bind_4 = %message.body,
             db_bind_5 = status,
             db_bind_6 = client_id,
@@ -306,9 +306,9 @@ impl app::chat::Repository for Repository {
             VALUES ($1, $2, $3, $4, $5, $6, $7)
             "#,
         )
-        .bind(message.id.as_uuid())
-        .bind(message.room_id.as_uuid())
-        .bind(message.user_id.as_uuid())
+        .bind(message.id.as_ref())
+        .bind(message.room_id.as_ref())
+        .bind(message.user_id.as_ref())
         .bind(message.body.to_string())
         .bind(status)
         .bind(message.client_id.as_ref().map(|value| value.to_string()))
@@ -332,8 +332,8 @@ impl app::chat::Repository for Repository {
             target: "demo.db",
             message = "db query",
             db_statement = "INSERT INTO chat_room_memberships (room_id, user_id, role) VALUES ($1, $2, $3)",
-            db_bind_1 = %room_id.as_uuid(),
-            db_bind_2 = %user_id.as_uuid(),
+            db_bind_1 = %room_id.as_ref(),
+            db_bind_2 = %user_id.as_ref(),
             db_bind_3 = %role
         );
         sqlx::query(
@@ -343,8 +343,8 @@ impl app::chat::Repository for Repository {
             ON CONFLICT (room_id, user_id) DO NOTHING
             "#,
         )
-        .bind(room_id.as_uuid())
-        .bind(user_id.as_uuid())
+        .bind(room_id.as_ref())
+        .bind(user_id.as_ref())
         .bind(role.to_string())
         .execute(&self.pg)
         .await
@@ -364,8 +364,8 @@ impl app::chat::Repository for Repository {
             target: "demo.db",
             message = "db query",
             db_statement = "SELECT 1 FROM chat_room_memberships WHERE room_id = $1 AND user_id = $2",
-            db_bind_1 = %room_id.as_uuid(),
-            db_bind_2 = %user_id.as_uuid()
+            db_bind_1 = %room_id.as_ref(),
+            db_bind_2 = %user_id.as_ref()
         );
         let row = sqlx::query(
             r#"
@@ -374,8 +374,8 @@ impl app::chat::Repository for Repository {
             WHERE room_id = $1 AND user_id = $2
             "#,
         )
-        .bind(room_id.as_uuid())
-        .bind(user_id.as_uuid())
+        .bind(room_id.as_ref())
+        .bind(user_id.as_ref())
         .fetch_optional(&self.pg)
         .await
         .context(QuerySnafu {
@@ -403,7 +403,7 @@ impl app::chat::Repository for Repository {
               AND status = 'pending'
             "#,
         )
-        .bind(message_id.as_uuid())
+        .bind(message_id.as_ref())
         .bind(Self::status_to_db(status))
         .execute(&self.pg)
         .await
@@ -447,7 +447,7 @@ impl app::chat::moderation::Queue for ModerationQueue {
             VALUES ($1, $2)
             "#,
         )
-        .bind(message_id.as_uuid())
+        .bind(message_id.as_ref())
         .bind(reason.to_string())
         .execute(&self.pg)
         .await
@@ -513,14 +513,12 @@ impl app::chat::moderation::Queue for ModerationQueue {
 
             items.push(
                 app::chat::moderation::Item::builder()
-                    .message_id(chat::message::Id::from_uuid(
+                    .message_id(chat::message::Id::from(
                         row.get::<uuid::Uuid, _>("message_id"),
                     ))
-                    .room_id(chat::room::Id::from_uuid(
-                        row.get::<uuid::Uuid, _>("room_id"),
-                    ))
+                    .room_id(chat::room::Id::from(row.get::<uuid::Uuid, _>("room_id")))
                     .room_name(room_name)
-                    .user_id(chat::UserId::from_uuid(row.get::<uuid::Uuid, _>("user_id")))
+                    .user_id(chat::UserId::from(row.get::<uuid::Uuid, _>("user_id")))
                     .body(body)
                     .queue_status(queue_status)
                     .reason(reason)
@@ -560,9 +558,9 @@ impl app::chat::moderation::Queue for ModerationQueue {
               AND status = 'pending'
             "#,
         )
-        .bind(message_id.as_uuid())
+        .bind(message_id.as_ref())
         .bind(status.to_string())
-        .bind(reviewer_id.as_uuid())
+        .bind(reviewer_id.as_ref())
         .bind(reason.map(|value| value.to_string()))
         .execute(&self.pg)
         .await
@@ -609,8 +607,8 @@ impl app::chat::RateLimiter for RateLimiter {
             target: "demo.db",
             message = "db query",
             db_statement = "UPSERT chat_rate_limits",
-            db_bind_1 = %room_id.as_uuid(),
-            db_bind_2 = %user_id.as_uuid(),
+            db_bind_1 = %room_id.as_ref(),
+            db_bind_2 = %user_id.as_ref(),
             db_bind_3 = RATE_LIMIT_WINDOW_SECS,
             db_bind_4 = RATE_LIMIT_MAX
         );
@@ -637,8 +635,8 @@ impl app::chat::RateLimiter for RateLimiter {
             FROM updated
             "#,
         )
-        .bind(room_id.as_uuid())
-        .bind(user_id.as_uuid())
+        .bind(room_id.as_ref())
+        .bind(user_id.as_ref())
         .bind(RATE_LIMIT_WINDOW_SECS)
         .bind(RATE_LIMIT_MAX)
         .fetch_one(&self.pg)
@@ -669,8 +667,8 @@ impl AuditLog {
 #[async_trait]
 impl app::chat::audit::Log for AuditLog {
     async fn record(&self, entry: audit::Entry) -> Result<()> {
-        let room_id = entry.room_id.as_uuid().to_string();
-        let actor_id = entry.actor_id.as_uuid().to_string();
+        let room_id = entry.room_id.as_ref().to_string();
+        let actor_id = entry.actor_id.as_ref().to_string();
         let action = entry.action.to_string();
         let metadata = entry
             .metadata
@@ -699,8 +697,8 @@ impl app::chat::audit::Log for AuditLog {
             VALUES ($1, $2, $3, $4)
             "#,
         )
-        .bind(entry.room_id.as_uuid())
-        .bind(entry.actor_id.as_uuid())
+        .bind(entry.room_id.as_ref())
+        .bind(entry.actor_id.as_ref())
         .bind(entry.action.to_string())
         .bind(metadata)
         .execute(&self.pg)

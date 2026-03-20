@@ -55,7 +55,7 @@ impl LabPageFlow<Incoming> {
         let viewer_id = self
             .auth_user
             .as_ref()
-            .map(|user| user.id.to_domain())
+            .map(|user| domain::user::Id::try_from(&user.id))
             .transpose()?;
         Ok(self.mark_viewer_resolved(ViewerData {
             maybe_user,
@@ -81,7 +81,7 @@ impl LabPageFlow<ViewerResolved> {
             crate::chat_demo::load_chat_context(state, self.state_data.viewer_id).await?;
         let maybe_user = self.state_data.maybe_user.clone();
         let chat_demo = partials::chat::DemoSection::builder()
-            .room_id(Text::from(context.room.id.as_uuid().to_string()))
+            .room_id(Text::from(context.room.id.as_ref().to_string()))
             .room_name(Text::from(context.room.name.to_string()))
             .messages(context.messages)
             .mode(self.state_data.chat_mode)
@@ -167,7 +167,7 @@ mod tests {
     fn bind_live_tab_binds_loaded_room_to_generated_handle() {
         let room_id = domain::chat::room::Id::new_v4();
         let chat_demo = partials::chat::DemoSection::builder()
-            .room_id(Text::from(room_id.as_uuid().to_string()))
+            .room_id(Text::from(room_id.as_ref().to_string()))
             .room_name(Text::from(domain::chat::room::Name::Lobby.to_string()))
             .messages(Vec::new())
             .mode(partials::components::chat::Mode::DemoOnly)

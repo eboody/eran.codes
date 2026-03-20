@@ -10,13 +10,13 @@ pub(crate) struct Body {
     pub features: FeatureList,
 }
 
-impl Body {
-    pub(crate) fn from_content(body: &tab_set::content::Body) -> Self {
+impl From<&tab_set::content::Body> for Body {
+    fn from(body: &tab_set::content::Body) -> Self {
         Self {
             title: body.title.clone(),
             subtitle: body.subtitle.clone(),
             features: FeatureList {
-                children: body.features.iter().map(Feature::from_content).collect(),
+                children: body.features.iter().map(Feature::from).collect(),
             },
         }
     }
@@ -56,8 +56,8 @@ pub(crate) struct Feature {
     pub text: Text,
 }
 
-impl Feature {
-    pub(crate) fn from_content(feature: &tab_set::content::Feature) -> Self {
+impl From<&tab_set::content::Feature> for Feature {
+    fn from(feature: &tab_set::content::Feature) -> Self {
         Self {
             text: feature.text.clone(),
         }

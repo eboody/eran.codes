@@ -28,15 +28,15 @@ impl Item {
             preview: tab_content
                 .preview
                 .as_ref()
-                .map(tab_set::pane::Preview::from_content),
+                .map(tab_set::pane::Preview::from),
             body: tab_content
                 .body
                 .as_ref()
-                .map(tab_set::pane::Body::from_content),
+                .map(tab_set::pane::Body::from),
             action: tab_content
                 .action
                 .as_ref()
-                .map(tab_set::pane::Action::from_content),
+                .map(tab_set::pane::Action::from),
         }
     }
 }

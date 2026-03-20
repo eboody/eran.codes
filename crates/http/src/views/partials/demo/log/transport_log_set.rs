@@ -1,7 +1,7 @@
 use bon::Builder;
 use maud::Render;
 
-use crate::trace_log::store;
+use crate::trace_log::{FlowFilterTerms, store};
 use crate::types::Text;
 use crate::views::partials::components;
 
@@ -12,22 +12,19 @@ pub struct TransportLogSet<'a> {
     pub entries: &'a [store::TraceEntry],
     pub active_tab_id: Option<crate::types::SseTabId>,
     #[builder(default)]
-    pub excluded_terms: Vec<Text>,
+    pub excluded_terms: FlowFilterTerms,
 }
 
 impl Render for TransportLogSet<'_> {
     fn render(&self) -> maud::Markup {
         let mut request_flows =
             vm::request_flows(self.entries, 20, self.active_tab_id.as_ref());
-        let excluded_terms: Vec<String> = self
-            .excluded_terms
-            .iter()
-            .map(|value| value.to_string().trim().to_lowercase())
-            .filter(|value| !value.is_empty())
-            .collect();
-        if !excluded_terms.is_empty() {
+        if !self.excluded_terms.is_empty() {
             request_flows.retain(|flow| {
-                !components::logs::composed::flow_matches_any_search_term(flow, &excluded_terms)
+                !components::logs::composed::flow_matches_any_search_term(
+                    flow,
+                    self.excluded_terms.as_slice(),
+                )
             });
         }
         let flow_body = components::logs::composed::FlowTimeline::builder()
@@ -180,7 +177,7 @@ mod tests {
 
         let markup = TransportLogSet::builder()
             .entries(&entries)
-            .excluded_terms(vec![Text::from("/events")])
+            .excluded_terms(FlowFilterTerms::from("/events"))
             .build()
             .render()
             .into_string();

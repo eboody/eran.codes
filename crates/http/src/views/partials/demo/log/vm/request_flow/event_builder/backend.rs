@@ -1,15 +1,15 @@
 use crate::trace_log::{
+    demo_db,
     store,
-    log::target,
 };
-use crate::types::{LogFieldKey, Text};
+use crate::types::Text;
 use crate::views::partials::components;
 use crate::views::partials::demo::log;
 
 pub(super) fn backend_event(
     entry: &store::TraceEntry,
 ) -> (Text, Text, Vec<components::Pill>) {
-    let summary = db_backend_summary(entry)
+    let summary = demo_db::summary(entry)
         .unwrap_or_else(|| Text::from(format!("{}: {}", entry.target, entry.message)));
 
     (
@@ -17,41 +17,4 @@ pub(super) fn backend_event(
         Text::from("backend"),
         log::vm::request_flow::pills::field_pills(entry),
     )
-}
-
-fn db_backend_summary(entry: &store::TraceEntry) -> Option<Text> {
-    if !matches!(
-        target::Kind::parse(&entry.target.to_string()),
-        target::Kind::Known(target::Known::DemoDb)
-    ) {
-        return None;
-    }
-
-    let label = match unquote(entry.message.to_string().as_str()) {
-        "db query" => "DB query",
-        "db query complete" => "DB query complete",
-        _ => return None,
-    };
-
-    let statement = log::vm::field_text(entry, LogFieldKey::DbStatement)
-        .map(|value| normalize_whitespace(&value.to_string()))
-        .unwrap_or_default();
-
-    if statement.is_empty() {
-        return Some(Text::from(label));
-    }
-
-    Some(Text::from(format!("{label}: {statement}")))
-}
-
-fn unquote(value: &str) -> &str {
-    let trimmed = value.trim();
-    trimmed
-        .strip_prefix('"')
-        .and_then(|candidate| candidate.strip_suffix('"'))
-        .unwrap_or(trimmed)
-}
-
-fn normalize_whitespace(value: &str) -> String {
-    value.split_whitespace().collect::<Vec<_>>().join(" ")
 }

@@ -4,7 +4,7 @@ use crate::trace_log::store;
 use crate::types::{LogFieldKey, SseTabId, Text};
 use crate::views::partials::components;
 
-use super::{field_text, short_request_id};
+use super::short_request_id;
 
 mod event_builder;
 mod kind;
@@ -29,8 +29,9 @@ pub fn request_flows(
 
         let flow_id = flow_id(entry, index);
         let key = flow_id.to_string();
-        let display_id = field_text(entry, LogFieldKey::RequestId)
-            .map(|value| short_request_id(&value))
+        let display_id = entry
+            .field_text(LogFieldKey::RequestId)
+            .map(short_request_id)
             .unwrap_or_else(|| Text::from("orphan"));
 
         if !flow_map.contains_key(&key) {
@@ -43,7 +44,7 @@ pub fn request_flows(
                     display_id,
                     latest_timestamp: Text::from(entry.timestamp.clone()),
                     latest_index: index,
-                    has_request_id: field_text(entry, LogFieldKey::RequestId).is_some(),
+                    has_request_id: entry.field_text(LogFieldKey::RequestId).is_some(),
                     has_request_envelope: false,
                     method: None,
                     path: None,
@@ -59,7 +60,7 @@ pub fn request_flows(
             aggregate.latest_index = index;
             aggregate.events.push(build_flow_event(kind, entry));
             hydrate_request_fields(aggregate, entry, kind);
-            if let Some(tab_id) = field_text(entry, LogFieldKey::SseTabId) {
+            if let Some(tab_id) = entry.field_text(LogFieldKey::SseTabId) {
                 aggregate.tab_ids.insert(tab_id.to_string());
             }
         }
@@ -70,7 +71,7 @@ pub fn request_flows(
         .filter_map(|key| flow_map.remove(&key))
         .collect();
     flows.retain(|flow| !flow.has_request_id || flow.has_request_envelope);
-    flows.sort_by(|left, right| right.latest_index.cmp(&left.latest_index));
+    flows.sort_by_key(|flow| std::cmp::Reverse(flow.latest_index));
     if let Some(active_tab_id) = active_tab_id.map(ToString::to_string) {
         flows.retain(|flow| {
             flow.tab_ids.is_empty() || flow.tab_ids.contains(&active_tab_id)
@@ -118,15 +119,15 @@ fn hydrate_request_fields(
     if matches!(kind, kind::FlowEvent::RequestEnd | kind::FlowEvent::RequestStart) {
         aggregate.has_request_envelope = true;
         if aggregate.method.is_none() {
-            aggregate.method = field_text(entry, LogFieldKey::Method);
+            aggregate.method = entry.field_text(LogFieldKey::Method).cloned();
         }
         if aggregate.path.is_none() {
-            aggregate.path = field_text(entry, LogFieldKey::Path);
+            aggregate.path = entry.field_text(LogFieldKey::Path).cloned();
         }
     }
 
     if aggregate.status.is_none() {
-        aggregate.status = field_text(entry, LogFieldKey::Status);
+        aggregate.status = entry.field_text(LogFieldKey::Status).cloned();
     }
 }
 
@@ -140,7 +141,7 @@ fn flow_title(flow: &FlowAggregate) -> Text {
 }
 
 fn flow_id(entry: &store::TraceEntry, index: usize) -> Text {
-    field_text(entry, LogFieldKey::RequestId).unwrap_or_else(|| {
+    entry.field_text(LogFieldKey::RequestId).cloned().unwrap_or_else(|| {
         Text::from(format!(
             "orphan-{}-{index}",
             entry.timestamp.to_string().replace(':', "")

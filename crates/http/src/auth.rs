@@ -67,7 +67,7 @@ impl AuthnBackend for Backend {
         let auth = self.auth.clone();
         let user_id = user_id.clone();
         async move {
-            let domain_id = user_id.to_domain()?;
+            let domain_id = domain::user::Id::try_from(&user_id)?;
             let user = auth.get_user(&domain_id).await?;
             Ok(user.map(User::from))
         }
@@ -91,19 +91,30 @@ impl From<app::auth::AuthenticatedUser> for User {
 )]
 pub struct UserId(String);
 
-impl UserId {
-    pub fn to_domain(&self) -> Result<domain::user::Id, app::auth::Error> {
-        let parsed = self
+impl TryFrom<&UserId> for domain::user::Id {
+    type Error = app::auth::Error;
+
+    fn try_from(value: &UserId) -> Result<Self, Self::Error> {
+        let parsed = value
             .to_string()
             .parse::<uuid::Uuid>()
             .map_err(|source| app::auth::Error::InvalidAuthenticatedUserId { source })?;
-        Ok(domain::user::Id::from_uuid(parsed))
+
+        Ok(parsed.into())
+    }
+}
+
+impl TryFrom<UserId> for domain::user::Id {
+    type Error = app::auth::Error;
+
+    fn try_from(value: UserId) -> Result<Self, Self::Error> {
+        Self::try_from(&value)
     }
 }
 
 impl From<domain::user::Id> for UserId {
     fn from(value: domain::user::Id) -> Self {
-        UserId::new(value.as_uuid().to_string())
+        UserId::new(uuid::Uuid::from(value).to_string())
     }
 }
 

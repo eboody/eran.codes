@@ -185,7 +185,7 @@ impl ModerateMessageFlow<QueueCompletionApplied> {
         let metadata = vec![
             (
                 audit::Key::MessageId,
-                audit::Value::new(self.message_id.as_uuid().to_string()),
+                audit::Value::new(self.message_id.as_ref().to_string()),
             ),
             (
                 audit::Key::Decision,

@@ -6,6 +6,6 @@ mod network_tables;
 mod request_flow;
 
 pub use chat_flow_rows::chat_flow_rows;
-pub use entry_fields::{field_text, short_request_id};
+pub use entry_fields::short_request_id;
 pub use grouped_stream::build_grouped_feed;
 pub use request_flow::request_flows;

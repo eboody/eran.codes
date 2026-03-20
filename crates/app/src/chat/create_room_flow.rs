@@ -126,7 +126,7 @@ impl CreateRoomFlow<OwnerMembershipAdded> {
                 audit::Action::RoomCreate,
                 vec![(
                     audit::Key::RoomId,
-                    audit::Value::new(room_id.as_uuid().to_string()),
+                    audit::Value::new(room_id.as_ref().to_string()),
                 )],
             ))
             .await?;

@@ -85,6 +85,10 @@ pub mod message {
         RequestEnd,
         #[strum(serialize = "request completed")]
         RequestCompleted,
+        #[strum(serialize = "\"db query\"", serialize = "db query")]
+        DbQuery,
+        #[strum(serialize = "\"db query complete\"", serialize = "db query complete")]
+        DbQueryComplete,
         #[strum(serialize = "chat.message.incoming")]
         ChatMessageIncoming,
         #[strum(serialize = "chat message broadcast")]
@@ -97,6 +101,8 @@ pub mod message {
                 Self::RequestStart => "request.start",
                 Self::RequestEnd => "request.end",
                 Self::RequestCompleted => "request completed",
+                Self::DbQuery => "db query",
+                Self::DbQueryComplete => "db query complete",
                 Self::ChatMessageIncoming => "chat.message.incoming",
                 Self::ChatMessageBroadcast => "chat message broadcast",
             }
@@ -122,6 +128,10 @@ pub mod message {
             LogMessageText::new(value.as_str())
         }
     }
+}
+
+pub(crate) fn classify(target: &str, message: &str) -> (target::Kind, message::Kind) {
+    (target::Kind::parse(target), message::Kind::parse(message))
 }
 
 pub(crate) fn should_skip_event(target: &target::Kind, message: &message::Kind) -> bool {

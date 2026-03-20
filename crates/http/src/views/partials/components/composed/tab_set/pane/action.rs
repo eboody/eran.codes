@@ -10,8 +10,8 @@ pub(crate) struct Action {
     pub href: Option<Text>,
 }
 
-impl Action {
-    pub(crate) fn from_content(action: &tab_set::content::Action) -> Self {
+impl From<&tab_set::content::Action> for Action {
+    fn from(action: &tab_set::content::Action) -> Self {
         Self {
             label: action.label.clone(),
             href: action.href.clone(),

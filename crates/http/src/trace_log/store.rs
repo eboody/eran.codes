@@ -8,10 +8,13 @@ use dashmap::DashMap;
 use maud::Render;
 
 use crate::types::{
-    LogFieldName, LogFieldValue, LogLevelText, LogMessageText, LogTargetText, RequestId,
-    SessionId, SseTabId, Text, TimestampText,
+    LogFieldKey, LogFieldName, LogFieldValue, LogLevelText, LogMessageText, LogTargetText,
+    RequestId, SessionId, SseTabId, Text, TimestampText,
 };
 use crate::{sse, views};
+
+use super::log::{self, message, target};
+use super::{FlowFilterTerms, db_bind};
 
 #[derive(Clone, Debug, Builder)]
 pub struct TraceEntry {
@@ -22,11 +25,56 @@ pub struct TraceEntry {
     pub fields: Vec<(LogFieldName, LogFieldValue)>,
 }
 
+impl TraceEntry {
+    pub fn field_value(&self, key: LogFieldKey) -> Option<&LogFieldValue> {
+        let name = LogFieldName::from(key);
+        self.fields
+            .iter()
+            .find(|(field, _)| field == &name)
+            .map(|(_, value)| value)
+    }
+
+    pub fn field_text(&self, key: LogFieldKey) -> Option<&Text> {
+        self.field_value(key).and_then(LogFieldValue::as_text)
+    }
+
+    pub fn target_kind(&self) -> target::Kind {
+        let (target_kind, _) = self.kinds();
+        target_kind
+    }
+
+    pub fn message_kind(&self) -> message::Kind {
+        let (_, message_kind) = self.kinds();
+        message_kind
+    }
+
+    pub fn db_bind_values(&self) -> Vec<(usize, Text)> {
+        let mut values: Vec<(usize, Text)> = self
+            .fields
+            .iter()
+            .filter_map(|(name, value)| {
+                let index = db_bind::Index::from_field_name(&name.to_string())?.get();
+                let value = match value {
+                    LogFieldValue::Text(text) => text.clone(),
+                    LogFieldValue::Missing => return None,
+                };
+                Some((index, value))
+            })
+            .collect();
+        values.sort_by_key(|(index, _)| *index);
+        values
+    }
+
+    pub fn kinds(&self) -> (target::Kind, message::Kind) {
+        log::classify(&self.target.to_string(), &self.message.to_string())
+    }
+}
+
 #[derive(Clone)]
 pub struct Store {
     requests: Arc<DashMap<RequestId, VecDeque<TraceEntry>>>,
     sessions: Arc<DashMap<SessionId, VecDeque<TraceEntry>>>,
-    flow_filters: Arc<DashMap<sse::StreamKey, Text>>,
+    flow_filters: Arc<DashMap<sse::StreamKey, FlowFilterTerms>>,
     global: Arc<Mutex<VecDeque<TraceEntry>>>,
     max_entries: usize,
     sse: sse::Registry,
@@ -145,14 +193,11 @@ impl Store {
         filter_query: Option<&str>,
     ) {
         let stream_key = sse::StreamKey::new(session_id.clone(), tab_id.cloned());
-        let normalized = filter_query
-            .map(str::trim)
-            .filter(|value| !value.is_empty());
-        if let Some(value) = normalized {
-            self.flow_filters
-                .insert(stream_key, Text::from(value.to_string()));
-        } else {
+        let terms = filter_query.map(FlowFilterTerms::from).unwrap_or_default();
+        if terms.is_empty() {
             self.flow_filters.remove(&stream_key);
+        } else {
+            self.flow_filters.insert(stream_key, terms);
         }
     }
 
@@ -190,11 +235,11 @@ impl Store {
             .unwrap_or_default()
     }
 
-    fn filter_terms_for_stream(&self, stream_key: &sse::StreamKey) -> Vec<Text> {
+    fn filter_terms_for_stream(&self, stream_key: &sse::StreamKey) -> FlowFilterTerms {
         let Some(query) = self.flow_filters.get(stream_key) else {
-            return Vec::new();
+            return FlowFilterTerms::default();
         };
-        parse_filter_terms(&query.to_string())
+        query.clone()
     }
 }
 
@@ -207,25 +252,5 @@ impl Store {
         #[builder(default = true, setters(name = with_emit_sse))] emit_sse: bool,
     ) -> Self {
         Self::new(sse, max_entries, emit_sse)
-    }
-}
-
-fn parse_filter_terms(query: &str) -> Vec<Text> {
-    query
-        .split(',')
-        .map(str::trim)
-        .filter(|value| !value.is_empty())
-        .map(|value| Text::from(value.to_lowercase()))
-        .collect()
-}
-
-#[cfg(test)]
-mod tests {
-    #[test]
-    fn parse_filter_terms_trims_commas_and_normalizes_case() {
-        let terms = super::parse_filter_terms(" /events,  POST , , /HEALTH ");
-        let values: Vec<String> =
-            terms.into_iter().map(|value| value.to_string()).collect();
-        assert_eq!(values, vec!["/events", "post", "/health"]);
     }
 }

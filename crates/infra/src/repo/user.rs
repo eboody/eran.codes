@@ -113,7 +113,7 @@ impl AppUserRepository for SqlxUserRepository {
         user: &user::User,
         password_hash: &auth::password::Hash,
     ) -> app::user::Result<()> {
-        let user_id = user.id.as_uuid().to_string();
+        let user_id = user.id.as_ref().to_string();
         let username = user.username.to_string();
         let email = user.email.to_string();
         let password_hash_value = password_hash.to_string();
@@ -184,7 +184,7 @@ impl SqlxUserRepository {
             VALUES ($1, $2, $3)
             "#,
         )
-        .bind(user.id.as_uuid())
+        .bind(user.id.as_ref())
         .bind(username)
         .bind(email)
         .execute(&mut *tx)
@@ -210,7 +210,7 @@ impl SqlxUserRepository {
             VALUES ($1, $2)
             "#,
         )
-        .bind(user.id.as_uuid())
+        .bind(user.id.as_ref())
         .bind(password_hash_value)
         .execute(&mut *tx)
         .await;
@@ -235,7 +235,7 @@ impl SqlxUserRepository {
             .context(DecodeEmailSnafu)?;
 
         Ok(user::User {
-            id: user::Id::from_uuid(row.get::<uuid::Uuid, _>("id")),
+            id: user::Id::from(row.get::<uuid::Uuid, _>("id")),
             username,
             email,
         })

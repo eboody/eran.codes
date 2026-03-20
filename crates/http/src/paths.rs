@@ -1,5 +1,4 @@
 use maud::Render;
-use std::str::FromStr;
 use strum_macros::{AsRefStr, Display, EnumString};
 
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Display, EnumString, AsRefStr)]
@@ -88,10 +87,6 @@ impl Route {
             Route::PartialSurrealGuarded => "/partials/surreal-message-guarded",
             Route::PartialSurrealCancel => "/partials/surreal-message-cancel",
         }
-    }
-
-    pub fn from_path(path: &str) -> Option<Self> {
-        Self::from_str(path).ok()
     }
 
     pub fn with_query(self, query: &str) -> String {

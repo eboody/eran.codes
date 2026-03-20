@@ -124,7 +124,7 @@ impl RequestLayerPipeline<CoreReady> {
                         if let Some(user_agent) = context.user_agent.as_ref() {
                             span.record("user_agent", user_agent.to_string().as_str());
                         }
-                        span.record("kind", context.kind.as_str());
+                        span.record("kind", context.kind.as_ref());
                     }
                     let route = request
                         .extensions()

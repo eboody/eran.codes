@@ -11,15 +11,15 @@ pub(crate) struct Preview {
     pub code_examples: Vec<CodeExample>,
 }
 
-impl Preview {
-    pub(crate) fn from_content(preview: &tab_set::content::Preview) -> Self {
+impl From<&tab_set::content::Preview> for Preview {
+    fn from(preview: &tab_set::content::Preview) -> Self {
         Self {
             asset_ref: preview.image.as_ref().map(|image| image.asset_ref.clone()),
             badge_text: preview.badge.as_ref().map(|badge| badge.text.clone()),
             code_examples: preview
                 .code_examples
                 .iter()
-                .map(CodeExample::from_content)
+                .map(CodeExample::from)
                 .collect(),
         }
     }
@@ -67,8 +67,8 @@ pub(crate) struct CodeExample {
     pub code: Text,
 }
 
-impl CodeExample {
-    fn from_content(content: &tab_set::content::CodeExample) -> Self {
+impl From<&tab_set::content::CodeExample> for CodeExample {
+    fn from(content: &tab_set::content::CodeExample) -> Self {
         Self {
             label: content.label.clone(),
             code: content.code.clone(),

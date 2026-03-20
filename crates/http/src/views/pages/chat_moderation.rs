@@ -128,15 +128,15 @@ impl Render for ChatModeration {
                                     header {
                                         h3 { (&entry.room_name) }
                                         p class="u-muted" {
-                                            "Message " (&entry.message_id.as_uuid().to_string()[..8])
-                                            " · User " (&entry.user_id.as_uuid().to_string()[..8])
+                                            "Message " (&entry.message_id.as_ref().to_string()[..8])
+                                            " · User " (&entry.user_id.as_ref().to_string()[..8])
                                             " · " (&entry.created_at)
                                         }
                                     }
                                     p { (&entry.body) }
                                     p class="u-muted" { "Reason: " (&entry.reason) }
                                     form method="post" action=(Route::ChatModeration) {
-                                        input type="hidden" name="message_id" value=(entry.message_id.as_uuid());
+                                        input type="hidden" name="message_id" value=(entry.message_id.as_ref());
                                         input type="hidden" name="reason" value=(&entry.reason);
                                         (partials::button::Row::builder()
                                             .items(vec![
@@ -145,7 +145,7 @@ impl Render for ChatModeration {
                                                     .variant(partials::button::Variant::Secondary)
                                                     .role(partials::button::Role::submit_with(
                                                         "decision",
-                                                        partials::ModerationAction::Approve.to_string(),
+                                                        app::chat::moderation::Decision::Approve.to_string(),
                                                     ))
                                                     .build(),
                                                 partials::button::Button::builder()
@@ -153,7 +153,7 @@ impl Render for ChatModeration {
                                                     .variant(partials::button::Variant::Primary)
                                                     .role(partials::button::Role::submit_with(
                                                         "decision",
-                                                        partials::ModerationAction::Remove.to_string(),
+                                                        app::chat::moderation::Decision::Remove.to_string(),
                                                     ))
                                                     .build(),
                                             ])

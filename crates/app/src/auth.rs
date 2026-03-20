@@ -265,7 +265,7 @@ mod tests {
     }
 
     fn test_user_id() -> user::Id {
-        user::Id::from_uuid(uuid::Uuid::new_v4())
+        user::Id::from(uuid::Uuid::new_v4())
     }
 
     fn test_password_hash() -> password::Hash {

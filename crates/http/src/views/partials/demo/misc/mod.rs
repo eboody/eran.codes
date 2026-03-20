@@ -1,4 +1,3 @@
-moddef::moddef!(mod { moderation_action, ping });
+moddef::moddef!(mod { ping });
 
-pub use moderation_action::ModerationAction;
 pub use ping::Ping;

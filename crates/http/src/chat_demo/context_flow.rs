@@ -82,7 +82,7 @@ impl ChatDemoContextFlow<Incoming> {
         viewer_user_id: domain::user::Id,
     ) -> ChatDemoContextFlow<ViewerResolved> {
         self.transition_with(ViewerResolvedData {
-            chat_user_id: domain::chat::UserId::from_uuid(*viewer_user_id.as_uuid()),
+            chat_user_id: domain::chat::UserId::from(viewer_user_id),
         })
     }
 }
@@ -217,7 +217,7 @@ async fn map_message_views(
 ) -> Vec<partials::components::chat::Message> {
     let mut names = HashMap::new();
     for message in messages {
-        let user_id = domain::user::Id::from_uuid(*message.user_id.as_uuid());
+        let user_id = domain::user::Id::from(message.user_id);
         if names.contains_key(&user_id) {
             continue;
         }
@@ -228,7 +228,7 @@ async fn map_message_views(
             Ok(None) => {}
             Err(error) => {
                 tracing::debug!(
-                    user_id = %user_id.as_uuid(),
+                    user_id = %user_id.as_ref(),
                     %error,
                     "author lookup fell back to synthetic label"
                 );
@@ -239,42 +239,26 @@ async fn map_message_views(
     messages
         .iter()
         .map(|message| {
-            let user_id = domain::user::Id::from_uuid(*message.user_id.as_uuid());
+            let user_id = domain::user::Id::from(message.user_id);
             let author = names
                 .get(&user_id)
                 .cloned()
                 .unwrap_or_else(|| fallback_author_label(&user_id));
             partials::components::chat::Message::builder()
-                .message_id(crate::types::Text::from(message.id.as_uuid().to_string()))
+                .message_id(crate::types::Text::from(message.id.as_ref().to_string()))
                 .author(crate::types::Text::from(author))
                 .timestamp(crate::types::Text::from(super::format_message_time(
                     message.created_at,
                 )))
                 .body(crate::types::Text::from(message.body.to_string()))
-                .status(to_chat_message_status(message.status))
+                .status(partials::components::chat::Status::from(message.status))
                 .build()
         })
         .collect()
 }
 
 fn fallback_author_label(user_id: &domain::user::Id) -> String {
-    format!("user-{}", &user_id.as_uuid().to_string()[..8])
-}
-
-fn to_chat_message_status(
-    value: domain::chat::message::Status,
-) -> partials::components::chat::Status {
-    match value {
-        domain::chat::message::Status::Visible => {
-            partials::components::chat::Status::Visible
-        }
-        domain::chat::message::Status::Pending => {
-            partials::components::chat::Status::Pending
-        }
-        domain::chat::message::Status::Removed => {
-            partials::components::chat::Status::Removed
-        }
-    }
+    format!("user-{}", &user_id.as_ref().to_string()[..8])
 }
 
 pub(super) type IncomingFlow = ChatDemoContextFlow<Incoming>;
@@ -496,17 +480,17 @@ mod tests {
 
     impl app::chat::IdGenerator for Ids {
         fn new_room_id(&self) -> domain::chat::room::Id {
-            domain::chat::room::Id::from_uuid(uuid::Uuid::from_u128(0x1111))
+            domain::chat::room::Id::from(uuid::Uuid::from_u128(0x1111))
         }
 
         fn new_message_id(&self) -> domain::chat::message::Id {
-            domain::chat::message::Id::from_uuid(uuid::Uuid::from_u128(0x2222))
+            domain::chat::message::Id::from(uuid::Uuid::from_u128(0x2222))
         }
     }
 
     fn demo_user() -> domain::user::User {
         domain::user::User::builder()
-            .id(domain::user::Id::from_uuid(uuid::Uuid::nil()))
+            .id(domain::user::Id::from(uuid::Uuid::nil()))
             .username(domain::user::Username::try_new("demo_bot").expect("username"))
             .email(domain::user::Email::try_new("demo.bot@example.com").expect("email"))
             .build()
@@ -514,21 +498,19 @@ mod tests {
 
     fn sample_room() -> domain::chat::Room {
         domain::chat::Room::builder()
-            .id(domain::chat::room::Id::from_uuid(uuid::Uuid::from_u128(
-                0x1234,
-            )))
+            .id(domain::chat::room::Id::from(uuid::Uuid::from_u128(0x1234)))
             .name(domain::chat::room::Name::Lobby)
-            .created_by(domain::chat::UserId::from_uuid(uuid::Uuid::nil()))
+            .created_by(domain::chat::UserId::from(uuid::Uuid::nil()))
             .build()
     }
 
     fn sample_message(room_id: domain::chat::room::Id) -> domain::chat::Message {
         domain::chat::Message::builder()
-            .id(domain::chat::message::Id::from_uuid(uuid::Uuid::from_u128(
+            .id(domain::chat::message::Id::from(uuid::Uuid::from_u128(
                 0x3333,
             )))
             .room_id(room_id)
-            .user_id(domain::chat::UserId::from_uuid(uuid::Uuid::nil()))
+            .user_id(domain::chat::UserId::from(uuid::Uuid::nil()))
             .body(
                 domain::chat::message::Body::try_new("hello from test")
                     .expect("valid message body"),
@@ -574,14 +556,14 @@ mod tests {
     async fn resolve_viewer_uses_authenticated_user_id() {
         let chat_repo = Arc::new(TestChatRepo::new(Some(sample_room()), Vec::new()));
         let state = test_state(chat_repo);
-        let viewer = domain::user::Id::from_uuid(uuid::Uuid::from_u128(0x4444));
+        let viewer = domain::user::Id::from(uuid::Uuid::from_u128(0x4444));
 
         let resolved = IncomingFlow::from_viewer(Some(viewer))
             .resolve_viewer(&state)
             .await
             .expect("viewer resolved");
 
-        assert_eq!(resolved.chat_user_id().as_uuid(), viewer.as_uuid());
+        assert_eq!(resolved.chat_user_id().as_ref(), viewer.as_ref());
     }
 
     #[tokio::test]
@@ -594,7 +576,7 @@ mod tests {
             .await
             .expect("viewer resolved");
 
-        assert_eq!(resolved.chat_user_id().as_uuid(), demo_user().id.as_uuid());
+        assert_eq!(resolved.chat_user_id().as_ref(), demo_user().id.as_ref());
     }
 
     #[tokio::test]
@@ -603,7 +585,7 @@ mod tests {
         let chat_repo =
             Arc::new(TestChatRepo::new(Some(existing_room.clone()), Vec::new()));
         let state = test_state(chat_repo.clone());
-        let viewer = domain::user::Id::from_uuid(uuid::Uuid::from_u128(0x5555));
+        let viewer = domain::user::Id::from(uuid::Uuid::from_u128(0x5555));
 
         let room_ready = IncomingFlow::from_viewer(Some(viewer))
             .resolve_viewer(&state)
@@ -622,7 +604,7 @@ mod tests {
     async fn ensure_room_creates_lobby_when_missing() {
         let chat_repo = Arc::new(TestChatRepo::new(None, Vec::new()));
         let state = test_state(chat_repo.clone());
-        let viewer = domain::user::Id::from_uuid(uuid::Uuid::from_u128(0x6666));
+        let viewer = domain::user::Id::from(uuid::Uuid::from_u128(0x6666));
 
         let room_ready = IncomingFlow::from_viewer(Some(viewer))
             .resolve_viewer(&state)
@@ -645,7 +627,7 @@ mod tests {
             vec![sample_message(room.id)],
         ));
         let state = test_state(chat_repo);
-        let viewer = domain::user::Id::from_uuid(uuid::Uuid::from_u128(0x7777));
+        let viewer = domain::user::Id::from(uuid::Uuid::from_u128(0x7777));
 
         let context = IncomingFlow::from_viewer(Some(viewer))
             .load(&state)

@@ -6,7 +6,9 @@ use crate::views::partials::demo::log;
 pub(super) fn chat_incoming_event(
     entry: &store::TraceEntry,
 ) -> (Text, Text, Vec<components::Pill>) {
-    let sender = log::vm::field_text(entry, LogFieldKey::Sender)
+    let sender = entry
+        .field_text(LogFieldKey::Sender)
+        .cloned()
         .unwrap_or_else(|| Text::from("unknown"));
     let mut pills = vec![components::Pill::fields(format!("sender={sender}"))];
 
@@ -30,7 +32,9 @@ pub(super) fn chat_incoming_event(
 pub(super) fn chat_broadcast_event(
     entry: &store::TraceEntry,
 ) -> (Text, Text, Vec<components::Pill>) {
-    let selector = log::vm::field_text(entry, LogFieldKey::Selector)
+    let selector = entry
+        .field_text(LogFieldKey::Selector)
+        .cloned()
         .unwrap_or_else(|| Text::from("[unknown-selector]"));
     let mut pills = vec![components::Pill::fields(format!("selector={selector}"))];
 

@@ -1,4 +1,5 @@
 // ci: descriptive-module-import crate::handlers::auth
+mod form_input;
 mod login_flow;
 mod page_gate_flow;
 mod protected_flow;

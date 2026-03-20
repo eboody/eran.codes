@@ -1,4 +1,5 @@
 mod error;
+mod input;
 mod register_user_flow;
 
 use std::sync::Arc;
@@ -9,6 +10,7 @@ use secrecy::SecretString;
 
 use domain::user;
 pub use error::{Error, RepositoryOperation, Result};
+pub use input::Input;
 
 #[derive(Clone, Debug, Builder)]
 pub struct Register {
@@ -52,15 +54,6 @@ impl Service {
     pub async fn find_by_email(&self, email: user::Email) -> Result<Option<user::User>> {
         self.users.find_by_email(&email).await
     }
-}
-
-pub fn validate_input(
-    username: &str,
-    email: &str,
-) -> Result<(user::Username, user::Email)> {
-    let username = user::Username::try_new(username).map_err(domain::user::Error::from)?;
-    let email = user::Email::try_new(email).map_err(domain::user::Error::from)?;
-    Ok((username, email))
 }
 
 #[cfg(test)]
@@ -167,8 +160,8 @@ mod tests {
     }
 
     #[test]
-    fn validate_input_rejects_invalid_email() {
-        assert!(validate_input("person", "not-an-email").is_err());
+    fn input_parse_rejects_invalid_email() {
+        assert!(Input::parse("person", "not-an-email").is_err());
     }
 
     #[tokio::test]

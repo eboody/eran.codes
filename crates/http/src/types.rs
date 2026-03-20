@@ -1,4 +1,4 @@
-use std::fmt;
+use std::{fmt, str::FromStr};
 
 use nutype::nutype;
 use serde::{Deserialize, Serialize};
@@ -221,6 +221,14 @@ pub enum LogFieldKey {
 impl From<LogFieldKey> for LogFieldName {
     fn from(value: LogFieldKey) -> Self {
         LogFieldName::new(value.to_string())
+    }
+}
+
+impl TryFrom<&LogFieldName> for LogFieldKey {
+    type Error = strum::ParseError;
+
+    fn try_from(value: &LogFieldName) -> Result<Self, Self::Error> {
+        Self::from_str(&value.to_string())
     }
 }
 

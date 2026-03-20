@@ -69,7 +69,7 @@ fn action_targets_case_or_lab(action: &CmsActionLink, case_route: Route) -> bool
     let path = href.split(['#', '?']).next().unwrap_or(href.as_str());
 
     matches!(
-        Route::from_path(path),
+        path.parse::<Route>().ok(),
         Some(route) if route == case_route || route == Route::Lab
     )
 }

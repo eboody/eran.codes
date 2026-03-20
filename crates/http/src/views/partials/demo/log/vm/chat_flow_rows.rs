@@ -1,13 +1,11 @@
-use std::str::FromStr;
-
 use maud::{Markup, Render};
 
-use crate::trace_log::store;
+use crate::trace_log::{
+    demo_chat::{Direction as FlowDirection, Sender as ChatSender, short_hyphenated_text},
+    store,
+};
 use crate::types::{LogFieldKey, Text};
 use crate::views::partials::components;
-use strum_macros::{Display, EnumString};
-
-use super::field_text;
 
 pub fn chat_flow_rows(entries: &[&store::TraceEntry]) -> Vec<Vec<Markup>> {
     entries
@@ -21,7 +19,7 @@ pub fn chat_flow_rows(entries: &[&store::TraceEntry]) -> Vec<Vec<Markup>> {
                 maud::html! { (sender_pill(entry)) },
                 maud::html! { (receiver_pill(entry)) },
                 maud::html! { (user_pill(entry)) },
-                maud::html! { (field_text(entry, LogFieldKey::Body).unwrap_or_else(|| Text::from("-"))) },
+                maud::html! { (entry.field_text(LogFieldKey::Body).cloned().unwrap_or_else(|| Text::from("-"))) },
             ]
         })
         .collect()
@@ -46,18 +44,17 @@ fn sender_pill(entry: &store::TraceEntry) -> Markup {
 }
 
 fn receiver_pill(entry: &store::TraceEntry) -> Markup {
-    match field_text(entry, LogFieldKey::Receiver) {
+    match entry.field_text(LogFieldKey::Receiver) {
         Some(receiver) => components::Pill::fields(format!("to:{}", receiver)).render(),
         None => components::Pill::fields("to:unknown").render(),
     }
 }
 
 fn user_pill(entry: &store::TraceEntry) -> Markup {
-    let Some(user_id) = field_text(entry, LogFieldKey::UserId) else {
+    let Some(user_id) = entry.field_text(LogFieldKey::UserId) else {
         return components::Pill::fields("user:unknown").render();
     };
-    let user_text = user_id.to_string();
-    let short_id = user_text.split('-').next().unwrap_or(user_text.as_str());
+    let short_id = short_hyphenated_text(user_id);
     let sender = ChatSender::from_entry(entry);
     let (label, kind) = match sender {
         ChatSender::You => (format!("You ({short_id})"), components::BadgeKind::You),
@@ -65,76 +62,6 @@ fn user_pill(entry: &store::TraceEntry) -> Markup {
         ChatSender::Unknown => (format!("User ({short_id})"), components::BadgeKind::Secondary),
     };
     components::Pill::badge(label, kind).render()
-}
-
-#[derive(Clone, Copy, Debug)]
-enum ChatSender {
-    You,
-    Demo,
-    Unknown,
-}
-
-impl ChatSender {
-    fn from_entry(entry: &store::TraceEntry) -> Self {
-        let Some(sender) = field_text(entry, LogFieldKey::Sender) else {
-            return Self::Unknown;
-        };
-        ChatSenderKnown::from_str(&sender.to_string())
-            .map(Into::into)
-            .unwrap_or(Self::Unknown)
-    }
-}
-
-#[derive(Clone, Copy, Debug, PartialEq, Eq, Display, EnumString)]
-enum ChatSenderKnown {
-    #[strum(serialize = "you")]
-    You,
-    #[strum(serialize = "demo")]
-    Demo,
-}
-
-impl From<ChatSenderKnown> for ChatSender {
-    fn from(kind: ChatSenderKnown) -> Self {
-        match kind {
-            ChatSenderKnown::You => Self::You,
-            ChatSenderKnown::Demo => Self::Demo,
-        }
-    }
-}
-
-#[derive(Clone, Copy, Debug, PartialEq, Eq, Display, EnumString)]
-enum FlowDirectionKnown {
-    #[strum(serialize = "incoming")]
-    Incoming,
-    #[strum(serialize = "outgoing")]
-    Outgoing,
-}
-
-#[derive(Clone, Copy, Debug)]
-enum FlowDirection {
-    Incoming,
-    Outgoing,
-    Unknown,
-}
-
-impl FlowDirection {
-    fn from_entry(entry: &store::TraceEntry) -> Self {
-        let Some(direction) = field_text(entry, LogFieldKey::Direction) else {
-            return Self::Unknown;
-        };
-        FlowDirectionKnown::from_str(&direction.to_string())
-            .map(Into::into)
-            .unwrap_or(Self::Unknown)
-    }
-}
-
-impl From<FlowDirectionKnown> for FlowDirection {
-    fn from(kind: FlowDirectionKnown) -> Self {
-        match kind {
-            FlowDirectionKnown::Incoming => Self::Incoming,
-            FlowDirectionKnown::Outgoing => Self::Outgoing,
-        }
-    }
 }
 
 #[cfg(test)]

@@ -64,7 +64,7 @@ impl BoundaryCheckPartialFlow<CaseResolved> {
             .clone()
             .unwrap_or_else(|| Text::from(""))
             .to_string();
-        let result = match app::user::validate_input(&username, &email) {
+        let result = match app::user::Input::parse(&username, &email) {
             Ok(_) => "ok",
             Err(err) => {
                 tracing::debug!(?err, "boundary validation failed");

@@ -17,12 +17,22 @@ impl Id {
     pub fn new_v4() -> Self {
         Self(uuid::Uuid::new_v4())
     }
+}
 
-    pub fn from_uuid(value: uuid::Uuid) -> Self {
+impl From<uuid::Uuid> for Id {
+    fn from(value: uuid::Uuid) -> Self {
         Self(value)
     }
+}
 
-    pub fn as_uuid(&self) -> &uuid::Uuid {
+impl From<Id> for uuid::Uuid {
+    fn from(value: Id) -> Self {
+        value.0
+    }
+}
+
+impl AsRef<uuid::Uuid> for Id {
+    fn as_ref(&self) -> &uuid::Uuid {
         &self.0
     }
 }

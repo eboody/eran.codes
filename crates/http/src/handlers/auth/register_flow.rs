@@ -1,8 +1,7 @@
 use axum::response::IntoResponse;
-use secrecy::SecretString;
 use statum::{machine, state, transition};
 
-use super::{NextPath, RegisterForm};
+use super::RegisterForm;
 use crate::paths::Route;
 
 #[derive(Clone, Debug)]
@@ -28,31 +27,12 @@ pub(super) struct RegisterFlow<RegisterFlowState> {
 
 impl RegisterFlow<Incoming> {
     pub(super) fn from_form(form: RegisterForm) -> crate::Result<Self> {
-        let next = NextPath::sanitize(form.next.clone());
-        let email = domain::user::Email::try_new(form.email.to_string())
-            .map_err(domain::user::Error::from)
-            .map_err(app::user::Error::from)
-            .map_err(crate::Error::from)?;
-        let username = domain::user::Username::try_new(form.username.to_string())
-            .map_err(domain::user::Error::from)
-            .map_err(app::user::Error::from)
-            .map_err(crate::Error::from)?;
-        let password = SecretString::new(form.password.to_string().into());
-
-        let command = app::user::Register::builder()
-            .username(username)
-            .email(email.clone())
-            .password(password.clone())
-            .build();
-        let credentials = app::auth::Credentials::builder()
-            .email(email)
-            .password(password)
-            .build();
+        let input = super::form_input::RegisterInput::try_from(form)?;
 
         Ok(RegisterFlow::<Incoming>::builder()
-            .next(next)
-            .command(command)
-            .credentials(credentials)
+            .next(input.next)
+            .command(input.command)
+            .credentials(input.credentials)
             .build())
     }
 

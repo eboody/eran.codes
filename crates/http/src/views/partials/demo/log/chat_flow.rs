@@ -79,7 +79,7 @@ mod tests {
 
     #[test]
     fn renders_table_when_entries_exist() {
-        let entries = vec![entry(
+        let entries = [entry(
             "12:00:01",
             vec![
                 ("direction", "incoming"),

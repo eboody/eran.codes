@@ -145,7 +145,7 @@ impl EventsConnectionFlow<Ready> {
             loop {
                 match receiver.recv().await {
                     Ok(event) => {
-                        let sse_event = event.as_datastar_event().write_as_axum_sse_event();
+                        let sse_event = event.as_ref().write_as_axum_sse_event();
                         yield Ok::<_, Infallible>(sse_event);
                     }
                     Err(error::RecvError::Lagged(_)) => continue,

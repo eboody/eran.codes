@@ -12,8 +12,8 @@ pub use components::{
 pub use components::Button;
 pub use demo::chat;
 pub use demo::{
-    AuthStatus, BoundaryCheck, DbCheck, EngineeringQuality, HomeHero, ModerationAction,
-    OperationalRequestFilter, Ping, RequestBurstDemo, RequestMeta, RequestTraceLog,
-    SessionStatus, TabSetShowcase, TransportLogSet,
+    AuthStatus, BoundaryCheck, DbCheck, EngineeringQuality, HomeHero,
+    OperationalRequestFilter, Ping, RequestBurstDemo, RequestMeta,
+    RequestTraceLog, SessionStatus, TabSetShowcase, TransportLogSet,
 };
 pub use error::Error;

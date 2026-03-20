@@ -1,8 +1,7 @@
 use axum::response::IntoResponse;
-use secrecy::SecretString;
 use statum::{machine, state, transition};
 
-use super::{LoginForm, NextPath};
+use super::LoginForm;
 use crate::paths::Route;
 
 #[derive(Clone, Debug)]
@@ -25,19 +24,11 @@ pub(super) struct LoginFlow<LoginFlowState> {
 
 impl LoginFlow<Incoming> {
     pub(super) fn from_form(form: LoginForm) -> crate::Result<Self> {
-        let next = NextPath::sanitize(form.next.clone());
-        let email = domain::user::Email::try_new(form.email.to_string())
-            .map_err(domain::user::Error::from)
-            .map_err(app::user::Error::from)
-            .map_err(crate::Error::from)?;
-        let credentials = app::auth::Credentials::builder()
-            .email(email)
-            .password(SecretString::new(form.password.to_string().into()))
-            .build();
+        let input = super::form_input::LoginInput::try_from(form)?;
 
         Ok(LoginFlow::<Incoming>::builder()
-            .next(next)
-            .credentials(credentials)
+            .next(input.next)
+            .credentials(input.credentials)
             .build())
     }
 

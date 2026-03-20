@@ -4,26 +4,12 @@ use domain::chat;
 use maud::Render;
 use statum::{machine, state, transition};
 
+use super::post_input::{ChatSender, PostInput};
 use super::{ChatSignals, DemoChatSignals};
 use crate::trace_log::log::{message, target};
 use crate::types::{LogFieldKey, Text, UserIdText};
 use crate::views::partials;
 use crate::{paths::Route, request};
-
-#[derive(Clone, Copy, Debug)]
-pub(super) enum ChatSender {
-    You,
-    Demo,
-}
-
-impl ChatSender {
-    pub(super) fn as_str(self) -> &'static str {
-        match self {
-            Self::You => "you",
-            Self::Demo => "demo",
-        }
-    }
-}
 
 #[derive(Clone, Debug)]
 pub struct PostedData {
@@ -63,62 +49,28 @@ impl ChatPostFlow<Incoming> {
         signals: ChatSignals,
         user: &crate::auth::User,
     ) -> crate::Result<Self> {
-        let room_id = Self::room_id_from_binding(state)?;
-        let body_text = signals.draft_body.to_string();
-
-        Ok(Self::new(
-            room_id,
-            Self::chat_user_id_from_user_id(user.id.to_domain()?),
-            Self::message_body_from_text(&body_text)?,
-            body_text,
-            ChatSender::You,
-            user.username.to_string(),
-            UserIdText::new(user.id.to_string()),
-            Self::request_id_from_context(),
-        ))
+        let input = PostInput::from_authenticated_signals(state, signals, user)?;
+        Ok(Self::from_input(input))
     }
 
     pub(super) async fn from_demo_signals(
         state: &crate::State,
         signals: DemoChatSignals,
     ) -> crate::Result<Self> {
-        let demo_user = crate::chat_demo::ensure_demo_user(state).await?;
-        let room_id = Self::room_id_from_binding(state)?;
-        let chat_user_id = Self::chat_user_id_from_user_id(demo_user.id);
-        let body_text = signals.draft_body.to_string();
-
-        Ok(Self::new(
-            room_id,
-            chat_user_id,
-            Self::message_body_from_text(&body_text)?,
-            body_text,
-            ChatSender::Demo,
-            demo_user.username.to_string(),
-            UserIdText::new(demo_user.id.as_uuid().to_string()),
-            Self::request_id_from_context(),
-        ))
+        let input = PostInput::from_demo_signals(state, signals).await?;
+        Ok(Self::from_input(input))
     }
 
-    #[allow(clippy::too_many_arguments)]
-    fn new(
-        room_id: domain::chat::room::Id,
-        user_id: domain::chat::UserId,
-        body: domain::chat::message::Body,
-        body_text: String,
-        sender: ChatSender,
-        author_name: String,
-        user_id_text: UserIdText,
-        request_id: Text,
-    ) -> Self {
+    fn from_input(input: PostInput) -> Self {
         ChatPostFlow::<Incoming>::builder()
-            .room_id(room_id)
-            .user_id(user_id)
-            .body(body)
-            .body_text(body_text)
-            .sender(sender)
-            .author_name(author_name)
-            .user_id_text(user_id_text)
-            .request_id(request_id)
+            .room_id(input.room_id)
+            .user_id(input.user_id)
+            .body(input.body)
+            .body_text(input.body_text)
+            .sender(input.sender)
+            .author_name(input.author_name)
+            .user_id_text(input.user_id_text)
+            .request_id(input.request_id)
             .build()
     }
 
@@ -131,51 +83,6 @@ impl ChatPostFlow<Incoming> {
         let broadcasted = rendered.broadcast(state);
 
         Ok(broadcasted.into_response())
-    }
-
-    fn request_id_from_context() -> Text {
-        request::current_context()
-            .and_then(|context| context.request_id)
-            .map(|request_id| Text::from(request_id.to_string()))
-            .unwrap_or_else(|| Text::from(format!("fallback-{}", uuid::Uuid::new_v4())))
-    }
-
-    fn message_body_from_text(
-        value: &str,
-    ) -> Result<domain::chat::message::Body, crate::Error> {
-        domain::chat::message::Body::try_new(value)
-            .map_err(domain::chat::Error::from)
-            .map_err(app::chat::Error::from)
-            .map_err(crate::Error::from)
-    }
-
-    fn chat_user_id_from_user_id(value: domain::user::Id) -> domain::chat::UserId {
-        domain::chat::UserId::from_uuid(*value.as_uuid())
-    }
-
-    fn current_handle() -> Result<crate::sse::Handle, crate::Error> {
-        let Some(context) = request::current_context() else {
-            return Err(crate::Error::Internal);
-        };
-        let Some(session_id) = context.session_id else {
-            return Err(crate::Error::Internal);
-        };
-        let Some(tab_id) = context.sse_tab_id else {
-            return Err(crate::Error::ChatRoomBindingMissing);
-        };
-
-        Ok(crate::sse::Handle::with_tab(session_id, Some(tab_id)))
-    }
-
-    fn room_id_from_binding(
-        state: &crate::State,
-    ) -> Result<domain::chat::room::Id, crate::Error> {
-        let handle = Self::current_handle()?;
-        state
-            .demo
-            .chat_room_bindings
-            .room_id_for(&handle)
-            .ok_or(crate::Error::ChatRoomBindingMissing)
     }
 }
 
@@ -261,7 +168,7 @@ impl ChatPostFlow<MessagePosted> {
                     ),
                     (
                         crate::types::LogFieldName::from(LogFieldKey::Sender),
-                        crate::types::LogFieldValue::new(self.sender().as_str()),
+                        crate::types::LogFieldValue::new(self.sender().as_ref()),
                     ),
                     (
                         crate::types::LogFieldName::from(LogFieldKey::Receiver),
@@ -306,13 +213,13 @@ impl ChatPostFlow<IncomingRecorded> {
     pub(super) fn render_message_html(self) -> ChatPostFlow<HtmlRendered> {
         let message = &self.state_data.message;
         let markup = partials::components::chat::Message::builder()
-            .message_id(Text::from(message.id.as_uuid().to_string()))
+            .message_id(Text::from(message.id.as_ref().to_string()))
             .author(Text::from(self.author_name.clone()))
             .timestamp(Text::from(crate::chat_demo::format_message_time(
                 message.created_at,
             )))
             .body(Text::from(message.body.to_string()))
-            .status(to_chat_message_status(message.status))
+            .status(partials::components::chat::Status::from(message.status))
             .build()
             .render();
         self.mark_html_rendered(markup)
@@ -359,12 +266,12 @@ impl ChatPostFlow<HtmlRendered> {
         );
         if let Err(error) = state
             .sse
-            .send_to_stream_keys(targets, crate::sse::Event::from_event(event))
+            .send_to_stream_keys(targets, crate::sse::Event::from(event))
         {
             tracing::warn!(
                 target: target::Known::DemoSse.as_str(),
                 ?error,
-                room_id = %self.room_id.as_uuid(),
+                room_id = %self.room_id.as_ref(),
                 "chat room fanout could not reach active clients"
             );
         }
@@ -400,7 +307,7 @@ impl ChatPostFlow<HtmlRendered> {
                     ),
                     (
                         crate::types::LogFieldName::from(LogFieldKey::Sender),
-                        crate::types::LogFieldValue::new(self.sender().as_str()),
+                        crate::types::LogFieldValue::new(self.sender().as_ref()),
                     ),
                     (
                         crate::types::LogFieldName::from(LogFieldKey::Receiver),
@@ -453,22 +360,6 @@ impl ChatPostFlow<Broadcasted> {
     }
 }
 
-fn to_chat_message_status(
-    value: domain::chat::message::Status,
-) -> partials::components::chat::Status {
-    match value {
-        domain::chat::message::Status::Visible => {
-            partials::components::chat::Status::Visible
-        }
-        domain::chat::message::Status::Pending => {
-            partials::components::chat::Status::Pending
-        }
-        domain::chat::message::Status::Removed => {
-            partials::components::chat::Status::Removed
-        }
-    }
-}
-
 pub(super) type IncomingFlow = ChatPostFlow<Incoming>;
 
 #[cfg(test)]
@@ -492,16 +383,16 @@ mod tests {
     }
 
     fn incoming() -> ChatPostFlow<Incoming> {
-        IncomingFlow::new(
-            domain::chat::room::Id::new_v4(),
-            domain::chat::UserId::new_v4(),
-            sample_body(),
-            "hello".to_string(),
-            ChatSender::You,
-            "person".to_string(),
-            UserIdText::new("user-1"),
-            Text::from("req-1"),
-        )
+        IncomingFlow::from_input(PostInput {
+            room_id: domain::chat::room::Id::new_v4(),
+            user_id: domain::chat::UserId::new_v4(),
+            body: sample_body(),
+            body_text: "hello".to_string(),
+            sender: ChatSender::You,
+            author_name: "person".to_string(),
+            user_id_text: UserIdText::new("user-1"),
+            request_id: Text::from("req-1"),
+        })
     }
 
     #[test]

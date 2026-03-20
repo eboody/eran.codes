@@ -18,6 +18,16 @@ pub enum Side {
     Right,
 }
 
+impl From<domain::chat::message::Status> for Status {
+    fn from(value: domain::chat::message::Status) -> Self {
+        match value {
+            domain::chat::message::Status::Visible => Self::Visible,
+            domain::chat::message::Status::Pending => Self::Pending,
+            domain::chat::message::Status::Removed => Self::Removed,
+        }
+    }
+}
+
 #[derive(Clone, Debug, Builder)]
 pub struct Message {
     pub message_id: Text,

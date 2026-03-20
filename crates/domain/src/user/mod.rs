@@ -1,3 +1,5 @@
+mod parse;
+
 moddef::moddef!(mod { entity, error, repository });
 
 pub use entity::User;
@@ -14,30 +16,10 @@ pub struct Username(String);
 
 #[nutype(
     sanitize(trim, lowercase),
-    validate(not_empty, len_char_max = 254, predicate = is_valid_email),
+    validate(not_empty, len_char_max = 254, predicate = parse::is_valid_email_address),
     derive(Debug, Clone, PartialEq, Eq, Display)
 )]
 pub struct Email(String);
-
-fn is_valid_email(value: &str) -> bool {
-    let mut parts = value.split('@');
-    let Some(local) = parts.next() else {
-        return false;
-    };
-    let Some(domain) = parts.next() else {
-        return false;
-    };
-
-    if parts.next().is_some() || local.is_empty() || domain.is_empty() {
-        return false;
-    }
-
-    if domain.starts_with('.') || domain.ends_with('.') {
-        return false;
-    }
-
-    domain.contains('.')
-}
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub struct Id(uuid::Uuid);
@@ -46,12 +28,22 @@ impl Id {
     pub fn new_v4() -> Self {
         Self(uuid::Uuid::new_v4())
     }
+}
 
-    pub fn from_uuid(value: uuid::Uuid) -> Self {
+impl From<uuid::Uuid> for Id {
+    fn from(value: uuid::Uuid) -> Self {
         Self(value)
     }
+}
 
-    pub fn as_uuid(&self) -> &uuid::Uuid {
+impl From<Id> for uuid::Uuid {
+    fn from(value: Id) -> Self {
+        value.0
+    }
+}
+
+impl AsRef<uuid::Uuid> for Id {
+    fn as_ref(&self) -> &uuid::Uuid {
         &self.0
     }
 }

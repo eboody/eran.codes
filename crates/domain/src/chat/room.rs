@@ -3,6 +3,8 @@ pub mod name;
 use bon::Builder;
 use strum_macros::{Display, EnumString};
 
+use crate::user;
+
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, Display, EnumString)]
 pub enum Name {
     #[strum(serialize = "Lobby")]
@@ -30,12 +32,22 @@ impl Id {
     pub fn new_v4() -> Self {
         Self(uuid::Uuid::new_v4())
     }
+}
 
-    pub fn from_uuid(value: uuid::Uuid) -> Self {
+impl From<uuid::Uuid> for Id {
+    fn from(value: uuid::Uuid) -> Self {
         Self(value)
     }
+}
 
-    pub fn as_uuid(&self) -> &uuid::Uuid {
+impl From<Id> for uuid::Uuid {
+    fn from(value: Id) -> Self {
+        value.0
+    }
+}
+
+impl AsRef<uuid::Uuid> for Id {
+    fn as_ref(&self) -> &uuid::Uuid {
         &self.0
     }
 }
@@ -47,13 +59,35 @@ impl UserId {
     pub fn new_v4() -> Self {
         Self(uuid::Uuid::new_v4())
     }
+}
 
-    pub fn from_uuid(value: uuid::Uuid) -> Self {
+impl From<uuid::Uuid> for UserId {
+    fn from(value: uuid::Uuid) -> Self {
         Self(value)
     }
+}
 
-    pub fn as_uuid(&self) -> &uuid::Uuid {
+impl From<UserId> for uuid::Uuid {
+    fn from(value: UserId) -> Self {
+        value.0
+    }
+}
+
+impl AsRef<uuid::Uuid> for UserId {
+    fn as_ref(&self) -> &uuid::Uuid {
         &self.0
+    }
+}
+
+impl From<user::Id> for UserId {
+    fn from(value: user::Id) -> Self {
+        uuid::Uuid::from(value).into()
+    }
+}
+
+impl From<UserId> for user::Id {
+    fn from(value: UserId) -> Self {
+        uuid::Uuid::from(value).into()
     }
 }
 

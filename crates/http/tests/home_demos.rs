@@ -22,7 +22,7 @@ impl user::Repository for TestUserRepo {
         email: &domain_user::Email,
     ) -> user::Result<Option<domain_user::User>> {
         Ok(Some(domain_user::User {
-            id: domain_user::Id::from_uuid(uuid::Uuid::nil()),
+            id: domain_user::Id::from(uuid::Uuid::nil()),
             username: domain_user::Username::try_new("demo_bot").unwrap(),
             email: email.clone(),
         }))
@@ -137,7 +137,7 @@ impl app::chat::Repository for ChatRepo {
         Ok(Some(domain_chat::Room {
             id: *room_id,
             name: domain_chat::room::Name::Lobby,
-            created_by: domain_chat::UserId::from_uuid(uuid::Uuid::nil()),
+            created_by: domain_chat::UserId::from(uuid::Uuid::nil()),
         }))
     }
 
@@ -148,7 +148,7 @@ impl app::chat::Repository for ChatRepo {
         Ok(Some(domain_chat::Room {
             id: domain_chat::room::Id::new_v4(),
             name: *name,
-            created_by: domain_chat::UserId::from_uuid(uuid::Uuid::nil()),
+            created_by: domain_chat::UserId::from(uuid::Uuid::nil()),
         }))
     }
 
@@ -159,11 +159,11 @@ impl app::chat::Repository for ChatRepo {
     ) -> app::chat::Result<Vec<domain_chat::Message>> {
         Ok(vec![
             domain_chat::Message::builder()
-                .id(domain_chat::message::Id::from_uuid(uuid::Uuid::from_u128(
+                .id(domain_chat::message::Id::from(uuid::Uuid::from_u128(
                     0xaaaa,
                 )))
                 .room_id(*room_id)
-                .user_id(domain_chat::UserId::from_uuid(uuid::Uuid::nil()))
+                .user_id(domain_chat::UserId::from(uuid::Uuid::nil()))
                 .body(
                     domain_chat::message::Body::try_new("hello from test")
                         .expect("valid body"),

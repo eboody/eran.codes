@@ -174,10 +174,6 @@ pub enum MethodKind {
 }
 
 impl MethodKind {
-    pub fn from_text(value: &Text) -> Self {
-        MethodKind::from_str(&value.to_string()).unwrap_or(Self::Other)
-    }
-
     fn classes(self) -> Vec<&'static str> {
         match self {
             Self::Get => vec!["ui-pill--method", "ui-pill--method-get"],
@@ -187,6 +183,14 @@ impl MethodKind {
             Self::Delete => vec!["ui-pill--method", "ui-pill--method-delete"],
             Self::Other => vec!["ui-pill--method", "ui-pill--method-other"],
         }
+    }
+}
+
+impl TryFrom<&Text> for MethodKind {
+    type Error = strum::ParseError;
+
+    fn try_from(value: &Text) -> Result<Self, strum::ParseError> {
+        Self::from_str(&value.to_string())
     }
 }
 
@@ -200,7 +204,19 @@ pub enum StatusKind {
 }
 
 impl StatusKind {
-    pub fn from_str(value: &str) -> Self {
+    fn classes(self) -> Vec<&'static str> {
+        match self {
+            Self::S2xx => vec!["ui-pill--status", "ui-pill--status-2xx"],
+            Self::S3xx => vec!["ui-pill--status", "ui-pill--status-3xx"],
+            Self::S4xx => vec!["ui-pill--status", "ui-pill--status-4xx"],
+            Self::S5xx => vec!["ui-pill--status", "ui-pill--status-5xx"],
+            Self::Unknown => vec!["ui-pill--status", "ui-pill--status-unknown"],
+        }
+    }
+}
+
+impl From<&str> for StatusKind {
+    fn from(value: &str) -> Self {
         if let Ok(code) = value.parse::<u16>() {
             if code >= 500 {
                 return Self::S5xx;
@@ -217,15 +233,12 @@ impl StatusKind {
         }
         Self::Unknown
     }
+}
 
-    fn classes(self) -> Vec<&'static str> {
-        match self {
-            Self::S2xx => vec!["ui-pill--status", "ui-pill--status-2xx"],
-            Self::S3xx => vec!["ui-pill--status", "ui-pill--status-3xx"],
-            Self::S4xx => vec!["ui-pill--status", "ui-pill--status-4xx"],
-            Self::S5xx => vec!["ui-pill--status", "ui-pill--status-5xx"],
-            Self::Unknown => vec!["ui-pill--status", "ui-pill--status-unknown"],
-        }
+impl From<&Text> for StatusKind {
+    fn from(value: &Text) -> Self {
+        let value = value.to_string();
+        Self::from(value.as_str())
     }
 }
 
@@ -245,10 +258,6 @@ pub enum LevelKind {
 }
 
 impl LevelKind {
-    pub fn from_text(value: &Text) -> Self {
-        LevelKind::from_str(&value.to_string()).unwrap_or(Self::Info)
-    }
-
     fn classes(self) -> Vec<&'static str> {
         match self {
             Self::Info => vec!["ui-pill--log-level-info"],
@@ -257,6 +266,14 @@ impl LevelKind {
             Self::Debug => vec!["ui-pill--log-level-debug"],
             Self::Trace => vec!["ui-pill--log-level-trace"],
         }
+    }
+}
+
+impl TryFrom<&Text> for LevelKind {
+    type Error = strum::ParseError;
+
+    fn try_from(value: &Text) -> Result<Self, strum::ParseError> {
+        Self::from_str(&value.to_string())
     }
 }
 
@@ -315,7 +332,7 @@ pub struct Pill {
 impl Pill {
     pub fn level(text: impl Into<Text>) -> Self {
         let text = text.into();
-        let kind = LevelKind::from_text(&text);
+        let kind = LevelKind::try_from(&text).unwrap_or(LevelKind::Info);
         Self {
             text,
             variant: PillVariant::Level(kind),
@@ -324,7 +341,7 @@ impl Pill {
 
     pub fn method(text: impl Into<Text>) -> Self {
         let text = text.into();
-        let kind = MethodKind::from_text(&text);
+        let kind = MethodKind::try_from(&text).unwrap_or(MethodKind::Other);
         Self {
             text,
             variant: PillVariant::Method(kind),
@@ -333,7 +350,7 @@ impl Pill {
 
     pub fn status(text: impl Into<Text>) -> Self {
         let text = text.into();
-        let kind = StatusKind::from_str(&text.to_string());
+        let kind = StatusKind::from(&text);
         Self {
             text,
             variant: PillVariant::Status(kind),

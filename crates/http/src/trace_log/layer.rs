@@ -4,10 +4,10 @@ use axum::{body::Body, extract::Extension, http, middleware::Next, response::Res
 use tracing::{Event, Level};
 use tracing_subscriber::{layer::Layer as SubscriberLayer, registry::LookupSpan};
 
+use super::demo_chat::Sender as ChatSender;
 use super::log::{self, message, target};
 use super::store::TraceEntry;
 use super::{Store, now_timestamp_short};
-use crate::paths::Route;
 use crate::request;
 use crate::types::{
     LogFieldKey, LogFieldName, LogFieldValue, LogLevelText, LogMessageText, LogTargetText,
@@ -57,8 +57,7 @@ where
         let message = visitor
             .message
             .unwrap_or_else(|| LogMessageText::new(event.metadata().name()));
-        let target_kind = target::Kind::parse(target);
-        let message_kind = message::Kind::parse(&message.to_string());
+        let (target_kind, message_kind) = log::classify(target, &message.to_string());
         if log::should_skip_event(&target_kind, &message_kind) {
             return;
         }
@@ -66,10 +65,7 @@ where
             return;
         }
         let has_db = visitor.fields.iter().any(|(name, _)| {
-            matches!(
-                LogFieldKey::from_str(&name.to_string()),
-                Ok(LogFieldKey::DbStatement)
-            )
+            matches!(LogFieldKey::try_from(name), Ok(LogFieldKey::DbStatement))
         });
         let is_demo = target_kind.is_demo();
         let is_info = matches!(level, Level::INFO | Level::WARN | Level::ERROR);
@@ -116,8 +112,7 @@ where
         let message = visitor
             .message
             .unwrap_or_else(|| LogMessageText::new(event.metadata().name()));
-        let target_kind = target::Kind::parse(target);
-        let message_kind = message::Kind::parse(&message.to_string());
+        let (target_kind, message_kind) = log::classify(target, &message.to_string());
 
         let is_request_start = matches!(
             target_kind,
@@ -250,11 +245,7 @@ pub async fn audit_middleware(
     let user_id = context.as_ref().and_then(|value| value.user_id.clone());
     let sse_tab_id = context.as_ref().and_then(|value| value.sse_tab_id.clone());
     let latency_ms = started_at.elapsed().as_millis().to_string();
-    let sender = match Route::from_path(path.as_str()) {
-        Some(Route::ChatMessages) => ChatSender::You,
-        Some(Route::ChatMessagesDemo) => ChatSender::Demo,
-        _ => ChatSender::Unknown,
-    };
+    let sender = ChatSender::from_path(path.as_str());
     let sent_at = now_timestamp_short();
 
     state.trace_log.record_with_session(
@@ -309,7 +300,7 @@ pub async fn audit_middleware(
                 ),
                 (
                     LogFieldName::from(LogFieldKey::Sender),
-                    LogFieldValue::new(sender.as_str()),
+                    LogFieldValue::new(sender.as_ref()),
                 ),
                 (
                     LogFieldName::from(LogFieldKey::SentAt),
@@ -334,23 +325,6 @@ fn should_skip_operational_path(path: &str) -> bool {
         return true;
     }
     path.contains("livereload")
-}
-
-#[derive(Clone, Copy, Debug)]
-enum ChatSender {
-    You,
-    Demo,
-    Unknown,
-}
-
-impl ChatSender {
-    fn as_str(self) -> &'static str {
-        match self {
-            Self::You => "you",
-            Self::Demo => "demo",
-            Self::Unknown => "-",
-        }
-    }
 }
 
 #[cfg(test)]

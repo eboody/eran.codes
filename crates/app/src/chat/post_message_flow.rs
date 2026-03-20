@@ -6,35 +6,14 @@ use super::{Error, PostMessage, audit, moderation};
 use domain::chat;
 
 #[derive(Clone, Debug, PartialEq)]
-pub struct BuiltVisibleData {
+pub struct MessageData {
     message: chat::Message,
 }
 
 #[derive(Clone, Debug, PartialEq)]
-pub struct BuiltPendingData {
+pub struct PendingMessageData {
     message: chat::Message,
     moderation_reason: moderation::Reason,
-}
-
-#[derive(Clone, Debug, PartialEq)]
-pub struct PersistedVisibleData {
-    message: chat::Message,
-}
-
-#[derive(Clone, Debug, PartialEq)]
-pub struct PersistedPendingData {
-    message: chat::Message,
-    moderation_reason: moderation::Reason,
-}
-
-#[derive(Clone, Debug, PartialEq)]
-pub struct ModerationEnqueuedData {
-    message: chat::Message,
-}
-
-#[derive(Clone, Debug, PartialEq)]
-pub struct AuditedData {
-    message: chat::Message,
 }
 
 #[state]
@@ -43,12 +22,12 @@ pub enum PostMessageState {
     RoomVerified,
     MembershipVerified,
     RateLimitPassed,
-    BuiltVisible(BuiltVisibleData),
-    BuiltPending(BuiltPendingData),
-    PersistedVisible(PersistedVisibleData),
-    PersistedPending(PersistedPendingData),
-    ModerationEnqueued(ModerationEnqueuedData),
-    Audited(AuditedData),
+    BuiltVisible(MessageData),
+    BuiltPending(PendingMessageData),
+    PersistedVisible(MessageData),
+    PersistedPending(PendingMessageData),
+    ModerationEnqueued(MessageData),
+    Audited(MessageData),
 }
 
 #[machine]
@@ -89,7 +68,7 @@ impl PostMessageFlow<RateLimitPassed> {
     ) -> PostMessageFlow<BuiltVisible> {
         let message =
             self.build_message(message_id, created_at, chat::message::Status::Visible);
-        self.transition_with(BuiltVisibleData { message })
+        self.transition_with(MessageData { message })
     }
 
     pub(super) fn build_pending(
@@ -100,7 +79,7 @@ impl PostMessageFlow<RateLimitPassed> {
     ) -> PostMessageFlow<BuiltPending> {
         let message =
             self.build_message(message_id, created_at, chat::message::Status::Pending);
-        self.transition_with(BuiltPendingData {
+        self.transition_with(PendingMessageData {
             message,
             moderation_reason,
         })
@@ -110,9 +89,7 @@ impl PostMessageFlow<RateLimitPassed> {
 #[transition]
 impl PostMessageFlow<BuiltVisible> {
     pub(super) fn mark_persisted(self) -> PostMessageFlow<PersistedVisible> {
-        let data = PersistedVisibleData {
-            message: self.state_data.message.clone(),
-        };
+        let data = self.state_data.clone();
         self.transition_with(data)
     }
 }
@@ -120,10 +97,7 @@ impl PostMessageFlow<BuiltVisible> {
 #[transition]
 impl PostMessageFlow<BuiltPending> {
     pub(super) fn mark_persisted(self) -> PostMessageFlow<PersistedPending> {
-        let data = PersistedPendingData {
-            message: self.state_data.message.clone(),
-            moderation_reason: self.state_data.moderation_reason.clone(),
-        };
+        let data = self.state_data.clone();
         self.transition_with(data)
     }
 }
@@ -131,7 +105,7 @@ impl PostMessageFlow<BuiltPending> {
 #[transition]
 impl PostMessageFlow<PersistedPending> {
     pub(super) fn mark_moderation_enqueued(self) -> PostMessageFlow<ModerationEnqueued> {
-        let data = ModerationEnqueuedData {
+        let data = MessageData {
             message: self.state_data.message.clone(),
         };
         self.transition_with(data)
@@ -141,9 +115,7 @@ impl PostMessageFlow<PersistedPending> {
 #[transition]
 impl PostMessageFlow<PersistedVisible> {
     pub(super) fn mark_audited(self) -> PostMessageFlow<Audited> {
-        let data = AuditedData {
-            message: self.state_data.message.clone(),
-        };
+        let data = self.state_data.clone();
         self.transition_with(data)
     }
 }
@@ -151,9 +123,7 @@ impl PostMessageFlow<PersistedVisible> {
 #[transition]
 impl PostMessageFlow<ModerationEnqueued> {
     pub(super) fn mark_audited(self) -> PostMessageFlow<Audited> {
-        let data = AuditedData {
-            message: self.state_data.message.clone(),
-        };
+        let data = self.state_data.clone();
         self.transition_with(data)
     }
 }
@@ -301,34 +271,6 @@ impl PostMessageFlow<RateLimitPassed> {
     }
 }
 
-impl PostMessageFlow<BuiltVisible> {
-    pub(super) fn message(&self) -> &chat::Message {
-        &self.state_data.message
-    }
-}
-
-impl PostMessageFlow<BuiltPending> {
-    pub(super) fn message(&self) -> &chat::Message {
-        &self.state_data.message
-    }
-}
-
-impl PostMessageFlow<PersistedVisible> {
-    pub(super) fn message(&self) -> &chat::Message {
-        &self.state_data.message
-    }
-}
-
-impl PostMessageFlow<PersistedPending> {
-    pub(super) fn message(&self) -> &chat::Message {
-        &self.state_data.message
-    }
-
-    pub(super) fn moderation_reason(&self) -> &moderation::Reason {
-        &self.state_data.moderation_reason
-    }
-}
-
 impl PostMessageFlow<Audited> {
     pub(super) fn into_message(self) -> chat::Message {
         self.state_data.message
@@ -377,11 +319,11 @@ impl BuiltPostMessage {
     ) -> Result<PersistedPostMessage, Error> {
         match self {
             Self::Visible(visible) => {
-                repo.insert_message(visible.message()).await?;
+                repo.insert_message(&visible.state_data.message).await?;
                 Ok(PersistedPostMessage::Visible(visible.mark_persisted()))
             }
             Self::Pending(pending) => {
-                repo.insert_message(pending.message()).await?;
+                repo.insert_message(&pending.state_data.message).await?;
                 Ok(PersistedPostMessage::Pending(pending.mark_persisted()))
             }
         }
@@ -402,7 +344,10 @@ impl PersistedPostMessage {
             Self::Visible(visible) => Ok(ReadyForAudit::Visible(visible)),
             Self::Pending(pending) => {
                 moderation
-                    .enqueue(&pending.message().id, pending.moderation_reason())
+                    .enqueue(
+                        &pending.state_data.message.id,
+                        &pending.state_data.moderation_reason,
+                    )
                     .await?;
                 Ok(ReadyForAudit::Pending(pending.mark_moderation_enqueued()))
             }
@@ -418,7 +363,7 @@ pub(super) enum ReadyForAudit {
 impl ReadyForAudit {
     pub(super) fn message(&self) -> &chat::Message {
         match self {
-            Self::Visible(visible) => visible.message(),
+            Self::Visible(visible) => &visible.state_data.message,
             Self::Pending(pending) => &pending.state_data.message,
         }
     }
@@ -447,7 +392,7 @@ impl ReadyForAudit {
                 vec![
                     (
                         audit::Key::MessageId,
-                        audit::Value::new(message_id.as_uuid().to_string()),
+                        audit::Value::new(message_id.as_ref().to_string()),
                     ),
                     (audit::Key::Status, audit::Value::new(status.to_string())),
                 ],
@@ -461,29 +406,10 @@ pub(super) type IncomingFlow = PostMessageFlow<Incoming>;
 
 fn requires_moderation(body: &chat::message::Body) -> bool {
     let value = body.to_string();
-    value.len() > 300 || LinkPrefix::is_present(&value)
+    value.len() > 300 || URL_PREFIXES.iter().any(|prefix| value.contains(prefix))
 }
 
-#[derive(Clone, Copy, Debug)]
-enum LinkPrefix {
-    Http,
-    Https,
-}
-
-impl LinkPrefix {
-    fn as_str(self) -> &'static str {
-        match self {
-            LinkPrefix::Http => "http://",
-            LinkPrefix::Https => "https://",
-        }
-    }
-
-    fn is_present(value: &str) -> bool {
-        [Self::Http, Self::Https]
-            .iter()
-            .any(|prefix| value.contains(prefix.as_str()))
-    }
-}
+const URL_PREFIXES: &[&str] = &["http://", "https://"];
 
 #[cfg(test)]
 mod tests {
@@ -518,7 +444,10 @@ mod tests {
             panic!("expected visible branch");
         };
 
-        assert_eq!(visible.message().status, chat::message::Status::Visible);
+        assert_eq!(
+            visible.state_data.message.status,
+            chat::message::Status::Visible
+        );
     }
 
     #[test]
@@ -532,8 +461,11 @@ mod tests {
         };
         let persisted = pending.mark_persisted();
 
-        assert_eq!(persisted.message().status, chat::message::Status::Pending);
-        assert_eq!(persisted.moderation_reason().to_string(), "auto");
+        assert_eq!(
+            persisted.state_data.message.status,
+            chat::message::Status::Pending
+        );
+        assert_eq!(persisted.state_data.moderation_reason.to_string(), "auto");
     }
 
     #[test]

@@ -1,10 +1,8 @@
-use std::str::FromStr;
-
 use crate::trace_log::store;
 use crate::types::{LogFieldKey, Text};
 use crate::views::partials::components;
 
-use super::{field_text, short_request_id};
+use super::short_request_id;
 
 pub fn build_grouped_feed<'a, I>(entries: I) -> components::logs::composed::GroupedFeed
 where
@@ -57,7 +55,7 @@ where
         std::collections::HashMap::new();
 
     for entry in entries {
-        let request_id = field_text(entry, LogFieldKey::RequestId);
+        let request_id = entry.field_text(LogFieldKey::RequestId).cloned();
         if !map.contains_key(&request_id) {
             order.push(request_id.clone());
         }
@@ -79,14 +77,14 @@ where
 fn build_pills(entry: &store::TraceEntry) -> Vec<components::Pill> {
     let mut pills = Vec::new();
     pills.push(components::Pill::level(entry.level.clone()));
-    if let Some(status) = field_text(entry, LogFieldKey::Status) {
+    if let Some(status) = entry.field_text(LogFieldKey::Status) {
         pills.push(components::Pill::status(status.clone()));
     }
-    if let Some(method) = field_text(entry, LogFieldKey::Method) {
+    if let Some(method) = entry.field_text(LogFieldKey::Method) {
         pills.push(components::Pill::method(method.clone()));
     }
-    if let Some(path) = field_text(entry, LogFieldKey::Path) {
-        pills.push(components::Pill::path(path));
+    if let Some(path) = entry.field_text(LogFieldKey::Path) {
+        pills.push(components::Pill::path(path.clone()));
     }
     pills.push(components::Pill::target(entry.target.clone()));
     pills.extend(compact_fields(entry));
@@ -102,7 +100,7 @@ fn compact_fields(entry: &store::TraceEntry) -> Vec<components::Pill> {
         .fields
         .iter()
         .filter_map(|(name, value)| {
-            let field_kind = LogFieldKey::from_str(&name.to_string()).ok();
+            let field_kind = LogFieldKey::try_from(name).ok();
             if matches!(
                 field_kind,
                 Some(LogFieldKey::Method | LogFieldKey::Path | LogFieldKey::Status)
@@ -138,7 +136,7 @@ mod tests {
 
     #[test]
     fn builds_grouped_feed_from_request_ids() {
-        let entries = vec![entry("abc-1", "a"), entry("abc-1", "b"), entry("def-2", "c")];
+        let entries = [entry("abc-1", "a"), entry("abc-1", "b"), entry("def-2", "c")];
         let markup = build_grouped_feed(entries.iter()).render().into_string();
 
         assert!(markup.contains("request_id=abc"));

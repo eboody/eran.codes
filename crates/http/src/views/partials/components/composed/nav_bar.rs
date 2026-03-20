@@ -304,20 +304,13 @@ impl Render for NavLink {
     }
 }
 
-#[derive(Clone, Copy, Debug, Default)]
+#[derive(Clone, Copy, Debug, Default, strum_macros::AsRefStr)]
 pub enum NavLinkListRole {
     #[default]
+    #[strum(serialize = "primary")]
     Primary,
+    #[strum(serialize = "auth")]
     Auth,
-}
-
-impl NavLinkListRole {
-    fn as_attr(self) -> &'static str {
-        match self {
-            Self::Primary => "primary",
-            Self::Auth => "auth",
-        }
-    }
 }
 
 #[derive(Clone, Debug, Builder)]
@@ -330,7 +323,7 @@ pub struct NavLinkList {
 impl Render for NavLinkList {
     fn render(&self) -> maud::Markup {
         maud::html! {
-            ul data-nav-list=(self.role.as_attr()) {
+            ul data-nav-list=(self.role.as_ref()) {
                 @for item in &self.children {
                     (item)
                 }

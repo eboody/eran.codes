@@ -64,14 +64,18 @@ impl Event {
             inner: Arc::new(ExecuteScript::new(script).into_datastar_event()),
         }
     }
+}
 
-    pub fn from_event(event: DatastarEvent) -> Self {
+impl From<DatastarEvent> for Event {
+    fn from(value: DatastarEvent) -> Self {
         Self {
-            inner: Arc::new(event),
+            inner: Arc::new(value),
         }
     }
+}
 
-    pub fn as_datastar_event(&self) -> &DatastarEvent {
+impl AsRef<DatastarEvent> for Event {
+    fn as_ref(&self) -> &DatastarEvent {
         &self.inner
     }
 }
@@ -95,7 +99,7 @@ impl Registry {
     }
 
     pub fn send(&self, handle: &Handle, event: Event) -> send::Result<()> {
-        let event_type = format!("{:?}", event.as_datastar_event().event);
+        let event_type = format!("{:?}", event.as_ref().event);
         let session_id = handle.id();
         let tab_id = handle
             .tab_id()
@@ -126,7 +130,7 @@ impl Registry {
     }
 
     pub fn send_by_id(&self, session_id: &SessionId, event: Event) -> send::Result<()> {
-        let event_type = format!("{:?}", event.as_datastar_event().event);
+        let event_type = format!("{:?}", event.as_ref().event);
         tracing::debug!(
             target: "demo.sse",
             message = "sse send",
@@ -201,7 +205,7 @@ impl Registry {
     }
 
     pub fn broadcast(&self, event: Event) -> send::Result<usize> {
-        let event_type = format!("{:?}", event.as_datastar_event().event);
+        let event_type = format!("{:?}", event.as_ref().event);
         let mut sent = 0;
         let mut failed = Vec::new();
         let total = self.sessions.len();

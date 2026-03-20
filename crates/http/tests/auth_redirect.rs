@@ -94,7 +94,7 @@ impl auth::Provider for TestAuthProvider {
         &self,
         user_id: &domain_user::Id,
     ) -> auth::Result<Option<auth::AuthenticatedUser>> {
-        if *user_id == domain_user::Id::from_uuid(USER_ID) {
+        if *user_id == domain_user::Id::from(USER_ID) {
             return Ok(Some(test_user()));
         }
         Ok(None)
@@ -105,7 +105,7 @@ fn test_user() -> auth::AuthenticatedUser {
     let username = domain_user::Username::try_new("Demo").expect("username");
     let email = TestCredential::Demo.email();
     auth::AuthenticatedUser::builder()
-        .id(domain_user::Id::from_uuid(USER_ID))
+        .id(domain_user::Id::from(USER_ID))
         .username(username)
         .email(email)
         .session_hash(auth::SessionHash::new("hash"))

@@ -1,6 +1,8 @@
 // ci: descriptive-module-import crate::handlers::demo::chat
 mod moderate_flow;
+mod moderation_input;
 mod post_flow;
+mod post_input;
 
 use axum::extract::Extension;
 use axum::response::Response;
@@ -68,8 +70,7 @@ pub async fn moderate_message(
         .ok_or(crate::error::Error::Internal)?;
 
     let incoming = moderate_flow::IncomingFlow::from_form(form, user.id.clone())?;
-    let parsed = incoming.parse()?;
-    let _applied = parsed.apply(&state).await?;
+    let _applied = incoming.apply(&state).await?;
 
     moderation_page(Extension(state), auth_session).await
 }

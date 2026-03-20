@@ -157,18 +157,11 @@ me .ui-code-block__token--macro {
 "#
 );
 
-#[derive(Clone, Copy, Debug, Default, PartialEq, Eq)]
+#[derive(Clone, Copy, Debug, Default, PartialEq, Eq, strum_macros::AsRefStr)]
 pub enum CodeLanguage {
     #[default]
+    #[strum(serialize = "Rust")]
     Rust,
-}
-
-impl CodeLanguage {
-    fn label(self) -> &'static str {
-        match self {
-            Self::Rust => "Rust",
-        }
-    }
 }
 
 #[derive(Clone, Debug, Builder)]
@@ -192,7 +185,7 @@ impl Render for CodeBlock {
             div class=(class_attr) data-code-block {
                 (css())
                 div data-code-block-header {
-                    (Pill::badge(self.language.label(), BadgeKind::Secondary))
+                    (Pill::badge(self.language.as_ref(), BadgeKind::Secondary))
                     @if let Some(label) = &self.label {
                         p data-code-block-label { (label) }
                     }
