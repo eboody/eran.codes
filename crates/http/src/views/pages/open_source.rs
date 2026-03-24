@@ -101,6 +101,10 @@ me [data-open-source-hero-footnote] {
   border-top: 1px solid color-mix(in srgb, var(--ui-border-soft) 78%, transparent);
 }
 
+me [data-open-source-mobile-intro] {
+  display: none;
+}
+
 me .ui-portfolio-crate-section--standalone {
   inline-size: 100%;
   max-inline-size: none;
@@ -167,6 +171,27 @@ me .ui-portfolio-crate-section--standalone .ui-code-block {
 
   me [data-open-source-hero-aside] {
     display: none;
+  }
+
+  me [data-open-source-mobile-intro] {
+    display: grid;
+    gap: var(--space-1);
+    margin-top: var(--space-1);
+    padding-top: var(--space-2);
+    border-top: 1px solid color-mix(in srgb, var(--ui-border-soft) 72%, transparent);
+  }
+
+  me [data-open-source-mobile-intro-eyebrow] {
+    margin: 0;
+    font-size: var(--text-size-meta-xs);
+    letter-spacing: var(--text-track-caps-sm);
+    text-transform: uppercase;
+    color: var(--ui-text-muted);
+  }
+
+  me [data-open-source-mobile-intro] .ui-portfolio-summary {
+    font-size: var(--text-size-body-md);
+    line-height: 1.55;
   }
 
   me .ui-portfolio-crate-section--standalone {
@@ -237,6 +262,12 @@ impl Render for OpenSource {
                         content: &content.hero,
                         aside: Some(hero_aside),
                     })
+                    div data-open-source-mobile-intro {
+                        p data-open-source-mobile-intro-eyebrow { "Crate walkthrough" }
+                        p class="ui-portfolio-summary" {
+                            (&content.crate_section.subtitle)
+                        }
+                    }
                     (partials::components::portfolio::CrateSection {
                         content: &content.crate_section,
                         show_heading: false,
