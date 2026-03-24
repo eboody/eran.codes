@@ -841,8 +841,7 @@ pub mod content;
 mod sections;
 
 pub use sections::{
-    ClosingSection, CurrentProofHeroAside, ExperienceSection, OpenSourceFlow, PortfolioHero,
-    SkillGroupsSection, WorkCaseDetail, WorkFlow, WorkSection, WorkSectionVariant,
+    HomeFlow, OpenSourceFlow, WorkCaseDetail, WorkFlow,
 };
 
 pub struct Page {

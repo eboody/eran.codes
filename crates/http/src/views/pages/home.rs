@@ -14,42 +14,9 @@ pub struct Home {
 impl Render for Home {
     fn render(&self) -> maud::Markup {
         let content = partials::components::portfolio::content::portfolio_home_content();
-        let hero_aside = content.current_proof_section.cards.first().map(|card| {
-            maud::html! {
-                (partials::components::portfolio::CurrentProofHeroAside { card })
-            }
-        });
-
         let body = partials::components::portfolio::Page {
             content: maud::html! {
-                (partials::components::portfolio::PortfolioHero {
-                    content: &content.hero,
-                    aside: hero_aside,
-                })
-                (partials::components::portfolio::WorkSection {
-                    content: &content.current_proof_section,
-                    variant: partials::components::portfolio::WorkSectionVariant::CurrentProof,
-                })
-                (partials::components::portfolio::ExperienceSection {
-                    content: &content.experience_section,
-                })
-                (partials::components::portfolio::WorkSection {
-                    content: &content.project_section,
-                    variant: partials::components::portfolio::WorkSectionVariant::Standard,
-                })
-                (partials::components::portfolio::ClosingSection {
-                    title: &content.open_source_teaser.title,
-                    summary: &content.open_source_teaser.summary,
-                    actions: &content.open_source_teaser.actions,
-                })
-                (partials::components::portfolio::SkillGroupsSection {
-                    content: &content.skill_section,
-                })
-                (partials::components::portfolio::ClosingSection {
-                    title: &content.contact_section.title,
-                    summary: &content.contact_section.summary,
-                    actions: &content.contact_section.actions,
-                })
+                (partials::components::portfolio::HomeFlow { content })
             },
         }
         .render();

@@ -12,8 +12,8 @@ pub use types::{
     ArchiveDetailsContent, ArchivedWorkCaseContent, ClosingContent, CmsActionLink,
     CrateCardContent, CrateSectionContent, CtaKind,
     ExperienceRoleContent, ExperienceSectionContent, OpenSourceIndexContent, PortfolioHeroContent,
-    SkillGroupContent, SkillSectionContent, WorkCardContent, WorkCaseContent, WorkCaseSlug,
-    WorkIndexContent, WorkSectionContent,
+    PortfolioHomeContent, SkillGroupContent, SkillSectionContent, WorkCardContent,
+    WorkCaseContent, WorkCaseSlug, WorkIndexContent, WorkSectionContent,
 };
 
 #[cfg(test)]
