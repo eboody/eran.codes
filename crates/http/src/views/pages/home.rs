@@ -31,6 +31,27 @@ crate::views::scoped::inline_css!(
     padding: var(--space-2);
   }
 }
+
+@media (max-width: 26rem) {
+  me [data-home-current-proof] .ui-portfolio-surface {
+    --surface-card-padding: var(--space-3);
+
+    gap: var(--space-1);
+  }
+
+  me [data-home-current-proof] .ui-portfolio-work-card {
+    gap: var(--space-1);
+  }
+
+  me [data-home-current-proof] .ui-portfolio-card-summary {
+    font-size: var(--text-size-body-md);
+    line-height: 1.5;
+  }
+
+  me [data-home-current-proof] .ui-portfolio-card-footer {
+    gap: var(--space-1);
+  }
+}
 "#
 );
 
