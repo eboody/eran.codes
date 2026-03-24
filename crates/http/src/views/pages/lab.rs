@@ -4,22 +4,6 @@ use crate::paths::Route;
 use crate::types::Text;
 use crate::views::{page, partials};
 
-crate::views::scoped::inline_css!(
-    r#"
-me {
-  display: grid;
-  gap: var(--space-section);
-  margin-top: clamp(1.2rem, 0.9rem + 1.2vw, 2rem);
-  padding-bottom: calc(var(--space-section) + var(--space-7));
-}
-
-me > :where(header, section) {
-  margin-top: 0;
-  scroll-margin-top: var(--nav-scroll-offset);
-}
-"#
-);
-
 #[derive(Builder)]
 pub struct Lab {
     pub user: Option<page::UserNav>,
@@ -30,8 +14,7 @@ pub struct Lab {
 impl maud::Render for Lab {
     fn render(&self) -> maud::Markup {
         let content = maud::html! {
-            div data-lab-page data-page-section {
-                (css())
+            div class="u-page-stack u-page-stack--spacious" data-lab-page data-page-section {
                 (partials::HomeHero::builder().maybe_user(self.user.clone()).build())
 
                 (partials::TabSetShowcase::builder().build())
@@ -62,5 +45,20 @@ impl maud::Render for Lab {
             .maybe_sse_tab_id(self.sse_tab_id.clone())
             .build()
             .render()
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use maud::Render;
+
+    use super::*;
+
+    #[test]
+    fn uses_shared_page_stack_contract() {
+        let markup = Lab::builder().build().render().into_string();
+
+        assert!(markup.contains("class=\"u-page-stack u-page-stack--spacious\""));
+        assert!(markup.contains("data-lab-page"));
     }
 }

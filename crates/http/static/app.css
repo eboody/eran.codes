@@ -570,6 +570,26 @@ input[type="password"] {
   display: grid;
 }
 
+.u-page-stack {
+  --page-stack-margin-top: clamp(1.1rem, 0.9rem + 0.9vw, 1.8rem);
+  --page-stack-padding-extra: var(--space-6);
+
+  display: grid;
+  gap: var(--space-section);
+  margin-top: var(--page-stack-margin-top);
+  padding-bottom: calc(var(--space-section) + var(--page-stack-padding-extra));
+}
+
+.u-page-stack > :where(header, section, article, div) {
+  margin-top: 0;
+  scroll-margin-top: var(--nav-scroll-offset);
+}
+
+.u-page-stack--spacious {
+  --page-stack-margin-top: clamp(1.2rem, 0.9rem + 1.2vw, 2rem);
+  --page-stack-padding-extra: var(--space-7);
+}
+
 @media (max-width: 48rem) {
   :root {
     --nav-scroll-offset: 9rem;

@@ -4,22 +4,6 @@ use maud::Render;
 use crate::types::Text;
 use crate::views::{page, partials};
 
-crate::views::scoped::inline_css!(
-    r#"
-me {
-  display: grid;
-  gap: var(--space-section);
-  margin-top: clamp(1.1rem, 0.9rem + 0.9vw, 1.8rem);
-  padding-bottom: calc(var(--space-section) + var(--space-6));
-}
-
-me > :where(header, section) {
-  margin-top: 0;
-  scroll-margin-top: var(--nav-scroll-offset);
-}
-"#
-);
-
 #[derive(Builder)]
 pub struct Chat {
     pub room_id: Text,
@@ -32,8 +16,7 @@ pub struct Chat {
 impl Render for Chat {
     fn render(&self) -> maud::Markup {
         let content = maud::html! {
-            div data-chat-page data-page-section {
-                (css())
+            div class="u-page-stack" data-chat-page data-page-section {
                 ({
                     partials::components::chat::Hero::builder()
                         .room_name(self.room_name.clone())
@@ -56,5 +39,26 @@ impl Render for Chat {
             .maybe_with_user(self.user.clone())
             .build()
             .render()
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use maud::Render;
+
+    use super::*;
+
+    #[test]
+    fn uses_shared_page_stack_contract() {
+        let markup = Chat::builder()
+            .room_id(Text::from("room-1"))
+            .room_name(Text::from("Lobby"))
+            .messages(Vec::new())
+            .build()
+            .render()
+            .into_string();
+
+        assert!(markup.contains("class=\"u-page-stack\""));
+        assert!(markup.contains("data-chat-page"));
     }
 }

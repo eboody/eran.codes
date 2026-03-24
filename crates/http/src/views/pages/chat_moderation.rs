@@ -4,21 +4,8 @@ use maud::Render;
 use crate::paths::Route;
 use crate::types::Text;
 use crate::views::{page, partials};
-
 crate::views::scoped::inline_css!(
     r#"
-me {
-  display: grid;
-  gap: var(--space-section);
-  margin-top: clamp(1.1rem, 0.9rem + 0.9vw, 1.8rem);
-  padding-bottom: calc(var(--space-section) + var(--space-6));
-}
-
-me > :where(header, section) {
-  margin-top: 0;
-  scroll-margin-top: var(--nav-scroll-offset);
-}
-
 me [data-chat-moderation-hero] {
   display: grid;
   gap: var(--space-3);
@@ -110,7 +97,7 @@ pub struct ChatModeration {
 impl Render for ChatModeration {
     fn render(&self) -> maud::Markup {
         let content = maud::html! {
-            div data-chat-page data-chat-moderation-page data-page-section {
+            div class="u-page-stack" data-chat-page data-chat-moderation-page data-page-section {
                 (css())
                 header data-chat-moderation-hero {
                     div {
@@ -175,5 +162,24 @@ impl Render for ChatModeration {
             .maybe_with_user(self.user.clone())
             .build()
             .render()
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use maud::Render;
+
+    use super::*;
+
+    #[test]
+    fn uses_shared_page_stack_contract() {
+        let markup = ChatModeration::builder()
+            .entries(Vec::new())
+            .build()
+            .render()
+            .into_string();
+
+        assert!(markup.contains("class=\"u-page-stack\""));
+        assert!(markup.contains("data-chat-moderation-page"));
     }
 }

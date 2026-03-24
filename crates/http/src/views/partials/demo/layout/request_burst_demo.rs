@@ -58,7 +58,7 @@ me [data-burst-actions] {
   gap: var(--space-2) var(--space-3);
 }
 
-me [data-burst-actions] p {
+me [data-burst-actions-note] {
   margin: 0;
   font-size: var(--text-size-meta-lg);
 }
@@ -206,7 +206,7 @@ impl Render for RequestBurstDemo {
                             .label(Text::from("Send burst"))
                             .data_attrs(vec![partials::button::DataAttr::flag("data-burst-run")])
                             .build())
-                        p class="u-muted" {
+                        p class="u-muted" data-burst-actions-note {
                             "Browser-observed latency and throughput"
                         }
                     }
