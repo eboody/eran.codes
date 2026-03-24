@@ -242,6 +242,14 @@ me [data-home-hero-card-secondary-link]:focus-visible {
     font-size: var(--text-size-body-lg);
   }
 
+  me [data-home-hero-tags] {
+    gap: var(--space-1);
+  }
+
+  me [data-home-hero-tags] > :nth-child(n + 4) {
+    display: none;
+  }
+
   me [data-home-hero-card] {
     inline-size: 100%;
   }
