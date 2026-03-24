@@ -3,6 +3,9 @@ use maud::{PreEscaped, Render};
 
 use crate::types::Text;
 use crate::views::partials;
+use crate::views::partials::components::{
+    KeyValueItem, KeyValueList, KeyValueListLayout, KeyValueValueAttr, ResultCard,
+};
 
 use super::{SurfaceSection, SurfaceSectionAttr};
 
@@ -63,11 +66,10 @@ me [data-burst-actions-note] {
   font-size: var(--text-size-meta-lg);
 }
 
-me [data-burst-result] {
-  margin: 0;
+me .ui-request-burst-result {
+  margin-top: 0;
   border: 1px solid color-mix(in srgb, var(--accent-signal) 18%, var(--border-default));
-  border-radius: var(--ui-radius-sm);
-  padding: var(--space-3) var(--space-4);
+  --inset-card-padding: var(--space-3) var(--space-4);
   background: color-mix(in srgb, var(--accent-signal-soft) 38%, var(--surface-field));
   font-family: var(--ui-font-mono);
   font-size: var(--text-size-meta-sm);
@@ -76,33 +78,8 @@ me [data-burst-result] {
   overflow: visible;
 }
 
-me [data-burst-status] {
+me .ui-request-burst-status {
   margin: 0 0 var(--space-3);
-}
-
-me [data-burst-metrics] {
-  margin: 0;
-  display: grid;
-  gap: var(--space-3) var(--space-4);
-  grid-template-columns: repeat(auto-fit, minmax(10rem, 1fr));
-}
-
-me [data-burst-metrics] > div {
-  min-width: 0;
-  display: grid;
-  gap: var(--space-1);
-}
-
-me [data-burst-metrics] dt {
-  font-size: var(--text-size-label-xs);
-  letter-spacing: var(--text-track-caps-wide);
-  text-transform: uppercase;
-  color: var(--text-subtle);
-}
-
-me [data-burst-metrics] dd {
-  margin: 0;
-  color: var(--text-strong);
 }
 
 me [data-burst-endpoint],
@@ -113,7 +90,7 @@ me [data-burst-delta] {
 }
 
 @media (prefers-color-scheme: dark) {
-  me [data-burst-result] {
+  me .ui-request-burst-result {
     background:
       linear-gradient(
         180deg,
@@ -160,22 +137,13 @@ me [data-burst-delta] {
     width: 100%;
   }
 
-  me [data-burst-result] {
-    padding: var(--space-2);
+  me .ui-request-burst-result {
+    --inset-card-padding: var(--space-2);
     font-size: var(--text-size-meta-xs);
   }
 
-  me [data-burst-status] {
+  me .ui-request-burst-status {
     margin-bottom: var(--space-1);
-  }
-
-  me [data-burst-metrics] {
-    gap: var(--space-1) var(--space-2);
-    grid-template-columns: repeat(2, minmax(0, 1fr));
-  }
-
-  me [data-burst-metrics] dt {
-    font-size: var(--text-size-label-2xs);
   }
 }
 
@@ -196,12 +164,8 @@ me [data-burst-delta] {
     font-size: var(--text-size-meta-sm);
   }
 
-  me [data-burst-result] {
-    padding: var(--space-2) var(--space-1);
-  }
-
-  me [data-burst-metrics] {
-    gap: calc(var(--space-1) * 0.75) var(--space-1);
+  me .ui-request-burst-result {
+    --inset-card-padding: var(--space-2) var(--space-1);
   }
 }
 "#
@@ -262,63 +226,48 @@ impl Render for RequestBurstDemo {
                             "Browser-observed latency and throughput"
                         }
                     }
-                    div data-burst-result {
-                        p data-burst-status {
-                            "Ready. Choose a burst size and run the load."
-                        }
-                        dl data-burst-metrics {
-                            div {
-                                dt { "Endpoint" }
-                                dd data-burst-endpoint { (&self.endpoint) }
+                    (ResultCard::builder()
+                        .extra_class("ui-request-burst-result")
+                        .content(maud::html! {
+                            p class="ui-request-burst-status" data-burst-status {
+                                "Ready. Choose a burst size and run the load."
                             }
-                            div {
-                                dt { "Workers" }
-                                dd data-burst-workers { (self.concurrency) }
-                            }
-                            div {
-                                dt { "Throughput" }
-                                dd data-burst-rate { "—" }
-                            }
-                            div {
-                                dt { "Duration" }
-                                dd data-burst-duration { "—" }
-                            }
-                            div {
-                                dt { "OK" }
-                                dd data-burst-ok { "—" }
-                            }
-                            div {
-                                dt { "Failed" }
-                                dd data-burst-failed { "—" }
-                            }
-                            div {
-                                dt { "Latency p50" }
-                                dd data-burst-p50 { "—" }
-                            }
-                            div {
-                                dt { "Latency p95" }
-                                dd data-burst-p95 { "—" }
-                            }
-                            div {
-                                dt { "Latency p99" }
-                                dd data-burst-p99 { "—" }
-                            }
-                            div {
-                                dt { "Baseline" }
-                                dd data-burst-previous { "Run once to set a baseline." }
-                            }
-                            div {
-                                dt { "Delta" }
-                                dd data-burst-delta { "—" }
-                            }
-                        }
-                    }
+                            (KeyValueList::builder()
+                                .layout(KeyValueListLayout::MetricsGrid)
+                                .items(vec![
+                                    burst_metric("Endpoint", "data-burst-endpoint", self.endpoint.clone()),
+                                    burst_metric("Workers", "data-burst-workers", self.concurrency.to_string()),
+                                    burst_metric("Throughput", "data-burst-rate", "—"),
+                                    burst_metric("Duration", "data-burst-duration", "—"),
+                                    burst_metric("OK", "data-burst-ok", "—"),
+                                    burst_metric("Failed", "data-burst-failed", "—"),
+                                    burst_metric("Latency p50", "data-burst-p50", "—"),
+                                    burst_metric("Latency p95", "data-burst-p95", "—"),
+                                    burst_metric("Latency p99", "data-burst-p99", "—"),
+                                    burst_metric("Baseline", "data-burst-previous", "Run once to set a baseline."),
+                                    burst_metric("Delta", "data-burst-delta", "—"),
+                                ])
+                                .build())
+                        })
+                        .build())
                 }
                 script { (PreEscaped(REQUEST_BURST_SCRIPT)) }
             })
             .build()
             .render()
     }
+}
+
+fn burst_metric(
+    label: impl Into<Text>,
+    value_attr: impl Into<Text>,
+    value: impl Into<Text>,
+) -> KeyValueItem {
+    KeyValueItem::builder()
+        .label(label.into())
+        .value(value.into())
+        .value_attrs(vec![KeyValueValueAttr::flag(value_attr)])
+        .build()
 }
 
 #[cfg(test)]
@@ -337,5 +286,7 @@ mod tests {
         assert!(markup.contains("data-burst-endpoint"));
         assert!(markup.contains("data-burst-delta"));
         assert!(markup.contains("/partials/request-burst-probe"));
+        assert!(markup.contains("u-demo-result-card"));
+        assert!(markup.contains("data-key-value-layout=\"metrics-grid\""));
     }
 }

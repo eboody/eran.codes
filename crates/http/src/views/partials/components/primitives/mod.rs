@@ -8,7 +8,7 @@ mod tab;
 
 pub use code_block::CodeBlock;
 pub(crate) use icon::Icon;
-pub use key_value_list::KeyValueList;
+pub use key_value_list::{KeyValueItem, KeyValueList, KeyValueListLayout, KeyValueValueAttr};
 pub(crate) use local_tab_panel::LocalTabPanel;
 pub(crate) use local_tab_root::{LocalTabRoot, LocalTabRootSurface};
 pub use pill::{BadgeKind, Pill};

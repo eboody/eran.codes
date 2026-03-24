@@ -2,7 +2,7 @@ use bon::Builder;
 use maud::Render;
 
 use crate::types::Text;
-use crate::views::partials::components::KeyValueList;
+use crate::views::partials::components::{KeyValueItem, KeyValueList};
 
 use super::ResultCard;
 
@@ -41,7 +41,7 @@ impl Render for StatusCard {
         let items = self
             .items
             .iter()
-            .map(|item| (item.label.clone(), item.value.clone()))
+            .map(|item| KeyValueItem::text(item.label.clone(), item.value.clone()))
             .collect();
 
         ResultCard::builder()
