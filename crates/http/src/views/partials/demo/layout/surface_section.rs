@@ -6,6 +6,7 @@ use maud::{Escaper, Markup, Render};
 use crate::types::Text;
 
 use super::SectionHeader;
+use crate::views::partials::components::SectionHeaderDensity;
 
 #[derive(Clone, Debug)]
 pub enum SurfaceSectionAttr {
@@ -40,6 +41,8 @@ pub struct SurfaceSection {
     pub extra_class: Option<Text>,
     #[builder(default)]
     pub attrs: Vec<SurfaceSectionAttr>,
+    #[builder(default)]
+    pub header_density: SectionHeaderDensity,
 }
 
 impl Render for SurfaceSection {
@@ -55,6 +58,7 @@ impl Render for SurfaceSection {
             .title(self.title.clone())
             .maybe_subtitle(self.subtitle.clone())
             .maybe_action(self.action.clone())
+            .density(self.header_density)
             .build()
             .render_to(buffer);
         self.content.render_to(buffer);
@@ -112,6 +116,7 @@ mod tests {
                 SurfaceSectionAttr::flag("data-example"),
                 SurfaceSectionAttr::value("data-state", "ready"),
             ])
+            .header_density(SectionHeaderDensity::Compact)
             .content(maud::html! { p { "content" } })
             .build()
             .render()
@@ -122,5 +127,6 @@ mod tests {
         assert!(markup.contains("data-example"));
         assert!(markup.contains("data-state=\"ready\""));
         assert!(markup.contains("<h2>Example</h2>"));
+        assert!(markup.contains("u-section-header--compact"));
     }
 }

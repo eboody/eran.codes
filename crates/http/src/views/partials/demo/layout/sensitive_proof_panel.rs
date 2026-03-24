@@ -6,31 +6,6 @@ use crate::views::partials;
 
 use super::{SurfaceSection, SurfaceSectionAttr};
 
-crate::views::scoped::inline_css!(
-    r#"
-me[data-sensitive-proof] [data-section-header] {
-  gap: var(--space-3);
-}
-
-@media (max-width: 48rem) {
-  me[data-sensitive-proof] [data-section-header] {
-    gap: var(--space-2);
-    margin-bottom: var(--space-3);
-  }
-
-  me[data-sensitive-proof] [data-section-header] [data-button] {
-    --control-font-size: var(--control-font-size-compact);
-    --control-padding-block: 0.48rem;
-    --control-padding-inline: 0.85rem;
-  }
-
-  me[data-sensitive-proof] [data-section-header-copy] .u-muted {
-    font-size: var(--text-size-body-md);
-  }
-}
-"#
-);
-
 #[derive(Clone, Debug, Builder)]
 pub struct SensitiveProofPanel {}
 
@@ -62,8 +37,8 @@ impl Render for SensitiveProofPanel {
                 SurfaceSectionAttr::flag("data-sensitive-proof"),
                 SurfaceSectionAttr::value("data-init", request_action),
             ])
+            .header_density(partials::components::SectionHeaderDensity::Compact)
             .content(maud::html! {
-                (css())
                 (partials::DemoResultPlaceholder::builder()
                     .target_id(Text::from("sensitive-proof-target"))
                     .message(content.sensitive_proof.empty_message.clone())

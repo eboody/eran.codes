@@ -11,6 +11,13 @@ pub enum SectionHeaderLevel {
     H2,
 }
 
+#[derive(Clone, Copy, Debug, Default)]
+pub enum SectionHeaderDensity {
+    #[default]
+    Standard,
+    Compact,
+}
+
 #[derive(Clone, Debug, Builder)]
 pub struct SectionHeaderMetaText {
     pub text: Text,
@@ -33,12 +40,19 @@ pub struct SectionHeader {
     pub meta: Option<SectionHeaderMetaText>,
     #[builder(default)]
     pub level: SectionHeaderLevel,
+    #[builder(default)]
+    pub density: SectionHeaderDensity,
 }
 
 impl Render for SectionHeader {
     fn render(&self) -> maud::Markup {
+        let class_name = match self.density {
+            SectionHeaderDensity::Standard => "u-section-header",
+            SectionHeaderDensity::Compact => "u-section-header u-section-header--compact",
+        };
+
         maud::html! {
-            header class="u-section-header" data-section-header {
+            header class=(class_name) data-section-header {
                 div class="u-section-copy u-section-header-copy" data-section-header-copy {
                     @match self.level {
                         SectionHeaderLevel::H1 => h1 { (&self.title) },
@@ -93,5 +107,17 @@ mod tests {
 
         assert!(markup.contains("<h1>Chat room</h1>"));
         assert!(markup.contains("data-section-header-actions"));
+    }
+
+    #[test]
+    fn can_render_compact_density() {
+        let markup = SectionHeader::builder()
+            .title(Text::from("Sensitive record proof"))
+            .density(SectionHeaderDensity::Compact)
+            .build()
+            .render()
+            .into_string();
+
+        assert!(markup.contains("class=\"u-section-header u-section-header--compact\""));
     }
 }

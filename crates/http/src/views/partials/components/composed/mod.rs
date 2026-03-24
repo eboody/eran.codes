@@ -19,5 +19,7 @@ pub use nav_bar::{
     NavAuth, NavBar, NavBrand, NavLink, NavLinkList, NavLinkListRole, NavSignedIn,
 };
 pub(crate) use result_card::ResultCard;
-pub use section_header::{SectionHeader, SectionHeaderLevel, SectionHeaderMetaText};
+pub use section_header::{
+    SectionHeader, SectionHeaderDensity, SectionHeaderLevel, SectionHeaderMetaText,
+};
 pub use status_card::{StatusCard, StatusCardItem};
