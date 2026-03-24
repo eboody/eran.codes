@@ -23,7 +23,7 @@ me > .ui-portfolio-surface {
 }
 
 me .ui-portfolio-hero {
-  max-inline-size: 82rem;
+  max-inline-size: 92rem;
   padding: 0;
   border: none;
   border-radius: 0;
@@ -36,7 +36,52 @@ me .ui-portfolio-lead-surface {
 }
 
 me .ui-portfolio-lead-surface h1 {
-  max-width: 20ch;
+  max-width: 18ch;
+}
+
+me [data-open-source-hero-aside] {
+  gap: var(--space-3);
+}
+
+me [data-open-source-hero-intro] {
+  display: grid;
+  gap: var(--space-1);
+}
+
+me [data-open-source-hero-intro] p {
+  margin: 0;
+}
+
+me [data-open-source-hero-list] {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  display: grid;
+  gap: var(--space-2);
+}
+
+me [data-open-source-hero-item] {
+  display: grid;
+  gap: 0.35rem;
+  padding-top: var(--space-2);
+  border-top: 1px solid color-mix(in srgb, var(--ui-border-soft) 78%, transparent);
+}
+
+me [data-open-source-hero-item] strong,
+me [data-open-source-hero-footnote] strong {
+  font-size: var(--text-size-label-sm);
+  letter-spacing: var(--text-track-ui);
+}
+
+me [data-open-source-hero-item] p,
+me [data-open-source-hero-footnote] {
+  margin: 0;
+  color: var(--ui-text-muted);
+}
+
+me [data-open-source-hero-footnote] {
+  padding-top: var(--space-2);
+  border-top: 1px solid color-mix(in srgb, var(--ui-border-soft) 78%, transparent);
 }
 
 me .ui-portfolio-crate-section--standalone {
@@ -103,6 +148,10 @@ me .ui-portfolio-crate-section--standalone .ui-code-block {
     max-inline-size: none;
   }
 
+  me [data-open-source-hero-aside] {
+    display: none;
+  }
+
   me .ui-portfolio-crate-section--standalone {
     gap: var(--space-2);
   }
@@ -124,6 +173,29 @@ pub struct OpenSource {
 impl Render for OpenSource {
     fn render(&self) -> maud::Markup {
         let content = partials::components::portfolio::content::open_source_index_content();
+        let hero_aside = maud::html! {
+            div data-open-source-hero-aside {
+                div data-open-source-hero-intro {
+                    p class="ui-portfolio-hero-aside-kicker" { "Library proof" }
+                    h2 { "Three crates. One invariants-first through-line." }
+                    p class="ui-portfolio-card-summary" {
+                        "Typestate, nested enum modeling, and namespace discipline packaged as reusable Rust APIs."
+                    }
+                }
+                ul data-open-source-hero-list {
+                    @for card in content.crate_section.cards.iter().take(3) {
+                        li data-open-source-hero-item {
+                            strong { (&card.name) }
+                            p { (&card.summary) }
+                        }
+                    }
+                }
+                p data-open-source-hero-footnote {
+                    strong { "What to inspect" }
+                    " Read the API, then check the code and docs against the same published surface."
+                }
+            }
+        };
 
         let body = partials::components::portfolio::Page {
             content: maud::html! {
@@ -131,7 +203,7 @@ impl Render for OpenSource {
                     (css())
                     (partials::components::portfolio::PortfolioHero {
                         content: &content.hero,
-                        aside: None,
+                        aside: Some(hero_aside),
                     })
                     (partials::components::portfolio::CrateSection {
                         content: &content.crate_section,
@@ -161,8 +233,12 @@ mod tests {
         let hero_title = content.hero.title.to_string();
 
         assert!(markup.contains(hero_title.as_str()));
+        assert!(markup.contains("Library proof"));
+        assert!(markup.contains("Three crates. One invariants-first through-line."));
+        assert!(markup.contains("What to inspect"));
         assert!(markup.contains("data-portfolio-crate-switcher"));
         assert!(markup.contains("data-code-block"));
+        assert!(markup.contains("ui-portfolio-hero-aside"));
         assert!(!markup.contains("Open-source crate deep dives"));
         assert!(!markup.contains("Choose a crate"));
     }
