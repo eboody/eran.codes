@@ -1,7 +1,6 @@
 use bon::Builder;
 use maud::Render;
 
-use crate::types::Text;
 use crate::views::{page, partials};
 
 use super::portfolio_shell;
@@ -17,20 +16,7 @@ impl Render for Home {
         let content = partials::components::portfolio::content::portfolio_home_content();
         let hero_aside = content.current_proof_section.cards.first().map(|card| {
             maud::html! {
-                p class="ui-portfolio-hero-aside-kicker" { (&card.category) }
-                h2 { (&card.title) }
-                @if let Some(outcome) = &card.outcome {
-                    p class="ui-portfolio-hero-aside-outcome" {
-                        span class="ui-portfolio-hero-aside-outcome-label" { "Outcome" }
-                        span class="ui-portfolio-hero-aside-outcome-text" { (outcome) }
-                    }
-                }
-                p class="ui-portfolio-card-summary" { (&card.summary) }
-                (partials::button::Button::builder()
-                    .label(card.cta_label.clone())
-                    .variant(partials::button::Variant::Secondary)
-                    .role(partials::button::Role::link(Text::from(card.slug.public_href())))
-                    .build())
+                (partials::components::portfolio::CurrentProofHeroAside { card })
             }
         });
 
