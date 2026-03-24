@@ -5,8 +5,7 @@ pub(super) mod misc;
 mod support;
 
 pub use layout::{
-    EngineeringQuality, GuestChatFallback, HomeHero, OperationalRequestFilter,
-    OperationsSurface, RequestBurstDemo, SensitiveProofPanel, TabSetShowcase,
+    LabFlow, OperationalRequestFilter,
 };
 pub use log::{RequestTraceLog, TransportLogSet};
 pub use misc::Ping;

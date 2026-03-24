@@ -1,7 +1,5 @@
 use bon::Builder;
 
-use crate::paths::Route;
-use crate::types::Text;
 use crate::views::{page, partials};
 
 #[derive(Builder)]
@@ -14,25 +12,10 @@ pub struct Lab {
 impl maud::Render for Lab {
     fn render(&self) -> maud::Markup {
         let content = maud::html! {
-            div class="u-page-stack u-page-stack--spacious" data-lab-page data-page-section {
-                (partials::HomeHero::builder().maybe_user(self.user.clone()).build())
-
-                (partials::TabSetShowcase::builder().build())
-
-                (partials::RequestBurstDemo::builder()
-                    .endpoint(Text::from(Route::PartialRequestBurstProbe.as_str()))
-                    .build())
-
-                (partials::SensitiveProofPanel::builder().build())
-
-                @if let Some(chat_demo) = &self.chat_demo { (chat_demo.render()) } @else {
-                    (partials::GuestChatFallback::builder().build())
-                    }
-
-                (partials::OperationsSurface::builder().build())
-
-                (partials::EngineeringQuality::builder().build())
-            }
+            (partials::LabFlow::builder()
+                .maybe_user(self.user.clone())
+                .maybe_chat_demo(self.chat_demo.clone())
+                .build())
         };
         let content_model = partials::components::portfolio::content::lab_page_content();
         let content = page::Frame::builder().content(content).build().render();
