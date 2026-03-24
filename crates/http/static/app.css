@@ -639,6 +639,19 @@ input[type="password"] {
   }
 }
 
+@media (max-width: 26rem) {
+  .u-support-results,
+  .u-support-card-grid {
+    gap: var(--space-2);
+  }
+
+  .u-page-stack--spacious {
+    --page-stack-margin-top: var(--space-3);
+    --page-stack-gap: clamp(1.9rem, 1.45rem + 1.5vw, 2.35rem);
+    --page-stack-padding-extra: var(--space-5);
+  }
+}
+
 @media (prefers-reduced-motion: reduce) {
   :root {
     --motion-lift-subtle: none;
