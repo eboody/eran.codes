@@ -1,7 +1,7 @@
 use maud::Render;
 
 use crate::types::Text;
-use crate::views::partials::components::CodeBlock;
+use crate::views::partials::components::{CodeBlock, CodeLineMode};
 use crate::views::partials::components::tab_set;
 
 #[derive(Clone, Debug)]
@@ -48,6 +48,7 @@ impl Render for Preview {
                                 (CodeBlock::builder()
                                     .code(example.code.clone())
                                     .maybe_label(example.label.clone())
+                                    .line_mode(CodeLineMode::Wrap)
                                     .with_class(Text::from("tab-set__preview-code"))
                                     .build())
                             }

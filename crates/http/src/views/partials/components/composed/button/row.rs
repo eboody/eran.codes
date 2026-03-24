@@ -20,6 +20,22 @@ impl RowDensity {
 }
 
 #[derive(Clone, Copy, Debug, Default)]
+pub enum RowFrame {
+    #[default]
+    Bleed,
+    Contained,
+}
+
+impl RowFrame {
+    const fn as_attr(self) -> &'static str {
+        match self {
+            Self::Bleed => "bleed",
+            Self::Contained => "contained",
+        }
+    }
+}
+
+#[derive(Clone, Copy, Debug, Default)]
 pub enum RowNarrowLayout {
     #[default]
     AutoGrid,
@@ -41,6 +57,8 @@ pub struct Row {
     #[builder(default)]
     pub density: RowDensity,
     #[builder(default)]
+    pub frame: RowFrame,
+    #[builder(default)]
     pub narrow_layout: RowNarrowLayout,
 }
 
@@ -51,6 +69,7 @@ impl Render for Row {
                 class="ui-button-row"
                 data-button-row
                 data-button-row-density=(self.density.as_attr())
+                data-button-row-frame=(self.frame.as_attr())
                 data-button-row-narrow=(self.narrow_layout.as_attr())
             {
                 @for item in &self.items {
@@ -71,6 +90,7 @@ mod tests {
     fn renders_density_and_narrow_layout_contract() {
         let markup = Row::builder()
             .density(RowDensity::Compact)
+            .frame(RowFrame::Contained)
             .narrow_layout(RowNarrowLayout::Stack)
             .items(vec![Button::builder().label(Text::from("Inspect")).build()])
             .build()
@@ -79,6 +99,7 @@ mod tests {
 
         assert!(markup.contains("data-button-row"));
         assert!(markup.contains("data-button-row-density=\"compact\""));
+        assert!(markup.contains("data-button-row-frame=\"contained\""));
         assert!(markup.contains("data-button-row-narrow=\"stack\""));
     }
 }

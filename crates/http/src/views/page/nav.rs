@@ -101,28 +101,27 @@ fn auth(
 ) -> partials::components::NavAuth {
     match user {
         Some(user) => partials::components::NavAuth::SignedIn(signed_in(user)),
-        None => partials::components::NavAuth::Guest(guest_links(current_route)),
+        None => partials::components::NavAuth::Guest(guest_auth(current_route)),
     }
 }
 
-fn guest_links(current_route: Option<Route>) -> partials::components::NavLinkList {
-    partials::components::NavLinkList::builder()
-        .role(partials::components::NavLinkListRole::Auth)
-        .children(vec![
-            partials::components::NavLink::builder()
-                .label(Text::from("Sign in"))
-                .maybe_compact_label(Some(Text::from("Sign in")))
-                .href(Text::from(Route::Login.as_str()))
-                .active(current_route == Some(Route::Login))
-                .build(),
-            partials::components::NavLink::builder()
-                .label(Text::from("Create account"))
-                .maybe_compact_label(Some(Text::from("Register")))
-                .href(Text::from(Route::Register.as_str()))
-                .active(current_route == Some(Route::Register))
-                .cta(true)
-                .build(),
-        ])
+fn guest_auth(current_route: Option<Route>) -> partials::components::NavGuestAuth {
+    let sign_in_variant = if current_route == Some(Route::Login) {
+        partials::button::Variant::Primary
+    } else {
+        partials::button::Variant::Secondary
+    };
+    let create_account_variant = if current_route == Some(Route::Login) {
+        partials::button::Variant::Secondary
+    } else {
+        partials::button::Variant::Primary
+    };
+
+    partials::components::NavGuestAuth::builder()
+        .sign_in_href(Text::from(Route::Login.as_str()))
+        .create_account_href(Text::from(Route::Register.as_str()))
+        .sign_in_variant(sign_in_variant)
+        .create_account_variant(create_account_variant)
         .build()
 }
 
@@ -139,5 +138,23 @@ fn compact_label_for_href(href: &str) -> Option<Text> {
         }
         "mailto:eboodnero@gmail.com" => Some(Text::from("Contact")),
         _ => None,
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use maud::Render;
+
+    use super::*;
+
+    #[test]
+    fn login_route_promotes_sign_in_guest_action() {
+        let markup = guest_auth(Some(Route::Login)).render().into_string();
+
+        assert!(markup.contains(">Sign in<"));
+        assert!(markup.contains("class=\"button\""));
+        assert!(markup.contains("class=\"button secondary\""));
+        assert!(markup.contains("href=\"/login\""));
+        assert!(markup.contains("href=\"/register\""));
     }
 }

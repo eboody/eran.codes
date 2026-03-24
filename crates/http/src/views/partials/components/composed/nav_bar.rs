@@ -229,6 +229,17 @@ me [data-nav-auth-action] {
   --_button-font-size: var(--control-font-size-compact);
 }
 
+me [data-nav-guest-auth] {
+  min-width: 0;
+  display: grid;
+  justify-items: end;
+}
+
+me [data-nav-guest-auth] .ui-button-row {
+  --button-row-gap: 0.35rem;
+  --button-row-item-min-inline-size: 7.4rem;
+}
+
 me [data-nav-list='auth'] [data-nav-link-cta='true'] {
   color: var(--ui-text-on-accent);
   border-color: color-mix(in srgb, var(--ui-accent-primary) 56%, var(--border-default));
@@ -328,6 +339,15 @@ me [data-nav-list='auth'] [data-nav-link-cta='true'] {
     gap: 0.25rem;
   }
 
+  me [data-nav-guest-auth] {
+    width: 100%;
+  }
+
+  me [data-nav-guest-auth] .ui-button-row {
+    width: 100%;
+    --button-row-grid-template: repeat(2, minmax(0, 1fr));
+  }
+
   me [data-nav-list='meta'] {
     display: none;
   }
@@ -351,6 +371,10 @@ me [data-nav-list='auth'] [data-nav-link-cta='true'] {
     flex-basis: 100%;
     max-inline-size: none;
     text-align: right;
+  }
+
+  me [data-nav-guest-auth] .ui-button-row {
+    --button-row-gap: var(--space-1);
   }
 }
 
@@ -392,12 +416,22 @@ me [data-nav-list='auth'] [data-nav-link-cta='true'] {
     text-align: left;
   }
 
+  me [data-nav-guest-auth] .ui-button-row {
+    --button-row-grid-template: repeat(2, minmax(0, 1fr));
+  }
+
   me [data-nav-list='auth'] [data-nav-link] {
     padding-inline: calc(var(--control-padding-inline-compact) - 0.1rem);
   }
 
   me [data-nav-auth-action] {
     --_button-padding-inline: calc(var(--control-padding-inline-compact) - 0.1rem);
+  }
+}
+
+@media (max-width: 23rem) {
+  me [data-nav-guest-auth] .ui-button-row {
+    --button-row-grid-template: 1fr;
   }
 }
 "#
@@ -469,8 +503,6 @@ pub enum NavLinkListRole {
     Primary,
     #[strum(serialize = "meta")]
     Meta,
-    #[strum(serialize = "auth")]
-    Auth,
 }
 
 #[derive(Clone, Debug, Builder)]
@@ -558,9 +590,48 @@ impl Render for NavSignedIn {
     }
 }
 
+#[derive(Clone, Debug, Builder)]
+pub struct NavGuestAuth {
+    pub sign_in_href: Text,
+    pub create_account_href: Text,
+    #[builder(default = button::Variant::Secondary)]
+    pub sign_in_variant: button::Variant,
+    #[builder(default)]
+    pub create_account_variant: button::Variant,
+}
+
+impl Render for NavGuestAuth {
+    fn render(&self) -> maud::Markup {
+        let actions = button::Row::builder()
+            .density(button::RowDensity::Compact)
+            .frame(button::RowFrame::Contained)
+            .items(vec![
+                button::Button::builder()
+                    .label(Text::from("Sign in"))
+                    .variant(self.sign_in_variant.clone())
+                    .role(button::Role::link(self.sign_in_href.clone()))
+                    .data_attrs(vec![button::DataAttr::flag("data-nav-auth-action")])
+                    .build(),
+                button::Button::builder()
+                    .label(Text::from("Create account"))
+                    .variant(self.create_account_variant.clone())
+                    .role(button::Role::link(self.create_account_href.clone()))
+                    .data_attrs(vec![button::DataAttr::flag("data-nav-auth-action")])
+                    .build(),
+            ])
+            .build();
+
+        maud::html! {
+            div data-nav-guest-auth {
+                (actions)
+            }
+        }
+    }
+}
+
 #[derive(Clone, Debug)]
 pub enum NavAuth {
-    Guest(NavLinkList),
+    Guest(NavGuestAuth),
     SignedIn(NavSignedIn),
 }
 
@@ -648,12 +719,9 @@ mod tests {
                     .build(),
             )
             .auth(NavAuth::Guest(
-                NavLinkList::builder()
-                    .role(NavLinkListRole::Auth)
-                    .children(vec![NavLink::builder()
-                        .label(Text::from("Sign in"))
-                        .href(Text::from("/login"))
-                        .build()])
+                NavGuestAuth::builder()
+                    .sign_in_href(Text::from("/login"))
+                    .create_account_href(Text::from("/register"))
                     .build(),
             ))
             .build()
@@ -667,6 +735,7 @@ mod tests {
         assert!(markup.contains("grid-template-columns: repeat(2, minmax(0, 1fr));"));
         assert!(markup.contains("data-nav-list=\"meta\""));
         assert!(markup.contains("data-nav-link-label=\"compact\""));
+        assert!(markup.contains("data-nav-guest-auth"));
     }
 
     #[test]
@@ -689,26 +758,18 @@ mod tests {
                     .build(),
             )
             .auth(NavAuth::Guest(
-                NavLinkList::builder()
-                    .role(NavLinkListRole::Auth)
-                    .children(vec![
-                        NavLink::builder()
-                            .label(Text::from("Sign in"))
-                            .href(Text::from("/login"))
-                            .build(),
-                        NavLink::builder()
-                            .label(Text::from("Create account"))
-                            .href(Text::from("/register"))
-                            .cta(true)
-                            .build(),
-                    ])
+                NavGuestAuth::builder()
+                    .sign_in_href(Text::from("/login"))
+                    .create_account_href(Text::from("/register"))
                     .build(),
             ))
             .build()
             .render()
             .into_string();
 
-        assert!(markup.contains("data-nav-link-cta=\"true\""));
+        assert!(markup.contains("data-nav-guest-auth"));
+        assert!(markup.contains("class=\"button secondary\""));
+        assert!(markup.contains("href=\"/register\""));
         assert!(markup.contains(">Create account<"));
     }
 }

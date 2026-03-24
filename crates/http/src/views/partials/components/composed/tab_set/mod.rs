@@ -401,10 +401,15 @@ me .tab-set__subtitle {
   me .tab-set__tabs {
     gap: var(--space-1);
     padding-block: var(--interactive-bleed) calc(var(--space-1) + var(--interactive-bleed));
+    flex-wrap: wrap;
+    overflow-x: visible;
+    scroll-snap-type: none;
   }
 
   me .tab-set__tab {
     font-size: var(--text-size-meta-xs);
+    min-width: 0;
+    flex: 1 1 10rem;
   }
 
   me .tab-set__panel {
@@ -415,11 +420,16 @@ me .tab-set__subtitle {
   me.ui-portfolio-crate-gallery--flat .tab-set__tabs {
     gap: var(--space-1);
     padding-block-end: calc(var(--space-1) + var(--interactive-bleed));
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(min(100%, 7rem), 1fr));
+    align-items: stretch;
   }
 
   me.ui-portfolio-crate-gallery--flat .tab-set__tab {
     padding-block: var(--space-1);
     padding-inline: calc(var(--space-1) * 0.75);
+    justify-content: center;
+    text-align: center;
   }
 
   me.ui-portfolio-crate-gallery--flat .tab-set__panel {
@@ -476,6 +486,16 @@ me .tab-set__subtitle {
 
   me .tab-set__badge {
     font-size: var(--text-size-label-sm);
+  }
+}
+
+@media (max-width: 23rem) {
+  me.ui-portfolio-crate-gallery--flat .tab-set__tabs {
+    grid-template-columns: 1fr;
+  }
+
+  me .tab-set__tab {
+    flex-basis: 100%;
   }
 }
 

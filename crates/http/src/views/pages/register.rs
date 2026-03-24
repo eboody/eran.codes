@@ -67,8 +67,24 @@ impl Render for Register<'_> {
         page::Layout::builder()
             .title("Create account")
             .content(content)
+            .current_route(Route::Register)
             .maybe_with_user(self.user.clone())
             .build()
             .render()
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use maud::Render;
+
+    use super::*;
+
+    #[test]
+    fn register_page_marks_create_account_nav_action_as_primary() {
+        let markup = Register::builder().build().render().into_string();
+
+        assert!(markup.contains("<a class=\"button secondary\" data-button href=\"/login\" data-nav-auth-action>Sign in</a>"));
+        assert!(markup.contains("<a class=\"button\" data-button href=\"/register\" data-nav-auth-action>Create account</a>"));
     }
 }

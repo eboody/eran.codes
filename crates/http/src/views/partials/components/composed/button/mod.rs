@@ -11,6 +11,7 @@ const STYLES: &str = r#"
   --_button-padding-inline: var(--control-padding-inline);
   --_button-font-size: var(--control-font-size);
   display: inline-flex;
+  box-sizing: border-box;
   align-items: center;
   justify-content: center;
   gap: var(--control-gap);
@@ -19,6 +20,7 @@ const STYLES: &str = r#"
   padding-inline: var(--_button-padding-inline);
   border: var(--control-border-width) solid var(--control-border-color-default);
   border-radius: var(--control-radius);
+  max-inline-size: 100%;
   font: var(--control-font);
   font-family: var(--font-ui);
   font-size: var(--_button-font-size);
@@ -96,5 +98,5 @@ pub(crate) fn head_styles() -> maud::Markup {
 pub use attr::DataAttr;
 pub use component::Button;
 pub use role::Role;
-pub use row::{Row, RowDensity, RowNarrowLayout};
+pub use row::{Row, RowDensity, RowFrame, RowNarrowLayout};
 pub use variant::Variant;

@@ -16,7 +16,8 @@ pub(crate) fn head_styles() -> maud::Markup {
 pub use auth_shell::{AuthShell, AuthShellVariant};
 pub use demo_result_placeholder::DemoResultPlaceholder;
 pub use nav_bar::{
-    NavAuth, NavBar, NavBrand, NavLink, NavLinkList, NavLinkListRole, NavSignedIn,
+    NavAuth, NavBar, NavBrand, NavGuestAuth, NavLink, NavLinkList, NavLinkListRole,
+    NavSignedIn,
 };
 pub(crate) use result_card::ResultCard;
 pub use section_header::{

@@ -66,6 +66,18 @@ me {
   overflow: clip;
 }
 
+me[data-code-block-line-mode='wrap'] pre {
+  overflow: clip;
+  scrollbar-gutter: auto;
+}
+
+me[data-code-block-line-mode='wrap'] code {
+  min-width: 0;
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+  word-break: break-word;
+}
+
 me [data-code-block-header] {
   display: flex;
   flex-wrap: wrap;
@@ -164,6 +176,15 @@ pub enum CodeLanguage {
     Rust,
 }
 
+#[derive(Clone, Copy, Debug, Default, PartialEq, Eq, strum_macros::AsRefStr)]
+pub enum CodeLineMode {
+    #[default]
+    #[strum(serialize = "preserve")]
+    Preserve,
+    #[strum(serialize = "wrap")]
+    Wrap,
+}
+
 #[derive(Clone, Debug, Builder)]
 // ci: style-system-component
 pub struct CodeBlock {
@@ -171,6 +192,8 @@ pub struct CodeBlock {
     #[builder(default)]
     pub language: CodeLanguage,
     pub label: Option<Text>,
+    #[builder(default)]
+    pub line_mode: CodeLineMode,
     #[builder(setters(name = with_class))]
     pub class: Option<Text>,
 }
@@ -182,7 +205,11 @@ impl Render for CodeBlock {
         let class_attr = self.class_attr();
 
         maud::html! {
-            div class=(class_attr) data-code-block {
+            div
+                class=(class_attr)
+                data-code-block
+                data-code-block-line-mode=(self.line_mode.as_ref())
+            {
                 (css())
                 div data-code-block-header {
                     (Pill::badge(self.language.as_ref(), BadgeKind::Secondary))
@@ -450,6 +477,7 @@ mod tests {
             .into_string();
 
         assert!(markup.contains("data-code-block"));
+        assert!(markup.contains("data-code-block-line-mode=\"preserve\""));
         assert!(markup.contains("Rust"));
         assert!(markup.contains("Transition API"));
     }
@@ -465,5 +493,17 @@ mod tests {
         assert!(markup.contains("ui-code-block__token--keyword\">pub</span>"));
         assert!(markup.contains("ui-code-block__token--macro\">println!</span>"));
         assert!(markup.contains("ui-code-block__token--comment\">// comment</span>"));
+    }
+
+    #[test]
+    fn renders_wrap_line_mode_contract() {
+        let markup = CodeBlock::builder()
+            .code(Text::from("struct VeryLongTypeName<Something> {}"))
+            .line_mode(CodeLineMode::Wrap)
+            .build()
+            .render()
+            .into_string();
+
+        assert!(markup.contains("data-code-block-line-mode=\"wrap\""));
     }
 }

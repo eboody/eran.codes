@@ -189,6 +189,12 @@
   --control-icon-size: 1em;
 }
 
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
 @view-transition {
   navigation: auto;
 }
@@ -433,7 +439,9 @@ input[type="password"] {
   --surface-card-shadow: var(--shadow-panel);
 
   display: grid;
+  box-sizing: border-box;
   gap: var(--surface-card-gap);
+  max-inline-size: 100%;
   margin-top: var(--surface-card-margin-top);
   padding: var(--surface-card-padding);
   border: 1px solid var(--surface-card-border);
@@ -528,6 +536,7 @@ input[type="password"] {
   display: flex;
   flex-wrap: wrap;
   gap: var(--button-row-gap);
+  min-width: 0;
   position: relative;
   isolation: isolate;
   padding: var(--button-row-padding);
@@ -545,12 +554,21 @@ input[type="password"] {
   --button-row-item-min-inline-size: 9rem;
 }
 
+.ui-button-row[data-button-row-frame='contained'] {
+  --button-row-padding: 0;
+  --button-row-margin-inline: 0;
+  --button-row-margin-block-start: 0;
+  --button-row-margin-block-end: 0;
+}
+
 .u-inset-card {
   --inset-card-border: var(--border-default);
   --inset-card-bg: var(--surface-fill-field);
   --inset-card-padding: 0;
   --inset-card-shadow: inset 0 1px 0 var(--surface-edge-soft);
 
+  box-sizing: border-box;
+  max-inline-size: 100%;
   padding: var(--inset-card-padding);
   border: 1px solid var(--inset-card-border);
   border-radius: var(--ui-radius-md-inset);
@@ -675,6 +693,10 @@ input[type="password"] {
   }
 
   .ui-button-row {
+    --button-row-padding: 0;
+    --button-row-margin-inline: 0;
+    --button-row-margin-block-start: var(--space-2);
+    --button-row-margin-block-end: 0;
     display: grid;
     grid-template-columns: var(--button-row-grid-template);
     align-items: stretch;

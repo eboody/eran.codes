@@ -63,8 +63,24 @@ impl Render for Login<'_> {
         page::Layout::builder()
             .title("Sign in")
             .content(content)
+            .current_route(Route::Login)
             .maybe_with_user(self.user.clone())
             .build()
             .render()
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use maud::Render;
+
+    use super::*;
+
+    #[test]
+    fn login_page_marks_sign_in_nav_action_as_primary() {
+        let markup = Login::builder().build().render().into_string();
+
+        assert!(markup.contains("<a class=\"button\" data-button href=\"/login\" data-nav-auth-action>Sign in</a>"));
+        assert!(markup.contains("<a class=\"button secondary\" data-button href=\"/register\" data-nav-auth-action>Create account</a>"));
     }
 }

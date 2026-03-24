@@ -6,7 +6,7 @@ mod local_tab_root;
 mod pill;
 mod tab;
 
-pub use code_block::CodeBlock;
+pub use code_block::{CodeBlock, CodeLineMode};
 pub(crate) use icon::Icon;
 pub use key_value_list::{KeyValueItem, KeyValueList, KeyValueListLayout, KeyValueValueAttr};
 pub(crate) use local_tab_panel::LocalTabPanel;
