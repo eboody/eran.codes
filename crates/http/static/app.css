@@ -1,8 +1,10 @@
 :root {
+  /* Type families */
   --font-display: "Newsreader", "Iowan Old Style", "Palatino Linotype", serif;
   --font-ui: "Space Grotesk", "Avenir Next", "Segoe UI", sans-serif;
   --font-mono: "IBM Plex Mono", "SF Mono", ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
 
+  /* Core surfaces */
   --surface-page: hsl(36 30% 95%);
   --surface-page-alt: hsl(212 30% 94%);
   --surface-shell: hsl(34 38% 98% / 0.86);
@@ -37,6 +39,7 @@
   --text-subtle: hsl(220 12% 55%);
   --text-on-accent: hsl(210 20% 98%);
 
+  /* Type scale */
   --text-size-label-2xs: 0.7rem;
   --text-size-label-xs: 0.72rem;
   --text-size-label-sm: 0.74rem;
@@ -60,6 +63,7 @@
   --text-size-display-md: clamp(2.15rem, 1.55rem + 3.4vw, 3rem);
   --text-size-display-lg: clamp(2.7rem, 1.9rem + 3vw, 4.2rem);
 
+  /* Line-height rhythm */
   --text-line-flat: 1;
   --text-line-tightest: 0.92;
   --text-line-tight: 0.95;
@@ -74,6 +78,7 @@
   --text-line-body-loose: 1.5;
   --text-line-code: 1.65;
 
+  /* Letter spacing */
   --text-track-display: -0.03em;
   --text-track-tight: -0.02em;
   --text-track-tight-sm: -0.015em;
@@ -87,6 +92,7 @@
   --text-track-fixed-xs: 0.01rem;
   --text-track-fixed-sm: 0.05rem;
 
+  /* Border and accent primitives */
   --border-subtle: hsl(214 20% 78% / 0.42);
   --border-default: hsl(214 18% 70% / 0.58);
   --border-strong: hsl(215 18% 54% / 0.88);
@@ -99,6 +105,7 @@
   --status-warn: hsl(37 86% 44%);
   --status-danger: hsl(6 74% 47%);
 
+  /* Space, radius, motion, and layout */
   --space-section: clamp(2.8rem, 1.9rem + 2.4vw, 4.75rem);
   --space-card: clamp(1.1rem, 0.95rem + 0.65vw, 1.75rem);
   --space-1: var(--size-1);
@@ -131,6 +138,7 @@
   --nav-scroll-offset: 7.25rem;
   --interactive-bleed: 0.3rem;
 
+  /* Derived shared UI aliases */
   --ui-surface-card: var(--surface-panel);
   --ui-text: var(--text-body);
   --ui-surface-danger: color-mix(in srgb, var(--status-danger) 8%, var(--surface-panel));
@@ -148,6 +156,7 @@
   --portfolio-surface: var(--surface-shell);
   --portfolio-surface-border: var(--border-default);
 
+  /* Derived component-package aliases */
   --ui-border-soft: var(--border-subtle);
   --ui-surface-soft: color-mix(in srgb, var(--surface-panel) 82%, var(--surface-field));
   --ui-surface-soft-alt: color-mix(in srgb, var(--surface-field) 74%, var(--surface-inset));
@@ -158,7 +167,7 @@
   --ui-font-mono: var(--font-mono);
   --ui-inset-card-padding-cozy: 1rem 1.15rem;
 
-  /* Shared control standards */
+  /* Shared control package */
   --control-inline-display: inline-flex;
   --control-inline-align-items: center;
   --control-margin: 0;
@@ -219,6 +228,7 @@ html {
 
 @media (prefers-color-scheme: dark) {
   :root {
+    /* Core surfaces */
     --surface-page: hsl(228 12% 5%);
     --surface-page-alt: hsl(228 11% 4%);
     --surface-shell: hsl(228 11% 9% / 0.96);
@@ -249,6 +259,7 @@ html {
     --surface-edge-default: color-mix(in srgb, white 10%, transparent);
     --surface-edge-strong: color-mix(in srgb, white 12%, transparent);
 
+    /* Text and emphasis */
     --text-strong: hsl(38 32% 95%);
     --text-body: hsl(218 24% 91%);
     --text-muted: hsl(218 16% 79%);
@@ -259,6 +270,7 @@ html {
     --border-default: hsl(214 18% 62% / 0.5);
     --border-strong: hsl(203 42% 78% / 0.76);
 
+    /* Accent and status hues */
     --accent-signal: hsl(212 88% 68%);
     --accent-signal-soft: color-mix(in srgb, var(--accent-signal) 16%, transparent);
     --accent-warm: hsl(6 78% 66%);
@@ -275,6 +287,7 @@ html {
       inset 0 1px 0 var(--surface-edge-soft),
       0 14px 22px color-mix(in srgb, black 24%, transparent);
 
+    /* Derived shared UI aliases */
     --ui-surface-card: var(--surface-panel);
     --ui-text: var(--text-body);
     --ui-surface-danger: color-mix(in srgb, var(--status-danger) 10%, var(--surface-panel));
@@ -292,6 +305,7 @@ html {
     --portfolio-surface: var(--surface-shell);
     --portfolio-surface-border: var(--border-default);
 
+    /* Derived component-package aliases */
     --ui-border-soft: var(--border-subtle);
     --ui-surface-soft: color-mix(in srgb, var(--surface-panel) 86%, var(--surface-field));
     --ui-surface-soft-alt: color-mix(in srgb, var(--surface-field) 76%, var(--surface-inset));
@@ -321,6 +335,7 @@ html {
   }
 }
 
+/* Document primitives */
 body {
   margin: 0;
   font-family: var(--font-ui);
@@ -407,7 +422,7 @@ input[type="password"] {
   color: var(--text-strong);
 }
 
-/* Global utilities */
+/* Shared surface packages */
 .u-surface-card {
   display: grid;
   gap: var(--space-4);

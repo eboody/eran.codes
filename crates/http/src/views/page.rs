@@ -1,12 +1,11 @@
+mod assets;
+mod nav;
+
 use bon::Builder;
 use maud::{Markup, Render};
 
 use crate::paths::Route;
 use crate::types::{SseTabId, Text};
-use crate::views::partials;
-
-const APP_CSS_ASSET_URL: &str = "/static/app.css?v=20260320-tabs";
-const LOCAL_TABS_ASSET_URL: &str = "/static/local-tabs.js?v=20260320-tabs";
 
 crate::views::scoped::inline_css!(
     r#"
@@ -41,12 +40,7 @@ pub struct UserNav {
 
 impl Render for UserNav {
     fn render(&self) -> Markup {
-        partials::components::NavSignedIn::builder()
-            .username(self.username.clone())
-            .account_href(Text::from(Route::Protected.as_str()))
-            .logout_action(Text::from(Route::Logout.as_str()))
-            .build()
-            .render()
+        nav::signed_in(self).render()
     }
 }
 
@@ -96,63 +90,8 @@ pub struct Layout<'a> {
 
 impl Render for Layout<'_> {
     fn render(&self) -> Markup {
-        let sse_tab_id = self
-            .sse_tab_id
-            .clone()
-            .unwrap_or_else(|| crate::types::SseTabId::new(uuid::Uuid::new_v4().to_string()));
-        let global_signals = match self.sse_mode {
-            SseMode::Enabled => format!(
-                "{{sseTabId: '{sse_tab_id}', sseConnected: false, transportErrorSource: '', transportErrorKind: '', transportErrorTitle: '', transportErrorMessage: '', transportErrorStatus: 0, transportRetrying: false}}"
-            ),
-            SseMode::Disabled => {
-                "{transportErrorSource: '', transportErrorKind: '', transportErrorTitle: '', transportErrorMessage: '', transportErrorStatus: 0, transportRetrying: false}".to_string()
-            }
-        };
-        let brand = partials::components::NavBrand::builder()
-            .label(Text::from("eran.codes"))
-            .href(Text::from(Route::Home.as_str()))
-            .light_logo_src(Text::from("/static/eran.codes-light.svg"))
-            .dark_logo_src(Text::from("/static/eran.codes-dark.svg"))
-            .build();
-        let current_route = self.current_route;
-        let portfolio_links = partials::components::NavLinkList::builder()
-            .role(partials::components::NavLinkListRole::Primary)
-            .children(portfolio_nav_children(current_route))
-            .build();
-        let auth = match self.nav_mode {
-            NavMode::Portfolio => partials::components::NavAuth::Hidden,
-            NavMode::App => match &self.user {
-                Some(user) => partials::components::NavAuth::SignedIn(
-                    partials::components::NavSignedIn::builder()
-                        .username(user.username.clone())
-                        .account_href(Text::from(Route::Protected.as_str()))
-                        .logout_action(Text::from(Route::Logout.as_str()))
-                        .build(),
-                ),
-                None => partials::components::NavAuth::Guest(
-                    partials::components::NavLinkList::builder()
-                        .role(partials::components::NavLinkListRole::Auth)
-                        .children(vec![
-                            partials::components::NavLink::builder()
-                                .label(Text::from("Sign in"))
-                                .href(Text::from(Route::Login.as_str()))
-                                .active(current_route == Some(Route::Login))
-                                .build(),
-                            partials::components::NavLink::builder()
-                                .label(Text::from("Create account"))
-                                .href(Text::from(Route::Register.as_str()))
-                                .active(current_route == Some(Route::Register))
-                                .build(),
-                        ])
-                        .build(),
-                ),
-            },
-        };
-        let nav_bar = partials::components::NavBar::builder()
-            .brand(brand)
-            .links(portfolio_links)
-            .auth(auth)
-            .build();
+        let global_signals = global_signals(self.sse_mode, self.sse_tab_id.clone());
+        let nav_bar = nav::bar(self.nav_mode, self.current_route, self.user.as_ref());
         let body_content = maud::html! {
             (nav_bar)
             (crate::views::partials::Error)
@@ -161,43 +100,7 @@ impl Render for Layout<'_> {
         maud::html! {
             (maud::DOCTYPE)
             html {
-                head {
-                    meta charset="utf-8";
-                    meta name="viewport" content="width=device-width, initial-scale=1";
-                    title { (self.title) }
-                    link
-                        rel="icon"
-                        type="image/svg+xml"
-                        media="(prefers-color-scheme: light)"
-                        href="/static/eran.codes-light.svg";
-                    link
-                        rel="icon"
-                        type="image/svg+xml"
-                        media="(prefers-color-scheme: dark)"
-                        href="/static/eran.codes-dark.svg";
-                    link
-                        rel="icon"
-                        type="image/png"
-                        sizes="1024x1024"
-                        href="/static/eran.codes-favicon.png";
-                    link rel="apple-touch-icon" sizes="1024x1024" href="/static/eran.codes.png";
-                    link rel="preconnect" href="https://fonts.googleapis.com";
-                    link rel="preconnect" href="https://fonts.gstatic.com" crossorigin;
-                    link
-                        rel="stylesheet"
-                        href="https://fonts.googleapis.com/css2?family=Newsreader:opsz,wght@6..72,500;6..72,600;6..72,700&family=Space+Grotesk:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600&display=swap";
-                    link rel="stylesheet" href="/static/open-props.min.css";
-                    link rel="stylesheet" href=(APP_CSS_ASSET_URL);
-                    link
-                        rel="stylesheet"
-                        href="https://cdn.jsdelivr.net/gh/iconoir-icons/iconoir@main/css/iconoir.css";
-                    (crate::views::partials::components::head_styles())
-                    script src="/static/css-scope-inline.js" {}
-                    script type="module" src="/static/datastar.js" {}
-                    script src=(LOCAL_TABS_ASSET_URL) {}
-                    script type="module" src="/static/transport-errors.js" {}
-                    script src="/static/surreal.js" {}
-                }
+                (assets::head(self.title))
                 @match self.sse_mode {
                     SseMode::Enabled => {
                         body data-signals=(global_signals) data-init=(events_init_action()) { (body_content) }
@@ -211,40 +114,18 @@ impl Render for Layout<'_> {
     }
 }
 
-fn portfolio_nav_children(current_route: Option<Route>) -> Vec<partials::components::NavLink> {
-    partials::components::portfolio::content::portfolio_nav_links()
-        .iter()
-        .map(|link| {
-            let href = link.href.to_string();
-            let active = !link.kind.is_external() && portfolio_link_is_active(current_route, &href);
-
-            partials::components::NavLink::builder()
-                .label(link.label.clone())
-                .href(link.href.clone())
-                .external(link.kind.is_external())
-                .active(active)
-                .build()
-        })
-        .collect()
-}
-
-fn portfolio_link_is_active(current_route: Option<Route>, href: &str) -> bool {
-    let Some(current_route) = current_route else {
-        return false;
-    };
-
-    match href {
-        path if path == Route::Work.as_str() => matches!(
-            current_route,
-            Route::Work
-                | Route::WorkChatRealtime
-                | Route::WorkCommandSse
-                | Route::WorkOperationalVisibility
-        ),
-        path if path == Route::WorkSensitiveSync.as_str() => {
-            current_route == Route::WorkSensitiveSync
+fn global_signals(sse_mode: SseMode, sse_tab_id: Option<SseTabId>) -> String {
+    match sse_mode {
+        SseMode::Enabled => {
+            let sse_tab_id = sse_tab_id
+                .unwrap_or_else(|| crate::types::SseTabId::new(uuid::Uuid::new_v4().to_string()));
+            format!(
+                "{{sseTabId: '{sse_tab_id}', sseConnected: false, transportErrorSource: '', transportErrorKind: '', transportErrorTitle: '', transportErrorMessage: '', transportErrorStatus: 0, transportRetrying: false}}"
+            )
         }
-        path => current_route.as_str() == path,
+        SseMode::Disabled => {
+            "{transportErrorSource: '', transportErrorKind: '', transportErrorTitle: '', transportErrorMessage: '', transportErrorStatus: 0, transportRetrying: false}".to_string()
+        }
     }
 }
 
@@ -293,6 +174,7 @@ impl Render for Error {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use super::nav::portfolio_link_is_active;
 
     #[test]
     fn events_init_action_limits_signals_to_transport_contract() {
@@ -379,5 +261,16 @@ mod tests {
 
         assert!(markup.contains("data-page-frame"));
         assert!(markup.contains("data-page-section"));
+    }
+
+    #[test]
+    fn global_signals_only_includes_sse_tab_id_when_enabled() {
+        let signals = global_signals(
+            SseMode::Enabled,
+            Some(SseTabId::new("tab-123".to_string())),
+        );
+
+        assert!(signals.contains("sseTabId: 'tab-123'"));
+        assert!(signals.contains("transportErrorSource"));
     }
 }
