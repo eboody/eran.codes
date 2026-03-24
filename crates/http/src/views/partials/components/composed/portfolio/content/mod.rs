@@ -11,8 +11,8 @@ pub use fixture_loader::{
 pub use types::{
     ArchiveDetailsContent, ArchivedWorkCaseContent, ClosingContent, CmsActionLink,
     CrateCardContent, CrateSectionContent, CtaKind,
-    ExperienceRoleContent, ExperienceSectionContent, PortfolioHeroContent, SkillGroupContent,
-    SkillSectionContent, WorkCardContent, WorkCaseContent, WorkCaseSlug,
+    ExperienceRoleContent, ExperienceSectionContent, OpenSourceIndexContent, PortfolioHeroContent,
+    SkillGroupContent, SkillSectionContent, WorkCardContent, WorkCaseContent, WorkCaseSlug,
     WorkIndexContent, WorkSectionContent,
 };
 
