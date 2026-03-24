@@ -7,12 +7,27 @@ use crate::views::partials::components::portfolio::content::{
     ClosingContent, WorkCardContent, WorkIndexContent, WorkSectionContent,
 };
 
+#[derive(Clone, Copy, Debug, Default)]
+pub enum WorkSectionVariant {
+    #[default]
+    Standard,
+    CurrentProof,
+}
+
 pub struct WorkSection<'a> {
     pub content: &'a WorkSectionContent,
+    pub variant: WorkSectionVariant,
 }
 
 impl Render for WorkSection<'_> {
     fn render(&self) -> maud::Markup {
+        let extra_class = match self.variant {
+            WorkSectionVariant::Standard => "ui-portfolio-work-section",
+            WorkSectionVariant::CurrentProof => {
+                "ui-portfolio-work-section ui-portfolio-work-section--current-proof"
+            }
+        };
+
         maud::html! {
             (Surface::section(maud::html! {
                 (SectionCopy {
@@ -25,7 +40,7 @@ impl Render for WorkSection<'_> {
                         actions: &self.content.actions,
                     })
                 }
-            }))
+            }).extra_class(extra_class))
         }
     }
 }
@@ -44,14 +59,14 @@ impl Render for WorkIndexSection<'_> {
                     summary: &self.content.summary,
                 })
             }).extra_class("ui-portfolio-lead-surface"))
-            div data-work-current-proof {
-                (WorkSection {
-                    content: &self.content.current_proof_section,
-                })
-            }
+            (WorkSection {
+                content: &self.content.current_proof_section,
+                variant: WorkSectionVariant::CurrentProof,
+            })
             div data-work-supporting-proof {
                 (WorkSection {
                     content: &self.content.supporting_cases_section,
+                    variant: WorkSectionVariant::Standard,
                 })
             }
         }

@@ -526,6 +526,10 @@ me .ui-portfolio-supporting-teaser .ui-button-row {
   margin-top: calc(var(--space-1) - var(--interactive-bleed));
 }
 
+me .ui-portfolio-work-section--current-proof {
+  margin-top: 0;
+}
+
 me .ui-portfolio-case-grid {
   display: grid;
   gap: var(--space-3);
@@ -678,6 +682,14 @@ me .ui-portfolio-crate-section--standalone .ui-portfolio-inline-links {
     gap: var(--space-2);
   }
 
+  me .ui-portfolio-work-section--current-proof {
+    --surface-card-padding: var(--space-4);
+  }
+
+  me .ui-portfolio-work-section--current-proof .u-section-copy {
+    gap: var(--space-1);
+  }
+
   me .ui-portfolio-card-outcome {
     font-size: var(--text-size-body-sm);
     gap: calc(var(--space-1) * 0.75);
@@ -781,6 +793,25 @@ me .ui-portfolio-crate-section--standalone .ui-portfolio-inline-links {
 
 }
 
+@media (max-width: 26rem) {
+  me .ui-portfolio-work-section--current-proof {
+    --surface-card-padding: var(--space-3);
+  }
+
+  me .ui-portfolio-work-section--current-proof .ui-portfolio-work-card {
+    gap: var(--space-1);
+  }
+
+  me .ui-portfolio-work-section--current-proof .ui-portfolio-card-summary {
+    font-size: var(--text-size-body-md);
+    line-height: 1.5;
+  }
+
+  me .ui-portfolio-work-section--current-proof .ui-portfolio-card-footer {
+    gap: var(--space-1);
+  }
+}
+
 @media (prefers-reduced-motion: reduce) {
   me .ui-portfolio-card,
   me .ui-portfolio-proof-item {
@@ -796,6 +827,7 @@ mod sections;
 pub use sections::{
     ArchiveCaseDetailsSection, ClosingSection, CrateSection, ExperienceSection, PortfolioHero,
     SkillGroupsSection, SupportingTeaserSection, WorkCaseDetail, WorkIndexSection, WorkSection,
+    WorkSectionVariant,
 };
 
 pub struct Page {

@@ -19,7 +19,7 @@ pub use crate_section::CrateSection;
 pub use experience::ExperienceSection;
 pub use hero::PortfolioHero;
 pub use skill_groups::SkillGroupsSection;
-pub use work::{SupportingTeaserSection, WorkIndexSection, WorkSection};
+pub use work::{SupportingTeaserSection, WorkIndexSection, WorkSection, WorkSectionVariant};
 
 #[derive(Clone, Copy, Debug)]
 pub(super) struct SectionCopy<'a> {
