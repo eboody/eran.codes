@@ -227,7 +227,7 @@ me [data-home-hero-card-secondary-link]:focus-visible {
 @media (max-width: 48rem) {
   me {
     --_home-hero-title-size: clamp(1.9rem, 1.5rem + 2.2vw, 2.6rem);
-    --_home-hero-title-measure: 14.2ch;
+    --_home-hero-title-measure: 15.2ch;
     padding: clamp(1.2rem, 1rem + 1vw, 1.65rem);
     gap: var(--space-4);
   }
@@ -290,7 +290,7 @@ me [data-home-hero-card-secondary-link]:focus-visible {
 
 @media (max-width: 36rem) {
   me {
-    --_home-hero-title-measure: 13.2ch;
+    --_home-hero-title-measure: 14.1ch;
   }
 }
 
