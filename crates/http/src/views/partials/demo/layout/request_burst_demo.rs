@@ -178,6 +178,32 @@ me [data-burst-delta] {
     font-size: var(--text-size-label-2xs);
   }
 }
+
+@media (max-width: 26rem) {
+  me [data-burst-controls] {
+    gap: var(--space-2);
+  }
+
+  me [data-burst-slider] {
+    gap: var(--space-1);
+  }
+
+  me [data-burst-actions] {
+    gap: var(--space-1);
+  }
+
+  me [data-burst-actions-note] {
+    font-size: var(--text-size-meta-sm);
+  }
+
+  me [data-burst-result] {
+    padding: var(--space-2) var(--space-1);
+  }
+
+  me [data-burst-metrics] {
+    gap: calc(var(--space-1) * 0.75) var(--space-1);
+  }
+}
 "#
 );
 
