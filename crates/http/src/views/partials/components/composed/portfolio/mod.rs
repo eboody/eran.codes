@@ -168,6 +168,10 @@ me .ui-portfolio-work-card .ui-portfolio-card-kicker {
   color: color-mix(in srgb, var(--accent-signal) 52%, var(--ui-text-muted));
 }
 
+me .ui-portfolio-experience-grid {
+  align-items: start;
+}
+
 me .ui-portfolio-work-card h3 {
   font-size: var(--text-size-title-sm);
   line-height: var(--text-line-heading);
@@ -177,6 +181,20 @@ me .ui-portfolio-work-card h3 {
 me .ui-portfolio-experience-card,
 me .ui-portfolio-skill-card {
   gap: var(--space-3);
+}
+
+me .ui-portfolio-experience-card--feature {
+  inline-size: min(100%, 62rem);
+  justify-self: start;
+}
+
+me .ui-portfolio-experience-card--feature .ui-portfolio-card-summary {
+  max-width: 62ch;
+}
+
+me .ui-portfolio-experience-card--feature .ui-portfolio-list {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: var(--space-2) clamp(1rem, 0.7rem + 1vw, 1.85rem);
 }
 
 me .ui-portfolio-work-card .ui-portfolio-card-summary {
@@ -642,6 +660,15 @@ me .ui-portfolio-crate-section--standalone .ui-portfolio-inline-links {
   me .ui-portfolio-card {
     gap: var(--space-2);
     --inset-card-padding: var(--space-3);
+  }
+
+  me .ui-portfolio-experience-card--feature {
+    inline-size: 100%;
+  }
+
+  me .ui-portfolio-experience-card--feature .ui-portfolio-list {
+    grid-template-columns: minmax(0, 1fr);
+    gap: var(--space-1);
   }
 
   me .ui-portfolio-work-card {

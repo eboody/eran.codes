@@ -11,6 +11,8 @@ pub struct ExperienceSection<'a> {
 
 impl Render for ExperienceSection<'_> {
     fn render(&self) -> maud::Markup {
+        let feature_layout = self.content.roles.len() == 1;
+
         maud::html! {
             (Surface::section(maud::html! {
                 (SectionCopy {
@@ -19,9 +21,12 @@ impl Render for ExperienceSection<'_> {
                 })
                 (CardGrid::new(maud::html! {
                     @for role in &self.content.roles {
-                        (ExperienceRoleCard { role })
+                        (ExperienceRoleCard {
+                            role,
+                            feature_layout,
+                        })
                     }
-                }))
+                }).extra_class("ui-portfolio-experience-grid"))
             }))
         }
     }
@@ -29,10 +34,17 @@ impl Render for ExperienceSection<'_> {
 
 struct ExperienceRoleCard<'a> {
     role: &'a ExperienceRoleContent,
+    feature_layout: bool,
 }
 
 impl Render for ExperienceRoleCard<'_> {
     fn render(&self) -> maud::Markup {
+        let extra_class = if self.feature_layout {
+            "ui-portfolio-experience-card ui-portfolio-experience-card--feature"
+        } else {
+            "ui-portfolio-experience-card"
+        };
+
         maud::html! {
             (InsetCard::new(maud::html! {
                 p class="ui-portfolio-card-kicker" {
@@ -50,7 +62,7 @@ impl Render for ExperienceRoleCard<'_> {
                         (render_actions(&self.role.actions))
                     }))
                 }
-            }).extra_class("ui-portfolio-experience-card"))
+            }).extra_class(extra_class))
         }
     }
 }

@@ -33,11 +33,11 @@ impl Render for Home {
                     content: &content.hero,
                     aside: hero_aside,
                 })
-                (partials::components::portfolio::ExperienceSection {
-                    content: &content.experience_section,
-                })
                 (partials::components::portfolio::WorkSection {
                     content: &content.current_proof_section,
+                })
+                (partials::components::portfolio::ExperienceSection {
+                    content: &content.experience_section,
                 })
                 (partials::components::portfolio::WorkSection {
                     content: &content.project_section,
@@ -84,11 +84,11 @@ mod tests {
         let skills_title = content.skill_section.title.to_string();
 
         assert!(
-            markup.find(experience_title.as_str()).unwrap()
-                < markup.find(proof_title.as_str()).unwrap()
+            markup.find(proof_title.as_str()).unwrap()
+                < markup.find(experience_title.as_str()).unwrap()
         );
         assert!(
-            markup.find(proof_title.as_str()).unwrap()
+            markup.find(experience_title.as_str()).unwrap()
                 < markup.find(project_title.as_str()).unwrap()
         );
         assert!(
