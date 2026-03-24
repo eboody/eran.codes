@@ -5,12 +5,12 @@ use super::SurfaceSection;
 
 crate::views::scoped::inline_css!(
     r#"
-me [data-info-grid] {
+me [data-engineering-quality-grid] {
   display: grid;
   gap: var(--space-4);
 }
 
-me [data-info-card] {
+me [data-engineering-quality-card] {
   --inset-card-padding: var(--space-card);
 
   display: grid;
@@ -23,18 +23,18 @@ me [data-info-card] {
     transform var(--motion-fast);
 }
 
-me [data-info-card] h3 {
+me [data-engineering-quality-card-title] {
   margin: 0 0 var(--space-2);
 }
 
-me [data-info-card] p {
+me [data-engineering-quality-card-summary] {
   margin: 0;
   font-size: var(--text-size-body-md);
   line-height: var(--text-line-body);
   color: var(--text-muted);
 }
 
-me [data-info-card] ul {
+me [data-engineering-quality-card-points] {
   margin: var(--space-3) 0 0;
   padding-left: var(--space-4);
   display: grid;
@@ -45,13 +45,13 @@ me [data-info-card] ul {
 }
 
 @media (min-width: 980px) {
-  me [data-info-grid] {
+  me [data-engineering-quality-grid] {
     grid-template-columns: repeat(3, minmax(0, 1fr));
   }
 }
 
 @media (hover: hover) {
-  me [data-info-card]:hover {
+  me [data-engineering-quality-card]:hover {
     transform: var(--motion-lift-subtle);
     border-color: color-mix(in srgb, var(--accent-signal) 18%, var(--border-default));
     box-shadow: var(--shadow-panel-hover);
@@ -59,7 +59,7 @@ me [data-info-card] ul {
 }
 
 @media (prefers-reduced-motion: reduce) {
-  me [data-info-card] {
+  me [data-engineering-quality-card] {
     transition: none;
   }
 }
@@ -79,12 +79,12 @@ impl Render for EngineeringQuality {
             .subtitle(content.engineering_quality.subtitle.clone())
             .content(maud::html! {
                 (css())
-                div data-info-grid {
+                div data-engineering-quality-grid {
                     @for card in &content.engineering_quality.cards {
-                        article class="u-inset-card" data-info-card {
-                            h3 { (&card.title) }
-                            p { (&card.summary) }
-                            ul {
+                        article class="u-inset-card" data-engineering-quality-card {
+                            h3 data-engineering-quality-card-title { (&card.title) }
+                            p data-engineering-quality-card-summary { (&card.summary) }
+                            ul data-engineering-quality-card-points {
                                 @for point in &card.points {
                                     li { (point) }
                                 }
@@ -95,5 +95,21 @@ impl Render for EngineeringQuality {
             })
             .build()
             .render()
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use maud::Render;
+
+    use super::*;
+
+    #[test]
+    fn keeps_engineering_quality_hooks_local_to_the_surface() {
+        let markup = EngineeringQuality::builder().build().render().into_string();
+
+        assert!(markup.contains("data-engineering-quality-grid"));
+        assert!(markup.contains("data-engineering-quality-card-summary"));
+        assert!(!markup.contains("data-info-grid"));
     }
 }

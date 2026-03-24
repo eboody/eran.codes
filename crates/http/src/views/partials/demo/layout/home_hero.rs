@@ -49,14 +49,14 @@ me [data-home-hero-kicker] {
   color: var(--accent-warm);
 }
 
-me p {
+me [data-home-hero-summary] {
   margin: 0;
   max-width: 55ch;
   font-size: var(--text-size-lead);
   color: color-mix(in srgb, var(--text-body) 90%, var(--text-muted) 10%);
 }
 
-me h1 {
+me [data-home-hero-title] {
   margin: 0;
   max-width: 11ch;
   font-size: var(--text-size-display-lg);
@@ -95,7 +95,7 @@ me [data-home-hero-card] {
   box-shadow: inset 0 1px 0 var(--surface-edge-default);
 }
 
-me [data-home-hero-card] h3 {
+me [data-home-hero-card-title] {
   margin: 0;
   font-size: var(--text-size-label-sm);
   font-weight: 700;
@@ -104,18 +104,26 @@ me [data-home-hero-card] h3 {
   color: var(--text-subtle);
 }
 
-me [data-home-hero-card] .u-muted {
+me [data-home-hero-card-status] {
+  margin: 0;
+  max-width: 34ch;
+  font-size: var(--text-size-body-lg);
+  color: color-mix(in srgb, var(--text-body) 90%, var(--text-muted) 10%);
+}
+
+me [data-home-hero-card-detail] {
+  margin: 0;
   color: color-mix(in srgb, var(--text-muted) 94%, var(--text-body) 6%);
 }
 
-me [data-home-hero-copy] [data-button-row] {
+me [data-home-hero-primary-actions] [data-button-row] {
   width: fit-content;
   margin-top: var(--space-1);
   padding-top: var(--space-3);
   border-top: 1px solid color-mix(in srgb, var(--border-subtle) 82%, transparent);
 }
 
-me [data-home-hero-card] [data-button-row] {
+me [data-home-hero-card-actions] [data-button-row] {
   width: 100%;
   margin: var(--space-2) 0 0 0;
   padding: var(--space-2);
@@ -131,11 +139,11 @@ me [data-home-hero-card] [data-button-row] {
   box-shadow: inset 0 1px 0 var(--surface-edge-soft);
 }
 
-me [data-home-hero-card] [data-button-row] > * {
+me [data-home-hero-card-actions] [data-button-row] > * {
   flex: 1 1 10rem;
 }
 
-me [data-home-hero-card] [data-button-row] :where(a.button, button, .button) {
+me [data-home-hero-card-actions] [data-button-row] :where(a.button, button, .button) {
   width: 100%;
 }
 
@@ -197,12 +205,13 @@ me [data-home-hero-card] [data-button-row] :where(a.button, button, .button) {
     padding-inline-end: 0;
   }
 
-  me h1 {
+  me [data-home-hero-title] {
     font-size: var(--text-size-display-md);
     max-width: 9ch;
   }
 
-  me p {
+  me [data-home-hero-summary],
+  me [data-home-hero-card-status] {
     font-size: var(--text-size-body-lg);
   }
 
@@ -210,26 +219,26 @@ me [data-home-hero-card] [data-button-row] :where(a.button, button, .button) {
     inline-size: 100%;
   }
 
-  me [data-home-hero-copy] [data-button-row] {
+  me [data-home-hero-primary-actions] [data-button-row] {
     width: 100%;
     padding-top: var(--space-2);
   }
 
-  me [data-home-hero-copy] [data-button-row] > * {
+  me [data-home-hero-primary-actions] [data-button-row] > * {
     flex: 1 1 12rem;
   }
 
-  me [data-home-hero-copy] [data-button-row] :where(a.button, button, .button) {
+  me [data-home-hero-primary-actions] [data-button-row] :where(a.button, button, .button) {
     width: 100%;
   }
 }
 
 @media (max-width: 36rem) {
-  me h1 {
+  me [data-home-hero-title] {
     max-width: 8ch;
   }
 
-  me [data-home-hero-copy] [data-button-row] > * {
+  me [data-home-hero-primary-actions] [data-button-row] > * {
     flex-basis: 100%;
   }
 }
@@ -250,53 +259,16 @@ impl Render for HomeHero {
                 (css())
                 div data-home-hero-copy {
                     p data-home-hero-kicker { (&content.hero.eyebrow) }
-                    h1 { (&content.hero.title) }
-                    p { (&content.hero.summary) }
+                    h1 data-home-hero-title { (&content.hero.title) }
+                    p data-home-hero-summary { (&content.hero.summary) }
                     div data-home-hero-tags {
                         @for badge in &content.hero.badges {
                             (partials::components::Pill::builder().text(badge.clone()).build())
                         }
                     }
-                    (partials::button::Row::builder()
-                        .items(content.hero.actions.iter().map(|action| {
-                            partials::button::Button::builder()
-                                .label(action.label.clone())
-                                .variant(match action.tone {
-                                    partials::components::portfolio::content::CtaKind::Primary => {
-                                        partials::button::Variant::Primary
-                                    }
-                                    partials::components::portfolio::content::CtaKind::Secondary => {
-                                        partials::button::Variant::Secondary
-                                    }
-                                })
-                                .role(if action.kind.is_external() {
-                                    partials::button::Role::external_link(action.href.clone())
-                                } else {
-                                    partials::button::Role::link(action.href.clone())
-                                })
-                                .build()
-                        }).collect())
-                        .build())
-                }
-                aside data-home-hero-card {
-                    h3 { (&content.session_card.title) }
-                    @if let Some(user) = &self.user {
-                        p { "Signed in as " strong { (&user.username) } "." }
-                        p class="u-muted" { (&user.email) }
+                    div data-home-hero-primary-actions {
                         (partials::button::Row::builder()
-                            .items(vec![
-                                partials::button::Button::builder()
-                                    .label(content.session_card.signed_in_action_label.clone())
-                                    .variant(partials::button::Variant::Primary)
-                                    .role(partials::button::Role::link(Route::Protected.as_str()))
-                                    .build(),
-                            ])
-                            .build())
-                    } @else {
-                        p { (&content.session_card.guest_status) }
-                        p class="u-muted" { (&content.session_card.guest_summary) }
-                        (partials::button::Row::builder()
-                            .items(content.session_card.guest_actions.iter().map(|action| {
+                            .items(content.hero.actions.iter().map(|action| {
                                 partials::button::Button::builder()
                                     .label(action.label.clone())
                                     .variant(match action.tone {
@@ -307,13 +279,73 @@ impl Render for HomeHero {
                                             partials::button::Variant::Secondary
                                         }
                                     })
-                                    .role(partials::button::Role::link(action.href.clone()))
+                                    .role(if action.kind.is_external() {
+                                        partials::button::Role::external_link(action.href.clone())
+                                    } else {
+                                        partials::button::Role::link(action.href.clone())
+                                    })
                                     .build()
                             }).collect())
                             .build())
                     }
                 }
+                aside data-home-hero-card {
+                    h3 data-home-hero-card-title { (&content.session_card.title) }
+                    @if let Some(user) = &self.user {
+                        p data-home-hero-card-status { "Signed in as " strong { (&user.username) } "." }
+                        p class="u-muted" data-home-hero-card-detail { (&user.email) }
+                        div data-home-hero-card-actions {
+                            (partials::button::Row::builder()
+                                .items(vec![
+                                    partials::button::Button::builder()
+                                        .label(content.session_card.signed_in_action_label.clone())
+                                        .variant(partials::button::Variant::Primary)
+                                        .role(partials::button::Role::link(Route::Protected.as_str()))
+                                        .build(),
+                                ])
+                                .build())
+                        }
+                    } @else {
+                        p data-home-hero-card-status { (&content.session_card.guest_status) }
+                        p class="u-muted" data-home-hero-card-detail { (&content.session_card.guest_summary) }
+                        div data-home-hero-card-actions {
+                            (partials::button::Row::builder()
+                                .items(content.session_card.guest_actions.iter().map(|action| {
+                                    partials::button::Button::builder()
+                                        .label(action.label.clone())
+                                        .variant(match action.tone {
+                                            partials::components::portfolio::content::CtaKind::Primary => {
+                                                partials::button::Variant::Primary
+                                            }
+                                            partials::components::portfolio::content::CtaKind::Secondary => {
+                                                partials::button::Variant::Secondary
+                                            }
+                                        })
+                                        .role(partials::button::Role::link(action.href.clone()))
+                                        .build()
+                                }).collect())
+                                .build())
+                        }
+                    }
+                }
             }
         }
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use maud::Render;
+
+    use super::*;
+
+    #[test]
+    fn renders_explicit_hero_hooks() {
+        let markup = HomeHero::builder().build().render().into_string();
+
+        assert!(markup.contains("data-home-hero-title"));
+        assert!(markup.contains("data-home-hero-summary"));
+        assert!(markup.contains("data-home-hero-primary-actions"));
+        assert!(markup.contains("data-home-hero-card-actions"));
     }
 }
