@@ -359,6 +359,26 @@ me [data-nav-list='auth'] [data-nav-link-cta='true'] {
     display: grid;
     grid-template-columns: repeat(3, max-content);
   }
+
+  me [data-nav-list='auth'] {
+    display: grid;
+    grid-template-columns: repeat(2, max-content);
+    justify-content: start;
+    gap: var(--space-1);
+  }
+
+  me [data-nav-auth-text] {
+    grid-column: 1 / -1;
+    text-align: left;
+  }
+
+  me [data-nav-list='auth'] [data-nav-link] {
+    padding-inline: calc(var(--control-padding-inline-compact) - 0.1rem);
+  }
+
+  me [data-nav-auth-action] {
+    --_button-padding-inline: calc(var(--control-padding-inline-compact) - 0.1rem);
+  }
 }
 "#
 );
@@ -624,6 +644,7 @@ mod tests {
         assert!(markup.contains("flex-wrap: wrap;"));
         assert!(!markup.contains("overscroll-behavior-x: contain;"));
         assert!(markup.contains("grid-template-columns: repeat(3, max-content);"));
+        assert!(markup.contains("grid-template-columns: repeat(2, max-content);"));
         assert!(markup.contains("data-nav-list=\"meta\""));
         assert!(markup.contains("data-nav-link-label=\"compact\""));
     }
