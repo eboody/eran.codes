@@ -6,6 +6,16 @@ use crate::views::{page, partials};
 
 use super::portfolio_shell;
 
+crate::views::scoped::inline_css!(
+    r#"
+@media (max-width: 48rem) {
+  me [data-home-current-proof] {
+    margin-top: var(--space-1);
+  }
+}
+"#
+);
+
 #[derive(Builder, Default)]
 pub struct Home {
     #[builder(setters(name = with_user))]
@@ -36,13 +46,16 @@ impl Render for Home {
 
         let body = partials::components::portfolio::Page {
             content: maud::html! {
+                (css())
                 (partials::components::portfolio::PortfolioHero {
                     content: &content.hero,
                     aside: hero_aside,
                 })
-                (partials::components::portfolio::WorkSection {
-                    content: &content.current_proof_section,
-                })
+                div data-home-current-proof {
+                    (partials::components::portfolio::WorkSection {
+                        content: &content.current_proof_section,
+                    })
+                }
                 (partials::components::portfolio::ExperienceSection {
                     content: &content.experience_section,
                 })
