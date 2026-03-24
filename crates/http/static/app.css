@@ -640,6 +640,11 @@ input[type="password"] {
 }
 
 @media (max-width: 26rem) {
+  :root {
+    --control-padding-block-compact: 0.5rem;
+    --control-padding-inline-compact: 0.78rem;
+  }
+
   .u-demo-result-card {
     --inset-card-padding: 0.85rem 0.95rem;
     margin-top: var(--space-2);
