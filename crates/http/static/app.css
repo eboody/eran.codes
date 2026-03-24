@@ -449,6 +449,39 @@ input[type="password"] {
     transform var(--motion-fast);
 }
 
+.u-section-header {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-3) var(--space-4);
+  margin-bottom: var(--space-4);
+}
+
+.u-section-header-copy {
+  --section-copy-gap: var(--space-1);
+
+  min-width: 0;
+}
+
+.u-section-header-copy > :is(h1, h2) {
+  font-size: var(--text-size-title-lg);
+  line-height: var(--text-line-title);
+}
+
+.u-section-header .u-muted {
+  margin: var(--space-1) 0 0;
+  max-width: 58ch;
+  color: var(--text-muted);
+  font-size: var(--text-size-body-lg);
+}
+
+.u-section-meta {
+  margin-top: calc(var(--space-3) * -1);
+  margin-bottom: var(--space-2);
+  color: var(--text-subtle);
+}
+
 .u-section-copy {
   --section-copy-gap: var(--space-2);
   --section-copy-max-inline: 60ch;
@@ -465,6 +498,22 @@ input[type="password"] {
 .u-section-copy > p {
   max-width: var(--section-copy-max-inline);
   color: var(--section-copy-color);
+}
+
+.ui-button-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-3);
+  position: relative;
+  isolation: isolate;
+  padding: var(--interactive-bleed);
+  margin-inline: calc(var(--interactive-bleed) * -1);
+  margin-block: calc(1.1rem - var(--interactive-bleed)) calc(var(--interactive-bleed) * -1);
+  overflow: visible;
+}
+
+.ui-button-row > :where(button, a)[data-button] {
+  min-inline-size: 10rem;
 }
 
 .u-inset-card {
@@ -485,6 +534,15 @@ input[type="password"] {
     background-color var(--motion-fast),
     box-shadow var(--motion-fast),
     transform var(--motion-fast);
+}
+
+.u-demo-result-card {
+  margin-top: var(--space-4);
+  --inset-card-padding: var(--ui-inset-card-padding-cozy);
+}
+
+.u-demo-result-card > p {
+  margin: 0;
 }
 
 @media (max-width: 48rem) {

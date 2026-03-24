@@ -4,37 +4,6 @@ use maud::Render;
 use crate::types::Text;
 use crate::views::partials::components::button;
 
-crate::views::scoped::inline_css!(
-    r#"
-me > style + [data-section-header] {
-  display: flex;
-  flex-wrap: wrap;
-  align-items: center;
-  justify-content: space-between;
-  gap: var(--space-3) var(--space-4);
-  margin-bottom: var(--space-4);
-}
-
-me > style + [data-section-header] :is(h1, h2) {
-  font-size: var(--text-size-title-lg);
-  line-height: var(--text-line-title);
-}
-
-me > style + [data-section-header] .u-muted {
-  margin: var(--space-1) 0 0;
-  max-width: 58ch;
-  color: var(--text-muted);
-  font-size: var(--text-size-body-lg);
-}
-
-me > style + [data-section-header] + [data-section-meta] {
-  margin-top: calc(var(--space-3) * -1);
-  margin-bottom: var(--space-2);
-  color: var(--text-subtle);
-}
-"#
-);
-
 #[derive(Clone, Copy, Debug, Default)]
 pub enum SectionHeaderLevel {
     H1,
@@ -69,9 +38,8 @@ pub struct SectionHeader {
 impl Render for SectionHeader {
     fn render(&self) -> maud::Markup {
         maud::html! {
-            (css())
-            header data-section-header {
-                div data-section-header-copy {
+            header class="u-section-header" data-section-header {
+                div class="u-section-copy u-section-header-copy" data-section-header-copy {
                     @match self.level {
                         SectionHeaderLevel::H1 => h1 { (&self.title) },
                         SectionHeaderLevel::H2 => h2 { (&self.title) },
@@ -85,7 +53,7 @@ impl Render for SectionHeader {
                 }
             }
             @if let Some(meta) = &self.meta {
-                div data-section-meta { (meta) }
+                div class="u-section-meta" data-section-meta { (meta) }
             }
         }
     }

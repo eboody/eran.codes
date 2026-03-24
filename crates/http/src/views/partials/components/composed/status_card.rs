@@ -4,19 +4,6 @@ use maud::Render;
 use crate::types::Text;
 use crate::views::partials::components::KeyValueList;
 
-crate::views::scoped::inline_css!(
-    r#"
-me {
-  margin-top: var(--space-4);
-  --inset-card-padding: var(--ui-inset-card-padding-cozy);
-}
-
-me > p {
-  margin: 0;
-}
-"#
-);
-
 #[derive(Clone, Debug, Builder)]
 // ci: style-system-component
 pub struct StatusCard {
@@ -56,8 +43,7 @@ impl Render for StatusCard {
             .collect();
 
         maud::html! {
-            div class="u-inset-card" data-demo-result data-status-card {
-                (css())
+            div class="u-demo-result-card u-inset-card" data-demo-result data-status-card {
                 p { strong { (&self.title) } }
                 (KeyValueList::builder().items(items).build())
             }

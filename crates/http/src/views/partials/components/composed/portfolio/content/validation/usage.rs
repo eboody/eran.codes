@@ -1,4 +1,4 @@
-use super::*;
+use super::shared::*;
 
 pub(super) fn validate_used_entries(content: &SiteContent) {
     let mut usage = ContentUsage::default();

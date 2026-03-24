@@ -1,4 +1,4 @@
-use super::*;
+use super::shared::*;
 
 pub(in super::super) fn validate_identity_fragment(content: &IdentityContent) {
     assert_non_empty("site_content/identity.json.name", &content.name);

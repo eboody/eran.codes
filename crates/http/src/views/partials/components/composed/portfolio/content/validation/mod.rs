@@ -2,27 +2,12 @@ mod asserts;
 mod fragments;
 mod pages;
 mod refs;
+mod shared;
 #[cfg(test)]
 mod tests;
 mod usage;
 
-use std::collections::HashSet;
-
-use crate::{paths::Route, types::Text};
-
-use super::CrateGalleryContent;
-use super::crate_gallery::CrateGalleryPreviewContent;
-use super::types::{
-    ActionBundleContent, ActionLibraryFragment, ArchiveDetailsContent, CaseListSection,
-    ClosingContent, ClosingCopy, CmsActionLink, CmsImageAsset, ContactMethodContent, CrateCardContent,
-    CrateSectionContent, CtaKind, DirectLinkReference, ExperienceRoleContent, ExperienceSectionContent,
-    HomePageCopy, IdentityContent, InfoCardContent, InfoSectionContent, LabPageContent,
-    LabPageCopy, LabPanelContent, LinkReference, OpenSourceIndexContent, OpenSourceIndexCopy,
-    PortfolioHeroContent, PortfolioHeroCopy, PortfolioHomeContent, ProjectSectionSelection,
-    ResumeDocumentContent, SessionCardContent, SiteContent, SkillGroupContent, SkillSectionContent,
-    WorkCardContent, WorkCaseContent, WorkCaseCopy, WorkCaseRecord, WorkCaseSlug, WorkIndexContent,
-    WorkIndexCopy, WorkSectionContent,
-};
+use super::types::SiteContent;
 
 use self::asserts::*;
 pub(super) use self::fragments::{
@@ -38,16 +23,13 @@ pub(super) use self::pages::{
     validate_work_index,
 };
 use self::refs::{
-    validate_direct_link_reference_shape, validate_home_refs, validate_lab_copy,
-    validate_open_source_refs, validate_resume_refs, validate_work_case_copy, validate_work_refs,
+    validate_home_refs, validate_lab_copy, validate_open_source_refs, validate_resume_refs,
+    validate_work_case_copy, validate_work_refs,
 };
 use self::usage::validate_used_entries;
 use self::pages::{
-    validate_action, validate_archive_details_shape, validate_case_list,
-    validate_closing_copy_shape, validate_contact_method, validate_crate_card,
-    validate_experience_role, validate_info_section, validate_lab_panel,
-    validate_open_source_hero_copy_shape, validate_portfolio_hero_copy_shape,
-    validate_project_section_selection_shape, validate_skill_group, validate_work_card,
+    validate_action, validate_contact_method, validate_crate_card,
+    validate_experience_role, validate_skill_group, validate_work_card,
 };
 
 pub(super) fn validate_site_content(content: &SiteContent) {

@@ -1,4 +1,4 @@
-use super::*;
+use super::shared::*;
 
 pub(super) fn validate_home_refs(content: &SiteContent) {
     let home = &content.ui_copy.home;

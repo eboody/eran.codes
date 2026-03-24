@@ -15,10 +15,10 @@ impl Render for Home {
                     content: &content.experience_section,
                 })
                 (partials::components::portfolio::WorkSection {
-                    content: &content.project_section,
+                    content: &content.current_proof_section,
                 })
                 (partials::components::portfolio::WorkSection {
-                    content: &content.current_proof_section,
+                    content: &content.project_section,
                 })
                 (partials::components::portfolio::ClosingSection {
                     title: &content.open_source_teaser.title,
@@ -63,10 +63,11 @@ mod tests {
 
         assert!(
             markup.find(experience_title.as_str()).unwrap()
-                < markup.find(project_title.as_str()).unwrap()
+                < markup.find(proof_title.as_str()).unwrap()
         );
         assert!(
-            markup.find(project_title.as_str()).unwrap() < markup.find(proof_title.as_str()).unwrap()
+            markup.find(proof_title.as_str()).unwrap()
+                < markup.find(project_title.as_str()).unwrap()
         );
         assert!(
             markup.find(proof_title.as_str()).unwrap() < markup.find(skills_title.as_str()).unwrap()

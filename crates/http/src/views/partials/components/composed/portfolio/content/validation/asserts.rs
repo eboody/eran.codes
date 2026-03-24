@@ -1,4 +1,4 @@
-use super::*;
+use super::shared::*;
 
 pub(super) fn assert_non_empty(path: &str, value: &Text) {
     assert!(

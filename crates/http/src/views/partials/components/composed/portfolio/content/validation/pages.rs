@@ -1,4 +1,4 @@
-use super::*;
+use super::shared::*;
 
 pub(in super::super) fn validate_portfolio_home(content: &PortfolioHomeContent) {
     assert_non_empty("home.page_title", &content.page_title);

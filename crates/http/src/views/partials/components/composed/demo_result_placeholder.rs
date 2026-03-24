@@ -4,16 +4,6 @@ use maud::Render;
 use crate::types::Text;
 use crate::views::partials::components::EmptyState;
 
-crate::views::scoped::inline_css!(
-    r#"
-me {
-  margin-top: var(--space-4);
-  --inset-card-padding: var(--ui-inset-card-padding-cozy);
-  color: color-mix(in srgb, var(--ui-text-muted) 94%, var(--ui-text) 6%);
-}
-"#
-);
-
 #[derive(Clone, Debug, Builder)]
 // ci: style-system-component
 pub struct DemoResultPlaceholder {
@@ -24,8 +14,7 @@ pub struct DemoResultPlaceholder {
 impl Render for DemoResultPlaceholder {
     fn render(&self) -> maud::Markup {
         maud::html! {
-            div id=(&self.target_id) class="u-muted u-inset-card" data-demo-result {
-                (css())
+            div id=(&self.target_id) class="u-demo-result-card u-muted u-inset-card" data-demo-result {
                 (EmptyState::builder()
                     .message(self.message.clone())
                     .build())

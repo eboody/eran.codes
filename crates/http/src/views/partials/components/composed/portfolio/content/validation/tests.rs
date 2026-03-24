@@ -1,4 +1,5 @@
 use super::*;
+use super::shared::*;
 
 #[test]
 #[should_panic(expected = "site.projects[].slug must be unique")]
