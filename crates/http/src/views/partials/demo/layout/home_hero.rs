@@ -180,7 +180,19 @@ me [data-home-hero-card-secondary-link]:focus-visible {
   border-radius: calc(var(--radius-control) - 3px);
 }
 
-@media (min-width: 62rem) {
+@media (min-width: 60rem) {
+  me {
+    grid-template-columns: minmax(0, 1.08fr) minmax(17.5rem, 0.92fr);
+  }
+
+  me [data-home-hero-card] {
+    inline-size: min(100%, 21rem);
+    justify-self: end;
+    margin-top: var(--space-3);
+  }
+}
+
+@media (min-width: 70rem) {
   me {
     grid-template-columns: minmax(0, 1.5fr) minmax(19rem, 0.86fr);
   }
@@ -188,6 +200,7 @@ me [data-home-hero-card-secondary-link]:focus-visible {
   me [data-home-hero-card] {
     justify-self: end;
     margin-top: var(--space-5);
+    inline-size: min(100%, 23rem);
   }
 }
 

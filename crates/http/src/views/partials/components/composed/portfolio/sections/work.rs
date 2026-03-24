@@ -59,7 +59,7 @@ impl Render for WorkIndexSection<'_> {
                         title: &self.content.title,
                         summary: &self.content.summary,
                     })
-                }).extra_class("ui-portfolio-lead-surface"))
+                }).extra_class("ui-portfolio-lead-surface ui-portfolio-lead-surface--compact"))
                 (WorkSection {
                     content: &self.content.current_proof_section,
                     variant: WorkSectionVariant::CurrentProof,

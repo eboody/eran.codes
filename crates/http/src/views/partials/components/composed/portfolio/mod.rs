@@ -49,6 +49,11 @@ me .ui-portfolio-lead-surface {
   gap: clamp(1rem, 0.8rem + 0.65vw, 1.45rem);
 }
 
+me .ui-portfolio-lead-surface--compact {
+  inline-size: min(100%, 58rem);
+  justify-self: center;
+}
+
 me .ui-portfolio-lead-surface h1 {
   max-width: 18.4ch;
   font-size: var(--text-size-hero-lg);
@@ -779,9 +784,24 @@ me .ui-portfolio-crate-section--standalone .ui-portfolio-inline-links {
   }
 }
 
+@media (min-width: 60rem) {
+  me .ui-portfolio-hero-grid {
+    grid-template-columns: minmax(0, 1.12fr) minmax(17.5rem, 0.88fr);
+    gap: clamp(1.25rem, 1.02rem + 0.78vw, 1.95rem);
+  }
+
+  me .ui-portfolio-hero-aside {
+    inline-size: min(100%, 20rem);
+  }
+}
+
 @media (min-width: 68rem) {
   me .ui-portfolio-hero-grid {
     grid-template-columns: minmax(0, 1.38fr) minmax(18rem, 0.78fr);
+  }
+
+  me .ui-portfolio-hero-aside {
+    inline-size: min(100%, 22rem);
   }
 
   me .ui-portfolio-work-section--current-proof,

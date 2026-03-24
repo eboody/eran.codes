@@ -24,7 +24,7 @@ impl Render for WorkCaseDetail<'_> {
                         actions: &self.content.actions,
                     })
                 }
-            }).extra_class("ui-portfolio-lead-surface"))
+            }).extra_class("ui-portfolio-lead-surface ui-portfolio-lead-surface--compact"))
 
             (case_sections(self.content, ArchiveHeading::Page))
         }
