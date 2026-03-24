@@ -26,6 +26,18 @@ me .ui-portfolio-hero {
   view-transition-name: portfolio-hero;
 }
 
+me .ui-portfolio-hero-grid {
+  display: grid;
+  gap: clamp(1.2rem, 1rem + 0.85vw, 1.9rem);
+  align-items: start;
+}
+
+me .ui-portfolio-hero-main {
+  display: grid;
+  gap: inherit;
+  align-content: start;
+}
+
 me .ui-portfolio-lead-surface {
   align-content: start;
   gap: clamp(1rem, 0.8rem + 0.65vw, 1.45rem);
@@ -405,6 +417,72 @@ me .ui-portfolio-lead-surface .ui-button-row {
   border-top: 1px solid color-mix(in srgb, var(--ui-border-soft) 82%, transparent);
 }
 
+me .ui-portfolio-hero-aside {
+  --inset-card-padding: clamp(1rem, 0.88rem + 0.55vw, 1.35rem);
+  --inset-card-border: color-mix(in srgb, var(--portfolio-accent-a) 32%, var(--ui-border-soft));
+  --inset-card-bg:
+    linear-gradient(
+      180deg,
+      color-mix(in srgb, var(--portfolio-accent-a) 10%, transparent),
+      transparent 30%
+    ),
+    color-mix(in srgb, var(--ui-surface-soft) 92%, transparent);
+
+  display: grid;
+  gap: var(--space-3);
+  align-content: start;
+  inline-size: min(100%, 22rem);
+  justify-self: end;
+}
+
+me .ui-portfolio-hero-aside-kicker {
+  margin: 0;
+  font-size: var(--text-size-label-sm);
+  font-weight: 700;
+  letter-spacing: var(--text-track-caps-sm);
+  text-transform: uppercase;
+  color: color-mix(in srgb, var(--accent-signal) 58%, var(--ui-text-muted));
+}
+
+me .ui-portfolio-hero-aside h2 {
+  margin: 0;
+  font-size: var(--text-size-title-sm);
+  line-height: var(--text-line-heading);
+  text-wrap: balance;
+}
+
+me .ui-portfolio-hero-aside .ui-portfolio-card-summary {
+  margin: 0;
+  color: var(--ui-text-muted);
+}
+
+me .ui-portfolio-hero-aside-outcome {
+  margin: 0;
+  display: grid;
+  gap: var(--space-1);
+  padding: var(--space-2) var(--space-3);
+  border-radius: var(--ui-radius-md-inset);
+  border: var(--border-size-1) solid color-mix(in srgb, var(--portfolio-accent-a) 42%, transparent);
+  background: color-mix(in srgb, var(--portfolio-accent-a) 12%, transparent);
+}
+
+me .ui-portfolio-hero-aside-outcome-label {
+  font-size: var(--text-size-label-2xs);
+  font-weight: 600;
+  letter-spacing: var(--text-track-caps-md);
+  text-transform: uppercase;
+  color: var(--ui-text-muted);
+}
+
+me .ui-portfolio-hero-aside-outcome-text {
+  font-weight: 600;
+  color: color-mix(in srgb, var(--ui-text) 94%, var(--portfolio-accent-a) 6%);
+}
+
+me .ui-portfolio-hero-aside .button {
+  width: fit-content;
+}
+
 me .ui-portfolio-closing {
   justify-items: start;
   gap: var(--space-3);
@@ -529,6 +607,10 @@ me .ui-portfolio-crate-section--standalone .ui-portfolio-inline-links {
     padding: var(--space-5) var(--space-4);
   }
 
+  me .ui-portfolio-hero-grid {
+    gap: var(--space-4);
+  }
+
   me .ui-portfolio-lead-surface {
     gap: var(--space-4);
   }
@@ -541,6 +623,12 @@ me .ui-portfolio-crate-section--standalone .ui-portfolio-inline-links {
   me .ui-portfolio-summary {
     font-size: var(--text-size-body-lg);
     line-height: 1.6;
+  }
+
+  me .ui-portfolio-hero-aside {
+    inline-size: 100%;
+    justify-self: stretch;
+    gap: var(--space-2);
   }
 
   me .ui-portfolio-card-grid {
@@ -607,6 +695,10 @@ me .ui-portfolio-crate-section--standalone .ui-portfolio-inline-links {
 }
 
 @media (min-width: 56.25rem) {
+  me .ui-portfolio-hero-grid {
+    grid-template-columns: minmax(0, 1.38fr) minmax(18rem, 0.78fr);
+  }
+
   me .ui-portfolio-proof-strip {
     grid-template-columns: repeat(3, minmax(0, 1fr));
   }

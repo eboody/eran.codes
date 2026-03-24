@@ -5,26 +5,37 @@ use crate::views::partials::components::portfolio::content::PortfolioHeroContent
 
 pub struct PortfolioHero<'a> {
     pub content: &'a PortfolioHeroContent,
+    pub aside: Option<maud::Markup>,
 }
 
 impl Render for PortfolioHero<'_> {
     fn render(&self) -> maud::Markup {
         maud::html! {
             (Surface::header(maud::html! {
-                (LeadCopy {
-                    eyebrow: &self.content.eyebrow,
-                    title: &self.content.title,
-                    summary: &self.content.summary,
-                })
-                @if !self.content.badges.is_empty() {
-                    ul class="ui-portfolio-badges" {
-                        @for badge in &self.content.badges {
-                            li { (badge) }
+                div class="ui-portfolio-hero-grid" {
+                    div class="ui-portfolio-hero-main" {
+                        (LeadCopy {
+                            eyebrow: &self.content.eyebrow,
+                            title: &self.content.title,
+                            summary: &self.content.summary,
+                        })
+                        @if !self.content.badges.is_empty() {
+                            ul class="ui-portfolio-badges" {
+                                @for badge in &self.content.badges {
+                                    li { (badge) }
+                                }
+                            }
+                        }
+                        @if !self.content.actions.is_empty() {
+                            (render_actions(&self.content.actions))
                         }
                     }
-                }
-                @if !self.content.actions.is_empty() {
-                    (render_actions(&self.content.actions))
+
+                    @if let Some(aside) = &self.aside {
+                        aside class="ui-portfolio-hero-aside u-inset-card" {
+                            (aside)
+                        }
+                    }
                 }
             }).extra_class("ui-portfolio-lead-surface ui-portfolio-hero"))
         }

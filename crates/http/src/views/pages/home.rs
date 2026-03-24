@@ -1,5 +1,6 @@
 use maud::Render;
 
+use crate::types::Text;
 use crate::views::{page, partials};
 
 pub struct Home;
@@ -7,10 +8,31 @@ pub struct Home;
 impl Render for Home {
     fn render(&self) -> maud::Markup {
         let content = partials::components::portfolio::content::portfolio_home_content();
+        let hero_aside = content.current_proof_section.cards.first().map(|card| {
+            maud::html! {
+                p class="ui-portfolio-hero-aside-kicker" { (&card.category) }
+                h2 { (&card.title) }
+                @if let Some(outcome) = &card.outcome {
+                    p class="ui-portfolio-hero-aside-outcome" {
+                        span class="ui-portfolio-hero-aside-outcome-label" { "Outcome" }
+                        span class="ui-portfolio-hero-aside-outcome-text" { (outcome) }
+                    }
+                }
+                p class="ui-portfolio-card-summary" { (&card.summary) }
+                (partials::button::Button::builder()
+                    .label(card.cta_label.clone())
+                    .variant(partials::button::Variant::Secondary)
+                    .role(partials::button::Role::link(Text::from(card.slug.public_href())))
+                    .build())
+            }
+        });
 
         let body = partials::components::portfolio::Page {
             content: maud::html! {
-                (partials::components::portfolio::PortfolioHero { content: &content.hero })
+                (partials::components::portfolio::PortfolioHero {
+                    content: &content.hero,
+                    aside: hero_aside,
+                })
                 (partials::components::portfolio::ExperienceSection {
                     content: &content.experience_section,
                 })
@@ -77,5 +99,6 @@ mod tests {
         assert!(markup.contains("Most relevant experience"));
         assert!(markup.contains("Current secure-data proof"));
         assert!(markup.contains("href=\"/resume.txt\""));
+        assert!(markup.contains("ui-portfolio-hero-aside"));
     }
 }

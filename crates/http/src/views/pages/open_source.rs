@@ -124,6 +124,7 @@ impl Render for OpenSource {
                     (css())
                     (partials::components::portfolio::PortfolioHero {
                         content: &content.hero,
+                        aside: None,
                     })
                     (partials::components::portfolio::CrateSection {
                         content: &content.crate_section,
