@@ -666,7 +666,8 @@ me .ui-portfolio-crate-section--standalone .ui-portfolio-inline-links {
 
   me .ui-portfolio-experience-card--feature .ui-portfolio-list {
     grid-template-columns: minmax(0, 1fr);
-    gap: var(--space-1);
+    gap: calc(var(--space-1) * 0.75);
+    padding-left: var(--space-2);
   }
 
   me .ui-portfolio-work-card {
