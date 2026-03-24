@@ -688,6 +688,15 @@ me .ui-portfolio-crate-section--standalone .ui-portfolio-inline-links {
     gap: var(--space-1);
   }
 
+  me .ui-portfolio-archive-entry {
+    scroll-margin-top: calc(var(--space-7) + 3.5rem);
+    gap: var(--space-2);
+  }
+
+  me .ui-portfolio-case-grid {
+    gap: var(--space-2);
+  }
+
   me .ui-portfolio-card-footer {
     gap: var(--space-1);
     padding-top: var(--space-1);
