@@ -21,4 +21,4 @@ pub use composed::{
 };
 pub use logs::primitives::EmptyState;
 pub use primitives::{BadgeKind, CodeBlock, KeyValueList, Pill};
-pub(crate) use primitives::{Tab, TabInteraction};
+pub(crate) use primitives::{LocalTabPanel, LocalTabRoot, LocalTabRootSurface, Tab, TabInteraction};

@@ -3,26 +3,26 @@ use maud::Render;
 use super::showcase::CrateShowcase;
 use crate::types::Text;
 use crate::views::partials::components::portfolio::content::CrateCardContent;
-use crate::views::partials::components::{Tab, TabInteraction};
+use crate::views::partials::components::{
+    LocalTabPanel, LocalTabRoot, LocalTabRootSurface, Tab, TabInteraction, tab_set,
+};
 use crate::views::proper_theme::THEME;
 
 crate::views::scoped::inline_css!(
     r#"
 me {
-  --_crate-switcher-panel-enter-offset: calc(var(--space-2) * 0.5);
-
   display: grid;
   gap: var(--space-3);
 }
 
-me [data-portfolio-crate-switcher-nav] {
+me .tab-set__tabs {
   display: flex;
   flex-wrap: wrap;
   gap: var(--space-2);
   align-items: center;
 }
 
-me [data-portfolio-crate-switcher-nav] .tab-set__tab {
+me .tab-set__tab {
   width: fit-content;
   justify-content: center;
   padding:
@@ -36,11 +36,11 @@ me [data-portfolio-crate-switcher-nav] .tab-set__tab {
   font-size: var(--text-size-body-xs);
 }
 
-me [data-portfolio-crate-switcher-nav] .tab-set__tab-line {
+me .tab-set__tab-line {
   font-weight: 600;
 }
 
-me [data-portfolio-crate-switcher-nav] .tab-set__tab.is-selected {
+me .tab-set__tab.is-selected {
   color: var(--text-body);
   border-color: color-mix(in srgb, var(--accent-signal) 36%, var(--border-default));
   background:
@@ -55,7 +55,7 @@ me [data-portfolio-crate-switcher-nav] .tab-set__tab.is-selected {
     0 0 0 1px color-mix(in srgb, var(--accent-signal) 10%, transparent);
 }
 
-me [data-portfolio-crate-switcher-nav] .tab-set__tab:focus-visible {
+me .tab-set__tab:focus-visible {
   outline: none;
   border-color: color-mix(in srgb, var(--accent-signal) 54%, var(--border-default));
   box-shadow:
@@ -63,38 +63,17 @@ me [data-portfolio-crate-switcher-nav] .tab-set__tab:focus-visible {
     inset 0 1px 0 var(--surface-edge-default);
 }
 
-me [data-portfolio-crate-panel][hidden] {
-  display: none;
-}
-
-me [data-portfolio-crate-panel] {
+me .ui-portfolio-crate-panel {
   align-content: start;
 }
 
-me [data-portfolio-crate-panel][data-local-tab-entering] {
-  animation: crate-switcher-panel-enter var(--motion-standard) var(--ease-3);
-  transform-origin: top center;
-}
-
-@keyframes crate-switcher-panel-enter {
-  from {
-    opacity: 0;
-    transform: translateY(var(--_crate-switcher-panel-enter-offset));
-  }
-
-  to {
-    opacity: 1;
-    transform: translateY(0);
-  }
-}
-
 @media (prefers-color-scheme: dark) {
-  me [data-portfolio-crate-switcher-nav] .tab-set__tab {
+  me .tab-set__tab {
     background: color-mix(in srgb, var(--surface-field) 92%, black 8%);
     border-color: color-mix(in srgb, var(--border-default) 90%, transparent);
   }
 
-  me [data-portfolio-crate-switcher-nav] .tab-set__tab.is-selected {
+  me .tab-set__tab.is-selected {
     background:
       linear-gradient(180deg, var(--surface-wash-top-soft), transparent 44%),
       color-mix(in srgb, var(--accent-signal) 14%, var(--surface-raised));
@@ -103,7 +82,7 @@ me [data-portfolio-crate-panel][data-local-tab-entering] {
 }
 
 @media (hover: hover) {
-  me [data-portfolio-crate-switcher-nav] .tab-set__tab:hover {
+  me .tab-set__tab:hover {
     transform: translateY(-1px);
   }
 }
@@ -113,20 +92,15 @@ me [data-portfolio-crate-panel][data-local-tab-entering] {
     gap: var(--space-1);
   }
 
-  me [data-portfolio-crate-switcher-nav] {
+  me .tab-set__tabs {
     gap: var(--space-1);
   }
 
-  me [data-portfolio-crate-switcher-nav] .tab-set__tab {
+  me .tab-set__tab {
     padding: var(--control-padding-block-compact) var(--control-padding-inline-compact);
   }
 }
 
-@media (prefers-reduced-motion: reduce) {
-  me [data-portfolio-crate-panel][data-local-tab-entering] {
-    animation: none;
-  }
-}
 "#
 );
 
@@ -136,35 +110,42 @@ pub(super) struct CrateShowcaseSwitcher<'a> {
 
 impl Render for CrateShowcaseSwitcher<'_> {
     fn render(&self) -> maud::Markup {
+        let tabs = self
+            .cards
+            .iter()
+            .enumerate()
+            .map(|(index, card)| Tab {
+                id: tab_dom_id(index),
+                controls: panel_dom_id(index),
+                palette: &THEME.gray,
+                is_selected: index == 0,
+                icon: None,
+                primary_text: card.name.clone(),
+                secondary_text: None,
+                interaction: TabInteraction::LocalTabs {
+                    value: tab_value(index),
+                },
+            })
+            .collect();
+
         maud::html! {
-            section
-                data-portfolio-crate-switcher
-                data-local-tabs-root
-                data-local-tabs-active=(tab_value(0)) {
+            (LocalTabRoot {
+                surface: LocalTabRootSurface::portfolio_crate_switcher(),
+                active_tab_id: tab_value(0),
+                content: maud::html! {
                 (css())
-                nav data-portfolio-crate-switcher-nav role="tablist" aria-label="Open source crate selection" {
-                    @for (index, card) in self.cards.iter().enumerate() {
-                        (Tab {
-                            id: tab_dom_id(index),
-                            controls: panel_dom_id(index),
-                            palette: &THEME.gray,
-                            is_selected: index == 0,
-                            icon: None,
-                            primary_text: card.name.clone(),
-                            secondary_text: None,
-                            interaction: TabInteraction::LocalTabs {
-                                value: tab_value(index),
-                            },
-                        })
-                    }
-                }
+                (tab_set::tab::Set {
+                    aria_label: Text::from("Open source crate selection"),
+                    tabs: tab_set::tab::List { children: tabs },
+                })
                 @for (index, card) in self.cards.iter().enumerate() {
                     (CrateShowcasePanel {
                         card,
                         tab_index: index,
                     })
                 }
-            }
+                },
+            })
         }
     }
 }
@@ -176,18 +157,16 @@ struct CrateShowcasePanel<'a> {
 
 impl Render for CrateShowcasePanel<'_> {
     fn render(&self) -> maud::Markup {
-        maud::html! {
-            section
-                id=(panel_dom_id(self.tab_index))
-                class="ui-portfolio-crate-panel"
-                role="tabpanel"
-                aria-labelledby=(tab_dom_id(self.tab_index))
-                data-portfolio-crate-panel
-                tabindex=(if self.tab_index == 0 { 0 } else { -1 })
-                hidden[self.tab_index != 0] {
+        LocalTabPanel {
+            id: panel_dom_id(self.tab_index),
+            labelled_by: tab_dom_id(self.tab_index),
+            class: "ui-portfolio-crate-panel",
+            is_selected: self.tab_index == 0,
+            content: maud::html! {
                 (CrateShowcase { card: self.card })
-            }
+            },
         }
+        .render()
     }
 }
 

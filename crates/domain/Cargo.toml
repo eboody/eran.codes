@@ -4,7 +4,7 @@ version = "0.1.1"
 edition = "2024"
 
 [dependencies]
-nutype = { workspace = true }
+nutype = { workspace = true, features = ["serde"] }
 snafu = "0.9.0"
 bon = { version = "3.9.1", features = [
   "experimental-overwritable",
@@ -16,3 +16,4 @@ uuid = { version = "1.22.0", features = ["v4"] }
 strum = { workspace = true }
 strum_macros = { workspace = true }
 email_address = "0.2.9"
+serde = { version = "1.0.228", features = ["derive"] }

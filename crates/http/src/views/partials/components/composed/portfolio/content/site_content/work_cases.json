@@ -1,0 +1,197 @@
+[
+  {
+    "slug": "sensitive_sync",
+    "page_title": "Current Proof | Encrypted Sensitive Record Sync",
+    "eyebrow": "Current Proof · Secure Systems Runtime",
+    "title": "Encrypted sensitive records, provider-token lifecycle, and bounded background sync",
+    "summary": "This repo now ships a narrow runtime proof slice for secure backend work: provider tokens and authorized payloads are stored encrypted with explicit key IDs, a local HTTP-backed stub feed syncs into Postgres on a background loop, and the live lab shows persisted sensitive-access grants, key-custody evidence, denied reads, and audited authorized access.",
+    "challenge": {
+      "title": "Challenge",
+      "items": [
+        "The proof pivot needed visible evidence for encrypted-at-rest storage, token lifecycle handling, and integration-boundary discipline instead of only architectural groundwork.",
+        "The repo needed a bounded implementation slice that stayed honest about scope and avoided claiming real healthcare or real-provider integrations.",
+        "The public proof surface had to show guest-safe redaction, denied signed-in reads without grants, and audited authorized reads from the same stored records."
+      ]
+    },
+    "implementation": {
+      "title": "Implementation",
+      "items": [
+        "Added a new sensitive-data bounded context across domain, app, infra, and HTTP without splitting the repo into new crates.",
+        "Stored provider tokens and authorized record payloads with AES-256-GCM encryption, while keeping only redacted labels and last-four evidence queryable in cleartext.",
+        "Wired a local HTTP-backed stub provider, periodic token refresh, cursor-based record sync, key-versioned ciphertext storage, bounded background rewrap passes, persisted sensitive-access grants, and a live lab panel that exposes denied-vs-allowed reads with recent audit evidence."
+      ]
+    },
+    "outcomes": {
+      "title": "Outcomes",
+      "items": [
+        "The repo now backs secure-systems claims with a running encrypted-storage, key-rotation, and background-sync slice instead of only narrative direction.",
+        "Reviewers can inspect operator-only token status, last sync state, redacted records, ciphertext evidence, key-custody state, denied reads, and audited authorized-read boundaries in the live app.",
+        "The implementation stays sanitized and bounded: stubbed provider data over a real HTTP boundary, explicit trust boundaries, and no overclaim about real PHI or live third-party integrations."
+      ]
+    },
+    "stack": {
+      "title": "Stack and ownership",
+      "items": [
+        "Rust",
+        "Axum",
+        "PostgreSQL",
+        "AES-256-GCM",
+        "Background jobs",
+        "Maud + Datastar proof surface"
+      ]
+    },
+    "action_refs": [
+      {
+        "source": "action",
+        "id": "inspect_sensitive_proof"
+      },
+      {
+        "source": "action",
+        "id": "back_to_supporting_proof"
+      }
+    ]
+  },
+  {
+    "slug": "chat_realtime",
+    "page_title": "Supporting Proof | Automation at Fundraising Scale",
+    "eyebrow": "Supporting Proof Archive · Automation & Operations",
+    "title": "Automated fundraiser acknowledgments to remove high-volume backlog",
+    "summary": "This archived GoodUnited case study is supporting proof of execution under operational pressure. It covers replacing a manual thank-you workflow with browser automation that increased throughput and consistency.",
+    "challenge": {
+      "title": "Challenge",
+      "items": [
+        "Manual thank-you workflows were time-consuming, error-prone, and perpetually behind demand.",
+        "Teams depended on queue dashboards and manual triage but still accumulated backlog.",
+        "Large nonprofit clients generated very high monthly fundraiser volume, making manual scaling expensive."
+      ]
+    },
+    "implementation": {
+      "title": "Implementation",
+      "items": [
+        "Built a Playwright + TypeScript automation worker to emulate the existing browser workflow end to end.",
+        "Encoded template selection and variable substitution logic to reduce operator variance and mistakes.",
+        "Scaled execution to 72 concurrent instances to keep pace with continuously arriving fundraiser pages."
+      ]
+    },
+    "outcomes": {
+      "title": "Outcomes",
+      "items": [
+        "Delivered roughly 12x speed compared to a single manual operator for the same task shape.",
+        "Eliminated persistent backlog and reduced error rates in outbound fundraiser communication.",
+        "Faster response windows increased fundraiser engagement and improved downstream support effectiveness."
+      ]
+    },
+    "stack": {
+      "title": "Stack and ownership",
+      "items": [
+        "TypeScript",
+        "Node.js",
+        "Playwright",
+        "Browser workflow automation",
+        "Operational queue optimization"
+      ]
+    },
+    "action_refs": [
+      {
+        "source": "bundle",
+        "id": "archive_case_actions"
+      }
+    ]
+  },
+  {
+    "slug": "command_sse",
+    "page_title": "Supporting Proof | Realtime Fundraiser Data Pipeline",
+    "eyebrow": "Supporting Proof Archive · Realtime Product Systems",
+    "title": "Replaced delayed CSV workflows with realtime fundraiser + donation visibility",
+    "summary": "This archived fundraiser pipeline is supporting proof of building under live integration pressure. It moved operations from delayed CSV snapshots to realtime creation and donation signals integrated with Meta APIs.",
+    "challenge": {
+      "title": "Challenge",
+      "items": [
+        "Prior workflow depended on manually downloaded CSV files that were at least 48 hours delayed.",
+        "Teams could only see fundraisers after donations appeared, missing newly created but not-yet-donated pages.",
+        "The lag degraded outreach speed and reduced the ability to guide fundraisers effectively."
+      ]
+    },
+    "implementation": {
+      "title": "Implementation",
+      "items": [
+        "Built an Express + Svelte + MongoDB app for event participants to create fundraisers in one click.",
+        "Integrated Meta APIs so fundraiser creation events were captured at source instead of inferred later.",
+        "Surfaced donation activity in realtime, enabling chat and success teams to operate with current context."
+      ]
+    },
+    "outcomes": {
+      "title": "Outcomes",
+      "items": [
+        "Eliminated 48-hour baseline delay in fundraiser discovery and donation context.",
+        "Enabled operations across millions of users and tens of millions of donation data points.",
+        "Improved decision quality across sales, customer success, and analytics functions."
+      ]
+    },
+    "stack": {
+      "title": "Stack and ownership",
+      "items": [
+        "TypeScript",
+        "Node.js + Express",
+        "Svelte",
+        "MongoDB",
+        "Meta platform/API integrations"
+      ]
+    },
+    "action_refs": [
+      {
+        "source": "bundle",
+        "id": "archive_case_actions"
+      }
+    ]
+  },
+  {
+    "slug": "operational_visibility",
+    "page_title": "Supporting Proof | Custom Substack Publishing Platform",
+    "eyebrow": "Supporting Proof Archive · Platform Architecture",
+    "title": "Built a custom Substack publishing platform around a CMS event pipeline",
+    "summary": "This archived Rust publishing platform is supporting proof of systems design under integration constraints. It ingests Directus CMS events, processes them through queued workers, and executes automated publishing flows through a custom Substack integration.",
+    "challenge": {
+      "title": "Challenge",
+      "items": [
+        "Editorial and publishing workflows needed reliable automation across CMS content lifecycle events.",
+        "Substack operations required custom integration logic because official API support was limited for needed flows.",
+        "The system had to preserve determinism and observability across asynchronous event processing."
+      ]
+    },
+    "implementation": {
+      "title": "Implementation",
+      "items": [
+        "Built a custom Substack client/integration layer for publish-oriented automation paths.",
+        "Typed Directus webhook events by collection/operation and routed them into queue-backed processing.",
+        "Structured a 13-crate Rust workspace across libs, services, and tools to keep boundaries explicit.",
+        "Used Axum services and worker processing to run end-to-end automation chains from trigger to publish."
+      ]
+    },
+    "outcomes": {
+      "title": "Outcomes",
+      "items": [
+        "Replaced manual handoff-heavy publishing work with deterministic event-driven automation.",
+        "Created a reusable platform foundation for additional CMS-triggered automation chains.",
+        "Established a clear hardening roadmap through architecture review of reliability and CI/security gaps."
+      ]
+    },
+    "stack": {
+      "title": "Stack and ownership",
+      "items": [
+        "Rust",
+        "Axum",
+        "Directus webhooks",
+        "Queue workers",
+        "Substack custom integration",
+        "Monorepo architecture"
+      ]
+    },
+    "action_refs": [
+      {
+        "source": "bundle",
+        "id": "archive_case_actions"
+      }
+    ]
+  }
+]

@@ -6,15 +6,21 @@ This repo has two documentation layers:
 
 ## Start Here
 
-- [Root README](../README.md) for the project thesis, runtime surfaces, and quick evaluation path
-- [Professionalism In Practice](./professionalism-breakdown.md) for the engineering rationale behind the codebase
-- [Portfolio Demo Concepts](./portfolio-demos.md) for what each major demo is proving
+- [Root README](../README.md) for the current thesis, proof surfaces, and quick evaluation path
+- [Resume Realignment Status](./resume-realignment.md) for what the original proof pivot identified and what has now shipped
+- [Resume Alignment Packaging Status](./refactor-plan.md) for what the shared-content, IA-hardening, supporting-proof route-policy, and archive-collapse passes changed
+- [Site Content Authoring Guide](./site-content-authoring.md) for what belongs in `site_content/` versus runtime-owned code
+- [Sensitive Sync Architecture](./sensitive-sync-architecture.md) for the new encrypted-storage, token-lifecycle, and bounded-sync proof
+- [Auth + Sessions](./auth-sessions.md) for the session/auth portion of the shipped security proof
+- [Portfolio Demo Concepts](./portfolio-demos.md) for what each major demo is proving today
 
 ## Architecture And Boundaries
 
+- [Sensitive Sync Architecture](./sensitive-sync-architecture.md)
+- [Professionalism In Practice](./professionalism-breakdown.md)
 - [Project Audit](./project-audit.md)
-- [Refactor Plan](./refactor-plan.md)
-- [Auth + Sessions](./auth-sessions.md)
+- [Resume Alignment Packaging Status](./refactor-plan.md)
+- [Site Content Authoring Guide](./site-content-authoring.md)
 - [Tracing Plan](./tracing.md)
 - [Reference Map](./reference-map.md) for docs-first source routing inside the repo
 
@@ -71,10 +77,10 @@ This repo has two documentation layers:
 ## Suggested Reading Paths
 
 - **Hiring manager**
-  - [Root README](../README.md) -> [Professionalism In Practice](./professionalism-breakdown.md) -> [HTTP crate](../crates/http/README.md)
+  - [Root README](../README.md) -> [Sensitive Sync Architecture](./sensitive-sync-architecture.md) -> [Auth + Sessions](./auth-sessions.md) -> [HTTP crate](../crates/http/README.md)
 
 - **Senior engineer**
-  - [Root README](../README.md) -> [Project Audit](./project-audit.md) -> [domain](../crates/domain/README.md) -> [app](../crates/app/README.md) -> [infra](../crates/infra/README.md) -> [http](../crates/http/README.md)
+  - [Root README](../README.md) -> [Sensitive Sync Architecture](./sensitive-sync-architecture.md) -> [Project Audit](./project-audit.md) -> [domain](../crates/domain/README.md) -> [app](../crates/app/README.md) -> [infra](../crates/infra/README.md) -> [http](../crates/http/README.md)
 
-- **Frontend / realtime reviewer**
-  - [Root README](../README.md) -> [Portfolio Demo Concepts](./portfolio-demos.md) -> [http::views](../crates/http/src/views/README.md) -> [http::sse](../crates/http/src/sse/README.md)
+- **Runtime reviewer**
+  - [Root README](../README.md) -> [Sensitive Sync Architecture](./sensitive-sync-architecture.md) -> [Portfolio Demo Concepts](./portfolio-demos.md) -> [http::views](../crates/http/src/views/README.md) -> [http::sse](../crates/http/src/sse/README.md)

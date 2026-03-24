@@ -1,0 +1,91 @@
+{
+  "page_title": "Live Proof",
+  "hero": {
+    "eyebrow": "Live Proof Surface",
+    "title": "Secure Backend Systems, Shown Running",
+    "summary": "This lab lets reviewers inspect durable sessions, typed boundaries, and live runtime behavior in one Rust app. It is the current proof surface for the repo's secure-systems thesis.",
+    "badges": [
+      "auth + sessions",
+      "typed boundaries",
+      "sqlx + postgres",
+      "datastar + sse",
+      "argon2"
+    ],
+    "action_refs": [
+      {
+        "source": "bundle",
+        "id": "current_proof_actions"
+      }
+    ]
+  },
+  "session_card": {
+    "title": "Session status",
+    "guest_status": "No active session.",
+    "guest_summary": "Create an account to inspect session-backed auth in the live app.",
+    "signed_in_action_label": "Open account",
+    "guest_action_refs": [
+      {
+        "source": "action",
+        "id": "create_account"
+      },
+      {
+        "source": "action",
+        "id": "sign_in"
+      }
+    ]
+  },
+  "guest_chat": {
+    "title": "Live chat room",
+    "summary": "Sign in to send messages and see the chat room.",
+    "action_refs": [
+      {
+        "source": "action",
+        "id": "sign_in"
+      }
+    ]
+  },
+  "operations_surface": {
+    "title": "Runtime Inspection Surface",
+    "subtitle": "Run a demo interaction, then inspect request, backend, and SSE behavior as supporting proof for session posture and boundary discipline.",
+    "empty_message": "No timeline events yet. Trigger a demo action to populate the current proof surface."
+  },
+  "sensitive_proof": {
+    "title": "Sensitive record proof",
+    "subtitle": "Inspect encrypted-at-rest storage, key-custody state, capability-backed authorized reads, operator-only token visibility, denied-read evidence, and recent access audit state.",
+    "empty_message": "No sensitive-data snapshot loaded yet. Refresh the panel to inspect the current proof surface.",
+    "action_label": "Refresh proof"
+  },
+  "engineering_quality": {
+    "title": "Engineering Quality",
+    "subtitle": "Quality signals a reviewer can validate in the running app and the repo today.",
+    "cards": [
+      {
+        "title": "Trust boundaries stay explicit",
+        "summary": "Auth/session handling, transport code, app policy, and storage integration stay in their own lanes so security-sensitive behavior does not blur across layers.",
+        "points": [
+          "App services consume traits, not SQL primitives.",
+          "Domain types carry invariants at compile time.",
+          "HTTP handlers stay focused on protocol concerns."
+        ]
+      },
+      {
+        "title": "Runtime behavior is inspectable",
+        "summary": "The page exposes runtime surfaces that let a reviewer inspect backend behavior during normal interaction instead of relying on architecture claims alone.",
+        "points": [
+          "Live logs stream backend events without manual refresh.",
+          "Network traces show request shape and timing in context.",
+          "Interactive demos can be correlated against transport output."
+        ]
+      },
+      {
+        "title": "Guardrails catch drift early",
+        "summary": "Architecture, component, and fixture conventions are checked by scripts so regressions get caught before merge.",
+        "points": [
+          "Datastar command and SSE conventions are verified in CI.",
+          "Component composition and naming rules are enforced.",
+          "Shared content fixtures are validated before render."
+        ]
+      }
+    ]
+  }
+}

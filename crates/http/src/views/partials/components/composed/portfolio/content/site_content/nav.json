@@ -1,0 +1,35 @@
+[
+  {
+    "source": "action",
+    "id": "nav_live_proof"
+  },
+  {
+    "source": "action",
+    "id": "nav_current_proof"
+  },
+  {
+    "source": "action",
+    "id": "nav_supporting_proof"
+  },
+  {
+    "source": "action",
+    "id": "nav_open_source"
+  },
+  {
+    "source": "action",
+    "id": "nav_resume"
+  },
+  {
+    "source": "contact_method",
+    "id": "github"
+  },
+  {
+    "source": "contact_method",
+    "id": "linkedin"
+  },
+  {
+    "source": "contact_method",
+    "id": "email",
+    "label": "Contact"
+  }
+]

@@ -546,6 +546,7 @@ mod tests {
             .with_user(user_service)
             .with_auth(auth_service)
             .with_chat(chat_service)
+            .with_sensitive(app::sensitive::Service::disabled())
             .with_sse(sse_registry)
             .with_cookie_key(Key::generate())
             .with_trace_log(trace_log)

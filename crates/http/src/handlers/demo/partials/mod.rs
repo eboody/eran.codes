@@ -10,6 +10,7 @@ mod auth_status_flow;
 mod boundary_check_flow;
 mod db_check_flow;
 mod request_meta_flow;
+mod sensitive_proof_flow;
 mod session_status_flow;
 
 pub async fn auth_status_partial(
@@ -94,4 +95,15 @@ pub async fn ping_partial(Extension(_state): Extension<crate::State>) -> impl In
 
 pub async fn request_burst_probe() -> impl IntoResponse {
     http::StatusCode::NO_CONTENT
+}
+
+pub async fn sensitive_proof_partial(
+    auth_session: crate::auth::Session,
+    Extension(state): Extension<crate::State>,
+) -> crate::Result<impl IntoResponse> {
+    tracing::info!(target: "demo.sensitive", "sensitive proof requested");
+    let prepared = sensitive_proof_flow::IncomingFlow::new()
+        .prepare_snapshot(&auth_session, &state)
+        .await?;
+    Ok(prepared.into_response())
 }

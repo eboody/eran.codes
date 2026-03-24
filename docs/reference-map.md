@@ -20,6 +20,9 @@ If a requested fact is not present in local sources, explicitly say it is not fo
 ## Task Routing
 
 ### Architecture and Boundaries
+- `docs/resume-realignment.md`
+- `docs/sensitive-sync-architecture.md`
+- `docs/site-content-authoring.md`
 - `docs/writing-style.md`
 - `docs/project-audit.md`
 - `docs/refactor-plan.md`

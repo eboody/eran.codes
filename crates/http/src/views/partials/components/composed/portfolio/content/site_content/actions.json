@@ -1,0 +1,125 @@
+{
+  "action_links": [
+    {
+      "id": "nav_live_proof",
+      "label": "Live Proof",
+      "href": "/lab",
+      "tone": "secondary"
+    },
+    {
+      "id": "nav_current_proof",
+      "label": "Current Proof",
+      "href": "/work/sensitive-sync",
+      "tone": "secondary"
+    },
+    {
+      "id": "nav_supporting_proof",
+      "label": "Supporting Proof",
+      "href": "/work",
+      "tone": "secondary"
+    },
+    {
+      "id": "nav_open_source",
+      "label": "Open Source",
+      "href": "/open-source",
+      "tone": "secondary"
+    },
+    {
+      "id": "nav_resume",
+      "label": "Resume",
+      "href": "/resume.txt",
+      "tone": "secondary"
+    },
+    {
+      "id": "open_live_proof",
+      "label": "Open live proof",
+      "href": "/lab",
+      "tone": "primary"
+    },
+    {
+      "id": "read_current_proof_case",
+      "label": "Read current proof case",
+      "href": "/work/sensitive-sync",
+      "tone": "secondary"
+    },
+    {
+      "id": "browse_supporting_proof",
+      "label": "Browse supporting proof archive",
+      "href": "/work",
+      "tone": "secondary"
+    },
+    {
+      "id": "explore_open_source",
+      "label": "Explore open-source work",
+      "href": "/open-source",
+      "tone": "secondary"
+    },
+    {
+      "id": "inspect_sensitive_proof",
+      "label": "Inspect sensitive proof",
+      "href": "/lab#sensitive-proof",
+      "tone": "primary"
+    },
+    {
+      "id": "create_account",
+      "label": "Create account",
+      "href": "/register",
+      "tone": "primary"
+    },
+    {
+      "id": "sign_in",
+      "label": "Sign in",
+      "href": "/login",
+      "tone": "secondary"
+    },
+    {
+      "id": "back_to_supporting_proof",
+      "label": "Back to supporting proof archive",
+      "href": "/work",
+      "tone": "secondary"
+    },
+    {
+      "id": "review_current_proof_case",
+      "label": "Review current proof case",
+      "href": "/work/sensitive-sync",
+      "tone": "primary"
+    }
+  ],
+  "action_bundles": [
+    {
+      "id": "current_proof_actions",
+      "references": [
+        {
+          "source": "action",
+          "id": "inspect_sensitive_proof"
+        },
+        {
+          "source": "action",
+          "id": "read_current_proof_case"
+        }
+      ]
+    },
+    {
+      "id": "open_source_actions",
+      "references": [
+        {
+          "source": "action",
+          "id": "explore_open_source"
+        }
+      ]
+    },
+    {
+      "id": "archive_case_actions",
+      "references": [
+        {
+          "source": "action",
+          "id": "review_current_proof_case"
+        },
+        {
+          "source": "action",
+          "id": "back_to_supporting_proof"
+        }
+      ]
+    }
+  ]
+}

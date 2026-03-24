@@ -6,8 +6,10 @@ mod support;
 
 pub use layout::{
     EngineeringQuality, HomeHero, OperationalRequestFilter, RequestBurstDemo,
-    TabSetShowcase,
+    SensitiveProofPanel, TabSetShowcase,
 };
 pub use log::{RequestTraceLog, TransportLogSet};
 pub use misc::Ping;
-pub use support::{AuthStatus, BoundaryCheck, DbCheck, RequestMeta, SessionStatus};
+pub use support::{
+    AuthStatus, BoundaryCheck, DbCheck, RequestMeta, SensitiveProof, SessionStatus,
+};

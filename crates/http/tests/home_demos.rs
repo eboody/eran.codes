@@ -3,7 +3,10 @@ use std::sync::Arc;
 use async_trait::async_trait;
 use axum::{
     body::{Body, to_bytes},
-    http::{Request, header::SET_COOKIE},
+    http::{
+        Request,
+        header::{LOCATION, SET_COOKIE},
+    },
 };
 use tower::ServiceExt;
 use tower_cookies::Key;
@@ -75,6 +78,7 @@ fn test_app() -> axum::Router {
         .with_user(user_service)
         .with_auth(auth_service)
         .with_chat(chat)
+        .with_sensitive(app::sensitive::Service::disabled())
         .with_sse(sse_registry)
         .with_cookie_key(cookie_key)
         .with_trace_log(trace_log)
@@ -303,10 +307,19 @@ async fn lab_page_includes_demo_sections() {
     for copy in LabContract::all() {
         assert!(body.contains(copy.as_str()));
     }
+
+    assert!(!body.contains("Production Rust Systems, Demonstrated Live"));
 }
 
 #[derive(Clone, Copy, Debug)]
 enum LabContract {
+    ProofKicker,
+    ProofHeadline,
+    LiveProofNav,
+    CurrentProofNav,
+    RuntimeInspectionTitle,
+    SensitiveProofTitle,
+    GuardrailsCard,
     OperationsSurface,
     NetworkLogTarget,
     RequestBurstEndpoint,
@@ -328,6 +341,13 @@ enum LabContract {
 impl LabContract {
     fn all() -> &'static [LabContract] {
         &[
+            LabContract::ProofKicker,
+            LabContract::ProofHeadline,
+            LabContract::LiveProofNav,
+            LabContract::CurrentProofNav,
+            LabContract::RuntimeInspectionTitle,
+            LabContract::SensitiveProofTitle,
+            LabContract::GuardrailsCard,
             LabContract::OperationsSurface,
             LabContract::NetworkLogTarget,
             LabContract::RequestBurstEndpoint,
@@ -349,6 +369,13 @@ impl LabContract {
 
     fn as_str(self) -> &'static str {
         match self {
+            LabContract::ProofKicker => "Live Proof Surface",
+            LabContract::ProofHeadline => "Secure Backend Systems, Shown Running",
+            LabContract::LiveProofNav => "Live Proof",
+            LabContract::CurrentProofNav => "Current Proof",
+            LabContract::RuntimeInspectionTitle => "Runtime Inspection Surface",
+            LabContract::SensitiveProofTitle => "Sensitive record proof",
+            LabContract::GuardrailsCard => "Guardrails catch drift early",
             LabContract::OperationsSurface => "id=\"operations-surface\"",
             LabContract::NetworkLogTarget => "id=\"network-log-target\"",
             LabContract::RequestBurstEndpoint => "/partials/request-burst-probe",
@@ -358,7 +385,7 @@ impl LabContract {
             LabContract::TablistRole => "role=\"tablist\"",
             LabContract::TabRole => "role=\"tab\"",
             LabContract::TabpanelRole => "role=\"tabpanel\"",
-            LabContract::ResumeLink => "/static/resume.txt",
+            LabContract::ResumeLink => "/resume.txt",
             LabContract::GithubLink => "https://github.com/eboody/eran.codes",
             LabContract::LinkedInLink => {
                 "https://www.linkedin.com/search/results/all/?keywords=Eran%20Boodnero"
@@ -387,17 +414,57 @@ async fn home_page_includes_portfolio_sections() {
     for copy in PortfolioHomeContract::all() {
         assert!(body.contains(copy.as_str()));
     }
+
+    assert!(!body.contains(
+        "I ship systems that remove operational bottlenecks and improve execution speed."
+    ));
+    assert!(!body.contains("Current implementation and supporting proof"));
+}
+
+#[tokio::test]
+async fn resume_text_route_renders_from_shared_content() {
+    let app = test_app();
+    let response = app
+        .oneshot(Request::get("/resume.txt").body(Body::empty()).unwrap())
+        .await
+        .unwrap();
+
+    let status = response.status();
+    let content_type = response
+        .headers()
+        .get(axum::http::header::CONTENT_TYPE)
+        .and_then(|value| value.to_str().ok())
+        .unwrap_or_default()
+        .to_string();
+    let body = to_bytes(response.into_body(), usize::MAX).await.unwrap();
+    let body = String::from_utf8_lossy(&body);
+
+    assert_eq!(status, axum::http::StatusCode::OK, "resume body:\n{body}");
+    assert!(content_type.contains("text/plain"));
+    assert!(body.contains("# Eran Boodnero"));
+    assert!(body.contains("## Professional Summary"));
+    assert!(body.contains("## Selected Projects"));
+    assert!(body.contains("Encrypted Sensitive Record Sync in Rust"));
 }
 
 #[derive(Clone, Copy, Debug)]
 enum PortfolioHomeContract {
     PortfolioMain,
     HeroSection,
+    PivotHeadline,
+    ExperienceTitle,
+    SelectedProjectsTitle,
+    CurrentProofTitle,
+    CurrentProofNav,
+    CurrentProofRoute,
+    SupportingProofNav,
     WorkRoute,
     OpenSourceRoute,
     LabRoute,
+    ResumeRoute,
     WorkCaseRoute,
     OpenSourceTitle,
+    SkillsTitle,
     BrandMarkWrap,
     LightBrandLogo,
     DarkBrandLogo,
@@ -412,11 +479,20 @@ impl PortfolioHomeContract {
         &[
             PortfolioHomeContract::PortfolioMain,
             PortfolioHomeContract::HeroSection,
+            PortfolioHomeContract::PivotHeadline,
+            PortfolioHomeContract::ExperienceTitle,
+            PortfolioHomeContract::SelectedProjectsTitle,
+            PortfolioHomeContract::CurrentProofTitle,
+            PortfolioHomeContract::CurrentProofNav,
+            PortfolioHomeContract::CurrentProofRoute,
+            PortfolioHomeContract::SupportingProofNav,
             PortfolioHomeContract::WorkRoute,
             PortfolioHomeContract::OpenSourceRoute,
             PortfolioHomeContract::LabRoute,
+            PortfolioHomeContract::ResumeRoute,
             PortfolioHomeContract::WorkCaseRoute,
             PortfolioHomeContract::OpenSourceTitle,
+            PortfolioHomeContract::SkillsTitle,
             PortfolioHomeContract::BrandMarkWrap,
             PortfolioHomeContract::LightBrandLogo,
             PortfolioHomeContract::DarkBrandLogo,
@@ -431,11 +507,22 @@ impl PortfolioHomeContract {
         match self {
             PortfolioHomeContract::PortfolioMain => "data-portfolio-page",
             PortfolioHomeContract::HeroSection => "ui-portfolio-hero",
+            PortfolioHomeContract::PivotHeadline => {
+                "I build secure backend systems with explicit trust boundaries."
+            }
+            PortfolioHomeContract::ExperienceTitle => "Most relevant experience",
+            PortfolioHomeContract::SelectedProjectsTitle => "Selected projects",
+            PortfolioHomeContract::CurrentProofTitle => "Current secure-data proof",
+            PortfolioHomeContract::CurrentProofNav => "Current Proof",
+            PortfolioHomeContract::CurrentProofRoute => "href=\"/work/sensitive-sync\"",
+            PortfolioHomeContract::SupportingProofNav => "Supporting Proof",
             PortfolioHomeContract::WorkRoute => "href=\"/work\"",
             PortfolioHomeContract::OpenSourceRoute => "href=\"/open-source\"",
             PortfolioHomeContract::LabRoute => "href=\"/lab\"",
-            PortfolioHomeContract::WorkCaseRoute => "href=\"/work/chat-realtime\"",
-            PortfolioHomeContract::OpenSourceTitle => "Open-source proof of how I think",
+            PortfolioHomeContract::ResumeRoute => "href=\"/resume.txt\"",
+            PortfolioHomeContract::WorkCaseRoute => "href=\"/work#chat-realtime\"",
+            PortfolioHomeContract::OpenSourceTitle => "Open-source systems design work",
+            PortfolioHomeContract::SkillsTitle => "Skills and technical focus",
             PortfolioHomeContract::BrandMarkWrap => "data-nav-brand-mark-wrap",
             PortfolioHomeContract::LightBrandLogo => "/static/eran.codes-light.svg",
             PortfolioHomeContract::DarkBrandLogo => "/static/eran.codes-dark.svg",
@@ -486,13 +573,7 @@ async fn health_endpoint_returns_ok() {
 #[tokio::test]
 async fn work_routes_render_successfully() {
     let app = test_app();
-    let routes = [
-        "/work",
-        "/open-source",
-        "/work/chat-realtime",
-        "/work/command-sse",
-        "/work/operational-visibility",
-    ];
+    let routes = ["/work", "/open-source", "/work/sensitive-sync"];
 
     for route in routes {
         let response = app
@@ -505,6 +586,130 @@ async fn work_routes_render_successfully() {
             response.status(),
             axum::http::StatusCode::OK,
             "route {route} should return 200",
+        );
+    }
+}
+
+#[tokio::test]
+async fn work_index_prioritizes_current_proof_before_supporting_archive() {
+    let app = test_app();
+    let response = app
+        .oneshot(Request::get("/work").body(Body::empty()).unwrap())
+        .await
+        .unwrap();
+
+    assert_eq!(response.status(), axum::http::StatusCode::OK);
+
+    let body = to_bytes(response.into_body(), usize::MAX).await.unwrap();
+    let body = String::from_utf8_lossy(&body);
+    let current_title = "Current flagship proof";
+    let archive_subtitle = "These older case studies stay reachable as archived support.";
+    let current_case = "Encrypted Sensitive Record Sync in Rust";
+    let archive_case = "Automated Fundraiser Acknowledgment at Scale";
+
+    assert!(
+        body.find(current_title).unwrap() < body.find(archive_subtitle).unwrap(),
+        "current proof section should render before supporting archive",
+    );
+    assert!(
+        body.find(current_case).unwrap() < body.find(archive_case).unwrap(),
+        "current proof card should render before archived supporting cases",
+    );
+    assert!(body.contains("Archived supporting-proof details"));
+    assert!(body.contains("id=\"chat-realtime\""));
+    assert!(body.contains("id=\"command-sse\""));
+    assert!(body.contains("id=\"operational-visibility\""));
+}
+
+#[tokio::test]
+async fn work_archive_renders_legacy_case_details() {
+    let app = test_app();
+    let response = app
+        .oneshot(Request::get("/work").body(Body::empty()).unwrap())
+        .await
+        .unwrap();
+
+    assert_eq!(response.status(), axum::http::StatusCode::OK);
+
+    let body = to_bytes(response.into_body(), usize::MAX).await.unwrap();
+    let body = String::from_utf8_lossy(&body);
+
+    for (anchor_id, summary, implementation_marker) in [
+        (
+            "chat-realtime",
+            "This archived GoodUnited case study is supporting proof of execution under operational pressure.",
+            "Built a Playwright + TypeScript automation worker to emulate the existing browser workflow end to end.",
+        ),
+        (
+            "command-sse",
+            "This archived fundraiser pipeline is supporting proof of building under live integration pressure.",
+            "Built an Express + Svelte + MongoDB app for event participants to create fundraisers in one click.",
+        ),
+        (
+            "operational-visibility",
+            "This archived Rust publishing platform is supporting proof of systems design under integration constraints.",
+            "Built a custom Substack client/integration layer for publish-oriented automation paths.",
+        ),
+    ] {
+        assert!(body.contains(&format!("id=\"{anchor_id}\"")));
+        assert!(body.contains(summary));
+        assert!(body.contains(implementation_marker));
+    }
+    assert!(body.contains("Back to supporting proof archive"));
+    assert!(body.contains("Review current proof case"));
+}
+
+#[tokio::test]
+async fn work_sensitive_sync_page_stays_live() {
+    let app = test_app();
+    let response = app
+        .oneshot(
+            Request::get("/work/sensitive-sync")
+                .body(Body::empty())
+                .unwrap(),
+        )
+        .await
+        .unwrap();
+
+    assert_eq!(response.status(), axum::http::StatusCode::OK);
+
+    let body = to_bytes(response.into_body(), usize::MAX).await.unwrap();
+    let body = String::from_utf8_lossy(&body);
+    assert!(body.contains("Current Proof | Encrypted Sensitive Record Sync"));
+    assert!(body.contains("Inspect sensitive proof"));
+}
+
+#[tokio::test]
+async fn legacy_work_routes_redirect_to_archive_anchors() {
+    let app = test_app();
+    let expectations = [
+        ("/work/chat-realtime", "/work#chat-realtime"),
+        ("/work/command-sse", "/work#command-sse"),
+        (
+            "/work/operational-visibility",
+            "/work#operational-visibility",
+        ),
+    ];
+
+    for (route, location) in expectations {
+        let response = app
+            .clone()
+            .oneshot(Request::get(route).body(Body::empty()).unwrap())
+            .await
+            .unwrap();
+
+        assert_eq!(
+            response.status(),
+            axum::http::StatusCode::PERMANENT_REDIRECT,
+            "route {route} should redirect permanently",
+        );
+        assert_eq!(
+            response
+                .headers()
+                .get(LOCATION)
+                .and_then(|value| value.to_str().ok()),
+            Some(location),
+            "route {route} should redirect to archive anchor",
         );
     }
 }

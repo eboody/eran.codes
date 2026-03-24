@@ -1,5 +1,6 @@
 mod config;
 mod error;
+mod sensitive_provider_stub;
 
 use std::sync::Arc;
 
@@ -31,6 +32,24 @@ async fn main() -> error::Result<()> {
         .await
         .context(error::InitInfraSnafu)?;
 
+    let provider_stub_addr = cfg.sensitive.provider_stub_addr();
+    let provider_stub_listener = tokio::net::TcpListener::bind(&provider_stub_addr)
+        .await
+        .context(error::BindSensitiveProviderListenerSnafu {
+        addr: provider_stub_addr.clone(),
+    })?;
+    let provider_stub =
+        sensitive_provider_stub::router(cfg.sensitive.provider_stub_failure_mode);
+    tokio::spawn(async move {
+        if let Err(error) = axum::serve(provider_stub_listener, provider_stub).await {
+            tracing::warn!(?error, "sensitive provider stub exited");
+        }
+    });
+    tracing::info!(
+        "sensitive provider stub listening on http://{}",
+        provider_stub_addr
+    );
+
     let user_repo = Arc::new(infra::repo::user::Repository::new(infra.db.clone()));
     let auth_hasher = Arc::new(infra::auth::Argon2Hasher::new());
     let user_service = user::Service::new(user_repo, auth_hasher.clone());
@@ -54,11 +73,35 @@ async fn main() -> error::Result<()> {
         .with_id_generator(chat_ids)
         .build();
 
+    let sensitive_crypto = infra::crypto::Keyring::new(
+        cfg.sensitive.data_encryption_keys.clone(),
+        cfg.sensitive.active_data_key_id.clone(),
+        &cfg.sensitive.disabled_data_key_ids,
+    )
+    .context(error::BuildSensitiveKeyringSnafu)?;
+    let sensitive_repo = Arc::new(infra::sensitive::Repository::new(
+        infra.db.clone(),
+        sensitive_crypto,
+    ));
+    let sensitive_provider = Arc::new(infra::sensitive_boundary::HttpProvider::new(
+        infra.http.clone(),
+        &cfg.sensitive.provider_base_url(),
+    ));
+    let sensitive_clock = Arc::new(infra::sensitive::SystemClock::new());
+    let sensitive_bootstrap = app::sensitive::BootstrapGrants::new(
+        cfg.sensitive.reader_emails.clone(),
+        cfg.sensitive.operator_emails.clone(),
+    );
+    let sensitive_service =
+        app::sensitive::Service::new(sensitive_repo, sensitive_provider, sensitive_clock)
+            .with_bootstrap_grants(sensitive_bootstrap);
+
     let session_key = Key::from(&cfg.http.session_secret);
     let http_state = http::State::builder()
-        .with_user(user_service)
+        .with_user(user_service.clone())
         .with_auth(auth_service)
         .with_chat(chat_service)
+        .with_sensitive(sensitive_service.clone())
         .with_sse(sse_registry)
         .with_cookie_key(session_key.clone())
         .with_trace_log(trace_log)
@@ -74,6 +117,85 @@ async fn main() -> error::Result<()> {
             .await
         {
             tracing::warn!(?error, "session cleanup task failed");
+        }
+    });
+
+    for email in sensitive_service.bootstrap_grants().configured_emails() {
+        match user_service.find_by_email(email.clone()).await {
+            Ok(Some(user)) => {
+                if let Err(error) = sensitive_service
+                    .reconcile_bootstrap_grants_for_user(user.id, &user.email)
+                    .await
+                {
+                    tracing::warn!(
+                        ?error,
+                        email = %email,
+                        "sensitive bootstrap grant reconciliation failed",
+                    );
+                }
+            }
+            Ok(None) => {
+                tracing::info!(
+                    email = %email,
+                    "sensitive bootstrap grant skipped because user was not found",
+                );
+            }
+            Err(error) => {
+                tracing::warn!(
+                    ?error,
+                    email = %email,
+                    "sensitive bootstrap grant lookup failed",
+                );
+            }
+        }
+    }
+
+    if let Err(error) = sensitive_service.refresh_provider_token().await {
+        tracing::warn!(?error, "initial sensitive token refresh failed");
+    }
+    if let Err(error) = sensitive_service.run_sync().await {
+        tracing::warn!(?error, "initial sensitive sync failed");
+    }
+    if let Err(error) = sensitive_service
+        .run_key_rotation_pass(cfg.sensitive.rotation_batch_size)
+        .await
+    {
+        tracing::warn!(?error, "initial sensitive key rotation pass failed");
+    }
+
+    let sensitive_refresh_interval =
+        std::time::Duration::from_secs(cfg.sensitive.token_refresh_interval_secs);
+    spawn_repeating_task("sensitive token refresh", sensitive_refresh_interval, {
+        let sensitive = sensitive_service.clone();
+        move || {
+            let sensitive = sensitive.clone();
+            async move { sensitive.refresh_provider_token().await.map(|_| ()) }
+        }
+    });
+
+    let sensitive_sync_interval =
+        std::time::Duration::from_secs(cfg.sensitive.sync_interval_secs);
+    spawn_repeating_task("sensitive sync", sensitive_sync_interval, {
+        let sensitive = sensitive_service.clone();
+        move || {
+            let sensitive = sensitive.clone();
+            async move { sensitive.run_sync().await.map(|_| ()) }
+        }
+    });
+
+    let sensitive_rotation_interval =
+        std::time::Duration::from_secs(cfg.sensitive.rotation_interval_secs);
+    let sensitive_rotation_batch_size = cfg.sensitive.rotation_batch_size;
+    spawn_repeating_task("sensitive key rotation", sensitive_rotation_interval, {
+        let sensitive = sensitive_service.clone();
+        move || {
+            let sensitive = sensitive.clone();
+            async move {
+                sensitive
+                    .run_key_rotation_pass(sensitive_rotation_batch_size)
+                    .await
+                    .map(|_| ())
+            }
         }
     });
 
@@ -121,6 +243,27 @@ fn init_tracing(trace_log: http::trace_log::Store, diagnostic_log: http::trace_l
                 .init();
         }
     }
+}
+
+fn spawn_repeating_task<Factory, Fut, E>(
+    task_name: &'static str,
+    interval: std::time::Duration,
+    make_future: Factory,
+) where
+    Factory: Fn() -> Fut + Send + Sync + 'static,
+    Fut: core::future::Future<Output = Result<(), E>> + Send + 'static,
+    E: std::fmt::Debug + Send + 'static,
+{
+    tokio::spawn(async move {
+        let mut ticker = tokio::time::interval(interval);
+        ticker.tick().await;
+        loop {
+            ticker.tick().await;
+            if let Err(error) = make_future().await {
+                tracing::warn!(task = task_name, ?error, "background task failed");
+            }
+        }
+    });
 }
 
 #[derive(Clone, Copy, Debug)]

@@ -11,12 +11,16 @@ pub enum Route {
     Work,
     #[strum(serialize = "/open-source")]
     OpenSource,
+    #[strum(serialize = "/resume.txt")]
+    ResumeText,
     #[strum(serialize = "/work/chat-realtime")]
     WorkChatRealtime,
     #[strum(serialize = "/work/command-sse")]
     WorkCommandSse,
     #[strum(serialize = "/work/operational-visibility")]
     WorkOperationalVisibility,
+    #[strum(serialize = "/work/sensitive-sync")]
+    WorkSensitiveSync,
     #[strum(serialize = "/login")]
     Login,
     #[strum(serialize = "/register")]
@@ -49,6 +53,8 @@ pub enum Route {
     PartialDbCheck,
     #[strum(serialize = "/partials/request-burst-probe")]
     PartialRequestBurstProbe,
+    #[strum(serialize = "/partials/sensitive-proof")]
+    PartialSensitiveProof,
     #[strum(serialize = "/partials/ping")]
     PartialPing,
     #[strum(serialize = "/partials/surreal-message-guarded")]
@@ -64,9 +70,11 @@ impl Route {
             Route::Lab => "/lab",
             Route::Work => "/work",
             Route::OpenSource => "/open-source",
+            Route::ResumeText => "/resume.txt",
             Route::WorkChatRealtime => "/work/chat-realtime",
             Route::WorkCommandSse => "/work/command-sse",
             Route::WorkOperationalVisibility => "/work/operational-visibility",
+            Route::WorkSensitiveSync => "/work/sensitive-sync",
             Route::Login => "/login",
             Route::Register => "/register",
             Route::Logout => "/logout",
@@ -83,6 +91,7 @@ impl Route {
             Route::PartialBoundaryCheck => "/partials/boundary-check",
             Route::PartialDbCheck => "/partials/db-check",
             Route::PartialRequestBurstProbe => "/partials/request-burst-probe",
+            Route::PartialSensitiveProof => "/partials/sensitive-proof",
             Route::PartialPing => "/partials/ping",
             Route::PartialSurrealGuarded => "/partials/surreal-message-guarded",
             Route::PartialSurrealCancel => "/partials/surreal-message-cancel",

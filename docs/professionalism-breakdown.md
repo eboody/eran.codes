@@ -2,8 +2,10 @@
 
 This page explains how engineering judgment shows up in this codebase, with concrete examples.
 
-## 1) Boundary-first modeling
-Professional code keeps policy and mechanisms in the right place. In this repo, app code defines contracts, and infra code implements them.
+It is part of the repo's current proof surface: durable auth and session handling, encrypted-record storage, bounded sync behavior, explicit trust boundaries, typed invariants, and runtime inspection.
+
+## 1) Trust-boundary modeling
+Professional code keeps policy and mechanisms in the right place. In this repo, app code defines contracts and infra code implements them.
 
 ```rust
 // crates/app/src/chat/mod.rs
@@ -42,7 +44,7 @@ Why this matters:
 - Safer refactors across layers.
 - Better readability at call sites (`MessageStatus::Visible` vs `"visible"`).
 
-## 3) Centralized error contracts
+## 3) Centralized failure contracts
 Professional APIs are predictable under failure. Error mapping is centralized so handlers stay focused on workflow, not response edge-cases.
 
 ```rust
@@ -62,8 +64,8 @@ Why this matters:
 - Easier to add new error types without duplicating response logic.
 - Cleaner handler implementations.
 
-## 4) Observability designed as architecture
-Professional systems distinguish product-facing live logs from deep diagnostic events.
+## 4) Runtime inspection as supporting proof
+Professional systems distinguish reviewer-facing inspection surfaces from deeper diagnostic events.
 
 ```rust
 // crates/http/src/trace_log.rs
@@ -81,8 +83,8 @@ pub enum LogTargetKnown {
 ```
 
 Why this matters:
-- Live UI gets the right amount of signal.
-- Diagnostic data remains available without polluting the product view.
+- The live UI exposes enough signal to inspect request and transport behavior directly.
+- Diagnostic data remains available without polluting the reviewer-facing surface.
 - Trace semantics are explicit and testable.
 
 ## 5) Reusable view components with typed inputs
@@ -105,7 +107,7 @@ Why this matters:
 - UI consistency is enforced by construction.
 
 ## 6) Builders as readable wiring
-Professional systems optimize for maintainers. Builder pipelines make composition roots self-documenting.
+Professional systems optimize for maintainers. Builder pipelines make composition roots self-documenting, especially where auth, chat, SSE, and tracing have to stay explicit.
 
 ```rust
 // crates/http/src/state.rs

@@ -1,5 +1,7 @@
 # Auth + Sessions: How It Works
 
+This is one of the shipped proof surfaces for the repo's secure-systems thesis, alongside the encrypted sensitive-data and bounded sync slice.
+
 This project uses `axum-login` for authentication and `tower-sessions` for session storage. Think of it as:
 
 - `axum-login`: auth orchestration (login/logout, current user, session auth hash).
@@ -67,10 +69,10 @@ Session cookies are configured in `crates/http/src/router/layers.rs`:
 
 ## Demo hooks
 
-The home page uses interactive demos that show:
+The live proof surfaces show:
 
 - Current auth/session status.
 - Request metadata and tracing logs.
 - SQL statements + timings from infra repositories.
 
-These are wired through partial endpoints in `crates/http/src/handlers.rs` and trace capture in `crates/http/src/trace_log.rs`.
+These are wired through partial endpoints in `crates/http/src/handlers.rs` and trace capture in `crates/http/src/trace_log.rs`, and they let reviewers inspect the session/auth foundation directly beside the encrypted-record and sync proof now shipped in the repo.

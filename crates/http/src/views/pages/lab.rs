@@ -125,6 +125,7 @@ pub struct Lab {
 
 impl maud::Render for Lab {
     fn render(&self) -> maud::Markup {
+        let content_model = partials::components::portfolio::content::lab_page_content();
         let content = maud::html! {
             div data-lab-page data-page-section {
                 (css())
@@ -136,6 +137,8 @@ impl maud::Render for Lab {
                     .endpoint(Text::from(Route::PartialRequestBurstProbe.as_str()))
                     .build())
 
+                (partials::SensitiveProofPanel::builder().build())
+
                 @if let Some(chat_demo) = &self.chat_demo { (chat_demo.render()) } @else {
                     section
                         id=(partials::chat::DemoSection::ANCHOR_ID)
@@ -144,16 +147,16 @@ impl maud::Render for Lab {
                     {
                         ({
                             partials::SectionHeader::builder()
-                                .title(Text::from("Live chat room"))
-                                .subtitle(
-                                    Text::from(
-                                        "Sign in to send messages and see the chat room.",
-                                    ),
-                                )
+                                .title(content_model.guest_chat.title.clone())
+                                .subtitle(content_model.guest_chat.summary.clone())
                                 .action(partials::button::Button::builder()
-                                    .label(Text::from("Sign in"))
+                                    .label(
+                                        content_model.guest_chat.actions[0].label.clone(),
+                                    )
                                     .variant(partials::button::Variant::Secondary)
-                                    .role(partials::button::Role::link(Route::Login.as_str()))
+                                    .role(partials::button::Role::link(
+                                        content_model.guest_chat.actions[0].href.clone(),
+                                    ))
                                     .build())
                                 .build()
                         })
@@ -167,12 +170,8 @@ impl maud::Render for Lab {
                 {
                     ({
                         partials::SectionHeader::builder()
-                            .title(Text::from("Operational View"))
-                            .subtitle(
-                                Text::from(
-                                    "Run a demo interaction, then follow request, backend, and SSE behavior in one timeline.",
-                                ),
-                            )
+                            .title(content_model.operations_surface.title.clone())
+                            .subtitle(content_model.operations_surface.subtitle.clone())
                             .build()
                     })
                     ({
@@ -183,11 +182,7 @@ impl maud::Render for Lab {
                     ({
                         partials::DemoResultPlaceholder::builder()
                             .target_id(Text::from("network-log-target"))
-                            .message(
-                                Text::from(
-                                    "No timeline events yet. Trigger a demo action to populate this view.",
-                                ),
-                            )
+                            .message(content_model.operations_surface.empty_message.clone())
                             .build()
                     })
                 }
@@ -198,7 +193,7 @@ impl maud::Render for Lab {
         let content = page::Frame::builder().content(content).build().render();
 
         page::Layout::builder()
-            .title("Live Lab")
+            .title(&content_model.page_title.to_string())
             .content(content)
             .sse_mode(page::SseMode::Enabled)
             .maybe_with_user(self.user.clone())

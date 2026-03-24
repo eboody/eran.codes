@@ -3,20 +3,22 @@ use maud::{Markup, Render};
 use crate::types::Text;
 use crate::views::partials;
 
-use super::content::{CmsActionLink, CtaKind, ProofKind};
+use super::content::{CmsActionLink, CtaKind};
 
 mod case_detail;
 mod closing;
 mod crate_section;
+mod experience;
 mod hero;
-mod proof_strip;
+mod skill_groups;
 mod work;
 
-pub use case_detail::WorkCaseDetail;
+pub use case_detail::{ArchiveCaseDetailsSection, WorkCaseDetail};
 pub use closing::ClosingSection;
 pub use crate_section::CrateSection;
+pub use experience::ExperienceSection;
 pub use hero::PortfolioHero;
-pub use proof_strip::ProofStrip;
+pub use skill_groups::SkillGroupsSection;
 pub use work::{SupportingTeaserSection, WorkIndexSection, WorkSection};
 
 #[derive(Clone, Copy, Debug)]
@@ -152,12 +154,4 @@ pub(super) fn render_actions(actions: &[CmsActionLink]) -> partials::button::Row
                 .collect(),
         )
         .build()
-}
-
-pub(super) fn proof_kind_attr(kind: ProofKind) -> &'static str {
-    match kind {
-        ProofKind::Outcome => "outcome",
-        ProofKind::Architecture => "architecture",
-        ProofKind::Reliability => "reliability",
-    }
 }

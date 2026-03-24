@@ -63,6 +63,7 @@
         const panel = panelForTab(root, tab);
         if (panel) {
           panel.hidden = !selected;
+          panel.style.display = selected ? '' : 'none';
           panel.tabIndex = selected ? 0 : -1;
 
           if (selected && animate && value !== previousValue) {

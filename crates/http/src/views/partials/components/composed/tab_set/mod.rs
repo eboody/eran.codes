@@ -2,7 +2,9 @@ use bon::Builder;
 use maud::Render;
 
 use crate::types::Text;
-use crate::views::partials::components::{Tab, TabInteraction};
+use crate::views::partials::components::{
+    LocalTabRoot, LocalTabRootSurface, Tab, TabInteraction,
+};
 use crate::views::proper_theme::{Palette, THEME};
 
 crate::views::scoped::inline_css!(
@@ -13,7 +15,6 @@ me.tab-set-showcase {
   --_tab-set-shell-padding: clamp(0.95rem, 0.82rem + 0.55vw, 1.3rem);
   --_tab-set-code-stack-gap: clamp(0.8rem, 0.72rem + 0.35vw, 1.05rem);
   --_tab-set-badge-padding: 0.35rem 0.65rem;
-  --_tab-set-panel-enter-offset: calc(var(--space-2) * 0.5);
 
   background:
     linear-gradient(
@@ -142,29 +143,8 @@ me .tab-set__panel {
   padding-block-start: var(--space-2);
 }
 
-me .tab-set__panel[hidden] {
-  display: none;
-}
-
-me .tab-set__panel[data-local-tab-entering] {
-  animation: tab-set-panel-enter var(--motion-standard) var(--ease-3);
-  transform-origin: top center;
-}
-
 me .tab-set__panel > * {
   min-width: 0;
-}
-
-@keyframes tab-set-panel-enter {
-  from {
-    opacity: 0;
-    transform: translateY(var(--_tab-set-panel-enter-offset));
-  }
-
-  to {
-    opacity: 1;
-    transform: translateY(0);
-  }
 }
 
 me .tab-set__preview-frame {
@@ -498,11 +478,6 @@ me .tab-set__subtitle {
   }
 }
 
-@media (prefers-reduced-motion: reduce) {
-  me .tab-set__panel[data-local-tab-entering] {
-    animation: none;
-  }
-}
 "#
 );
 
@@ -564,17 +539,16 @@ impl<'a> Component<'a> {
 
 impl Render for Component<'_> {
     fn render(&self) -> maud::Markup {
-        maud::html! {
-            section
-                id=(self.id)
-                class=(self.class)
-                data-local-tabs-root
-                data-local-tabs-active=(&self.active_tab_id) {
+        LocalTabRoot {
+            surface: LocalTabRootSurface::standard(self.id, self.class),
+            active_tab_id: self.active_tab_id.clone(),
+            content: maud::html! {
                 (css())
                 (self.tabs)
                 (self.panes)
-            }
+            },
         }
+        .render()
     }
 }
 

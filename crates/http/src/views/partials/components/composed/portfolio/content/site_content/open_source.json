@@ -1,0 +1,363 @@
+[
+  {
+    "name": "statum",
+    "summary": "Representational correctness for workflow and protocol state, with typed rehydration and projection helpers for stored or append-only data.",
+    "highlights": [
+      "Makes invalid, undesirable, or not-yet-validated states impossible to represent in ordinary code.",
+      "Uses #[state], #[machine], #[transition], and #[validators] to model legal phases and rebuild typed machines.",
+      "Exposes exact introspection, graph, and presentation surfaces for explainers, replay tooling, and generated docs."
+    ],
+    "gallery": {
+      "id": "crate-gallery-statum",
+      "aria_label": "statum feature gallery",
+      "tabs": [
+        {
+          "id": "transition_api",
+          "label": {
+            "primary": "Transition API"
+          },
+          "preview": {
+            "badge": {
+              "text": "Legal and illegal states stop looking different only in comments"
+            },
+            "code_examples": [
+              {
+                "label": "Definitions",
+                "code": "#[state]\nenum LightState {\n    Off,\n    On,\n}\n\n#[machine]\nstruct LightSwitch<LightState> {\n    name: String,\n}"
+              },
+              {
+                "label": "Call site",
+                "code": "let light = LightSwitch::<Off>::builder()\n    .name(\"desk lamp\".to_owned())\n    .build();\n\nlet light = light.switch_on();\nlet _light = light.switch_off();"
+              }
+            ]
+          },
+          "body": {
+            "title": "Legal edges become methods on the right machine type",
+            "features": [
+              {
+                "text": "LightSwitch<Off> and LightSwitch<On> are different types with different method surfaces."
+              },
+              {
+                "text": "The workflow shape moves into the type system instead of hiding in status enums, optional fields, and comments."
+              }
+            ]
+          }
+        },
+        {
+          "id": "state_data",
+          "label": {
+            "primary": "State Data"
+          },
+          "preview": {
+            "badge": {
+              "text": "State-specific data only exists when the machine is in that state"
+            },
+            "code_examples": [
+              {
+                "label": "State enum",
+                "code": "#[state]\nenum TaskState {\n    Draft,\n    InReview(ReviewData),\n    Published,\n}\n\nstruct ReviewData {\n    reviewer: String,\n}"
+              },
+              {
+                "label": "Typed access",
+                "code": "match machine {\n    task_machine::SomeState::InReview(task) => {\n        assert_eq!(task.state_data.reviewer.as_str(), \"reviewer-for-acme\");\n    }\n    _ => {}\n}"
+              }
+            ]
+          },
+          "body": {
+            "title": "Data-bearing states expose data only on the matching machine",
+            "features": [
+              {
+                "text": "Unit states validate with statum::Result<()>; data-bearing states return statum::Result<StateData>."
+              },
+              {
+                "text": "Review-only data stays off the draft and published machine types."
+              }
+            ]
+          }
+        },
+        {
+          "id": "rehydration",
+          "label": {
+            "primary": "Typed Rehydration"
+          },
+          "preview": {
+            "badge": {
+              "text": "Rows stay raw until validators prove a concrete state"
+            },
+            "code_examples": [
+              {
+                "label": "Validator",
+                "code": "struct TaskRow {\n    id: u64,\n    status: &'static str,\n    reviewer: Option<String>,\n}\n\n#[validators(Task)]\nimpl TaskRow {\n    fn is_in_review(&self) -> statum::Result<String> {\n        if self.status == \"in_review\" {\n            self.reviewer.clone().ok_or(statum::Error::InvalidState)\n        } else {\n            Err(statum::Error::InvalidState)\n        }\n    }\n}"
+              },
+              {
+                "label": "Rebuild",
+                "code": "let row_id = row.id;\nlet machine = row\n    .into_machine()\n    .id(row_id)\n    .build()?;"
+              }
+            ]
+          },
+          "body": {
+            "title": "Stored data rebuilds into typed machines",
+            "features": [
+              {
+                "text": "Validator methods return Ok(()) or Ok(StateData) for the matching state, and InvalidState otherwise."
+              },
+              {
+                "text": "Projection helpers can fold append-only event streams before validator rebuilds when your source of truth is an event log."
+              }
+            ]
+          }
+        }
+      ]
+    },
+    "repository_url": "https://github.com/eboody/statum",
+    "repository_label": "View repository",
+    "docs_url": "https://docs.rs/statum",
+    "docs_label": "Read docs",
+    "tags": [
+      "rust",
+      "typestate",
+      "macros"
+    ]
+  },
+  {
+    "name": "nestum",
+    "summary": "Proc-macro for nested enum paths that keeps the correct family boundary and removes constructor and match syntax tax.",
+    "highlights": [
+      "Keeps nested enums when they are already the honest model of the domain.",
+      "Uses Event::Document::Created and nested! without flattening the enum model.",
+      "Supports focused nested! rewrites, #[nestum_scope], named-field constructors, and cross-module nesting."
+    ],
+    "gallery": {
+      "id": "crate-gallery-nestum",
+      "aria_label": "nestum feature gallery",
+      "tabs": [
+        {
+          "id": "nested_paths",
+          "label": {
+            "primary": "Constructor Paths"
+          },
+          "preview": {
+            "badge": {
+              "text": "The outer enum stays a real envelope, but the surface reads like the tree"
+            },
+            "code_examples": [
+              {
+                "label": "Definitions",
+                "code": "#[nestum]\nenum DocumentEvent {\n    Created,\n    Deleted,\n}\n\n#[nestum]\nenum Event {\n    Document(DocumentEvent),\n}"
+              },
+              {
+                "label": "Construction",
+                "code": "let inner: DocumentEvent::Enum = DocumentEvent::Created;\nlet event: Event::Enum = Event::Document::Created;"
+              }
+            ]
+          },
+          "body": {
+            "title": "Nested constructor paths stay readable",
+            "features": [
+              {
+                "text": "Event::Document is a namespace branch, not a completed Event value."
+              },
+              {
+                "text": "The generated surface keeps the family boundary instead of flattening the model."
+              }
+            ]
+          }
+        },
+        {
+          "id": "match_rewrite",
+          "label": {
+            "primary": "Pattern Rewrite"
+          },
+          "preview": {
+            "badge": {
+              "text": "nested! rewrites patterns and named-field constructors where syntax gets noisy"
+            },
+            "code_examples": [
+              {
+                "label": "Match",
+                "code": "nested! {\n    match event {\n        Event::Document::Created => {}\n        Event::Document::Deleted => {}\n    }\n}"
+              },
+              {
+                "label": "Named-field variant",
+                "code": "nested! { Outer::Wrap::Struct { x: 5 } }"
+              }
+            ]
+          },
+          "body": {
+            "title": "Focused rewrites keep the nested vocabulary intact",
+            "features": [
+              {
+                "text": "nested! handles constructor and pattern positions without changing the enum model."
+              },
+              {
+                "text": "Named-field leaves still work without forcing a flatter API."
+              }
+            ]
+          }
+        },
+        {
+          "id": "scoped_rewrite",
+          "label": {
+            "primary": "Scoped Rewrite"
+          },
+          "preview": {
+            "badge": {
+              "text": "Rewrite a whole function or impl body instead of wrapping every match"
+            },
+            "code_examples": [
+              {
+                "label": "Scope-level rewriting",
+                "code": "#[nestum_scope]\nfn handle(event: Event::Enum) {\n    let renamed = Event::Document::Renamed { title: \"scope\" };\n\n    match event {\n        Event::Document::Created => {}\n        Event::Document::Renamed { title } => {\n            let _ = title;\n        }\n    }\n}"
+              },
+              {
+                "label": "External nesting",
+                "code": "#[nestum]\nenum Outer {\n    #[nestum(external = \"crate::inner::Inner\")]\n    Wrap(Inner),\n}\n\nlet _ = Outer::Wrap::A;"
+              }
+            ]
+          },
+          "body": {
+            "title": "Larger scopes and real projects stay coherent",
+            "features": [
+              {
+                "text": "#[nestum_scope] rewrites a whole function, method, impl, or inline module body."
+              },
+              {
+                "text": "The todo_api and ops_cli showcases keep Axum and Clap dispatch code aligned with the same nested command and event trees."
+              }
+            ]
+          }
+        }
+      ]
+    },
+    "repository_url": "https://github.com/eboody/nestum",
+    "repository_label": "View repository",
+    "docs_url": "https://docs.rs/nestum",
+    "docs_label": "Read docs",
+    "tags": [
+      "rust",
+      "enums",
+      "proc-macros"
+    ]
+  },
+  {
+    "name": "modum",
+    "summary": "Workspace lint tool for Rust naming, import style, and public API paths that reports diagnostics without rewriting code.",
+    "highlights": [
+      "Reports diagnostics instead of rewriting code, so teams can enforce policy without hidden edits.",
+      "Keeps namespace context visible at call sites instead of flattening it away.",
+      "Prefers strong semantic parents with short leaves like user::Repository over UserRepository.",
+      "Flags manual enum string helpers, ad hoc parse helpers, and other API-surface drift."
+    ],
+    "gallery": {
+      "id": "crate-gallery-modum",
+      "aria_label": "modum feature gallery",
+      "tabs": [
+        {
+          "id": "namespace_policy",
+          "label": {
+            "primary": "API Paths"
+          },
+          "preview": {
+            "badge": {
+              "text": "Readable public paths become enforceable lint policy"
+            },
+            "code_examples": [
+              {
+                "label": "Noisy shape",
+                "code": "pub fn handle(repo: UserRepository) -> Result<StatusCode, Error> {\n    todo!()\n}"
+              },
+              {
+                "label": "Desired shape",
+                "code": "pub fn handle(repo: user::Repository) -> Result<http::StatusCode, partials::Error> {\n    todo!()\n}"
+              }
+            ]
+          },
+          "body": {
+            "title": "A strong parent and short leaf become a linted standard",
+            "features": [
+              {
+                "text": "The tool flags redundant leaf context like user::UserRepository when the module path already carries the domain."
+              },
+              {
+                "text": "It keeps more descriptive leaves when the parent path is weak or technical."
+              }
+            ]
+          }
+        },
+        {
+          "id": "descriptive_imports",
+          "label": {
+            "primary": "Import Discipline"
+          },
+          "preview": {
+            "badge": {
+              "text": "Flattened imports that hide useful context become diagnostics"
+            },
+            "code_examples": [
+              {
+                "label": "Flat imports",
+                "code": "use storage::Repository;\nuse http::Client;"
+              },
+              {
+                "label": "Namespace-visible usage",
+                "code": "use components::tab_set;\n\nlet content = tab_set::ContentProps::builder();"
+              }
+            ]
+          },
+          "body": {
+            "title": "Imports can preserve context instead of erasing it",
+            "features": [
+              {
+                "text": "Namespace-preserving modules can stay visible when the qualified call-site form adds net context."
+              },
+              {
+                "text": "Canonical parent-surface re-exports like pub use error::{Error, Result}; remain allowed."
+              }
+            ]
+          }
+        },
+        {
+          "id": "workspace_check",
+          "label": {
+            "primary": "CI + Config"
+          },
+          "preview": {
+            "badge": {
+              "text": "Run it like clippy, then tune it with workspace metadata"
+            },
+            "code_examples": [
+              {
+                "label": "CLI",
+                "code": "cargo modum check --root .\ncargo modum check --root . --mode warn --format json"
+              },
+              {
+                "label": "Metadata",
+                "code": "[workspace.metadata.modum]\ngeneric_nouns = [\"Id\", \"Repository\", \"Service\", \"Error\", \"Command\", \"Request\", \"Response\", \"Outcome\"]\nnamespace_preserving_modules = [\"http\", \"partials\", \"components\", \"query\"]\norganizational_modules = [\"error\", \"request\", \"response\"]"
+              }
+            ]
+          },
+          "body": {
+            "title": "Workspace policy lives in tooling, not review folklore",
+            "features": [
+              {
+                "text": "Use it in CI or editor integrations; the tool reports diagnostics but does not rewrite code."
+              },
+              {
+                "text": "JSON output, Cargo metadata, and namespace-preserving module rules let one workspace carry a consistent namespace policy."
+              }
+            ]
+          }
+        }
+      ]
+    },
+    "repository_url": "https://github.com/eboody/modum",
+    "repository_label": "View repository",
+    "docs_url": "https://docs.rs/modum",
+    "docs_label": "Read docs",
+    "tags": [
+      "rust",
+      "linting",
+      "api-shape"
+    ]
+  }
+]

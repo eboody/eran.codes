@@ -1,0 +1,45 @@
+[
+  {
+    "id": "languages",
+    "title": "Languages",
+    "items": [
+      "Rust",
+      "TypeScript",
+      "JavaScript",
+      "SQL"
+    ]
+  },
+  {
+    "id": "systems",
+    "title": "Systems focus",
+    "items": [
+      "auth and sessions",
+      "typed boundaries",
+      "background jobs",
+      "SSE and realtime transport",
+      "operational inspection"
+    ]
+  },
+  {
+    "id": "data",
+    "title": "Data and integrations",
+    "items": [
+      "PostgreSQL",
+      "MongoDB",
+      "Meta APIs",
+      "Directus webhooks",
+      "custom vendor integrations"
+    ]
+  },
+  {
+    "id": "tooling",
+    "title": "Tooling",
+    "items": [
+      "Axum",
+      "Datastar",
+      "Playwright",
+      "Cargo workspaces",
+      "CI-oriented validation"
+    ]
+  }
+]

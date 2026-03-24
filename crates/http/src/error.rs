@@ -18,6 +18,8 @@ pub enum Error {
     #[snafu(display("{source}"))]
     Chat { source: app::chat::Error },
     #[snafu(display("{source}"))]
+    Sensitive { source: app::sensitive::Error },
+    #[snafu(display("{source}"))]
     ExtractJson {
         source: axum::extract::rejection::JsonRejection,
     },
@@ -55,6 +57,12 @@ impl From<app::auth::Error> for Error {
 impl From<app::chat::Error> for Error {
     fn from(source: app::chat::Error) -> Self {
         Self::Chat { source }
+    }
+}
+
+impl From<app::sensitive::Error> for Error {
+    fn from(source: app::sensitive::Error) -> Self {
+        Self::Sensitive { source }
     }
 }
 
@@ -248,6 +256,7 @@ impl Error {
                     | app::chat::Error::InvalidStoredMessageStatus { .. }
                     | app::chat::Error::InvalidStoredModerationStatus { .. },
             }
+            | Error::Sensitive { .. }
             | Error::Internal => ErrorPresentation {
                 kind: "internal",
                 status: axum::http::StatusCode::INTERNAL_SERVER_ERROR,

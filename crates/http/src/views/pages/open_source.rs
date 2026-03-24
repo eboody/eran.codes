@@ -47,7 +47,7 @@ me .ui-portfolio-crate-section--standalone {
   box-shadow: none;
 }
 
-me .ui-portfolio-crate-section--standalone [data-portfolio-crate-panel] {
+me .ui-portfolio-crate-section--standalone .ui-portfolio-crate-panel {
   min-block-size: 47rem;
 }
 
@@ -84,7 +84,7 @@ me .ui-portfolio-crate-section--standalone .ui-code-block {
     margin-inline: 0;
   }
 
-  me .ui-portfolio-crate-section--standalone [data-portfolio-crate-panel] {
+  me .ui-portfolio-crate-section--standalone .ui-portfolio-crate-panel {
     min-block-size: auto;
   }
 }

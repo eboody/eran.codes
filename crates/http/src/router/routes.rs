@@ -88,6 +88,10 @@ fn base_routes() -> Router {
             get(crate::handlers::demo::partials::request_burst_probe),
         )
         .route(
+            Route::PartialSensitiveProof.as_str(),
+            get(crate::handlers::demo::partials::sensitive_proof_partial),
+        )
+        .route(
             Route::PartialSurrealGuarded.as_str(),
             get(crate::handlers::sse::surreal_message_guarded),
         )
@@ -145,6 +149,10 @@ fn pages_routes() -> Router {
             get(crate::handlers::pages::open_source),
         )
         .route(
+            Route::ResumeText.as_str(),
+            get(crate::handlers::pages::resume_text),
+        )
+        .route(
             Route::WorkChatRealtime.as_str(),
             get(crate::handlers::pages::work_chat_realtime),
         )
@@ -155,6 +163,10 @@ fn pages_routes() -> Router {
         .route(
             Route::WorkOperationalVisibility.as_str(),
             get(crate::handlers::pages::work_operational_visibility),
+        )
+        .route(
+            Route::WorkSensitiveSync.as_str(),
+            get(crate::handlers::pages::work_sensitive_sync),
         )
         .route(
             Route::Login.as_str(),

@@ -1,9 +1,12 @@
 pub mod auth;
 pub mod chat;
 pub mod config;
+pub mod crypto;
 mod error;
 pub use error::{Error, Result};
 pub mod repo;
+pub mod sensitive;
+pub mod sensitive_boundary;
 use snafu::ResultExt;
 use sqlx::PgPool;
 use sqlx::postgres::PgPoolOptions;

@@ -5,11 +5,8 @@ use crate::paths::Route;
 use crate::types::{SseTabId, Text};
 use crate::views::partials;
 
-pub(crate) const PORTFOLIO_RESUME_URL: &str = "/static/resume.txt";
-pub(crate) const PORTFOLIO_GITHUB_URL: &str = "https://github.com/eboody/eran.codes";
-pub(crate) const PORTFOLIO_LINKEDIN_URL: &str =
-    "https://www.linkedin.com/search/results/all/?keywords=Eran%20Boodnero";
-pub(crate) const PORTFOLIO_CONTACT_URL: &str = "mailto:eboodnero@gmail.com";
+const APP_CSS_ASSET_URL: &str = "/static/app.css?v=20260320-tabs";
+const LOCAL_TABS_ASSET_URL: &str = "/static/local-tabs.js?v=20260320-tabs";
 
 crate::views::scoped::inline_css!(
     r#"
@@ -120,41 +117,7 @@ impl Render for Layout<'_> {
         let current_route = self.current_route;
         let portfolio_links = partials::components::NavLinkList::builder()
             .role(partials::components::NavLinkListRole::Primary)
-            .children(vec![
-                partials::components::NavLink::builder()
-                    .label(Text::from("Work"))
-                    .href(Text::from(Route::Work.as_str()))
-                    .active(current_route == Some(Route::Work))
-                    .build(),
-                partials::components::NavLink::builder()
-                    .label(Text::from("Open Source"))
-                    .href(Text::from(Route::OpenSource.as_str()))
-                    .active(current_route == Some(Route::OpenSource))
-                    .build(),
-                partials::components::NavLink::builder()
-                    .label(Text::from("Live Lab"))
-                    .href(Text::from(Route::Lab.as_str()))
-                    .active(current_route == Some(Route::Lab))
-                    .build(),
-                partials::components::NavLink::builder()
-                    .label(Text::from("Resume"))
-                    .href(Text::from(PORTFOLIO_RESUME_URL))
-                    .build(),
-                partials::components::NavLink::builder()
-                    .label(Text::from("GitHub"))
-                    .href(Text::from(PORTFOLIO_GITHUB_URL))
-                    .external(true)
-                    .build(),
-                partials::components::NavLink::builder()
-                    .label(Text::from("LinkedIn"))
-                    .href(Text::from(PORTFOLIO_LINKEDIN_URL))
-                    .external(true)
-                    .build(),
-                partials::components::NavLink::builder()
-                    .label(Text::from("Contact"))
-                    .href(Text::from(PORTFOLIO_CONTACT_URL))
-                    .build(),
-            ])
+            .children(portfolio_nav_children(current_route))
             .build();
         let auth = match self.nav_mode {
             NavMode::Portfolio => partials::components::NavAuth::Hidden,
@@ -224,14 +187,14 @@ impl Render for Layout<'_> {
                         rel="stylesheet"
                         href="https://fonts.googleapis.com/css2?family=Newsreader:opsz,wght@6..72,500;6..72,600;6..72,700&family=Space+Grotesk:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600&display=swap";
                     link rel="stylesheet" href="/static/open-props.min.css";
-                    link rel="stylesheet" href="/static/app.css";
+                    link rel="stylesheet" href=(APP_CSS_ASSET_URL);
                     link
                         rel="stylesheet"
                         href="https://cdn.jsdelivr.net/gh/iconoir-icons/iconoir@main/css/iconoir.css";
                     (crate::views::partials::components::head_styles())
                     script src="/static/css-scope-inline.js" {}
                     script type="module" src="/static/datastar.js" {}
-                    script src="/static/local-tabs.js" {}
+                    script src=(LOCAL_TABS_ASSET_URL) {}
                     script type="module" src="/static/transport-errors.js" {}
                     script src="/static/surreal.js" {}
                 }
@@ -245,6 +208,43 @@ impl Render for Layout<'_> {
                 }
             }
         }
+    }
+}
+
+fn portfolio_nav_children(current_route: Option<Route>) -> Vec<partials::components::NavLink> {
+    partials::components::portfolio::content::portfolio_nav_links()
+        .iter()
+        .map(|link| {
+            let href = link.href.to_string();
+            let active = !link.kind.is_external() && portfolio_link_is_active(current_route, &href);
+
+            partials::components::NavLink::builder()
+                .label(link.label.clone())
+                .href(link.href.clone())
+                .external(link.kind.is_external())
+                .active(active)
+                .build()
+        })
+        .collect()
+}
+
+fn portfolio_link_is_active(current_route: Option<Route>, href: &str) -> bool {
+    let Some(current_route) = current_route else {
+        return false;
+    };
+
+    match href {
+        path if path == Route::Work.as_str() => matches!(
+            current_route,
+            Route::Work
+                | Route::WorkChatRealtime
+                | Route::WorkCommandSse
+                | Route::WorkOperationalVisibility
+        ),
+        path if path == Route::WorkSensitiveSync.as_str() => {
+            current_route == Route::WorkSensitiveSync
+        }
+        path => current_route.as_str() == path,
     }
 }
 
@@ -312,6 +312,57 @@ mod tests {
             .into_string();
 
         assert!(markup.contains("/static/local-tabs.js"));
+    }
+
+    #[test]
+    fn layout_uses_proof_pivot_nav_labels() {
+        let markup = Layout::builder()
+            .title("Example")
+            .content(maud::html! { main {} })
+            .current_route(Route::Home)
+            .build()
+            .render()
+            .into_string();
+
+        assert!(markup.contains("Current Proof"));
+        assert!(markup.contains("Supporting Proof"));
+        assert!(markup.contains("Live Proof"));
+        assert!(markup.contains("/resume.txt"));
+        assert!(!markup.contains(">Work<"));
+        assert!(!markup.contains("Live Lab"));
+    }
+
+    #[test]
+    fn current_proof_and_supporting_proof_nav_entries_activate_separately() {
+        let current_proof_markup = Layout::builder()
+            .title("Example")
+            .content(maud::html! { main {} })
+            .current_route(Route::WorkSensitiveSync)
+            .build()
+            .render()
+            .into_string();
+        let supporting_markup = Layout::builder()
+            .title("Example")
+            .content(maud::html! { main {} })
+            .current_route(Route::WorkChatRealtime)
+            .build()
+            .render()
+            .into_string();
+
+        assert!(current_proof_markup.contains("Current Proof"));
+        assert!(supporting_markup.contains("Supporting Proof"));
+        assert!(portfolio_link_is_active(
+            Some(Route::WorkSensitiveSync),
+            Route::WorkSensitiveSync.as_str()
+        ));
+        assert!(portfolio_link_is_active(
+            Some(Route::WorkChatRealtime),
+            Route::Work.as_str()
+        ));
+        assert!(!portfolio_link_is_active(
+            Some(Route::WorkChatRealtime),
+            Route::WorkSensitiveSync.as_str()
+        ));
     }
 
     #[test]

@@ -8,6 +8,7 @@ pub struct State {
     pub user: app::user::Service,
     pub auth: app::auth::Service,
     pub chat: app::chat::Service,
+    pub sensitive: app::sensitive::Service,
     pub sse: crate::sse::Registry,
     pub cookie_key: Key,
     pub trace_log: crate::trace_log::Store,
@@ -88,6 +89,7 @@ impl State {
         user: app::user::Service,
         auth: app::auth::Service,
         chat: app::chat::Service,
+        sensitive: app::sensitive::Service,
         sse: crate::sse::Registry,
         cookie_key: Key,
         trace_log: crate::trace_log::Store,
@@ -96,6 +98,7 @@ impl State {
             user,
             auth,
             chat,
+            sensitive,
             sse,
             cookie_key,
             trace_log,
@@ -111,10 +114,11 @@ impl State {
         #[builder(setters(name = with_user))] user: app::user::Service,
         #[builder(setters(name = with_auth))] auth: app::auth::Service,
         #[builder(setters(name = with_chat))] chat: app::chat::Service,
+        #[builder(setters(name = with_sensitive))] sensitive: app::sensitive::Service,
         #[builder(setters(name = with_sse))] sse: crate::sse::Registry,
         #[builder(setters(name = with_cookie_key))] cookie_key: Key,
         #[builder(setters(name = with_trace_log))] trace_log: crate::trace_log::Store,
     ) -> Self {
-        Self::new(user, auth, chat, sse, cookie_key, trace_log)
+        Self::new(user, auth, chat, sensitive, sse, cookie_key, trace_log)
     }
 }

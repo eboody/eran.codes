@@ -11,20 +11,27 @@ impl Render for Home {
         let body = partials::components::portfolio::Page {
             content: maud::html! {
                 (partials::components::portfolio::PortfolioHero { content: &content.hero })
-                (partials::components::portfolio::ProofStrip {
-                    content: &content.proof_strip,
-                })
-                (partials::components::portfolio::CrateSection {
-                    content: &content.crate_section,
-                    show_heading: true,
+                (partials::components::portfolio::ExperienceSection {
+                    content: &content.experience_section,
                 })
                 (partials::components::portfolio::WorkSection {
-                    content: &content.work_section,
+                    content: &content.project_section,
+                })
+                (partials::components::portfolio::WorkSection {
+                    content: &content.current_proof_section,
                 })
                 (partials::components::portfolio::ClosingSection {
-                    title: &content.closing.title,
-                    summary: &content.closing.summary,
-                    actions: &content.closing.actions,
+                    title: &content.open_source_teaser.title,
+                    summary: &content.open_source_teaser.summary,
+                    actions: &content.open_source_teaser.actions,
+                })
+                (partials::components::portfolio::SkillGroupsSection {
+                    content: &content.skill_section,
+                })
+                (partials::components::portfolio::ClosingSection {
+                    title: &content.contact_section.title,
+                    summary: &content.contact_section.summary,
+                    actions: &content.contact_section.actions,
                 })
             },
         }
@@ -46,15 +53,28 @@ mod tests {
     use super::*;
 
     #[test]
-    fn renders_crate_section_before_work_section() {
+    fn renders_resume_first_sections_in_order() {
         let content = partials::components::portfolio::content::portfolio_home_content();
         let markup = Home.render().into_string();
-        let crate_title = content.crate_section.title.to_string();
-        let work_title = content.work_section.title.to_string();
+        let experience_title = content.experience_section.title.to_string();
+        let project_title = content.project_section.title.to_string();
+        let proof_title = content.current_proof_section.title.to_string();
+        let skills_title = content.skill_section.title.to_string();
 
         assert!(
-            markup.find(crate_title.as_str()).unwrap()
-                < markup.find(work_title.as_str()).unwrap()
+            markup.find(experience_title.as_str()).unwrap()
+                < markup.find(project_title.as_str()).unwrap()
         );
+        assert!(
+            markup.find(project_title.as_str()).unwrap() < markup.find(proof_title.as_str()).unwrap()
+        );
+        assert!(
+            markup.find(proof_title.as_str()).unwrap() < markup.find(skills_title.as_str()).unwrap()
+        );
+        assert!(markup.contains("I build secure backend systems with explicit trust boundaries."));
+        assert!(!markup.contains("I ship systems that remove operational bottlenecks and improve execution speed."));
+        assert!(markup.contains("Most relevant experience"));
+        assert!(markup.contains("Current secure-data proof"));
+        assert!(markup.contains("href=\"/resume.txt\""));
     }
 }

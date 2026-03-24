@@ -4,6 +4,7 @@ mod lab_flow;
 mod operations_filter_flow;
 
 use axum::extract::Extension;
+use axum::response::{IntoResponse, Redirect};
 use datastar::axum::ReadSignals;
 use serde::Deserialize;
 use tower_cookies::Cookies;
@@ -28,28 +29,38 @@ pub async fn open_source() -> crate::Result<axum::response::Html<String>> {
     Ok(views::render(pages::OpenSource))
 }
 
-pub async fn work_chat_realtime() -> crate::Result<axum::response::Html<String>> {
+pub async fn resume_text() -> impl axum::response::IntoResponse {
+    (
+        [(
+            axum::http::header::CONTENT_TYPE,
+            "text/plain; charset=utf-8",
+        )],
+        crate::views::partials::components::portfolio::content::resume_text().to_owned(),
+    )
+}
+
+pub async fn work_chat_realtime() -> impl IntoResponse {
+    redirect_to_work_archive(WorkCaseSlug::ChatRealtime)
+}
+
+pub async fn work_command_sse() -> impl IntoResponse {
+    redirect_to_work_archive(WorkCaseSlug::CommandSse)
+}
+
+pub async fn work_operational_visibility() -> impl IntoResponse {
+    redirect_to_work_archive(WorkCaseSlug::OperationalVisibility)
+}
+
+pub async fn work_sensitive_sync() -> crate::Result<axum::response::Html<String>> {
     Ok(views::render(
         pages::WorkCase::builder()
-            .slug(WorkCaseSlug::ChatRealtime)
+            .slug(WorkCaseSlug::SensitiveSync)
             .build(),
     ))
 }
 
-pub async fn work_command_sse() -> crate::Result<axum::response::Html<String>> {
-    Ok(views::render(
-        pages::WorkCase::builder()
-            .slug(WorkCaseSlug::CommandSse)
-            .build(),
-    ))
-}
-
-pub async fn work_operational_visibility() -> crate::Result<axum::response::Html<String>> {
-    Ok(views::render(
-        pages::WorkCase::builder()
-            .slug(WorkCaseSlug::OperationalVisibility)
-            .build(),
-    ))
+fn redirect_to_work_archive(slug: WorkCaseSlug) -> Redirect {
+    Redirect::permanent(slug.public_href())
 }
 
 pub async fn lab(

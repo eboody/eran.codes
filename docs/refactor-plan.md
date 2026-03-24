@@ -1,82 +1,38 @@
-# Refactor Plan (Prioritized)
+# Resume Alignment Packaging Status
 
-Date: 2026-02-16
-Source: `docs/project-audit.md`
+As of March 23, 2026, the resume-first content unification, the IA-hardening pass, the supporting-proof route-policy pass, and the archive-collapse pass are all shipped.
 
-## Status
-- Completed (2026-02-17): Priority 1
-- Completed (2026-02-17): Priority 2 (core repository conversion paths)
-- Completed (2026-02-17): Priority 3
-- Completed (2026-02-17): Priority 4
+This file is no longer a forward plan for the shared-content refactor. It is the status note for the packaging phases that followed the secure-data proof slice.
 
-## Priority 1: Tighten Request Metadata Typing
-Goal: remove remaining plain-string metadata paths in HTTP request context.
+## What Changed
 
-Why first:
-- High leverage across tracing/logging.
-- Low risk to business behavior.
-- Improves consistency with existing `http::types` direction.
+- The public site now reads from one checked-in content directory at `crates/http/.../site_content/`.
+- `/` is now the primary resume narrative instead of a portfolio-first landing page.
+- `/resume.txt` now derives from the same authored source as the public site.
+- Repeated public CTAs now resolve through shared action references and shared action bundles instead of being hand-authored in many places.
+- Portfolio nav now exposes both `Live Proof` and `Current Proof` as first-class paths.
+- `/work` now leads with the current secure-data case, keeps the older case studies in an explicit supporting-proof archive section, and renders their detailed archive blocks in place.
+- Legacy `/work/*` pages now permanently redirect to `/work#...` archive anchors instead of acting like parallel primary narratives.
+- Content validation now rejects unresolved action refs and invalid internal-route targets.
 
-Scope:
-1. Refactor `crates/http/src/request.rs` to return typed wrappers (`ClientIp`, `UserAgent`, `RoutePath`, etc.) instead of `Option<String>`.
-2. Keep string conversion at boundaries only (header parsing + final rendering).
-3. Add tests for fallback logic and header precedence with typed outputs.
+## What This Phase Improved
 
-Exit criteria:
-- No plain `Option<String>` return values for request metadata in `request.rs`.
-- Tests cover major header extraction paths.
+- Reviewer flow is more explicit: `/`, `/lab`, and `/work/sensitive-sync` are now the intended evaluation path.
+- The shared content root is less drift-prone because common links and repeated CTA patterns now resolve from named references.
+- Supporting-proof routes are now intentionally secondary instead of competing with the current flagship proof, and the old leaf pages no longer keep reviewers off the canonical path.
+- The authored content surface is easier to maintain because the old `site_content.json` monolith was replaced with split fragment files and fragment-level validation.
+- The repo docs no longer need to describe the shared-content migration as future work.
 
-## Priority 2: Normalize Infra Conversion Boundaries
-Goal: make DB row-to-domain conversion paths more explicit and consistent.
+## What Still Remains Optional
 
-Why second:
-- Most correctness risk is here.
-- Important for long-term migration safety and schema evolution.
+- Additional cleanup of the shared content model if future edits reveal awkward patterns that the current action-ref layer does not cover.
+- A stronger runtime-proof branch later if resume alignment needs deeper authorization or integration evidence instead of packaging changes.
 
-Scope:
-1. In `crates/infra/src/repo/chat.rs`, `crates/infra/src/repo/user.rs`, and `crates/infra/src/auth.rs`, centralize conversions into small typed helper functions.
-2. Replace repetitive inline conversions with domain-aware constructors.
-3. Ensure all conversion failures map into typed infra/app errors with clear context.
+## Recommended Next Decision
 
-Exit criteria:
-- Conversion logic is centralized in each repo module.
-- Fewer repeated `row.get::<String, _>(...)` + ad-hoc parsing chains.
+Do not continue broad packaging work by inertia.
 
-## Priority 3: Type Log “Extras” Instead of Formatting Ad-Hoc Strings
-Goal: reduce string assembly in log row rendering and improve display invariants.
+Pick one focused branch:
 
-Why third:
-- Primarily maintainability/readability gain.
-- Builds on already componentized log UI.
-
-Scope:
-1. Introduce typed log extra entries (field/value pairs with display kind) used by:
-   - `crates/http/src/views/partials/demo/log/live_log.rs`
-   - `crates/http/src/views/partials/demo/log/trace_log.rs`
-2. Push display decisions into enums/newtypes instead of `Vec<String>`.
-3. Reuse existing pill/row components for consistent rendering.
-
-Exit criteria:
-- No ad-hoc extras string concatenation in live/trace log renderers.
-- Extras render path uses typed units.
-
-## Priority 4: SSE Per-Tab Identity
-Goal: support per-tab SSE stream identity while preserving current session model.
-
-Why fourth:
-- Architectural enhancement, not immediate correctness issue.
-- Requires protocol/client coordination and therefore more careful rollout.
-
-Scope:
-1. Add tab identifier handling to SSE keying logic.
-2. Keep backward-compatible behavior for existing sessions.
-3. Document flow and edge-cases in SSE docs.
-
-Exit criteria:
-- Multiple tabs for one authenticated session can independently receive expected stream behavior.
-- Docs updated with keying model.
-
-## Nice-to-Have (After Priority 1-4)
-1. Expand CI checks for typed request metadata usage in HTTP modules.
-2. Add a small style guide for trace/log event naming to reduce future drift.
-3. Add integration tests validating live vs diagnostic trace separation end-to-end.
+- incremental content-root ergonomics cleanup if real editing pain shows up
+- a new runtime-proof branch such as key rotation or a narrower real-integration pilot

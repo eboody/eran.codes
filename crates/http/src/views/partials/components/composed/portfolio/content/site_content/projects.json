@@ -1,0 +1,80 @@
+[
+  {
+    "slug": "sensitive_sync",
+    "category": "Current Proof",
+    "title": "Encrypted Sensitive Record Sync in Rust",
+    "summary": "This repo now persists encrypted sensitive records, stores provider tokens at rest with explicit key IDs, re-seals stale ciphertext in the background, and syncs a local HTTP-backed provider feed into Postgres.",
+    "outcome": "Shipped a bounded runtime proof surface for encrypted storage, application-level key rotation, persisted sensitive-access grants, background sync, and audited authorized-read decisions.",
+    "highlights": [
+      "AES-256-GCM protects provider tokens and authorized record payloads at rest, and key-versioned ciphertext keeps mixed-key reads explicit during rotation.",
+      "Background token refresh and sync runs keep the proof surface current without widening the public claim surface.",
+      "The live lab shows guest-safe redaction, denied signed-in reads without grants, and audited authorized detail reads from the same stored data."
+    ],
+    "stack_tags": [
+      "rust",
+      "axum",
+      "postgresql",
+      "aes-256-gcm",
+      "background sync"
+    ],
+    "cta_label": "Read secure sync case study"
+  },
+  {
+    "slug": "chat_realtime",
+    "category": "Ops Throughput",
+    "title": "Automated Fundraiser Acknowledgment at Scale",
+    "summary": "Replaced a manual outsourced thank-you workflow with browser automation that could keep up with high-volume fundraiser traffic.",
+    "outcome": "Roughly 12x per-operator throughput with 72 concurrent workers, clearing a persistent backlog.",
+    "highlights": [
+      "Worker-pool automation pushed browser acknowledgments to 72 concurrent jobs.",
+      "Template handling and operator-only steps moved out of the daily workflow.",
+      "Improved response speed enough to lift fundraiser chat engagement."
+    ],
+    "stack_tags": [
+      "playwright",
+      "typescript",
+      "node.js",
+      "automation"
+    ],
+    "cta_label": "See the throughput case"
+  },
+  {
+    "slug": "command_sse",
+    "category": "Realtime Donations",
+    "title": "Realtime Fundraiser Creation + Donation Signal Pipeline",
+    "summary": "Built a realtime fundraiser creation and donation pipeline so teams could act on live signals instead of waiting for delayed files.",
+    "outcome": "Eliminated a 48-hour reporting lag and surfaced donation context in realtime for operations teams.",
+    "highlights": [
+      "Fundraiser creation and donation intake were wired into one live pipeline.",
+      "Operators saw donation context immediately instead of waiting for delayed exports.",
+      "Supported operations at millions-of-users scale."
+    ],
+    "stack_tags": [
+      "express",
+      "svelte",
+      "mongodb",
+      "meta api"
+    ],
+    "cta_label": "See the realtime pipeline"
+  },
+  {
+    "slug": "operational_visibility",
+    "category": "Publishing Pipeline",
+    "title": "Custom Substack Publishing Pipeline in Rust",
+    "summary": "Built a Rust monorepo that connected CMS events, queued workers, and publishing automation for Substack-oriented content operations.",
+    "outcome": "Delivered a deterministic pipeline from Directus webhooks through queued workers to publish actions.",
+    "highlights": [
+      "Directus webhooks fed typed event routing into queued Rust workers.",
+      "Publishing actions stayed deterministic from inbound event to Substack delivery.",
+      "Queue-backed publishing flow with custom Substack integration."
+    ],
+    "stack_tags": [
+      "rust",
+      "axum",
+      "directus",
+      "event queue",
+      "substack"
+    ],
+    "cta_label": "See the publishing pipeline"
+  }
+]

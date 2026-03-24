@@ -20,6 +20,11 @@ impl Render for WorkSection<'_> {
                     subtitle: &self.content.subtitle,
                 })
                 (WorkCards { cards: &self.content.cards })
+                @if !self.content.actions.is_empty() {
+                    div class="ui-portfolio-section-actions" {
+                        (render_actions(&self.content.actions))
+                    }
+                }
             }))
         }
     }
@@ -39,13 +44,12 @@ impl Render for WorkIndexSection<'_> {
                     summary: &self.content.summary,
                 })
             }).extra_class("ui-portfolio-lead-surface"))
-            (Surface::section(maud::html! {
-                (SectionCopy {
-                    title: &self.content.cases_title,
-                    subtitle: &self.content.cases_subtitle,
-                })
-                (WorkCards { cards: &self.content.cases })
-            }).extra_class("ui-portfolio-case-section"))
+            (WorkSection {
+                content: &self.content.current_proof_section,
+            })
+            (WorkSection {
+                content: &self.content.supporting_cases_section,
+            })
         }
     }
 }
@@ -88,8 +92,6 @@ struct WorkCard<'a> {
 
 impl Render for WorkCard<'_> {
     fn render(&self) -> maud::Markup {
-        let route = self.content.slug.route();
-
         maud::html! {
             article class="ui-portfolio-card ui-portfolio-work-card u-inset-card" {
                 p class="ui-portfolio-card-kicker" { (&self.content.category) }
@@ -105,7 +107,7 @@ impl Render for WorkCard<'_> {
                     (partials::button::Button::builder()
                         .label(self.content.cta_label.clone())
                         .variant(partials::button::Variant::Secondary)
-                        .role(partials::button::Role::link(Text::from(route.to_string())))
+                        .role(partials::button::Role::link(Text::from(self.content.slug.public_href())))
                         .build())
                 }
             }

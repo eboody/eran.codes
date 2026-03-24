@@ -15,5 +15,6 @@ pub use demo::{
     AuthStatus, BoundaryCheck, DbCheck, EngineeringQuality, HomeHero,
     OperationalRequestFilter, Ping, RequestBurstDemo, RequestMeta,
     RequestTraceLog, SessionStatus, TabSetShowcase, TransportLogSet,
+    SensitiveProof, SensitiveProofPanel,
 };
 pub use error::Error;

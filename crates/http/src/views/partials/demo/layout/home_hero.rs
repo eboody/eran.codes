@@ -2,7 +2,6 @@ use bon::Builder;
 use maud::Render;
 
 use crate::paths::Route;
-use crate::types::Text;
 use crate::views::{page, partials};
 
 crate::views::scoped::inline_css!(
@@ -244,67 +243,73 @@ pub struct HomeHero {
 
 impl Render for HomeHero {
     fn render(&self) -> maud::Markup {
+        let content = partials::components::portfolio::content::lab_page_content();
+
         maud::html! {
             header id="home-hero" data-home-hero {
                 (css())
                 div data-home-hero-copy {
-                    p data-home-hero-kicker { "Live Lab" }
-                    h1 { "Production Rust Systems, Demonstrated Live" }
-                    p {
-                        "I build secure, observable backend systems with typed boundaries. This portfolio runs on the same real auth, Postgres, and SSE stack I ship in production-style projects."
-                    }
+                    p data-home-hero-kicker { (&content.hero.eyebrow) }
+                    h1 { (&content.hero.title) }
+                    p { (&content.hero.summary) }
                     div data-home-hero-tags {
-                        (partials::components::Pill::builder().text(Text::from("axum-login")).build())
-                        (partials::components::Pill::builder().text(Text::from("tower-sessions")).build())
-                        (partials::components::Pill::builder().text(Text::from("sqlx + postgres")).build())
-                        (partials::components::Pill::builder().text(Text::from("datastar + sse")).build())
-                        (partials::components::Pill::builder().text(Text::from("argon2")).build())
+                        @for badge in &content.hero.badges {
+                            (partials::components::Pill::builder().text(badge.clone()).build())
+                        }
                     }
                     (partials::button::Row::builder()
-                        .items(vec![
+                        .items(content.hero.actions.iter().map(|action| {
                             partials::button::Button::builder()
-                                .label(Text::from("Open live demo"))
-                                .variant(partials::button::Variant::Primary)
-                                .role(partials::button::Role::link("#chat-demo"))
-                                .build(),
-                            partials::button::Button::builder()
-                                .label(Text::from("Review engineering quality"))
-                                .variant(partials::button::Variant::Secondary)
-                                .role(partials::button::Role::link("#engineering-quality"))
-                                .build(),
-                        ])
+                                .label(action.label.clone())
+                                .variant(match action.tone {
+                                    partials::components::portfolio::content::CtaKind::Primary => {
+                                        partials::button::Variant::Primary
+                                    }
+                                    partials::components::portfolio::content::CtaKind::Secondary => {
+                                        partials::button::Variant::Secondary
+                                    }
+                                })
+                                .role(if action.kind.is_external() {
+                                    partials::button::Role::external_link(action.href.clone())
+                                } else {
+                                    partials::button::Role::link(action.href.clone())
+                                })
+                                .build()
+                        }).collect())
                         .build())
                 }
                 aside data-home-hero-card {
-                    h3 { "Session status" }
+                    h3 { (&content.session_card.title) }
                     @if let Some(user) = &self.user {
                         p { "Signed in as " strong { (&user.username) } "." }
                         p class="u-muted" { (&user.email) }
                         (partials::button::Row::builder()
                             .items(vec![
                                 partials::button::Button::builder()
-                                    .label(Text::from("Open account"))
+                                    .label(content.session_card.signed_in_action_label.clone())
                                     .variant(partials::button::Variant::Primary)
                                     .role(partials::button::Role::link(Route::Protected.as_str()))
                                     .build(),
                             ])
                             .build())
                     } @else {
-                        p { "No active session." }
-                        p class="u-muted" { "Create an account to see session-backed auth." }
+                        p { (&content.session_card.guest_status) }
+                        p class="u-muted" { (&content.session_card.guest_summary) }
                         (partials::button::Row::builder()
-                            .items(vec![
+                            .items(content.session_card.guest_actions.iter().map(|action| {
                                 partials::button::Button::builder()
-                                    .label(Text::from("Create account"))
-                                    .variant(partials::button::Variant::Primary)
-                                    .role(partials::button::Role::link(Route::Register.as_str()))
-                                    .build(),
-                                partials::button::Button::builder()
-                                    .label(Text::from("Sign in"))
-                                    .variant(partials::button::Variant::Secondary)
-                                    .role(partials::button::Role::link(Route::Login.as_str()))
-                                    .build(),
-                            ])
+                                    .label(action.label.clone())
+                                    .variant(match action.tone {
+                                        partials::components::portfolio::content::CtaKind::Primary => {
+                                            partials::button::Variant::Primary
+                                        }
+                                        partials::components::portfolio::content::CtaKind::Secondary => {
+                                            partials::button::Variant::Secondary
+                                        }
+                                    })
+                                    .role(partials::button::Role::link(action.href.clone()))
+                                    .build()
+                            }).collect())
                             .build())
                     }
                 }

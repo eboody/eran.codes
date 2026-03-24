@@ -284,6 +284,7 @@ fn test_app() -> axum::Router {
         .with_user(user_service)
         .with_auth(auth_service)
         .with_chat(chat)
+        .with_sensitive(app::sensitive::Service::disabled())
         .with_sse(sse_registry)
         .with_cookie_key(cookie_key)
         .with_trace_log(trace_log)

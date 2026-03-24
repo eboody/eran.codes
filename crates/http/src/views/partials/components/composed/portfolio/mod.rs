@@ -177,6 +177,11 @@ me .ui-portfolio-work-card h3 {
   text-wrap: balance;
 }
 
+me .ui-portfolio-experience-card,
+me .ui-portfolio-skill-card {
+  gap: var(--space-3);
+}
+
 me .ui-portfolio-work-card .ui-portfolio-card-summary {
   max-width: 40ch;
 }
@@ -212,6 +217,14 @@ me .ui-portfolio-card-outcome-label {
 me .ui-portfolio-card-outcome-text {
   color: color-mix(in srgb, var(--ui-text) 94%, var(--portfolio-accent-a) 6%);
   font-weight: 600;
+}
+
+me .ui-portfolio-archive-entry {
+  scroll-margin-top: calc(var(--space-8) + 4rem);
+}
+
+me .ui-portfolio-archive-note {
+  color: color-mix(in srgb, var(--portfolio-accent-b) 48%, var(--ui-text-muted));
 }
 
 me .ui-portfolio-list {
@@ -657,8 +670,8 @@ pub mod content;
 mod sections;
 
 pub use sections::{
-    ClosingSection, CrateSection, PortfolioHero, ProofStrip, SupportingTeaserSection,
-    WorkCaseDetail, WorkIndexSection, WorkSection,
+    ArchiveCaseDetailsSection, ClosingSection, CrateSection, ExperienceSection, PortfolioHero,
+    SkillGroupsSection, SupportingTeaserSection, WorkCaseDetail, WorkIndexSection, WorkSection,
 };
 
 pub struct Page {

@@ -123,6 +123,7 @@
   --motion-lift-subtle: translateY(-2px);
   --motion-fast: 140ms var(--ease-3);
   --motion-standard: 220ms var(--ease-3);
+  --local-tab-panel-enter-offset: calc(var(--space-2) * 0.5);
   --shell-max-inline: 1180px;
   --shell-gutter: clamp(1rem, 2.5vw, 2rem);
   --shell-gutter-tight: clamp(0.85rem, 2vw, 1.15rem);
@@ -181,6 +182,27 @@
 
 @view-transition {
   navigation: auto;
+}
+
+[data-local-tab-panel][data-local-tab-entering] {
+  animation: local-tab-panel-enter var(--motion-standard) var(--ease-3);
+  transform-origin: top center;
+}
+
+[data-local-tab-panel][hidden] {
+  display: none;
+}
+
+@keyframes local-tab-panel-enter {
+  from {
+    opacity: 0;
+    transform: translateY(var(--local-tab-panel-enter-offset));
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
 }
 
 ::view-transition-group(app-nav),
@@ -443,6 +465,10 @@ input[type="password"] {
 @media (prefers-reduced-motion: reduce) {
   :root {
     --motion-lift-subtle: none;
+  }
+
+  [data-local-tab-panel][data-local-tab-entering] {
+    animation: none;
   }
 
   .u-surface-card,

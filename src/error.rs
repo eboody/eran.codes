@@ -9,8 +9,17 @@ pub enum Error {
     LoadConfig { source: crate::config::Error },
     #[snafu(display("failed to initialize infra: {source}"))]
     InitInfra { source: infra::Error },
+    #[snafu(display("failed to initialize the sensitive-data keyring: {source}"))]
+    BuildSensitiveKeyring { source: infra::crypto::Error },
     #[snafu(display("failed to bind HTTP listener at {addr}: {source}"))]
     BindHttpListener {
+        addr: String,
+        source: std::io::Error,
+    },
+    #[snafu(display(
+        "failed to bind sensitive provider stub listener at {addr}: {source}"
+    ))]
+    BindSensitiveProviderListener {
         addr: String,
         source: std::io::Error,
     },

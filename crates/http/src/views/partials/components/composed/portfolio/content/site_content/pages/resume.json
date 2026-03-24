@@ -1,0 +1,37 @@
+{
+  "summary_title": "Professional Summary",
+  "summary": "Backend and systems engineer specializing in Rust, secure backend boundaries, encrypted data handling, session posture, and inspectable runtime behavior. This repo now ships a narrow secure-data slice with encrypted sensitive-record storage, provider-token lifecycle, background sync, and live proof surfaces.",
+  "experience_title": "Experience",
+  "projects_title": "Selected Projects",
+  "open_source_title": "Open Source",
+  "client_context_title": "Selected Client Context",
+  "client_context": [
+    "Meta fundraising platform partner workflows",
+    "St. Jude",
+    "Wounded Warrior Project",
+    "Alzheimer's Association",
+    "American Cancer Society",
+    "National Suicide Prevention Lifeline"
+  ],
+  "skills_title": "Core Technologies",
+  "experience_role_ids": [
+    "goodunited"
+  ],
+  "featured_project_slugs": [
+    "sensitive_sync",
+    "chat_realtime",
+    "command_sse",
+    "operational_visibility"
+  ],
+  "skill_group_ids": [
+    "languages",
+    "systems",
+    "data",
+    "tooling"
+  ],
+  "contact_method_ids": [
+    "email",
+    "github",
+    "linkedin"
+  ]
+}

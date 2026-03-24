@@ -1,7 +1,7 @@
 use maud::Render;
 
 use crate::types::Text;
-use crate::views::partials::components::Tab;
+use crate::views::partials::components::{LocalTabPanel, Tab};
 use crate::views::partials::components::tab_set;
 
 #[derive(Clone, Debug)]
@@ -43,16 +43,12 @@ impl Item {
 
 impl Render for Item {
     fn render(&self) -> maud::Markup {
-        let tab_index = if self.is_selected { 0 } else { -1 };
-
-        maud::html! {
-            section
-                id=(&self.panel_dom_id)
-                class="tab-set__panel"
-                role="tabpanel"
-                aria-labelledby=(&self.tab_dom_id)
-                tabindex=(tab_index)
-                hidden[!self.is_selected] {
+        LocalTabPanel {
+            id: self.panel_dom_id.clone(),
+            labelled_by: self.tab_dom_id.clone(),
+            class: "tab-set__panel",
+            is_selected: self.is_selected,
+            content: maud::html! {
                 @if let Some(preview) = &self.preview {
                     (preview)
                 }
@@ -64,7 +60,8 @@ impl Render for Item {
                         (action)
                     }
                 }
-            }
+            },
         }
+        .render()
     }
 }

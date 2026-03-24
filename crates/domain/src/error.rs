@@ -8,6 +8,8 @@ pub enum Error {
     User { source: crate::user::Error },
     #[snafu(display("{source}"))]
     Chat { source: crate::chat::Error },
+    #[snafu(display("{source}"))]
+    Sensitive { source: crate::sensitive::Error },
 }
 
 impl From<crate::user::Error> for Error {
@@ -19,6 +21,12 @@ impl From<crate::user::Error> for Error {
 impl From<crate::chat::Error> for Error {
     fn from(source: crate::chat::Error) -> Self {
         Self::Chat { source }
+    }
+}
+
+impl From<crate::sensitive::Error> for Error {
+    fn from(source: crate::sensitive::Error) -> Self {
+        Self::Sensitive { source }
     }
 }
 
