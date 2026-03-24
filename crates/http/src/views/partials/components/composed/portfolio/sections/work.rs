@@ -44,12 +44,16 @@ impl Render for WorkIndexSection<'_> {
                     summary: &self.content.summary,
                 })
             }).extra_class("ui-portfolio-lead-surface"))
-            (WorkSection {
-                content: &self.content.current_proof_section,
-            })
-            (WorkSection {
-                content: &self.content.supporting_cases_section,
-            })
+            div data-work-current-proof {
+                (WorkSection {
+                    content: &self.content.current_proof_section,
+                })
+            }
+            div data-work-supporting-proof {
+                (WorkSection {
+                    content: &self.content.supporting_cases_section,
+                })
+            }
         }
     }
 }

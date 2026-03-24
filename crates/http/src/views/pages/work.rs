@@ -15,6 +15,10 @@ crate::views::scoped::inline_css!(
   me [data-work-page] .ui-portfolio-lead-surface .ui-portfolio-summary {
     font-size: var(--text-size-body-md);
   }
+
+  me [data-work-page] [data-work-current-proof] {
+    margin-top: var(--space-1);
+  }
 }
 "#
 );
