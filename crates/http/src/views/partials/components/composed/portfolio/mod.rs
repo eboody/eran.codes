@@ -662,11 +662,17 @@ me .ui-portfolio-crate-section--standalone .ui-portfolio-inline-links {
 
   me .ui-portfolio-experience-card--feature {
     inline-size: 100%;
+    gap: var(--space-2);
+  }
+
+  me .ui-portfolio-experience-card--feature .ui-portfolio-card-summary {
+    font-size: var(--text-size-body-md);
+    line-height: 1.55;
   }
 
   me .ui-portfolio-experience-card--feature .ui-portfolio-list {
     grid-template-columns: minmax(0, 1fr);
-    gap: calc(var(--space-1) * 0.75);
+    gap: calc(var(--space-1) * 0.5);
     padding-left: var(--space-2);
   }
 
