@@ -269,7 +269,7 @@ me [data-nav-list='auth'] [data-nav-link-cta='true'] {
     top: auto;
     --_nav-link-font-size: var(--text-size-meta-xs);
     margin-top: var(--space-2);
-    margin-bottom: var(--space-4);
+    margin-bottom: var(--space-3);
   }
 
   me > [data-nav] {
