@@ -161,16 +161,21 @@ me [data-burst-delta] {
   }
 
   me [data-burst-result] {
-    padding: var(--space-3);
+    padding: var(--space-2);
+    font-size: var(--text-size-meta-xs);
   }
 
   me [data-burst-status] {
-    margin-bottom: var(--space-2);
+    margin-bottom: var(--space-1);
   }
 
   me [data-burst-metrics] {
-    gap: var(--space-2) var(--space-3);
+    gap: var(--space-1) var(--space-2);
     grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  me [data-burst-metrics] dt {
+    font-size: var(--text-size-label-2xs);
   }
 }
 "#
