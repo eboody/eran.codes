@@ -6,6 +6,7 @@ moddef::moddef!(
         lab,
         login,
         open_source,
+        portfolio_shell,
         protected,
         register,
         work,

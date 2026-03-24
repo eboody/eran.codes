@@ -13,20 +13,45 @@ use crate::types::{SseTabId, Text};
 use crate::views::partials::components::portfolio::content::WorkCaseSlug;
 use crate::views::{self, pages};
 
+fn user_nav(auth_session: &crate::auth::Session) -> Option<crate::views::page::UserNav> {
+    auth_session
+        .user
+        .as_ref()
+        .map(crate::views::page::UserNav::from)
+}
+
 pub async fn health() -> &'static str {
     "OK"
 }
 
-pub async fn home() -> crate::Result<axum::response::Html<String>> {
-    Ok(views::render(pages::Home))
+pub async fn home(
+    auth_session: crate::auth::Session,
+) -> crate::Result<axum::response::Html<String>> {
+    Ok(views::render(
+        pages::Home::builder()
+            .maybe_with_user(user_nav(&auth_session))
+            .build(),
+    ))
 }
 
-pub async fn work() -> crate::Result<axum::response::Html<String>> {
-    Ok(views::render(pages::Work))
+pub async fn work(
+    auth_session: crate::auth::Session,
+) -> crate::Result<axum::response::Html<String>> {
+    Ok(views::render(
+        pages::Work::builder()
+            .maybe_with_user(user_nav(&auth_session))
+            .build(),
+    ))
 }
 
-pub async fn open_source() -> crate::Result<axum::response::Html<String>> {
-    Ok(views::render(pages::OpenSource))
+pub async fn open_source(
+    auth_session: crate::auth::Session,
+) -> crate::Result<axum::response::Html<String>> {
+    Ok(views::render(
+        pages::OpenSource::builder()
+            .maybe_with_user(user_nav(&auth_session))
+            .build(),
+    ))
 }
 
 pub async fn resume_text() -> impl axum::response::IntoResponse {
@@ -51,10 +76,13 @@ pub async fn work_operational_visibility() -> impl IntoResponse {
     redirect_to_work_archive(WorkCaseSlug::OperationalVisibility)
 }
 
-pub async fn work_sensitive_sync() -> crate::Result<axum::response::Html<String>> {
+pub async fn work_sensitive_sync(
+    auth_session: crate::auth::Session,
+) -> crate::Result<axum::response::Html<String>> {
     Ok(views::render(
         pages::WorkCase::builder()
             .slug(WorkCaseSlug::SensitiveSync)
+            .maybe_with_user(user_nav(&auth_session))
             .build(),
     ))
 }

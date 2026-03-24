@@ -1,6 +1,9 @@
+use bon::Builder;
 use maud::Render;
 
 use crate::views::{page, partials};
+
+use super::portfolio_shell;
 
 crate::views::scoped::inline_css!(
     r#"
@@ -112,7 +115,11 @@ me .ui-portfolio-crate-section--standalone .ui-code-block {
 "#
 );
 
-pub struct OpenSource;
+#[derive(Builder, Default)]
+pub struct OpenSource {
+    #[builder(setters(name = with_user))]
+    pub user: Option<page::UserNav>,
+}
 
 impl Render for OpenSource {
     fn render(&self) -> maud::Markup {
@@ -134,15 +141,12 @@ impl Render for OpenSource {
             },
         }
         .render();
-        let page_content = page::Frame::builder().content(body).build().render();
-
-        page::Layout::builder()
-            .title(&content.page_title.to_string())
-            .content(page_content)
-            .nav_mode(page::NavMode::Portfolio)
-            .current_route(crate::paths::Route::OpenSource)
-            .build()
-            .render()
+        portfolio_shell::render(
+            &content.page_title.to_string(),
+            body,
+            crate::paths::Route::OpenSource,
+            self.user.clone(),
+        )
     }
 }
 
@@ -153,7 +157,7 @@ mod tests {
     #[test]
     fn renders_open_source_hero_and_crate_section() {
         let content = partials::components::portfolio::content::open_source_index_content();
-        let markup = OpenSource.render().into_string();
+        let markup = OpenSource::default().render().into_string();
         let hero_title = content.hero.title.to_string();
 
         assert!(markup.contains(hero_title.as_str()));

@@ -3,9 +3,13 @@ use maud::Render;
 
 use crate::views::{page, partials};
 
+use super::portfolio_shell;
+
 #[derive(Clone, Debug, Builder)]
 pub struct WorkCase {
     pub slug: partials::components::portfolio::content::WorkCaseSlug,
+    #[builder(setters(name = with_user))]
+    pub user: Option<page::UserNav>,
 }
 
 impl Render for WorkCase {
@@ -18,14 +22,11 @@ impl Render for WorkCase {
             },
         }
         .render();
-        let page_content = page::Frame::builder().content(body).build().render();
-
-        page::Layout::builder()
-            .title(&content.page_title.to_string())
-            .content(page_content)
-            .nav_mode(page::NavMode::Portfolio)
-            .current_route(self.slug.route())
-            .build()
-            .render()
+        portfolio_shell::render(
+            &content.page_title.to_string(),
+            body,
+            self.slug.route(),
+            self.user.clone(),
+        )
     }
 }

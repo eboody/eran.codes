@@ -1,8 +1,15 @@
+use bon::Builder;
 use maud::Render;
 
 use crate::views::{page, partials};
 
-pub struct Work;
+use super::portfolio_shell;
+
+#[derive(Builder, Default)]
+pub struct Work {
+    #[builder(setters(name = with_user))]
+    pub user: Option<page::UserNav>,
+}
 
 impl Render for Work {
     fn render(&self) -> maud::Markup {
@@ -22,15 +29,12 @@ impl Render for Work {
             },
         }
         .render();
-        let page_content = page::Frame::builder().content(body).build().render();
-
-        page::Layout::builder()
-            .title(&content.page_title.to_string())
-            .content(page_content)
-            .nav_mode(page::NavMode::Portfolio)
-            .current_route(crate::paths::Route::Work)
-            .build()
-            .render()
+        portfolio_shell::render(
+            &content.page_title.to_string(),
+            body,
+            crate::paths::Route::Work,
+            self.user.clone(),
+        )
     }
 }
 
@@ -41,7 +45,7 @@ mod tests {
     #[test]
     fn renders_case_studies_and_open_source_teaser() {
         let content = partials::components::portfolio::content::work_index_content();
-        let markup = Work.render().into_string();
+        let markup = Work::default().render().into_string();
         let lead_title = content.title.to_string();
         let current_title = content.current_proof_section.title.to_string();
         let supporting_subtitle = content.supporting_cases_section.subtitle.to_string();
@@ -91,7 +95,7 @@ mod tests {
 
     #[test]
     fn archive_details_render_from_shared_work_case_content() {
-        let markup = Work.render().into_string();
+        let markup = Work::default().render().into_string();
 
         for case in partials::components::portfolio::content::supporting_archive_cases() {
             let anchor_id = case

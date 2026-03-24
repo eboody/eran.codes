@@ -1,9 +1,16 @@
+use bon::Builder;
 use maud::Render;
 
 use crate::types::Text;
 use crate::views::{page, partials};
 
-pub struct Home;
+use super::portfolio_shell;
+
+#[derive(Builder, Default)]
+pub struct Home {
+    #[builder(setters(name = with_user))]
+    pub user: Option<page::UserNav>,
+}
 
 impl Render for Home {
     fn render(&self) -> maud::Markup {
@@ -58,15 +65,12 @@ impl Render for Home {
             },
         }
         .render();
-        let page_content = page::Frame::builder().content(body).build().render();
-
-        page::Layout::builder()
-            .title(&content.page_title.to_string())
-            .content(page_content)
-            .nav_mode(page::NavMode::Portfolio)
-            .current_route(crate::paths::Route::Home)
-            .build()
-            .render()
+        portfolio_shell::render(
+            &content.page_title.to_string(),
+            body,
+            crate::paths::Route::Home,
+            self.user.clone(),
+        )
     }
 }
 
@@ -77,7 +81,7 @@ mod tests {
     #[test]
     fn renders_resume_first_sections_in_order() {
         let content = partials::components::portfolio::content::portfolio_home_content();
-        let markup = Home.render().into_string();
+        let markup = Home::default().render().into_string();
         let experience_title = content.experience_section.title.to_string();
         let project_title = content.project_section.title.to_string();
         let proof_title = content.current_proof_section.title.to_string();

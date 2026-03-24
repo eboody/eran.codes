@@ -46,12 +46,10 @@ impl LabPageFlow<Incoming> {
 
     pub(super) fn resolve_viewer(self) -> crate::Result<LabPageFlow<ViewerResolved>> {
         let is_authenticated = self.auth_user.is_some();
-        let maybe_user = self.auth_user.as_ref().map(|user| {
-            crate::views::page::UserNav::builder()
-                .username(Text::from(user.username.to_string()))
-                .email(Text::from(user.email.to_string()))
-                .build()
-        });
+        let maybe_user = self
+            .auth_user
+            .as_ref()
+            .map(crate::views::page::UserNav::from);
         let viewer_id = self
             .auth_user
             .as_ref()

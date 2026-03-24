@@ -2,7 +2,7 @@ use std::sync::{Arc, Mutex};
 
 use async_trait::async_trait;
 use axum::{
-    body::Body,
+    body::{Body, to_bytes},
     http::{Request, StatusCode},
 };
 use secrecy::{ExposeSecret, SecretString};
@@ -384,6 +384,51 @@ async fn login_sets_session_cookie_and_allows_chat_moderation() {
         .unwrap();
 
     assert_eq!(response.status(), StatusCode::OK);
+}
+
+#[tokio::test]
+async fn authenticated_portfolio_pages_render_signed_in_nav() {
+    let app = test_app();
+    let cookie_header = login_cookie(app.clone()).await;
+
+    for route in ["/", "/work", "/open-source", "/work/sensitive-sync"] {
+        let response = app
+            .clone()
+            .oneshot(
+                Request::get(route)
+                    .header(axum::http::header::COOKIE, cookie_header.clone())
+                    .body(Body::empty())
+                    .unwrap(),
+            )
+            .await
+            .unwrap();
+
+        assert_eq!(
+            response.status(),
+            StatusCode::OK,
+            "route {route} should render"
+        );
+
+        let body = to_bytes(response.into_body(), usize::MAX).await.unwrap();
+        let body = String::from_utf8_lossy(&body);
+
+        assert!(
+            body.contains("data-nav-auth-text") && body.contains("Signed in as"),
+            "route {route} should render the signed-in nav state\n{body}",
+        );
+        assert!(
+            body.contains("Sign out"),
+            "route {route} should render the sign-out action\n{body}",
+        );
+        assert!(
+            !body.contains(">Sign in<"),
+            "route {route} should not render guest sign-in controls\n{body}",
+        );
+        assert!(
+            !body.contains(">Create account<"),
+            "route {route} should not render guest register controls\n{body}",
+        );
+    }
 }
 
 #[tokio::test]

@@ -38,6 +38,15 @@ pub struct UserNav {
     pub email: Text,
 }
 
+impl From<&crate::auth::User> for UserNav {
+    fn from(user: &crate::auth::User) -> Self {
+        Self::builder()
+            .username(Text::from(user.username.to_string()))
+            .email(Text::from(user.email.to_string()))
+            .build()
+    }
+}
+
 impl Render for UserNav {
     fn render(&self) -> Markup {
         nav::signed_in(self).render()
