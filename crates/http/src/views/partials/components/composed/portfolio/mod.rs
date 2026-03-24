@@ -727,6 +727,16 @@ me .ui-portfolio-crate-section--standalone .ui-portfolio-inline-links {
   me .ui-portfolio-crate-section--standalone {
     gap: var(--space-2);
   }
+
+  me .ui-portfolio-closing,
+  me .ui-portfolio-supporting-teaser {
+    gap: var(--space-2);
+  }
+
+  me .ui-portfolio-section-actions .ui-button-row,
+  me .ui-portfolio-closing .ui-button-row {
+    margin-top: calc(var(--space-1) - var(--interactive-bleed));
+  }
 }
 
 @media (min-width: 56.25rem) {
