@@ -10,6 +10,8 @@ me {
   --control-font-size: var(--text-size-body-lg);
   --control-radius: var(--radius-pill);
   --_home-hero-title-size: clamp(2rem, 1.5rem + 2vw, 3rem);
+  --_home-hero-title-measure: 12.2ch;
+  --_home-hero-title-line-height: 0.95;
 
   display: grid;
   gap: clamp(1.8rem, 1.25rem + 1.8vw, 2.8rem);
@@ -54,14 +56,15 @@ me [data-home-hero-summary] {
   margin: 0;
   max-width: 55ch;
   font-size: var(--text-size-lead);
+  line-height: var(--text-line-reading);
   color: color-mix(in srgb, var(--text-body) 90%, var(--text-muted) 10%);
 }
 
 me [data-home-hero-title] {
   margin: 0;
-  max-width: 11.6ch;
+  max-width: var(--_home-hero-title-measure);
   font-size: var(--_home-hero-title-size);
-  line-height: var(--text-line-tightest);
+  line-height: var(--_home-hero-title-line-height);
   letter-spacing: var(--text-track-display);
   text-wrap: balance;
 }
@@ -120,6 +123,11 @@ me [data-home-hero-card-detail] {
 }
 
 me [data-home-hero-primary-actions] [data-button-row] {
+  --button-row-gap: var(--space-2);
+  --button-row-item-min-inline-size: 0;
+  --control-font-size: var(--text-size-body-md);
+  --control-padding-block: 0.62rem;
+
   width: fit-content;
   margin-top: var(--space-1);
   padding-top: var(--space-3);
@@ -218,8 +226,10 @@ me [data-home-hero-card-secondary-link]:focus-visible {
 
 @media (max-width: 48rem) {
   me {
+    --_home-hero-title-size: clamp(1.8rem, 1.45rem + 2vw, 2.45rem);
+    --_home-hero-title-measure: 13.25ch;
     padding: var(--space-card);
-    gap: var(--space-5);
+    gap: var(--space-4);
   }
 
   me [data-home-hero-copy] {
@@ -227,13 +237,9 @@ me [data-home-hero-card-secondary-link]:focus-visible {
     padding-inline-end: 0;
   }
 
-  me [data-home-hero-title] {
-    max-width: 10.8ch;
-  }
-
   me [data-home-hero-summary],
   me [data-home-hero-card-status] {
-    font-size: var(--text-size-body-lg);
+    font-size: var(--text-size-body-md);
   }
 
   me [data-home-hero-card] {
@@ -263,8 +269,8 @@ me [data-home-hero-card-secondary-link]:focus-visible {
 }
 
 @media (max-width: 36rem) {
-  me [data-home-hero-title] {
-    max-width: 10.1ch;
+  me {
+    --_home-hero-title-measure: 12.1ch;
   }
 }
 
@@ -276,8 +282,8 @@ me [data-home-hero-card-secondary-link]:focus-visible {
 }
 
 @media (max-width: 24rem) {
-  me [data-home-hero-title] {
-    max-width: 9.2ch;
+  me {
+    --_home-hero-title-measure: 10.6ch;
   }
 
   me [data-home-hero-primary-actions] [data-button-row] > * {
