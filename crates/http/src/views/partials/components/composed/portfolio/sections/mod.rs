@@ -15,6 +15,7 @@ mod open_source_flow;
 mod open_source_intro;
 mod skill_groups;
 mod work;
+mod work_flow;
 
 pub use case_detail::{ArchiveCaseDetailsSection, WorkCaseDetail};
 pub use closing::ClosingSection;
@@ -26,6 +27,7 @@ pub use open_source_flow::OpenSourceFlow;
 pub use open_source_intro::{OpenSourceHeroAside, OpenSourceMobileIntro};
 pub use skill_groups::SkillGroupsSection;
 pub use work::{SupportingTeaserSection, WorkIndexSection, WorkSection, WorkSectionVariant};
+pub use work_flow::WorkFlow;
 
 #[derive(Clone, Copy, Debug)]
 pub(super) struct SectionCopy<'a> {

@@ -18,13 +18,9 @@ impl Render for Work {
 
         let body = partials::components::portfolio::Page {
             content: maud::html! {
-                (partials::components::portfolio::WorkIndexSection { content })
-                (partials::components::portfolio::ArchiveCaseDetailsSection {
-                    intro: &content.archive_details,
-                    cases: archive_cases,
-                })
-                (partials::components::portfolio::SupportingTeaserSection {
-                    content: &content.open_source_teaser,
+                (partials::components::portfolio::WorkFlow {
+                    content,
+                    archive_cases,
                 })
             },
         }
