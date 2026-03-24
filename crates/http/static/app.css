@@ -501,19 +501,26 @@ input[type="password"] {
 }
 
 .ui-button-row {
+  --button-row-gap: var(--space-3);
+  --button-row-padding: var(--interactive-bleed);
+  --button-row-margin-inline: calc(var(--button-row-padding) * -1);
+  --button-row-margin-block-start: calc(1.1rem - var(--button-row-padding));
+  --button-row-margin-block-end: calc(var(--button-row-padding) * -1);
+  --button-row-item-min-inline-size: 10rem;
+
   display: flex;
   flex-wrap: wrap;
-  gap: var(--space-3);
+  gap: var(--button-row-gap);
   position: relative;
   isolation: isolate;
-  padding: var(--interactive-bleed);
-  margin-inline: calc(var(--interactive-bleed) * -1);
-  margin-block: calc(1.1rem - var(--interactive-bleed)) calc(var(--interactive-bleed) * -1);
+  padding: var(--button-row-padding);
+  margin-inline: var(--button-row-margin-inline);
+  margin-block: var(--button-row-margin-block-start) var(--button-row-margin-block-end);
   overflow: visible;
 }
 
 .ui-button-row > :where(button, a)[data-button] {
-  min-inline-size: 10rem;
+  min-inline-size: var(--button-row-item-min-inline-size);
 }
 
 .u-inset-card {

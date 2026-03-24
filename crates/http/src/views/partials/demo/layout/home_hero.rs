@@ -9,11 +9,12 @@ crate::views::scoped::inline_css!(
 me {
   --control-font-size: var(--text-size-body-lg);
   --control-radius: var(--radius-pill);
+  --_home-hero-title-size: clamp(2rem, 1.5rem + 2vw, 3rem);
 
   display: grid;
-  gap: var(--space-section);
+  gap: clamp(1.8rem, 1.25rem + 1.8vw, 2.8rem);
   align-items: start;
-  padding: clamp(1.55rem, 1.15rem + 1.2vw, 2.45rem);
+  padding: clamp(1.7rem, 1.2rem + 1.2vw, 2.6rem);
   border-radius: var(--radius-shell);
   border: 1px solid color-mix(in srgb, var(--accent-signal) 12%, var(--border-default));
   background:
@@ -58,9 +59,10 @@ me [data-home-hero-summary] {
 
 me [data-home-hero-title] {
   margin: 0;
-  max-width: 11ch;
-  font-size: var(--text-size-display-lg);
+  max-width: 11.6ch;
+  font-size: var(--_home-hero-title-size);
   line-height: var(--text-line-tightest);
+  letter-spacing: var(--text-track-display);
   text-wrap: balance;
 }
 
@@ -79,10 +81,9 @@ me [data-home-hero-tags] .ui-pill {
 me [data-home-hero-card] {
   display: grid;
   gap: var(--space-3);
-  grid-template-rows: auto auto auto 1fr auto;
   align-content: start;
-  inline-size: min(100%, 22rem);
-  padding: clamp(1.2rem, 0.95rem + 0.8vw, 1.75rem);
+  inline-size: min(100%, 23rem);
+  padding: clamp(1.2rem, 0.95rem + 0.9vw, 1.75rem);
   border-radius: var(--ui-radius-md);
   border: 1px solid color-mix(in srgb, var(--accent-warm) 14%, var(--border-default));
   background:
@@ -107,12 +108,14 @@ me [data-home-hero-card-title] {
 me [data-home-hero-card-status] {
   margin: 0;
   max-width: 34ch;
-  font-size: var(--text-size-body-lg);
+  font-size: var(--text-size-body-md);
+  line-height: var(--text-line-summary);
   color: color-mix(in srgb, var(--text-body) 90%, var(--text-muted) 10%);
 }
 
 me [data-home-hero-card-detail] {
   margin: 0;
+  max-width: 31ch;
   color: color-mix(in srgb, var(--text-muted) 94%, var(--text-body) 6%);
 }
 
@@ -123,28 +126,50 @@ me [data-home-hero-primary-actions] [data-button-row] {
   border-top: 1px solid color-mix(in srgb, var(--border-subtle) 82%, transparent);
 }
 
-me [data-home-hero-card-actions] [data-button-row] {
-  width: 100%;
-  margin: var(--space-2) 0 0 0;
-  padding: var(--space-2);
-  border: 1px solid color-mix(in srgb, var(--accent-warm) 16%, var(--border-subtle));
-  border-radius: var(--ui-radius-md);
-  background:
-    linear-gradient(
-      180deg,
-      color-mix(in srgb, white 26%, transparent),
-      transparent 60%
-    ),
-    color-mix(in srgb, var(--surface-field) 76%, var(--surface-raised));
-  box-shadow: inset 0 1px 0 var(--surface-edge-soft);
+me [data-home-hero-card-actions] {
+  display: grid;
+  justify-items: start;
+  margin-top: var(--space-1);
+  padding-top: var(--space-3);
+  gap: var(--space-2);
+  border-top: 1px solid color-mix(in srgb, var(--accent-warm) 16%, var(--border-subtle));
 }
 
-me [data-home-hero-card-actions] [data-button-row] > * {
-  flex: 1 1 10rem;
+me [data-home-hero-card-primary-action] {
+  --control-font-size: var(--control-font-size-compact);
+  --control-padding-block: 0.5rem;
+  --control-padding-inline: 1rem;
+  --control-radius: calc(var(--radius-control) - 2px);
+
+  display: grid;
+  min-inline-size: clamp(11.5rem, 18vw, 13.75rem);
 }
 
-me [data-home-hero-card-actions] [data-button-row] :where(a.button, button, .button) {
-  width: 100%;
+me [data-home-hero-card-primary-action] :where(a.button, button, .button) {
+  width: auto;
+  margin: 0;
+}
+
+me [data-home-hero-card-secondary-link] {
+  color: color-mix(in srgb, var(--text-muted) 82%, var(--text-body) 18%);
+  font-weight: 600;
+  letter-spacing: normal;
+  text-decoration: none;
+  text-decoration-line: underline;
+  text-decoration-color: color-mix(in srgb, var(--text-muted) 42%, transparent);
+  text-underline-offset: 0.18em;
+}
+
+me [data-home-hero-card-secondary-copy] {
+  margin: 0;
+  color: color-mix(in srgb, var(--text-muted) 92%, var(--text-body) 8%);
+  font-size: var(--text-size-meta-sm);
+}
+
+me [data-home-hero-card-secondary-link]:focus-visible {
+  outline: 2px solid color-mix(in srgb, var(--accent-signal) 58%, transparent);
+  outline-offset: 0.2rem;
+  border-radius: calc(var(--radius-control) - 3px);
 }
 
 @media (min-width: 62rem) {
@@ -154,6 +179,7 @@ me [data-home-hero-card-actions] [data-button-row] :where(a.button, button, .but
 
   me [data-home-hero-card] {
     justify-self: end;
+    margin-top: var(--space-4);
   }
 }
 
@@ -185,12 +211,8 @@ me [data-home-hero-card-actions] [data-button-row] :where(a.button, button, .but
       0 12px 20px color-mix(in srgb, black 24%, transparent);
   }
 
-  me [data-home-hero-card] [data-button-row] {
+  me [data-home-hero-card-actions] {
     border-color: color-mix(in srgb, var(--accent-warm) 24%, var(--border-default));
-    background:
-      linear-gradient(180deg, var(--surface-wash-top-soft), transparent 46%),
-      color-mix(in srgb, var(--surface-field) 92%, black 8%);
-    box-shadow: inset 0 1px 0 var(--surface-edge-soft);
   }
 }
 
@@ -206,8 +228,7 @@ me [data-home-hero-card-actions] [data-button-row] :where(a.button, button, .but
   }
 
   me [data-home-hero-title] {
-    font-size: var(--text-size-display-md);
-    max-width: 9ch;
+    max-width: 10.8ch;
   }
 
   me [data-home-hero-summary],
@@ -217,6 +238,14 @@ me [data-home-hero-card-actions] [data-button-row] :where(a.button, button, .but
 
   me [data-home-hero-card] {
     inline-size: 100%;
+  }
+
+  me [data-home-hero-card-actions] {
+    justify-items: stretch;
+  }
+
+  me [data-home-hero-card-primary-action] {
+    min-inline-size: 0;
   }
 
   me [data-home-hero-primary-actions] [data-button-row] {
@@ -235,7 +264,20 @@ me [data-home-hero-card-actions] [data-button-row] :where(a.button, button, .but
 
 @media (max-width: 36rem) {
   me [data-home-hero-title] {
-    max-width: 8ch;
+    max-width: 10.1ch;
+  }
+}
+
+@media (hover: hover) {
+  me [data-home-hero-card-secondary-link]:hover {
+    color: var(--text-strong);
+    text-decoration-color: currentColor;
+  }
+}
+
+@media (max-width: 24rem) {
+  me [data-home-hero-title] {
+    max-width: 9.2ch;
   }
 
   me [data-home-hero-primary-actions] [data-button-row] > * {
@@ -309,22 +351,26 @@ impl Render for HomeHero {
                         p data-home-hero-card-status { (&content.session_card.guest_status) }
                         p class="u-muted" data-home-hero-card-detail { (&content.session_card.guest_summary) }
                         div data-home-hero-card-actions {
-                            (partials::button::Row::builder()
-                                .items(content.session_card.guest_actions.iter().map(|action| {
-                                    partials::button::Button::builder()
-                                        .label(action.label.clone())
-                                        .variant(match action.tone {
-                                            partials::components::portfolio::content::CtaKind::Primary => {
-                                                partials::button::Variant::Primary
-                                            }
-                                            partials::components::portfolio::content::CtaKind::Secondary => {
-                                                partials::button::Variant::Secondary
-                                            }
-                                        })
-                                        .role(partials::button::Role::link(action.href.clone()))
-                                        .build()
-                                }).collect())
-                                .build())
+                            @if let Some(primary_action) = content.session_card.guest_actions.first() {
+                                div data-home-hero-card-primary-action {
+                                    (partials::button::Button::builder()
+                                        .label(primary_action.label.clone())
+                                        .variant(partials::button::Variant::Primary)
+                                        .role(partials::button::Role::link(primary_action.href.clone()))
+                                        .build())
+                                }
+                            }
+                            @if let Some(secondary_action) = content.session_card.guest_actions.get(1) {
+                                p data-home-hero-card-secondary-copy {
+                                    "Already have an account? "
+                                    a
+                                        href=(secondary_action.href.clone())
+                                        data-home-hero-card-secondary-link
+                                    {
+                                        (&secondary_action.label)
+                                    }
+                                }
+                            }
                         }
                     }
                 }
@@ -347,5 +393,7 @@ mod tests {
         assert!(markup.contains("data-home-hero-summary"));
         assert!(markup.contains("data-home-hero-primary-actions"));
         assert!(markup.contains("data-home-hero-card-actions"));
+        assert!(markup.contains("data-home-hero-card-secondary-link"));
+        assert!(markup.contains("data-home-hero-card-secondary-copy"));
     }
 }

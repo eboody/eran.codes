@@ -13,6 +13,7 @@ me {
   top: var(--nav-sticky-offset);
   z-index: 20;
   margin-top: var(--nav-sticky-offset);
+  margin-bottom: clamp(0.8rem, 0.55rem + 0.8vw, 1.25rem);
   view-transition-name: app-nav;
 }
 
@@ -47,6 +48,7 @@ me [data-nav-link] {
   border-radius: calc(var(--control-radius) - 2px);
   border: 1px solid transparent;
   font-size: var(--_nav-link-font-size);
+  white-space: nowrap;
   position: relative;
   z-index: 0;
   color: var(--text-muted);
@@ -55,6 +57,10 @@ me [data-nav-link] {
     color var(--motion-fast),
     background-color var(--motion-fast),
     transform var(--motion-fast);
+}
+
+me [data-nav-link-label='compact'] {
+  display: none;
 }
 
 me [data-nav-link][aria-current="page"] {
@@ -211,8 +217,11 @@ me [data-nav-auth-action] {
 @media (max-width: 48rem) {
   me {
     --_nav-shell-padding: 0.65rem 0.8rem;
-    top: var(--interactive-bleed);
+    position: static;
+    top: auto;
     --_nav-link-font-size: var(--text-size-meta-xs);
+    margin-top: var(--space-2);
+    margin-bottom: var(--space-4);
   }
 
   me > [data-nav] {
@@ -223,12 +232,23 @@ me [data-nav-auth-action] {
   }
 
   me [data-nav-list='primary'] {
+    display: grid;
+    grid-auto-flow: column;
+    grid-auto-columns: max-content;
     grid-column: 1 / -1;
     justify-content: flex-start;
     overflow-x: auto;
-    flex-wrap: nowrap;
+    overscroll-behavior-x: contain;
     padding-bottom: calc(var(--interactive-bleed) * 0.5);
     scrollbar-width: thin;
+  }
+
+  me [data-nav-list='primary'] [data-nav-link-label='full'] {
+    display: none;
+  }
+
+  me [data-nav-list='primary'] [data-nav-link-label='compact'] {
+    display: inline;
   }
 
   me [data-nav-auth-text] {
@@ -244,7 +264,7 @@ me [data-nav-auth-action] {
   }
 
   me [data-nav-brand-text] {
-    font-size: var(--text-size-body-lg);
+    display: none;
   }
 
   me [data-nav-link][aria-current="page"] {
@@ -257,7 +277,12 @@ me [data-nav-auth-action] {
     grid-template-columns: 1fr;
   }
 
+  me [data-nav-list='primary'] li[data-nav-link-item-kind='external'] {
+    display: none;
+  }
+
   me [data-nav-list='auth'] {
+    padding-top: var(--space-1);
     justify-self: stretch;
     justify-content: flex-start;
   }
@@ -273,6 +298,7 @@ me [data-nav-auth-action] {
 #[derive(Clone, Debug, Builder)]
 pub struct NavLink {
     pub label: Text,
+    pub compact_label: Option<Text>,
     pub href: Text,
     #[builder(default)]
     pub external: bool,
@@ -282,20 +308,31 @@ pub struct NavLink {
 
 impl Render for NavLink {
     fn render(&self) -> maud::Markup {
+        let kind = if self.external { "external" } else { "internal" };
+
         maud::html! {
-            li {
+            li data-nav-link-item-kind=(kind) {
                 @if self.external {
                     a data-nav-link href=(&self.href) target="_blank" rel="noopener noreferrer" {
-                        (&self.label)
+                        span data-nav-link-label="full" { (&self.label) }
+                        @if let Some(compact_label) = &self.compact_label {
+                            span data-nav-link-label="compact" { (compact_label) }
+                        }
                     }
                 } @else {
                     @if self.active {
                         a data-nav-link href=(&self.href) aria-current="page" {
-                            (&self.label)
+                            span data-nav-link-label="full" { (&self.label) }
+                            @if let Some(compact_label) = &self.compact_label {
+                                span data-nav-link-label="compact" { (compact_label) }
+                            }
                         }
                     } @else {
                         a data-nav-link href=(&self.href) {
-                            (&self.label)
+                            span data-nav-link-label="full" { (&self.label) }
+                            @if let Some(compact_label) = &self.compact_label {
+                                span data-nav-link-label="compact" { (compact_label) }
+                            }
                         }
                     }
                 }
@@ -436,5 +473,62 @@ impl Render for NavBar {
                 }
             }
         }
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn mobile_nav_preserves_scrolling_chip_contract() {
+        let markup = NavBar::builder()
+            .brand(
+                NavBrand::builder()
+                    .label(Text::from("eran.codes"))
+                    .href(Text::from("/"))
+                    .light_logo_src(Text::from("/static/eran.codes-light.svg"))
+                    .dark_logo_src(Text::from("/static/eran.codes-dark.svg"))
+                    .build(),
+            )
+            .links(
+                NavLinkList::builder()
+                    .children(vec![
+                        NavLink::builder()
+                            .label(Text::from("Live Proof"))
+                            .maybe_compact_label(Some(Text::from("Live")))
+                            .href(Text::from("/lab"))
+                            .build(),
+                        NavLink::builder()
+                            .label(Text::from("Current Proof"))
+                            .maybe_compact_label(Some(Text::from("Current")))
+                            .href(Text::from("/work/sensitive-sync"))
+                            .build(),
+                        NavLink::builder()
+                            .label(Text::from("GitHub"))
+                            .maybe_compact_label(Some(Text::from("GitHub")))
+                            .href(Text::from("https://github.com/eboody"))
+                            .external(true)
+                            .build(),
+                    ])
+                    .build(),
+            )
+            .auth(NavAuth::Guest(
+                NavLinkList::builder()
+                    .role(NavLinkListRole::Auth)
+                    .children(vec![NavLink::builder()
+                        .label(Text::from("Sign in"))
+                        .href(Text::from("/login"))
+                        .build()])
+                    .build(),
+            ))
+            .build()
+            .render()
+            .into_string();
+
+        assert!(markup.contains("white-space: nowrap;"));
+        assert!(markup.contains("overscroll-behavior-x: contain;"));
+        assert!(markup.contains("data-nav-link-item-kind=\"external\""));
+        assert!(markup.contains("data-nav-link-label=\"compact\""));
     }
 }
