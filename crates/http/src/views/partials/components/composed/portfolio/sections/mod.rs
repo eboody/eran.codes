@@ -30,7 +30,7 @@ pub(super) struct SectionCopy<'a> {
 impl Render for SectionCopy<'_> {
     fn render(&self) -> maud::Markup {
         maud::html! {
-            div class="ui-portfolio-section-copy" {
+            div class="u-section-copy ui-portfolio-section-copy" {
                 h2 { (&self.title) }
                 p { (&self.subtitle) }
             }

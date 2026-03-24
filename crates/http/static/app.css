@@ -424,21 +424,47 @@ input[type="password"] {
 
 /* Shared surface packages */
 .u-surface-card {
+  --surface-card-gap: var(--space-4);
+  --surface-card-margin-top: var(--space-6);
+  --surface-card-padding: clamp(1.2rem, 0.95rem + 0.8vw, 1.9rem);
+  --surface-card-border: var(--border-default);
+  --surface-card-bg-color: var(--surface-panel);
+  --surface-card-bg-image: var(--surface-fill-panel);
+  --surface-card-shadow: var(--shadow-panel);
+
   display: grid;
-  gap: var(--space-4);
-  margin-top: var(--space-6);
-  padding: clamp(1.2rem, 0.95rem + 0.8vw, 1.9rem);
-  border: 1px solid var(--border-default);
+  gap: var(--surface-card-gap);
+  margin-top: var(--surface-card-margin-top);
+  padding: var(--surface-card-padding);
+  border: 1px solid var(--surface-card-border);
   border-radius: var(--ui-radius-md);
-  background-color: var(--surface-panel);
-  background-image: var(--surface-fill-panel);
-  box-shadow: var(--shadow-panel);
+  background-color: var(--surface-card-bg-color);
+  background-image: var(--surface-card-bg-image);
+  box-shadow: var(--surface-card-shadow);
   overflow: visible;
   transition:
     border-color var(--motion-fast),
     background-color var(--motion-fast),
     box-shadow var(--motion-fast),
     transform var(--motion-fast);
+}
+
+.u-section-copy {
+  --section-copy-gap: var(--space-2);
+  --section-copy-max-inline: 60ch;
+  --section-copy-color: var(--ui-text-muted, var(--text-muted));
+
+  display: grid;
+  gap: var(--section-copy-gap);
+}
+
+.u-section-copy > :is(h1, h2, h3, p) {
+  margin: 0;
+}
+
+.u-section-copy > p {
+  max-width: var(--section-copy-max-inline);
+  color: var(--section-copy-color);
 }
 
 .u-inset-card {

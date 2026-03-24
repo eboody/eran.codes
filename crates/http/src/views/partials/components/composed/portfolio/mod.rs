@@ -10,12 +10,11 @@ me {
 }
 
 me .ui-portfolio-surface {
-  display: grid;
-  gap: clamp(1rem, 0.85rem + 0.8vw, 1.45rem);
+  --surface-card-gap: clamp(1rem, 0.85rem + 0.8vw, 1.45rem);
 }
 
 me .ui-portfolio-hero {
-  padding: var(--space-7);
+  --surface-card-padding: var(--space-7);
   border-radius: var(--radius-5);
   background:
     linear-gradient(
@@ -51,21 +50,6 @@ me .ui-portfolio-summary {
   margin: 0;
   max-width: 64ch;
   color: color-mix(in srgb, var(--ui-text) 90%, var(--ui-text-muted) 10%);
-}
-
-me .ui-portfolio-section-copy {
-  display: grid;
-  gap: var(--space-2);
-}
-
-me .ui-portfolio-section-copy h2,
-me .ui-portfolio-section-copy p {
-  margin: 0;
-}
-
-me .ui-portfolio-section-copy p {
-  max-width: 60ch;
-  color: var(--ui-text-muted);
 }
 
 me .ui-portfolio-badges {
@@ -419,16 +403,17 @@ me .ui-portfolio-closing {
 }
 
 me .ui-portfolio-supporting-teaser {
-  justify-items: start;
-  gap: var(--space-3);
-  border-color: color-mix(in srgb, var(--ui-border-soft) 84%, transparent);
-  background:
+  --surface-card-border: color-mix(in srgb, var(--ui-border-soft) 84%, transparent);
+  --surface-card-bg-image:
     linear-gradient(
       180deg,
       color-mix(in srgb, var(--portfolio-accent-b) 4%, transparent),
       transparent 18%
     ),
     color-mix(in srgb, var(--surface-fill-panel) 90%, transparent);
+
+  justify-items: start;
+  gap: var(--space-3);
 }
 
 me .ui-portfolio-supporting-teaser h2 {
@@ -446,12 +431,12 @@ me .ui-portfolio-case-grid {
 }
 
 me .ui-portfolio-case-section {
-  border-color: color-mix(
+  --surface-card-border: color-mix(
     in srgb,
     var(--portfolio-accent-a) 26%,
     var(--portfolio-surface-border)
   );
-  background:
+  --surface-card-bg-image:
     linear-gradient(
       180deg,
       color-mix(in srgb, var(--portfolio-accent-a) 8%, transparent),
@@ -465,16 +450,13 @@ me .ui-portfolio-case-section h2 {
 }
 
 me .ui-portfolio-case-section .ui-portfolio-section-copy {
-  gap: var(--space-1);
-}
-
-me .ui-portfolio-case-section .ui-portfolio-section-copy p {
-  max-width: 56ch;
+  --section-copy-gap: var(--space-1);
+  --section-copy-max-inline: 56ch;
 }
 
 me .ui-portfolio-crate-section {
-  border-color: color-mix(in srgb, var(--ui-border-soft) 88%, transparent);
-  background:
+  --surface-card-border: color-mix(in srgb, var(--ui-border-soft) 88%, transparent);
+  --surface-card-bg-image:
     linear-gradient(
       180deg,
       color-mix(in srgb, var(--portfolio-accent-b) 5%, transparent),
@@ -484,18 +466,19 @@ me .ui-portfolio-crate-section {
 }
 
 me .ui-portfolio-crate-section--standalone {
-  gap: var(--space-3);
-  margin-top: 0;
-  padding: clamp(0.9rem, 0.8rem + 0.5vw, 1.2rem);
-  border-color: color-mix(in srgb, var(--ui-border-soft) 76%, transparent);
-  background:
+  --surface-card-gap: var(--space-3);
+  --surface-card-margin-top: 0;
+  --surface-card-padding: clamp(0.9rem, 0.8rem + 0.5vw, 1.2rem);
+  --surface-card-border: color-mix(in srgb, var(--ui-border-soft) 76%, transparent);
+  --surface-card-bg-image:
     linear-gradient(
       180deg,
       color-mix(in srgb, var(--portfolio-accent-a) 5%, transparent),
       transparent 24%
     ),
     color-mix(in srgb, var(--surface-fill-panel) 76%, transparent);
-  box-shadow: inset 0 1px 0 var(--surface-edge-soft);
+  --surface-card-shadow: inset 0 1px 0 var(--surface-edge-soft);
+
   max-inline-size: 72rem;
   margin-inline: auto;
 }
@@ -531,7 +514,7 @@ me .ui-portfolio-crate-section--standalone .ui-portfolio-inline-links {
   }
 
   me .ui-portfolio-surface {
-    gap: var(--space-3);
+    --surface-card-gap: var(--space-3);
   }
 
   me .ui-portfolio-hero {
