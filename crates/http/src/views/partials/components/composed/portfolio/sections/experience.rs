@@ -12,6 +12,11 @@ pub struct ExperienceSection<'a> {
 impl Render for ExperienceSection<'_> {
     fn render(&self) -> maud::Markup {
         let feature_layout = self.content.roles.len() == 1;
+        let section_class = if feature_layout {
+            "ui-portfolio-experience-section ui-portfolio-experience-section--feature"
+        } else {
+            "ui-portfolio-experience-section"
+        };
 
         maud::html! {
             (Surface::section(maud::html! {
@@ -27,7 +32,7 @@ impl Render for ExperienceSection<'_> {
                         })
                     }
                 }).extra_class("ui-portfolio-experience-grid"))
-            }))
+            }).extra_class(section_class))
         }
     }
 }

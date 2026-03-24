@@ -4,9 +4,15 @@ crate::views::scoped::inline_css!(
     r#"
 me {
   display: grid;
+  grid-template-columns: minmax(0, 1fr);
   gap: clamp(1.7rem, 1.2rem + 1.55vw, 2.85rem);
+  min-width: 0;
   margin-top: clamp(1.45rem, 1rem + 1.35vw, 2.35rem);
   padding-bottom: var(--space-8);
+}
+
+me > * {
+  min-width: 0;
 }
 
 me .ui-portfolio-surface {
@@ -143,6 +149,10 @@ me .ui-portfolio-card {
     transform var(--motion-fast);
 }
 
+me .ui-portfolio-card > * {
+  min-width: 0;
+}
+
 me .ui-portfolio-card-kicker {
   margin: 0;
   font-size: var(--text-size-meta-xs);
@@ -184,7 +194,8 @@ me .ui-portfolio-skill-card {
 }
 
 me .ui-portfolio-experience-card--feature {
-  inline-size: min(100%, 62rem);
+  inline-size: 100%;
+  max-inline-size: 62rem;
   justify-self: start;
 }
 
@@ -768,9 +779,39 @@ me .ui-portfolio-crate-section--standalone .ui-portfolio-inline-links {
   }
 }
 
-@media (min-width: 56.25rem) {
+@media (min-width: 68rem) {
   me .ui-portfolio-hero-grid {
     grid-template-columns: minmax(0, 1.38fr) minmax(18rem, 0.78fr);
+  }
+
+  me .ui-portfolio-work-section--current-proof,
+  me .ui-portfolio-experience-section--feature {
+    grid-template-columns: minmax(0, 0.84fr) minmax(0, 1.16fr);
+    align-items: start;
+    gap: clamp(1.45rem, 1.15rem + 0.95vw, 2.35rem);
+  }
+
+  me .ui-portfolio-work-section--current-proof > .ui-portfolio-section-copy,
+  me .ui-portfolio-experience-section--feature > .ui-portfolio-section-copy {
+    grid-column: 1;
+    align-self: start;
+  }
+
+  me .ui-portfolio-work-section--current-proof > .ui-portfolio-card-grid,
+  me .ui-portfolio-experience-section--feature > .ui-portfolio-card-grid {
+    grid-column: 2;
+    grid-template-columns: 1fr;
+  }
+
+  me .ui-portfolio-work-section--current-proof > .ui-portfolio-section-actions {
+    grid-column: 1;
+    align-self: start;
+  }
+
+  me .ui-portfolio-work-section--current-proof .ui-portfolio-card,
+  me .ui-portfolio-experience-section--feature .ui-portfolio-card {
+    inline-size: 100%;
+    justify-self: stretch;
   }
 
   me .ui-portfolio-proof-strip {
@@ -825,6 +866,18 @@ me .ui-portfolio-crate-section--standalone .ui-portfolio-inline-links {
 
   me .ui-portfolio-work-section--current-proof .ui-portfolio-card-footer {
     gap: var(--space-1);
+  }
+}
+
+@media (max-width: 20rem) {
+  me .ui-portfolio-card-footer {
+    justify-items: stretch;
+  }
+
+  me .ui-portfolio-card-footer > .button {
+    width: 100%;
+    white-space: normal;
+    text-wrap: balance;
   }
 }
 

@@ -9,6 +9,11 @@ crate::views::scoped::inline_css!(
 me {
   display: grid;
   gap: var(--space-4);
+  min-width: 0;
+}
+
+me > * {
+  min-width: 0;
 }
 
 me[data-log-panels] {
@@ -375,6 +380,12 @@ me .ui-log-flow-event-summary-inline {
 
   me .ui-log-entry {
     align-items: flex-start;
+  }
+}
+
+@media (max-width: 20rem) {
+  me[data-log-panels] {
+    grid-template-columns: 1fr;
   }
 }
 "#

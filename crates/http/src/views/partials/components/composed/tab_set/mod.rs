@@ -197,9 +197,9 @@ me.ui-portfolio-crate-gallery--flat .tab-set__panel {
 }
 
 me.ui-portfolio-crate-gallery--flat .tab-set__copy {
-  gap: var(--space-3);
+  gap: var(--space-4);
   align-content: start;
-  max-inline-size: 27rem;
+  max-inline-size: 31rem;
 }
 
 me.ui-portfolio-crate-gallery--flat .tab-set__copy h2 {
@@ -262,7 +262,29 @@ me.ui-portfolio-crate-gallery--flat .tab-set__tab:focus-visible {
 }
 
 me.ui-portfolio-crate-gallery--flat .tab-set__features {
-  display: none;
+  margin-block: var(--space-1) 0;
+  padding: 0;
+  list-style: none;
+  display: grid;
+  gap: var(--space-2);
+  border-top: none;
+}
+
+me.ui-portfolio-crate-gallery--flat .tab-set__features li {
+  padding: 0.7rem 0.85rem;
+  border: var(--control-border-width) solid
+    color-mix(in srgb, var(--accent-signal-soft) 18%, var(--border-default));
+  border-radius: var(--ui-radius-md-inset);
+  background:
+    linear-gradient(
+      180deg,
+      color-mix(in srgb, var(--accent-signal-soft) 16%, transparent),
+      transparent 100%
+    ),
+    color-mix(in srgb, var(--surface-field) 82%, var(--surface-panel));
+  color: var(--text-muted);
+  font-size: var(--text-size-body-sm);
+  line-height: var(--text-line-summary);
 }
 
 me .tab-set__preview-meta {

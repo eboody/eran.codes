@@ -247,6 +247,7 @@ impl Render for CardFooter {
 pub(super) fn render_actions(actions: &[CmsActionLink]) -> partials::button::Row {
     partials::button::Row::builder()
         .density(partials::button::RowDensity::Compact)
+        .narrow_layout(partials::button::RowNarrowLayout::Stack)
         .items(
             actions
                 .iter()

@@ -85,6 +85,12 @@ me[data-key-value-layout='metrics-grid'] dd {
     gap: calc(var(--space-1) * 1.5) var(--space-1);
   }
 }
+
+@media (max-width: 20rem) {
+  me[data-key-value-layout='metrics-grid'] {
+    grid-template-columns: 1fr;
+  }
+}
 "#
 );
 

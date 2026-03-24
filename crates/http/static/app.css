@@ -457,6 +457,10 @@ input[type="password"] {
     transform var(--motion-fast);
 }
 
+.u-surface-card > * {
+  min-width: 0;
+}
+
 .u-section-header {
   display: flex;
   flex-wrap: wrap;
@@ -512,6 +516,7 @@ input[type="password"] {
 
   display: grid;
   gap: var(--section-copy-gap);
+  min-width: 0;
 }
 
 .u-section-copy > :is(h1, h2, h3, p) {
@@ -605,10 +610,12 @@ input[type="password"] {
 .u-support-results {
   display: grid;
   gap: var(--space-4);
+  min-width: 0;
 }
 
 .u-support-results > :where([data-status-card], [data-demo-result]) {
   margin-top: 0;
+  min-width: 0;
 }
 
 .u-support-card-grid {
@@ -616,11 +623,13 @@ input[type="password"] {
   gap: var(--space-4);
   grid-template-columns: repeat(auto-fit, minmax(min(100%, 18rem), 1fr));
   align-items: start;
+  min-width: 0;
 }
 
 .u-support-card-grid > :where([data-status-card], [data-demo-result]) {
   margin-top: 0;
   align-self: start;
+  min-width: 0;
 }
 
 .u-support-trace {
@@ -762,6 +771,13 @@ input[type="password"] {
     --page-stack-margin-top: var(--space-3);
     --page-stack-gap: clamp(1.9rem, 1.45rem + 1.5vw, 2.35rem);
     --page-stack-padding-extra: var(--space-5);
+  }
+}
+
+@media (max-width: 20rem) {
+  .ui-button-row[data-button-row-narrow='stack'] > :where(button, a)[data-button] {
+    white-space: normal;
+    text-wrap: balance;
   }
 }
 
