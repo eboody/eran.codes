@@ -607,6 +607,15 @@ input[type="password"] {
   .u-container {
     inline-size: min(var(--shell-max-inline), calc(100% - (var(--shell-gutter-tight) * 2)));
   }
+
+  .u-demo-result-card {
+    margin-top: var(--space-3);
+  }
+
+  .u-support-results,
+  .u-support-card-grid {
+    gap: var(--space-3);
+  }
 }
 
 @media (max-width: 38rem) {
