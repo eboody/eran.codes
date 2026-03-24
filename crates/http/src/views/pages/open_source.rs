@@ -173,6 +173,12 @@ me .ui-portfolio-crate-section--standalone .ui-code-block {
     gap: var(--space-2);
   }
 
+  me .ui-portfolio-crate-section--standalone .ui-portfolio-crate-gallery {
+    margin-top: var(--space-2);
+    padding-top: var(--space-2);
+    border-top: 1px solid color-mix(in srgb, var(--ui-border-soft) 72%, transparent);
+  }
+
   me .ui-portfolio-crate-section--standalone .ui-code-block {
     --_code-block-font-size: var(--text-size-meta-xs);
   }
