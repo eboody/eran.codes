@@ -52,22 +52,24 @@ pub struct WorkIndexSection<'a> {
 impl Render for WorkIndexSection<'_> {
     fn render(&self) -> maud::Markup {
         maud::html! {
-            (Surface::section(maud::html! {
-                (LeadCopy {
-                    eyebrow: &self.content.eyebrow,
-                    title: &self.content.title,
-                    summary: &self.content.summary,
-                })
-            }).extra_class("ui-portfolio-lead-surface"))
-            (WorkSection {
-                content: &self.content.current_proof_section,
-                variant: WorkSectionVariant::CurrentProof,
-            })
-            div data-work-supporting-proof {
+            div class="ui-portfolio-work-index" {
+                (Surface::section(maud::html! {
+                    (LeadCopy {
+                        eyebrow: &self.content.eyebrow,
+                        title: &self.content.title,
+                        summary: &self.content.summary,
+                    })
+                }).extra_class("ui-portfolio-lead-surface"))
                 (WorkSection {
-                    content: &self.content.supporting_cases_section,
-                    variant: WorkSectionVariant::Standard,
+                    content: &self.content.current_proof_section,
+                    variant: WorkSectionVariant::CurrentProof,
                 })
+                div data-work-supporting-proof {
+                    (WorkSection {
+                        content: &self.content.supporting_cases_section,
+                        variant: WorkSectionVariant::Standard,
+                    })
+                }
             }
         }
     }

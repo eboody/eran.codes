@@ -5,39 +5,6 @@ use crate::views::{page, partials};
 
 use super::portfolio_shell;
 
-crate::views::scoped::inline_css!(
-    r#"
-@media (max-width: 48rem) {
-  me [data-work-page] .ui-portfolio-lead-surface {
-    gap: var(--space-3);
-  }
-
-  me [data-work-page] .ui-portfolio-lead-surface .ui-portfolio-summary {
-    font-size: var(--text-size-body-md);
-  }
-
-  me [data-work-page] [data-work-current-proof] {
-    margin-top: var(--space-1);
-  }
-}
-
-@media (max-width: 26rem) {
-  me [data-work-page] .ui-portfolio-surface {
-    --surface-card-padding: var(--space-3);
-  }
-
-  me [data-work-page] .u-section-copy {
-    gap: var(--space-1);
-  }
-
-  me [data-work-page] .ui-portfolio-work-card,
-  me [data-work-page] .ui-portfolio-archive-entry {
-    gap: var(--space-2);
-  }
-}
-"#
-);
-
 #[derive(Builder, Default)]
 pub struct Work {
     #[builder(setters(name = with_user))]
@@ -51,17 +18,14 @@ impl Render for Work {
 
         let body = partials::components::portfolio::Page {
             content: maud::html! {
-                (css())
-                div data-work-page {
-                    (partials::components::portfolio::WorkIndexSection { content })
-                    (partials::components::portfolio::ArchiveCaseDetailsSection {
-                        intro: &content.archive_details,
-                        cases: archive_cases,
-                    })
-                    (partials::components::portfolio::SupportingTeaserSection {
-                        content: &content.open_source_teaser,
-                    })
-                }
+                (partials::components::portfolio::WorkIndexSection { content })
+                (partials::components::portfolio::ArchiveCaseDetailsSection {
+                    intro: &content.archive_details,
+                    cases: archive_cases,
+                })
+                (partials::components::portfolio::SupportingTeaserSection {
+                    content: &content.open_source_teaser,
+                })
             },
         }
         .render();

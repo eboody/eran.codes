@@ -635,6 +635,10 @@ me .ui-portfolio-crate-section--standalone .ui-portfolio-inline-links {
     gap: var(--space-4);
   }
 
+  me .ui-portfolio-work-index .ui-portfolio-lead-surface {
+    gap: var(--space-3);
+  }
+
   me .ui-portfolio-lead-surface h1 {
     font-size: var(--text-size-hero-md);
     max-width: 14.4ch;
@@ -643,6 +647,10 @@ me .ui-portfolio-crate-section--standalone .ui-portfolio-inline-links {
   me .ui-portfolio-summary {
     font-size: var(--text-size-body-lg);
     line-height: 1.6;
+  }
+
+  me .ui-portfolio-work-index .ui-portfolio-summary {
+    font-size: var(--text-size-body-md);
   }
 
   me .ui-portfolio-hero-aside {
@@ -794,6 +802,14 @@ me .ui-portfolio-crate-section--standalone .ui-portfolio-inline-links {
 }
 
 @media (max-width: 26rem) {
+  me .ui-portfolio-surface {
+    --surface-card-padding: var(--space-3);
+  }
+
+  me .ui-portfolio-section-copy {
+    gap: var(--space-1);
+  }
+
   me .ui-portfolio-work-section--current-proof {
     --surface-card-padding: var(--space-3);
   }
