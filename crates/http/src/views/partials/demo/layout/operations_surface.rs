@@ -19,7 +19,7 @@ me[data-operations-surface] {
   --log-panel-heading-color: var(--text-subtle);
 
   --log-scroll-max-height: 22rem;
-  --log-scroll-max-height-mobile: 18rem;
+  --log-scroll-max-height-mobile: 16rem;
   --log-scroll-max-height-compact: 18rem;
   --log-scroll-padding: var(--space-card);
   --log-scroll-padding-mobile: var(--space-card);
