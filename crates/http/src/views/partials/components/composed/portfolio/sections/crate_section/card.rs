@@ -1,5 +1,6 @@
 use maud::Render;
 
+use super::super::InsetCard;
 use super::links::CrateLinks;
 use crate::views::partials::components::portfolio::content::CrateCardContent;
 
@@ -10,7 +11,7 @@ pub(super) struct CrateCard<'a> {
 impl Render for CrateCard<'_> {
     fn render(&self) -> maud::Markup {
         maud::html! {
-            article class="ui-portfolio-card u-inset-card" {
+            (InsetCard::new(maud::html! {
                 h3 { (&self.card.name) }
                 p class="ui-portfolio-card-summary" { (&self.card.summary) }
                 ul class="ui-portfolio-list" {
@@ -26,7 +27,7 @@ impl Render for CrateCard<'_> {
                     }
                 }
                 (CrateLinks { card: self.card })
-            }
+            }))
         }
     }
 }

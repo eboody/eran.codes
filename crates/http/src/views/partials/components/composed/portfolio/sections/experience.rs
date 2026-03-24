@@ -1,6 +1,6 @@
 use maud::Render;
 
-use super::{SectionCopy, Surface, render_actions};
+use super::{CardFooter, CardGrid, InsetCard, SectionCopy, Surface, render_actions};
 use crate::views::partials::components::portfolio::content::{
     ExperienceRoleContent, ExperienceSectionContent,
 };
@@ -17,11 +17,11 @@ impl Render for ExperienceSection<'_> {
                     title: &self.content.title,
                     subtitle: &self.content.subtitle,
                 })
-                div class="ui-portfolio-card-grid" {
+                (CardGrid::new(maud::html! {
                     @for role in &self.content.roles {
                         (ExperienceRoleCard { role })
                     }
-                }
+                }))
             }))
         }
     }
@@ -34,7 +34,7 @@ struct ExperienceRoleCard<'a> {
 impl Render for ExperienceRoleCard<'_> {
     fn render(&self) -> maud::Markup {
         maud::html! {
-            article class="ui-portfolio-card ui-portfolio-experience-card u-inset-card" {
+            (InsetCard::new(maud::html! {
                 p class="ui-portfolio-card-kicker" {
                     (&self.role.company) " · " (&self.role.tenure)
                 }
@@ -46,11 +46,11 @@ impl Render for ExperienceRoleCard<'_> {
                     }
                 }
                 @if !self.role.actions.is_empty() {
-                    div class="ui-portfolio-work-card-footer" {
+                    (CardFooter::new(maud::html! {
                         (render_actions(&self.role.actions))
-                    }
+                    }))
                 }
-            }
+            }).extra_class("ui-portfolio-experience-card"))
         }
     }
 }

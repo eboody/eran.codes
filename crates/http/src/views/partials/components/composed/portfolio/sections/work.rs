@@ -1,6 +1,6 @@
 use maud::Render;
 
-use super::{LeadCopy, SectionCopy, Surface, render_actions};
+use super::{CardFooter, CardGrid, InsetCard, LeadCopy, SectionActions, SectionCopy, Surface};
 use crate::types::Text;
 use crate::views::partials;
 use crate::views::partials::components::portfolio::content::{
@@ -21,9 +21,9 @@ impl Render for WorkSection<'_> {
                 })
                 (WorkCards { cards: &self.content.cards })
                 @if !self.content.actions.is_empty() {
-                    div class="ui-portfolio-section-actions" {
-                        (render_actions(&self.content.actions))
-                    }
+                    (SectionActions {
+                        actions: &self.content.actions,
+                    })
                 }
             }))
         }
@@ -64,7 +64,9 @@ impl Render for SupportingTeaserSection<'_> {
             (Surface::section(maud::html! {
                 h2 { (&self.content.title) }
                 p class="ui-portfolio-summary" { (&self.content.summary) }
-                (render_actions(&self.content.actions))
+                (SectionActions {
+                    actions: &self.content.actions,
+                })
             }).extra_class("ui-portfolio-supporting-teaser"))
         }
     }
@@ -77,11 +79,11 @@ struct WorkCards<'a> {
 impl Render for WorkCards<'_> {
     fn render(&self) -> maud::Markup {
         maud::html! {
-            div class="ui-portfolio-card-grid" {
+            (CardGrid::new(maud::html! {
                 @for card in self.cards {
                     (WorkCard { content: card })
                 }
-            }
+            }))
         }
     }
 }
@@ -93,7 +95,7 @@ struct WorkCard<'a> {
 impl Render for WorkCard<'_> {
     fn render(&self) -> maud::Markup {
         maud::html! {
-            article class="ui-portfolio-card ui-portfolio-work-card u-inset-card" {
+            (InsetCard::new(maud::html! {
                 p class="ui-portfolio-card-kicker" { (&self.content.category) }
                 h3 { (&self.content.title) }
                 @if let Some(outcome) = &self.content.outcome {
@@ -103,14 +105,14 @@ impl Render for WorkCard<'_> {
                     }
                 }
                 p class="ui-portfolio-card-summary" { (&self.content.summary) }
-                div class="ui-portfolio-work-card-footer" {
+                (CardFooter::new(maud::html! {
                     (partials::button::Button::builder()
                         .label(self.content.cta_label.clone())
                         .variant(partials::button::Variant::Secondary)
                         .role(partials::button::Role::link(Text::from(self.content.slug.public_href())))
                         .build())
-                }
-            }
+                }))
+            }).extra_class("ui-portfolio-work-card"))
         }
     }
 }

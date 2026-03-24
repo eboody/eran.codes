@@ -4,7 +4,7 @@ use crate::views::partials::components::portfolio::content::{
     ArchiveDetailsContent, ArchivedWorkCaseContent, WorkCaseContent,
 };
 
-use super::{LeadCopy, SectionCopy, Surface, render_actions};
+use super::{CardGrid, InsetCard, LeadCopy, SectionActions, SectionCopy, Surface};
 
 pub struct WorkCaseDetail<'a> {
     pub content: &'a WorkCaseContent,
@@ -20,7 +20,9 @@ impl Render for WorkCaseDetail<'_> {
                     summary: &self.content.summary,
                 })
                 @if !self.content.actions.is_empty() {
-                    (render_actions(&self.content.actions))
+                    (SectionActions {
+                        actions: &self.content.actions,
+                    })
                 }
             }).extra_class("ui-portfolio-lead-surface"))
 
@@ -79,7 +81,9 @@ impl Render for ArchivedWorkCaseDetail<'_> {
                     h3 { (&self.content.title) }
                     p class="ui-portfolio-summary" { (&self.content.summary) }
                     @if !self.content.actions.is_empty() {
-                        (render_actions(&self.content.actions))
+                        (SectionActions {
+                            actions: &self.content.actions,
+                        })
                     }
                 }).extra_class("ui-portfolio-lead-surface"))
                 (case_sections(self.content, ArchiveHeading::Archive))
@@ -103,9 +107,9 @@ fn case_sections(content: &WorkCaseContent, heading: ArchiveHeading) -> maud::Ma
     ];
 
     maud::html! {
-        div class="ui-portfolio-case-grid" {
+        (CardGrid::new(maud::html! {
             @for (title, items) in sections {
-                (Surface::article(maud::html! {
+                (InsetCard::new(maud::html! {
                     @match heading {
                         ArchiveHeading::Page => {
                             h2 { (title) }
@@ -121,6 +125,6 @@ fn case_sections(content: &WorkCaseContent, heading: ArchiveHeading) -> maud::Ma
                     }
                 }).extra_class("ui-portfolio-case-section"))
             }
-        }
+        }).extra_class("ui-portfolio-case-grid"))
     }
 }

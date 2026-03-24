@@ -3,7 +3,7 @@ use maud::Render;
 use crate::types::Text;
 use crate::views::partials::components::portfolio::content::CmsActionLink;
 
-use super::{Surface, render_actions};
+use super::{SectionActions, Surface};
 
 pub struct ClosingSection<'a> {
     pub title: &'a Text,
@@ -17,7 +17,9 @@ impl Render for ClosingSection<'_> {
             (Surface::section(maud::html! {
                 h2 { (&self.title) }
                 p class="ui-portfolio-summary" { (&self.summary) }
-                (render_actions(self.actions))
+                (SectionActions {
+                    actions: self.actions,
+                })
             }).extra_class("ui-portfolio-closing"))
         }
     }

@@ -1,6 +1,6 @@
 use maud::Render;
 
-use super::{SectionCopy, Surface};
+use super::{CardGrid, InsetCard, SectionCopy, Surface};
 use crate::views::partials::components::portfolio::content::{
     SkillGroupContent, SkillSectionContent,
 };
@@ -17,11 +17,11 @@ impl Render for SkillGroupsSection<'_> {
                     title: &self.content.title,
                     subtitle: &self.content.subtitle,
                 })
-                div class="ui-portfolio-card-grid" {
+                (CardGrid::new(maud::html! {
                     @for group in &self.content.groups {
                         (SkillGroupCard { group })
                     }
-                }
+                }))
             }))
         }
     }
@@ -34,14 +34,14 @@ struct SkillGroupCard<'a> {
 impl Render for SkillGroupCard<'_> {
     fn render(&self) -> maud::Markup {
         maud::html! {
-            article class="ui-portfolio-card ui-portfolio-skill-card u-inset-card" {
+            (InsetCard::new(maud::html! {
                 h3 { (&self.group.title) }
                 ul class="ui-portfolio-list" {
                     @for item in &self.group.items {
                         li { (item) }
                     }
                 }
-            }
+            }).extra_class("ui-portfolio-skill-card"))
         }
     }
 }

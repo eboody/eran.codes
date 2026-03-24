@@ -238,23 +238,11 @@ me .ui-portfolio-work-card .ui-portfolio-list {
   gap: var(--space-2);
 }
 
-me .ui-portfolio-card-links {
-  display: flex;
-  flex-wrap: wrap;
-  gap: var(--space-2);
-  position: relative;
-  isolation: isolate;
-  align-items: center;
-  padding: var(--interactive-bleed);
-  margin: calc(var(--interactive-bleed) * -1);
-}
-
-me .ui-portfolio-card > .button,
-me .ui-portfolio-card-links > .button {
+me .ui-portfolio-card > .button {
   width: fit-content;
 }
 
-me .ui-portfolio-work-card-footer {
+me .ui-portfolio-card-footer {
   display: grid;
   gap: var(--space-2);
   margin-top: auto;
@@ -264,7 +252,7 @@ me .ui-portfolio-work-card-footer {
   justify-items: start;
 }
 
-me .ui-portfolio-work-card-footer .ui-portfolio-badges {
+me .ui-portfolio-card-footer .ui-portfolio-badges {
   gap: var(--space-1);
 }
 
@@ -595,12 +583,12 @@ me .ui-portfolio-crate-section--standalone .ui-portfolio-inline-links {
     gap: var(--space-1);
   }
 
-  me .ui-portfolio-work-card-footer {
+  me .ui-portfolio-card-footer {
     gap: var(--space-1);
     padding-top: var(--space-1);
   }
 
-  me .ui-portfolio-work-card-footer .ui-portfolio-badges {
+  me .ui-portfolio-card-footer .ui-portfolio-badges {
     display: none;
   }
 
@@ -643,7 +631,6 @@ me .ui-portfolio-crate-section--standalone .ui-portfolio-inline-links {
 }
 
 @media (max-width: 768px) {
-  me .ui-portfolio-card-links > .button,
   me .ui-portfolio-card > .button,
   me .ui-portfolio-section-actions .button,
   me .ui-portfolio-lead-surface .button,
@@ -651,7 +638,7 @@ me .ui-portfolio-crate-section--standalone .ui-portfolio-inline-links {
     width: 100%;
   }
 
-  me .ui-portfolio-work-card-footer > .button {
+  me .ui-portfolio-card-footer > .button {
     width: fit-content;
   }
 

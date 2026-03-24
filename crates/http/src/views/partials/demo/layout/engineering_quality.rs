@@ -11,12 +11,11 @@ me [data-info-grid] {
 }
 
 me [data-info-card] {
+  --inset-card-padding: var(--space-card);
+
+  display: grid;
+  gap: var(--space-2);
   overflow: visible;
-  border: 1px solid var(--border-default);
-  border-radius: var(--ui-radius-md-inset);
-  padding: var(--space-card);
-  background: var(--surface-fill-field);
-  box-shadow: inset 0 1px 0 var(--surface-edge-soft);
   transition:
     border-color var(--motion-fast),
     background-color var(--motion-fast),
@@ -83,7 +82,7 @@ impl Render for EngineeringQuality {
                     .build())
                 div data-info-grid {
                     @for card in &content.engineering_quality.cards {
-                        article data-info-card {
+                        article class="u-inset-card" data-info-card {
                             h3 { (&card.title) }
                             p { (&card.summary) }
                             ul {
