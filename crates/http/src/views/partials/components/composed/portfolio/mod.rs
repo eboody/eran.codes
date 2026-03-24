@@ -4,8 +4,8 @@ crate::views::scoped::inline_css!(
     r#"
 me {
   display: grid;
-  gap: clamp(1.35rem, 1rem + 1.2vw, 2.3rem);
-  margin-top: var(--space-5);
+  gap: clamp(1.7rem, 1.2rem + 1.55vw, 2.85rem);
+  margin-top: clamp(1.45rem, 1rem + 1.35vw, 2.35rem);
   padding-bottom: var(--space-8);
 }
 
@@ -28,13 +28,13 @@ me .ui-portfolio-hero {
 
 me .ui-portfolio-lead-surface {
   align-content: start;
-  gap: clamp(0.85rem, 0.72rem + 0.45vw, 1.15rem);
+  gap: clamp(1rem, 0.8rem + 0.65vw, 1.45rem);
 }
 
 me .ui-portfolio-lead-surface h1 {
-  max-width: 17ch;
+  max-width: 18.4ch;
   font-size: var(--text-size-hero-lg);
-  line-height: var(--text-line-tight);
+  line-height: var(--text-line-title);
   text-wrap: balance;
 }
 
@@ -48,7 +48,8 @@ me .ui-portfolio-eyebrow {
 
 me .ui-portfolio-summary {
   margin: 0;
-  max-width: 64ch;
+  max-width: 60ch;
+  line-height: 1.62;
   color: color-mix(in srgb, var(--ui-text) 90%, var(--ui-text-muted) 10%);
 }
 
@@ -397,6 +398,13 @@ me .ui-portfolio-closing .ui-button-row {
   margin-top: calc(var(--space-2) - var(--interactive-bleed));
 }
 
+me .ui-portfolio-lead-surface .ui-button-row {
+  --button-row-gap: var(--space-2);
+
+  padding-top: var(--space-3);
+  border-top: 1px solid color-mix(in srgb, var(--ui-border-soft) 82%, transparent);
+}
+
 me .ui-portfolio-closing {
   justify-items: start;
   gap: var(--space-3);
@@ -518,21 +526,21 @@ me .ui-portfolio-crate-section--standalone .ui-portfolio-inline-links {
   }
 
   me .ui-portfolio-hero {
-    padding: var(--space-4);
+    padding: var(--space-5) var(--space-4);
   }
 
   me .ui-portfolio-lead-surface {
-    gap: var(--space-3);
+    gap: var(--space-4);
   }
 
   me .ui-portfolio-lead-surface h1 {
     font-size: var(--text-size-hero-md);
-    max-width: 13ch;
+    max-width: 14.4ch;
   }
 
   me .ui-portfolio-summary {
     font-size: var(--text-size-body-lg);
-    line-height: var(--text-line-reading);
+    line-height: 1.6;
   }
 
   me .ui-portfolio-card-grid {

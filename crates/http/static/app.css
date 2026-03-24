@@ -579,10 +579,11 @@ input[type="password"] {
 
 .u-page-stack {
   --page-stack-margin-top: clamp(1.1rem, 0.9rem + 0.9vw, 1.8rem);
+  --page-stack-gap: var(--space-section);
   --page-stack-padding-extra: var(--space-6);
 
   display: grid;
-  gap: var(--space-section);
+  gap: var(--page-stack-gap);
   margin-top: var(--page-stack-margin-top);
   padding-bottom: calc(var(--space-section) + var(--page-stack-padding-extra));
 }
@@ -593,7 +594,8 @@ input[type="password"] {
 }
 
 .u-page-stack--spacious {
-  --page-stack-margin-top: clamp(1.2rem, 0.9rem + 1.2vw, 2rem);
+  --page-stack-margin-top: clamp(1.45rem, 1.05rem + 1.35vw, 2.45rem);
+  --page-stack-gap: clamp(3.15rem, 2.35rem + 1.9vw, 4.65rem);
   --page-stack-padding-extra: var(--space-7);
 }
 

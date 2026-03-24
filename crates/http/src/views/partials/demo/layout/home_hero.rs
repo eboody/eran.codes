@@ -9,14 +9,14 @@ crate::views::scoped::inline_css!(
 me {
   --control-font-size: var(--text-size-body-lg);
   --control-radius: var(--radius-pill);
-  --_home-hero-title-size: clamp(2rem, 1.5rem + 2vw, 3rem);
-  --_home-hero-title-measure: 12.2ch;
+  --_home-hero-title-size: clamp(2.05rem, 1.45rem + 2.2vw, 3.15rem);
+  --_home-hero-title-measure: 12.9ch;
   --_home-hero-title-line-height: 0.95;
 
   display: grid;
-  gap: clamp(1.8rem, 1.25rem + 1.8vw, 2.8rem);
+  gap: clamp(2.05rem, 1.35rem + 2vw, 3.2rem);
   align-items: start;
-  padding: clamp(1.7rem, 1.2rem + 1.2vw, 2.6rem);
+  padding: clamp(1.95rem, 1.35rem + 1.5vw, 2.95rem);
   border-radius: var(--radius-shell);
   border: 1px solid color-mix(in srgb, var(--accent-signal) 12%, var(--border-default));
   background:
@@ -37,7 +37,7 @@ me {
 
 me [data-home-hero-copy] {
   display: grid;
-  gap: var(--space-4);
+  gap: clamp(0.9rem, 0.7rem + 0.7vw, 1.3rem);
   align-content: start;
   min-width: 0;
   padding-inline-end: clamp(0rem, 0.3rem + 0.8vw, 1rem);
@@ -54,9 +54,9 @@ me [data-home-hero-kicker] {
 
 me [data-home-hero-summary] {
   margin: 0;
-  max-width: 55ch;
+  max-width: 58ch;
   font-size: var(--text-size-lead);
-  line-height: var(--text-line-reading);
+  line-height: 1.62;
   color: color-mix(in srgb, var(--text-body) 90%, var(--text-muted) 10%);
 }
 
@@ -129,8 +129,8 @@ me [data-home-hero-primary-actions] [data-button-row] {
   --control-padding-block: 0.62rem;
 
   width: fit-content;
-  margin-top: var(--space-1);
-  padding-top: var(--space-3);
+  margin-top: var(--space-2);
+  padding-top: var(--space-4);
   border-top: 1px solid color-mix(in srgb, var(--border-subtle) 82%, transparent);
 }
 
@@ -182,12 +182,12 @@ me [data-home-hero-card-secondary-link]:focus-visible {
 
 @media (min-width: 62rem) {
   me {
-    grid-template-columns: minmax(0, 1.45fr) minmax(18rem, 0.8fr);
+    grid-template-columns: minmax(0, 1.5fr) minmax(19rem, 0.86fr);
   }
 
   me [data-home-hero-card] {
     justify-self: end;
-    margin-top: var(--space-4);
+    margin-top: var(--space-5);
   }
 }
 
@@ -226,20 +226,20 @@ me [data-home-hero-card-secondary-link]:focus-visible {
 
 @media (max-width: 48rem) {
   me {
-    --_home-hero-title-size: clamp(1.8rem, 1.45rem + 2vw, 2.45rem);
-    --_home-hero-title-measure: 13.25ch;
-    padding: var(--space-card);
-    gap: var(--space-4);
+    --_home-hero-title-size: clamp(1.9rem, 1.5rem + 2.2vw, 2.6rem);
+    --_home-hero-title-measure: 14.2ch;
+    padding: clamp(1.2rem, 1rem + 1vw, 1.65rem);
+    gap: var(--space-5);
   }
 
   me [data-home-hero-copy] {
-    gap: var(--space-3);
+    gap: var(--space-4);
     padding-inline-end: 0;
   }
 
   me [data-home-hero-summary],
   me [data-home-hero-card-status] {
-    font-size: var(--text-size-body-md);
+    font-size: var(--text-size-body-lg);
   }
 
   me [data-home-hero-card] {
@@ -256,7 +256,8 @@ me [data-home-hero-card-secondary-link]:focus-visible {
 
   me [data-home-hero-primary-actions] [data-button-row] {
     width: 100%;
-    padding-top: var(--space-2);
+    margin-top: var(--space-2);
+    padding-top: var(--space-3);
   }
 
   me [data-home-hero-primary-actions] [data-button-row] > * {
@@ -270,7 +271,7 @@ me [data-home-hero-card-secondary-link]:focus-visible {
 
 @media (max-width: 36rem) {
   me {
-    --_home-hero-title-measure: 12.1ch;
+    --_home-hero-title-measure: 13.2ch;
   }
 }
 
@@ -283,7 +284,7 @@ me [data-home-hero-card-secondary-link]:focus-visible {
 
 @media (max-width: 24rem) {
   me {
-    --_home-hero-title-measure: 10.6ch;
+    --_home-hero-title-measure: 11.4ch;
   }
 
   me [data-home-hero-primary-actions] [data-button-row] > * {
