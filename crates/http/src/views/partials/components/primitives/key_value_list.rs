@@ -16,6 +16,18 @@ me li {
   margin: var(--space-1) 0;
   word-break: break-word;
 }
+
+@media (max-width: 48rem) {
+  me {
+    margin-top: var(--space-1);
+    padding-left: var(--space-3);
+    font-size: var(--text-size-meta-sm);
+  }
+
+  me li {
+    margin: calc(var(--space-1) * 0.75) 0;
+  }
+}
 "#
 );
 
