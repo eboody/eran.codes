@@ -209,6 +209,14 @@ me .ui-portfolio-crate-section--standalone .ui-code-block {
     gap: var(--space-1);
   }
 
+  me .ui-portfolio-crate-section--standalone .ui-portfolio-inline-links {
+    gap: calc(var(--space-1) * 0.75);
+  }
+
+  me .ui-portfolio-crate-section--standalone .ui-portfolio-inline-link {
+    font-size: var(--text-size-meta-xs);
+  }
+
   me .ui-portfolio-crate-section--standalone .ui-code-block {
     --_code-block-font-size: var(--text-size-meta-xs);
   }
