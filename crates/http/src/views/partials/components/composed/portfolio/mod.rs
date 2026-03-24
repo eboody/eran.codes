@@ -702,6 +702,11 @@ me .ui-portfolio-crate-section--standalone .ui-portfolio-inline-links {
     padding-top: var(--space-1);
   }
 
+  me .ui-portfolio-work-card .ui-portfolio-card-footer {
+    gap: calc(var(--space-1) * 0.75);
+    padding-top: calc(var(--space-1) * 0.75);
+  }
+
   me .ui-portfolio-card-footer .ui-portfolio-badges {
     display: none;
   }
