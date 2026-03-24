@@ -7,8 +7,8 @@ use crate::types::Text;
 crate::views::scoped::inline_css!(
     r#"
 me {
-  --_nav-shell-padding: 0.8rem 1rem;
-  --_nav-link-font-size: var(--text-size-meta-lg);
+  --_nav-shell-padding: 0.75rem 0.85rem;
+  --_nav-link-font-size: var(--text-size-meta-md);
   position: sticky;
   top: var(--nav-sticky-offset);
   z-index: 20;
@@ -19,7 +19,7 @@ me {
 
 me > [data-nav] {
   display: grid;
-  grid-template-columns: auto minmax(0, 1fr) auto;
+  grid-template-columns: auto minmax(0, 1fr) clamp(12rem, 16vw, 15rem);
   align-items: center;
   position: relative;
   isolation: isolate;
@@ -38,13 +38,13 @@ me [data-nav-list] {
   padding: 0;
   display: flex;
   align-items: center;
-  gap: var(--space-1);
+  gap: 0.35rem;
 }
 
 me [data-nav-link] {
   margin-bottom: 0;
   padding-block: calc(var(--control-padding-block) - 0.25rem);
-  padding-inline: calc(var(--control-padding-inline) - 0.3rem);
+  padding-inline: calc(var(--control-padding-inline) - 0.45rem);
   border-radius: calc(var(--control-radius) - 2px);
   border: 1px solid transparent;
   font-size: var(--_nav-link-font-size);
@@ -173,6 +173,7 @@ me [data-nav-list='primary'] {
 }
 
 me [data-nav-list='auth'] {
+  inline-size: 100%;
   min-width: 0;
   justify-content: flex-end;
   flex-wrap: wrap;
@@ -186,6 +187,10 @@ me [data-nav-list='auth'] li {
 me [data-nav-auth-text] {
   font-size: var(--_nav-link-font-size);
   color: var(--text-muted);
+  max-inline-size: 8.75rem;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 me [data-nav-list='auth'] form {
@@ -194,6 +199,10 @@ me [data-nav-list='auth'] form {
 
 me [data-nav-list='auth'] :where(button, [data-nav-link]) {
   margin-bottom: 0;
+}
+
+me [data-nav-list='auth'] [data-nav-link] {
+  padding-inline: calc(var(--control-padding-inline) - 0.55rem);
 }
 
 me [data-nav-auth-action] {
@@ -437,7 +446,6 @@ impl Render for NavSignedIn {
 
 #[derive(Clone, Debug)]
 pub enum NavAuth {
-    Hidden,
     Guest(NavLinkList),
     SignedIn(NavSignedIn),
 }
@@ -445,7 +453,6 @@ pub enum NavAuth {
 impl Render for NavAuth {
     fn render(&self) -> maud::Markup {
         match self {
-            Self::Hidden => maud::html! {},
             Self::Guest(links) => links.render(),
             Self::SignedIn(signed_in) => signed_in.render(),
         }

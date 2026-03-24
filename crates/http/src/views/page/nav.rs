@@ -78,16 +78,13 @@ fn portfolio_links(current_route: Option<Route>) -> partials::components::NavLin
 }
 
 fn auth(
-    nav_mode: NavMode,
+    _nav_mode: NavMode,
     current_route: Option<Route>,
     user: Option<&UserNav>,
 ) -> partials::components::NavAuth {
-    match nav_mode {
-        NavMode::Portfolio => partials::components::NavAuth::Hidden,
-        NavMode::App => match user {
-            Some(user) => partials::components::NavAuth::SignedIn(signed_in(user)),
-            None => partials::components::NavAuth::Guest(guest_links(current_route)),
-        },
+    match user {
+        Some(user) => partials::components::NavAuth::SignedIn(signed_in(user)),
+        None => partials::components::NavAuth::Guest(guest_links(current_route)),
     }
 }
 

@@ -215,6 +215,21 @@ mod tests {
     }
 
     #[test]
+    fn portfolio_nav_mode_keeps_auth_slot_visible() {
+        let markup = Layout::builder()
+            .title("Example")
+            .content(maud::html! { main {} })
+            .nav_mode(NavMode::Portfolio)
+            .current_route(Route::Home)
+            .build()
+            .render()
+            .into_string();
+
+        assert!(markup.contains("Sign in"));
+        assert!(markup.contains("Create account"));
+    }
+
+    #[test]
     fn current_proof_and_supporting_proof_nav_entries_activate_separately() {
         let current_proof_markup = Layout::builder()
             .title("Example")
