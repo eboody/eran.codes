@@ -389,7 +389,7 @@ me .tab-set__subtitle {
 
 @media (max-width: 48rem) {
   me.tab-set-showcase {
-    --_tab-set-panel-gap: var(--space-3);
+    --_tab-set-panel-gap: var(--space-2);
     --_tab-set-tab-padding:
       calc(var(--control-padding-block) - 0.08rem)
       calc(var(--control-padding-inline) - 0.16rem);
@@ -400,7 +400,7 @@ me .tab-set__subtitle {
 
   me .tab-set__tabs {
     gap: var(--space-1);
-    padding-block: var(--interactive-bleed) calc(var(--space-2) + var(--interactive-bleed));
+    padding-block: var(--interactive-bleed) calc(var(--space-1) + var(--interactive-bleed));
   }
 
   me .tab-set__tab {
@@ -437,7 +437,7 @@ me .tab-set__subtitle {
   }
 
   me .tab-set__preview-frame {
-    min-height: 12rem;
+    min-height: 10.5rem;
     gap: var(--space-1);
   }
 
@@ -454,7 +454,8 @@ me .tab-set__subtitle {
   }
 
   me .tab-set__subtitle {
-    font-size: var(--text-size-body-lg);
+    font-size: var(--text-size-body-md);
+    line-height: 1.55;
   }
 
   me .tab-set__preview-meta {
