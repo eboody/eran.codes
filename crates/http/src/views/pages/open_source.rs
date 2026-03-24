@@ -156,7 +156,7 @@ me .ui-portfolio-crate-section--standalone .ui-code-block {
 
 @media (max-width: 48rem) {
   me {
-    gap: var(--space-3);
+    gap: var(--space-4);
     max-inline-size: none;
     margin-top: var(--space-4);
   }
