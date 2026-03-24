@@ -144,12 +144,25 @@ me [data-burst-delta] {
 }
 
 @media (max-width: 48rem) {
+  me [data-burst-controls] {
+    gap: var(--space-3);
+  }
+
   me [data-burst-actions] {
     align-items: stretch;
   }
 
   me [data-burst-actions] [data-button] {
     width: 100%;
+  }
+
+  me [data-burst-result] {
+    padding: var(--space-3);
+  }
+
+  me [data-burst-metrics] {
+    gap: var(--space-2) var(--space-3);
+    grid-template-columns: repeat(2, minmax(0, 1fr));
   }
 }
 "#
