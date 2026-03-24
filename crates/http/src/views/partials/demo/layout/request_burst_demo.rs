@@ -148,6 +148,10 @@ me [data-burst-delta] {
     gap: var(--space-3);
   }
 
+  me [data-burst-selected] {
+    font-size: var(--text-size-title-xs);
+  }
+
   me [data-burst-actions] {
     align-items: stretch;
   }
@@ -158,6 +162,10 @@ me [data-burst-delta] {
 
   me [data-burst-result] {
     padding: var(--space-3);
+  }
+
+  me [data-burst-status] {
+    margin-bottom: var(--space-2);
   }
 
   me [data-burst-metrics] {
