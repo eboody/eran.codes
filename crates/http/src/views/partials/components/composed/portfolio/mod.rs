@@ -644,9 +644,7 @@ me .ui-portfolio-crate-section--standalone .ui-portfolio-inline-links {
   }
 
   me .ui-portfolio-hero-aside {
-    inline-size: 100%;
-    justify-self: stretch;
-    gap: var(--space-2);
+    display: none;
   }
 
   me .ui-portfolio-card-grid {
