@@ -79,6 +79,23 @@ me [data-open-source-hero-footnote] {
   color: var(--ui-text-muted);
 }
 
+me [data-open-source-hero-item-tags] {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.35rem;
+}
+
+me [data-open-source-hero-item-tag] {
+  padding: 0.18rem 0.48rem;
+  border-radius: var(--radius-pill);
+  border: 1px solid color-mix(in srgb, var(--ui-border-soft) 76%, transparent);
+  background: color-mix(in srgb, var(--ui-surface-soft) 92%, transparent);
+  font-size: var(--text-size-label-2xs);
+  letter-spacing: var(--text-track-caps-md);
+  text-transform: uppercase;
+  color: var(--ui-text-muted);
+}
+
 me [data-open-source-hero-footnote] {
   padding-top: var(--space-2);
   border-top: 1px solid color-mix(in srgb, var(--ui-border-soft) 78%, transparent);
@@ -186,7 +203,11 @@ impl Render for OpenSource {
                     @for card in content.crate_section.cards.iter().take(3) {
                         li data-open-source-hero-item {
                             strong { (&card.name) }
-                            p { (&card.summary) }
+                            div data-open-source-hero-item-tags {
+                                @for tag in card.tags.iter().take(2) {
+                                    span data-open-source-hero-item-tag { (tag) }
+                                }
+                            }
                         }
                     }
                 }
@@ -236,6 +257,7 @@ mod tests {
         assert!(markup.contains("Library proof"));
         assert!(markup.contains("Three crates. One invariants-first through-line."));
         assert!(markup.contains("What to inspect"));
+        assert!(markup.contains("data-open-source-hero-item-tag"));
         assert!(markup.contains("data-portfolio-crate-switcher"));
         assert!(markup.contains("data-code-block"));
         assert!(markup.contains("ui-portfolio-hero-aside"));
