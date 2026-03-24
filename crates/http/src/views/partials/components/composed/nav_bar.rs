@@ -357,14 +357,34 @@ me [data-nav-list='auth'] [data-nav-link-cta='true'] {
 @media (max-width: 26rem) {
   me [data-nav-list='primary'] {
     display: grid;
-    grid-template-columns: repeat(3, max-content);
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    width: 100%;
+  }
+
+  me [data-nav-list='primary'] li {
+    min-width: 0;
+  }
+
+  me [data-nav-list='primary'] [data-nav-link] {
+    display: flex;
+    justify-content: center;
+    width: 100%;
+    text-align: center;
   }
 
   me [data-nav-list='auth'] {
     display: grid;
-    grid-template-columns: repeat(2, max-content);
-    justify-content: start;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    width: 100%;
     gap: var(--space-1);
+  }
+
+  me [data-nav-list='auth'] li,
+  me [data-nav-list='auth'] form,
+  me [data-nav-list='auth'] [data-nav-link],
+  me [data-nav-list='auth'] [data-button] {
+    min-width: 0;
+    width: 100%;
   }
 
   me [data-nav-auth-text] {
@@ -643,8 +663,8 @@ mod tests {
         assert!(markup.contains("white-space: nowrap;"));
         assert!(markup.contains("flex-wrap: wrap;"));
         assert!(!markup.contains("overscroll-behavior-x: contain;"));
-        assert!(markup.contains("grid-template-columns: repeat(3, max-content);"));
-        assert!(markup.contains("grid-template-columns: repeat(2, max-content);"));
+        assert!(markup.contains("grid-template-columns: repeat(3, minmax(0, 1fr));"));
+        assert!(markup.contains("grid-template-columns: repeat(2, minmax(0, 1fr));"));
         assert!(markup.contains("data-nav-list=\"meta\""));
         assert!(markup.contains("data-nav-link-label=\"compact\""));
     }
