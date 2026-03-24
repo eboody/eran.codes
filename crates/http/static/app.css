@@ -640,6 +640,11 @@ input[type="password"] {
 }
 
 @media (max-width: 26rem) {
+  .u-demo-result-card {
+    --inset-card-padding: 0.85rem 0.95rem;
+    margin-top: var(--space-2);
+  }
+
   .u-support-results,
   .u-support-card-grid {
     gap: var(--space-2);
