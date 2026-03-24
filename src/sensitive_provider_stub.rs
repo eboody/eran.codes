@@ -134,8 +134,9 @@ fn error_response(
     (
         status,
         Json(RemoteErrorResponse {
-            category: category.to_string(),
-            message: message.to_string(),
+            category: Some(category.to_string()),
+            error: None,
+            message: Some(message.to_string()),
         }),
     )
         .into_response()

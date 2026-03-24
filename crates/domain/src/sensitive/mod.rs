@@ -107,6 +107,16 @@ pub struct SyncCursor(String);
 #[strum(serialize_all = "snake_case")]
 pub enum ProviderMode {
     LocalStub,
+    SandboxHttp,
+}
+
+#[derive(
+    Clone, Copy, Debug, PartialEq, Eq, Display, EnumString, AsRefStr, Serialize, Deserialize,
+)]
+#[strum(serialize_all = "snake_case")]
+pub enum ProviderAuthMode {
+    StubIssuedToken,
+    ClientCredentials,
 }
 
 #[derive(
@@ -142,9 +152,13 @@ pub enum TokenStrategy {
 )]
 #[strum(serialize_all = "snake_case")]
 pub enum RemoteErrorCategory {
+    Configuration,
     Unauthorized,
+    Forbidden,
     RateLimited,
     MalformedPayload,
+    Timeout,
+    ServerError,
     Transport,
 }
 
@@ -171,16 +185,7 @@ pub enum AccessCapability {
 }
 
 #[derive(
-    Clone,
-    Copy,
-    Debug,
-    PartialEq,
-    Eq,
-    Display,
-    EnumString,
-    AsRefStr,
-    Serialize,
-    Deserialize,
+    Clone, Copy, Debug, PartialEq, Eq, Display, EnumString, AsRefStr, Serialize, Deserialize,
 )]
 #[strum(serialize_all = "snake_case")]
 pub enum CipherKeyStatus {
@@ -267,10 +272,15 @@ pub struct IntegrationState {
     pub provider: Provider,
     pub mode: ProviderMode,
     pub endpoint: DetailText,
+    pub auth_mode: Option<ProviderAuthMode>,
     pub cursor: Option<SyncCursor>,
     pub last_fetch_outcome: FetchOutcome,
     pub token_strategy: TokenStrategy,
     pub last_error_category: Option<RemoteErrorCategory>,
+    pub last_auth_outcome: Option<FetchOutcome>,
+    pub last_remote_status_code: Option<u16>,
+    pub retry_backoff_secs: Option<u32>,
+    pub last_successful_mode: Option<ProviderMode>,
     pub last_successful_fetch_at: Option<std::time::SystemTime>,
     pub last_attempted_fetch_at: std::time::SystemTime,
     pub failure_count: u32,
@@ -330,7 +340,8 @@ pub struct KeyCustodyState {
 mod tests {
     use super::{
         AccessCapability, AccessOutcome, CipherKeyStatus, KeyId, Last4, Provider,
-        ProviderMode, RemoteErrorCategory, RotationOutcome, TokenStrategy,
+        ProviderAuthMode, ProviderMode, RemoteErrorCategory, RotationOutcome,
+        TokenStrategy,
     };
 
     #[test]
@@ -372,6 +383,14 @@ mod tests {
     }
 
     #[test]
+    fn provider_auth_mode_round_trips_snake_case_strings() {
+        let parsed = "client_credentials"
+            .parse::<ProviderAuthMode>()
+            .expect("provider auth mode should parse");
+        assert_eq!(parsed.as_ref(), "client_credentials");
+    }
+
+    #[test]
     fn token_strategy_round_trips_snake_case_strings() {
         let parsed = "retry_after_unauthorized"
             .parse::<TokenStrategy>()
@@ -381,10 +400,10 @@ mod tests {
 
     #[test]
     fn remote_error_category_round_trips_snake_case_strings() {
-        let parsed = "malformed_payload"
+        let parsed = "server_error"
             .parse::<RemoteErrorCategory>()
             .expect("error category should parse");
-        assert_eq!(parsed.as_ref(), "malformed_payload");
+        assert_eq!(parsed.as_ref(), "server_error");
     }
 
     #[test]

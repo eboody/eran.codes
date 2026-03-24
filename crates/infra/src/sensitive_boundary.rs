@@ -1,5 +1,5 @@
 use std::collections::HashSet;
-use std::time::SystemTime;
+use std::time::{Duration, SystemTime};
 
 use app::sensitive::{self, ProviderBoundaryMeta, ProviderClient, ProviderRecords};
 use async_trait::async_trait;
@@ -10,15 +10,103 @@ use serde::{Deserialize, Serialize};
 #[derive(Clone)]
 pub struct HttpProvider {
     http: reqwest::Client,
-    base_url: reqwest::Url,
+    mode: sensitive_domain::ProviderMode,
+    auth_mode: Option<sensitive_domain::ProviderAuthMode>,
+    retry_backoff_secs: Option<u32>,
+    endpoint: sensitive_domain::DetailText,
+    base_url: Option<reqwest::Url>,
+    sandbox_credentials: Option<SandboxCredentials>,
+    request_timeout: Option<Duration>,
+    degraded_reason: Option<String>,
+}
+
+#[derive(Clone, Debug)]
+pub struct SandboxHttpConfig {
+    pub base_url: Option<String>,
+    pub client_id: Option<String>,
+    pub client_secret: Option<String>,
+    pub timeout_secs: u64,
+    pub retry_backoff_secs: u64,
+}
+
+#[derive(Clone)]
+struct SandboxCredentials {
+    client_id: String,
+    client_secret: SecretString,
+}
+
+enum RefreshRequestBody {
+    Stub(TokenRefreshRequest),
+    Sandbox(SandboxTokenExchangeRequest),
+}
+
+impl serde::Serialize for RefreshRequestBody {
+    fn serialize<S>(&self, serializer: S) -> core::result::Result<S::Ok, S::Error>
+    where
+        S: serde::Serializer,
+    {
+        match self {
+            Self::Stub(body) => body.serialize(serializer),
+            Self::Sandbox(body) => body.serialize(serializer),
+        }
+    }
 }
 
 impl HttpProvider {
-    pub fn new(http: reqwest::Client, base_url: &str) -> Self {
+    pub fn new_stub(http: reqwest::Client, base_url: &str) -> Self {
         Self {
             http,
-            base_url: reqwest::Url::parse(base_url)
-                .expect("sensitive provider base url should parse"),
+            mode: sensitive_domain::ProviderMode::LocalStub,
+            auth_mode: Some(sensitive_domain::ProviderAuthMode::StubIssuedToken),
+            retry_backoff_secs: None,
+            endpoint: detail_text(base_url),
+            base_url: Some(
+                reqwest::Url::parse(base_url)
+                    .expect("sensitive provider base url should parse"),
+            ),
+            sandbox_credentials: None,
+            request_timeout: None,
+            degraded_reason: None,
+        }
+    }
+
+    pub fn new_sandbox(http: reqwest::Client, config: SandboxHttpConfig) -> Self {
+        let parsed_url = config
+            .base_url
+            .as_deref()
+            .and_then(|value| reqwest::Url::parse(value).ok());
+        let degraded_reason = sandbox_config_error(&config, parsed_url.as_ref());
+
+        Self {
+            http,
+            mode: sensitive_domain::ProviderMode::SandboxHttp,
+            auth_mode: Some(sensitive_domain::ProviderAuthMode::ClientCredentials),
+            retry_backoff_secs: Some(config.retry_backoff_secs.min(u32::MAX as u64) as u32),
+            endpoint: config
+                .base_url
+                .as_deref()
+                .map(detail_text)
+                .unwrap_or_else(|| detail_text("sandbox endpoint not configured")),
+            base_url: parsed_url,
+            sandbox_credentials: if degraded_reason.is_none() {
+                Some(SandboxCredentials {
+                    client_id: config
+                        .client_id
+                        .expect("sandbox client id should exist when config is complete"),
+                    client_secret: SecretString::new(
+                        config
+                            .client_secret
+                            .expect(
+                                "sandbox client secret should exist when config is complete",
+                            )
+                            .into_boxed_str(),
+                    ),
+                })
+            } else {
+                None
+            },
+            request_timeout: Some(Duration::from_secs(config.timeout_secs)),
+            degraded_reason,
         }
     }
 
@@ -26,19 +114,30 @@ impl HttpProvider {
         &self,
         current_token: Option<&SecretString>,
     ) -> sensitive::Result<TokenRefreshResponse> {
+        if let Some(reason) = self.degraded_reason.as_deref() {
+            return Err(configuration_error(
+                sensitive::ProviderOperation::RefreshToken,
+                reason,
+            ));
+        }
+
+        let base_url = self.base_url.as_ref().ok_or_else(|| {
+            configuration_error(
+                sensitive::ProviderOperation::RefreshToken,
+                "provider base url is unavailable",
+            )
+        })?;
         let response = self
-            .http
-            .post(self.endpoint("token", sensitive::ProviderOperation::RefreshToken)?)
-            .json(&TokenRefreshRequest {
-                has_current_token: current_token.is_some(),
-            })
+            .request_builder_with_timeout(self.http.post(endpoint_url(
+                base_url,
+                "token",
+                sensitive::ProviderOperation::RefreshToken,
+            )?))
+            .json(&self.refresh_request_body(current_token))
             .send()
             .await
             .map_err(|source| {
-                sensitive::Error::provider_request(
-                    sensitive::ProviderOperation::RefreshToken,
-                    source,
-                )
+                provider_request_error(sensitive::ProviderOperation::RefreshToken, source)
             })?;
 
         if !response.status().is_success() {
@@ -66,22 +165,27 @@ impl HttpProvider {
         token: &sensitive::ProviderToken,
         cursor: Option<&sensitive_domain::SyncCursor>,
     ) -> sensitive::Result<RecordsPageResponse> {
-        let mut endpoint =
-            self.endpoint("records", sensitive::ProviderOperation::FetchRecords)?;
+        let base_url = self.base_url.as_ref().ok_or_else(|| {
+            configuration_error(
+                sensitive::ProviderOperation::FetchRecords,
+                "provider base url is unavailable",
+            )
+        })?;
+        let mut endpoint = endpoint_url(
+            base_url,
+            "records",
+            sensitive::ProviderOperation::FetchRecords,
+        )?;
         if let Some(cursor) = cursor {
             let cursor = cursor.to_string();
             endpoint.query_pairs_mut().append_pair("after", &cursor);
         }
         let request = self
-            .http
-            .get(endpoint)
+            .request_builder_with_timeout(self.http.get(endpoint))
             .bearer_auth(token.access_token.expose_secret());
 
         let response = request.send().await.map_err(|source| {
-            sensitive::Error::provider_request(
-                sensitive::ProviderOperation::FetchRecords,
-                source,
-            )
+            provider_request_error(sensitive::ProviderOperation::FetchRecords, source)
         })?;
 
         if !response.status().is_success() {
@@ -104,14 +208,30 @@ impl HttpProvider {
             })
     }
 
-    fn endpoint(
+    fn refresh_request_body(
         &self,
-        path: &str,
-        operation: sensitive::ProviderOperation,
-    ) -> sensitive::Result<reqwest::Url> {
-        self.base_url
-            .join(path)
-            .map_err(|source| sensitive::Error::provider_request(operation, source))
+        current_token: Option<&SecretString>,
+    ) -> RefreshRequestBody {
+        match &self.sandbox_credentials {
+            Some(credentials) => RefreshRequestBody::Sandbox(SandboxTokenExchangeRequest {
+                client_id: credentials.client_id.clone(),
+                client_secret: credentials.client_secret.expose_secret().to_string(),
+                grant_type: "client_credentials".to_string(),
+            }),
+            None => RefreshRequestBody::Stub(TokenRefreshRequest {
+                has_current_token: current_token.is_some(),
+            }),
+        }
+    }
+
+    fn request_builder_with_timeout(
+        &self,
+        request: reqwest::RequestBuilder,
+    ) -> reqwest::RequestBuilder {
+        match self.request_timeout {
+            Some(timeout) => request.timeout(timeout),
+            None => request,
+        }
     }
 }
 
@@ -119,11 +239,10 @@ impl HttpProvider {
 impl ProviderClient for HttpProvider {
     fn boundary_meta(&self, _provider: sensitive_domain::Provider) -> ProviderBoundaryMeta {
         ProviderBoundaryMeta::builder()
-            .mode(sensitive_domain::ProviderMode::LocalStub)
-            .endpoint(
-                sensitive_domain::DetailText::try_new(self.base_url.as_str())
-                    .expect("provider base url should be valid proof text"),
-            )
+            .mode(self.mode)
+            .endpoint(self.endpoint.clone())
+            .maybe_auth_mode(self.auth_mode)
+            .maybe_retry_backoff_secs(self.retry_backoff_secs)
             .build()
     }
 
@@ -215,23 +334,130 @@ async fn provider_status_error(
     let remote_error = response.json::<RemoteErrorResponse>().await.ok();
     let detail = remote_error
         .as_ref()
-        .map(|error| error.message.as_str())
+        .and_then(RemoteErrorResponse::detail)
         .unwrap_or(status.as_str());
 
     let kind = match status {
         reqwest::StatusCode::UNAUTHORIZED => sensitive::ProviderFailureKind::Unauthorized,
+        reqwest::StatusCode::FORBIDDEN => sensitive::ProviderFailureKind::Forbidden,
         reqwest::StatusCode::TOO_MANY_REQUESTS => {
             sensitive::ProviderFailureKind::RateLimited
         }
+        status if status.is_server_error() => sensitive::ProviderFailureKind::ServerError,
         _ => sensitive::ProviderFailureKind::Transport,
     };
 
-    sensitive::Error::provider_failure(operation, kind, std::io::Error::other(detail))
+    sensitive::Error::provider_status_failure(
+        operation,
+        kind,
+        status.as_u16(),
+        std::io::Error::other(detail),
+    )
+}
+
+fn endpoint_url(
+    base_url: &reqwest::Url,
+    path: &str,
+    operation: sensitive::ProviderOperation,
+) -> sensitive::Result<reqwest::Url> {
+    base_url
+        .join(path)
+        .map_err(|source| sensitive::Error::provider_request(operation, source))
+}
+
+fn provider_request_error(
+    operation: sensitive::ProviderOperation,
+    source: reqwest::Error,
+) -> sensitive::Error {
+    if source.is_timeout() {
+        return sensitive::Error::provider_failure(
+            operation,
+            sensitive::ProviderFailureKind::Timeout,
+            source,
+        );
+    }
+
+    sensitive::Error::provider_request(operation, source)
+}
+
+fn configuration_error(
+    operation: sensitive::ProviderOperation,
+    message: &str,
+) -> sensitive::Error {
+    sensitive::Error::provider_failure(
+        operation,
+        sensitive::ProviderFailureKind::Configuration,
+        std::io::Error::other(message.to_string()),
+    )
+}
+
+fn sandbox_config_error(
+    config: &SandboxHttpConfig,
+    parsed_url: Option<&reqwest::Url>,
+) -> Option<String> {
+    if let Some(url) = parsed_url {
+        if url.scheme() != "https" {
+            return Some("SENSITIVE_PROVIDER_BASE_URL must use https".to_string());
+        }
+    } else if config.base_url.is_some() {
+        return Some(
+            "SENSITIVE_PROVIDER_BASE_URL must be a valid absolute URL".to_string(),
+        );
+    }
+
+    let mut missing = Vec::new();
+    if config.base_url.is_none() {
+        missing.push("SENSITIVE_PROVIDER_BASE_URL");
+    }
+    if config
+        .client_id
+        .as_deref()
+        .map(str::trim)
+        .unwrap_or_default()
+        .is_empty()
+    {
+        missing.push("SENSITIVE_SANDBOX_CLIENT_ID");
+    }
+    if config
+        .client_secret
+        .as_deref()
+        .map(str::trim)
+        .unwrap_or_default()
+        .is_empty()
+    {
+        missing.push("SENSITIVE_SANDBOX_CLIENT_SECRET");
+    }
+    if missing.is_empty() {
+        None
+    } else {
+        Some(format!(
+            "sandbox config incomplete: missing {}",
+            missing.join(", ")
+        ))
+    }
+}
+
+fn detail_text(value: &str) -> sensitive_domain::DetailText {
+    let trimmed = value.trim();
+    let normalized = if trimmed.is_empty() {
+        "provider endpoint unavailable"
+    } else {
+        trimmed
+    };
+    sensitive_domain::DetailText::try_new(normalized)
+        .expect("boundary detail text should stay valid")
 }
 
 #[derive(Clone, Debug, Serialize, Deserialize)]
 pub struct TokenRefreshRequest {
     pub has_current_token: bool,
+}
+
+#[derive(Clone, Debug, Serialize, Deserialize)]
+pub struct SandboxTokenExchangeRequest {
+    pub client_id: String,
+    pub client_secret: String,
+    pub grant_type: String,
 }
 
 #[derive(Clone, Debug, Serialize, Deserialize)]
@@ -294,8 +520,21 @@ impl RecordPayload {
 
 #[derive(Clone, Debug, Serialize, Deserialize)]
 pub struct RemoteErrorResponse {
-    pub category: String,
-    pub message: String,
+    #[serde(default)]
+    pub category: Option<String>,
+    #[serde(default)]
+    pub error: Option<String>,
+    #[serde(default)]
+    pub message: Option<String>,
+}
+
+impl RemoteErrorResponse {
+    fn detail(&self) -> Option<&str> {
+        self.message
+            .as_deref()
+            .or(self.error.as_deref())
+            .or(self.category.as_deref())
+    }
 }
 
 fn malformed_payload_error(
@@ -401,7 +640,7 @@ mod tests {
     #[tokio::test]
     async fn fetch_records_accumulates_paginated_http_pages() {
         let base_url = spawn_test_server(paginated_success_router()).await;
-        let provider = HttpProvider::new(reqwest::Client::new(), &base_url);
+        let provider = HttpProvider::new_stub(reqwest::Client::new(), &base_url);
         let token = refresh_token_for(&provider).await;
 
         let records = provider
@@ -441,14 +680,15 @@ mod tests {
                     (
                         StatusCode::UNAUTHORIZED,
                         Json(RemoteErrorResponse {
-                            category: "unauthorized".to_string(),
-                            message: "stub forced unauthorized".to_string(),
+                            category: Some("unauthorized".to_string()),
+                            error: None,
+                            message: Some("stub forced unauthorized".to_string()),
                         }),
                     )
                 }),
             );
         let base_url = spawn_test_server(router).await;
-        let provider = HttpProvider::new(reqwest::Client::new(), &base_url);
+        let provider = HttpProvider::new_stub(reqwest::Client::new(), &base_url);
         let token = refresh_token_for(&provider).await;
 
         let error = provider
@@ -496,7 +736,7 @@ mod tests {
                 }),
             );
         let base_url = spawn_test_server(router).await;
-        let provider = HttpProvider::new(reqwest::Client::new(), &base_url);
+        let provider = HttpProvider::new_stub(reqwest::Client::new(), &base_url);
         let token = refresh_token_for(&provider).await;
 
         let error = provider
@@ -540,7 +780,7 @@ mod tests {
                 }),
             );
         let base_url = spawn_test_server(router).await;
-        let provider = HttpProvider::new(reqwest::Client::new(), &base_url);
+        let provider = HttpProvider::new_stub(reqwest::Client::new(), &base_url);
         let token = refresh_token_for(&provider).await;
 
         let error = provider
@@ -553,6 +793,125 @@ mod tests {
             sensitive::Error::Provider {
                 operation: sensitive::ProviderOperation::FetchRecords,
                 kind: sensitive::ProviderFailureKind::MalformedPayload,
+                ..
+            }
+        ));
+    }
+
+    #[tokio::test]
+    async fn forbidden_http_records_response_maps_to_forbidden_failure() {
+        let router = Router::new()
+            .route(
+                "/token",
+                post(|| async {
+                    Json(TokenRefreshResponse {
+                        access_token: "local-http-token".to_string(),
+                        expires_in_secs: 900,
+                    })
+                }),
+            )
+            .route(
+                "/records",
+                get(|| async {
+                    (
+                        StatusCode::FORBIDDEN,
+                        Json(RemoteErrorResponse {
+                            category: Some("forbidden".to_string()),
+                            error: None,
+                            message: Some("sandbox forbids this account".to_string()),
+                        }),
+                    )
+                }),
+            );
+        let base_url = spawn_test_server(router).await;
+        let provider = HttpProvider::new_stub(reqwest::Client::new(), &base_url);
+        let token = refresh_token_for(&provider).await;
+
+        let error = provider
+            .fetch_records(test_provider(), &token, None, UNIX_EPOCH)
+            .await
+            .expect_err("records fetch should fail");
+
+        assert!(matches!(
+            error,
+            sensitive::Error::Provider {
+                operation: sensitive::ProviderOperation::FetchRecords,
+                kind: sensitive::ProviderFailureKind::Forbidden,
+                status_code: Some(403),
+                ..
+            }
+        ));
+    }
+
+    #[tokio::test]
+    async fn server_error_records_response_maps_to_server_error_failure() {
+        let router = Router::new()
+            .route(
+                "/token",
+                post(|| async {
+                    Json(TokenRefreshResponse {
+                        access_token: "local-http-token".to_string(),
+                        expires_in_secs: 900,
+                    })
+                }),
+            )
+            .route(
+                "/records",
+                get(|| async {
+                    (
+                        StatusCode::BAD_GATEWAY,
+                        Json(RemoteErrorResponse {
+                            category: Some("server_error".to_string()),
+                            error: None,
+                            message: Some("sandbox upstream timed out".to_string()),
+                        }),
+                    )
+                }),
+            );
+        let base_url = spawn_test_server(router).await;
+        let provider = HttpProvider::new_stub(reqwest::Client::new(), &base_url);
+        let token = refresh_token_for(&provider).await;
+
+        let error = provider
+            .fetch_records(test_provider(), &token, None, UNIX_EPOCH)
+            .await
+            .expect_err("records fetch should fail");
+
+        assert!(matches!(
+            error,
+            sensitive::Error::Provider {
+                operation: sensitive::ProviderOperation::FetchRecords,
+                kind: sensitive::ProviderFailureKind::ServerError,
+                status_code: Some(502),
+                ..
+            }
+        ));
+    }
+
+    #[tokio::test]
+    async fn sandbox_config_degrades_instead_of_panicking() {
+        let provider = HttpProvider::new_sandbox(
+            reqwest::Client::new(),
+            SandboxHttpConfig {
+                base_url: None,
+                client_id: Some("sandbox-client".to_string()),
+                client_secret: None,
+                timeout_secs: 10,
+                retry_backoff_secs: 45,
+            },
+        );
+
+        let error = provider
+            .refresh_token(test_provider(), UNIX_EPOCH, None)
+            .await
+            .expect_err("sandbox config should fail closed");
+
+        assert!(matches!(
+            error,
+            sensitive::Error::Provider {
+                operation: sensitive::ProviderOperation::RefreshToken,
+                kind: sensitive::ProviderFailureKind::Configuration,
+                status_code: None,
                 ..
             }
         ));

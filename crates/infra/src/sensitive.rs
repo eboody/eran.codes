@@ -87,9 +87,10 @@ impl Repository {
     ) -> sensitive::Result<Option<sensitive_domain::IntegrationState>> {
         let row = sqlx::query(
             r#"
-            SELECT provider, mode, endpoint, cursor, last_fetch_outcome, token_strategy,
-                   last_error_category, last_successful_fetch_at, last_attempted_fetch_at,
-                   failure_count
+            SELECT provider, mode, endpoint, auth_mode, cursor, last_fetch_outcome,
+                   token_strategy, last_error_category, last_auth_outcome,
+                   last_remote_status_code, retry_backoff_secs, last_successful_mode,
+                   last_successful_fetch_at, last_attempted_fetch_at, failure_count
             FROM integration_sync_state
             WHERE provider = $1
             "#,
@@ -122,10 +123,7 @@ impl Repository {
         .fetch_optional(&self.pg)
         .await
         .map_err(|source| {
-            sensitive::Error::query_repository(
-                RepositoryOperation::LoadKeyCustody,
-                source,
-            )
+            sensitive::Error::query_repository(RepositoryOperation::LoadKeyCustody, source)
         })?;
 
         row.map(rotation_run_from_row).transpose()
@@ -145,7 +143,10 @@ impl Repository {
             .map(|row| {
                 Ok(sensitive_domain::KeyedCiphertextCount::builder()
                     .key_id(parse_key_id(row.get::<String, _>("key_id"))?)
-                    .count(parse_u32_count(row.get::<i64, _>("ciphertext_count"), "ciphertext_count")?)
+                    .count(parse_u32_count(
+                        row.get::<i64, _>("ciphertext_count"),
+                        "ciphertext_count",
+                    )?)
                     .build())
             })
             .collect()
@@ -279,10 +280,12 @@ impl sensitive::Repository for Repository {
         .bind(record_id.as_ref())
         .fetch_optional(&self.pg)
         .await
-        .map_err(|source| sensitive::Error::query_repository(
-            RepositoryOperation::LoadAuthorizedRecord,
-            source,
-        ))?;
+        .map_err(|source| {
+            sensitive::Error::query_repository(
+                RepositoryOperation::LoadAuthorizedRecord,
+                source,
+            )
+        })?;
 
         row.map(|row| {
             let payload = self
@@ -324,9 +327,10 @@ impl sensitive::Repository for Repository {
     ) -> sensitive::Result<Option<sensitive_domain::IntegrationState>> {
         let row = sqlx::query(
             r#"
-            SELECT provider, mode, endpoint, cursor, last_fetch_outcome, token_strategy,
-                   last_error_category, last_successful_fetch_at, last_attempted_fetch_at,
-                   failure_count
+            SELECT provider, mode, endpoint, auth_mode, cursor, last_fetch_outcome,
+                   token_strategy, last_error_category, last_auth_outcome,
+                   last_remote_status_code, retry_backoff_secs, last_successful_mode,
+                   last_successful_fetch_at, last_attempted_fetch_at, failure_count
             FROM integration_sync_state
             WHERE provider = $1
             "#,
@@ -344,7 +348,9 @@ impl sensitive::Repository for Repository {
         row.map(integration_state_from_row).transpose()
     }
 
-    async fn load_key_custody(&self) -> sensitive::Result<sensitive_domain::KeyCustodyState> {
+    async fn load_key_custody(
+        &self,
+    ) -> sensitive::Result<sensitive_domain::KeyCustodyState> {
         let active_key_id = self.crypto.active_key_id().clone();
         let token_counts = self.query_token_counts_by_key().await?;
         let record_counts = self.query_record_counts_by_key().await?;
@@ -577,22 +583,32 @@ impl sensitive::Repository for Repository {
                 provider,
                 mode,
                 endpoint,
+                auth_mode,
                 cursor,
                 last_fetch_outcome,
                 token_strategy,
                 last_error_category,
+                last_auth_outcome,
+                last_remote_status_code,
+                retry_backoff_secs,
+                last_successful_mode,
                 last_successful_fetch_at,
                 last_attempted_fetch_at,
                 failure_count
             )
-            VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10)
+            VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15)
             ON CONFLICT (provider) DO UPDATE
             SET mode = EXCLUDED.mode,
                 endpoint = EXCLUDED.endpoint,
+                auth_mode = EXCLUDED.auth_mode,
                 cursor = EXCLUDED.cursor,
                 last_fetch_outcome = EXCLUDED.last_fetch_outcome,
                 token_strategy = EXCLUDED.token_strategy,
                 last_error_category = EXCLUDED.last_error_category,
+                last_auth_outcome = EXCLUDED.last_auth_outcome,
+                last_remote_status_code = EXCLUDED.last_remote_status_code,
+                retry_backoff_secs = EXCLUDED.retry_backoff_secs,
+                last_successful_mode = EXCLUDED.last_successful_mode,
                 last_successful_fetch_at = EXCLUDED.last_successful_fetch_at,
                 last_attempted_fetch_at = EXCLUDED.last_attempted_fetch_at,
                 failure_count = EXCLUDED.failure_count,
@@ -602,6 +618,7 @@ impl sensitive::Repository for Repository {
         .bind(state.provider.as_ref())
         .bind(state.mode.as_ref())
         .bind(state.endpoint.to_string())
+        .bind(state.auth_mode.map(|mode| mode.as_ref().to_string()))
         .bind(state.cursor.as_ref().map(ToString::to_string))
         .bind(state.last_fetch_outcome.as_ref())
         .bind(state.token_strategy.as_ref())
@@ -609,6 +626,18 @@ impl sensitive::Repository for Repository {
             state
                 .last_error_category
                 .map(|category| category.as_ref().to_string()),
+        )
+        .bind(
+            state
+                .last_auth_outcome
+                .map(|outcome| outcome.as_ref().to_string()),
+        )
+        .bind(state.last_remote_status_code.map(i64::from))
+        .bind(state.retry_backoff_secs.map(i64::from))
+        .bind(
+            state
+                .last_successful_mode
+                .map(|mode| mode.as_ref().to_string()),
         )
         .bind(state.last_successful_fetch_at.map(to_offset_datetime))
         .bind(to_offset_datetime(state.last_attempted_fetch_at))
@@ -663,7 +692,10 @@ impl sensitive::Repository for Repository {
         .fetch_optional(&self.pg)
         .await
         .map_err(|source| {
-            sensitive::Error::query_repository(RepositoryOperation::RotateCiphertext, source)
+            sensitive::Error::query_repository(
+                RepositoryOperation::RotateCiphertext,
+                source,
+            )
         })? {
             rows_scanned += 1;
             let row_key_id = parse_key_id(token_row.get::<String, _>("token_key_id"))?;
@@ -704,7 +736,10 @@ impl sensitive::Repository for Repository {
                             )
                         })?;
                         rows_rewrapped += 1;
-                        detail = format!("provider token rewrapped from {} to {}", row_key_id, active_key_id);
+                        detail = format!(
+                            "provider token rewrapped from {} to {}",
+                            row_key_id, active_key_id
+                        );
                     }
                     Err(error) => {
                         rows_failed += 1;
@@ -732,7 +767,10 @@ impl sensitive::Repository for Repository {
             .fetch_all(&self.pg)
             .await
             .map_err(|source| {
-                sensitive::Error::query_repository(RepositoryOperation::RotateCiphertext, source)
+                sensitive::Error::query_repository(
+                    RepositoryOperation::RotateCiphertext,
+                    source,
+                )
             })?;
 
             for row in rows {
@@ -777,11 +815,15 @@ impl sensitive::Repository for Repository {
                             )
                         })?;
                         rows_rewrapped += 1;
-                        detail = format!("sensitive record ciphertext rewrapped to {}", active_key_id);
+                        detail = format!(
+                            "sensitive record ciphertext rewrapped to {}",
+                            active_key_id
+                        );
                     }
                     Err(error) => {
                         rows_failed += 1;
-                        detail = format!("record ciphertext rewrap failed for {}", row_key_id);
+                        detail =
+                            format!("record ciphertext rewrap failed for {}", row_key_id);
                         tracing::warn!(target: "demo.sensitive", ?error, %row_key_id, "record ciphertext rewrap failed");
                     }
                 }
@@ -795,8 +837,10 @@ impl sensitive::Repository for Repository {
             .rows_already_current(rows_already_current)
             .rows_failed(rows_failed)
             .detail(
-                sensitive_domain::DetailText::try_new(detail.chars().take(120).collect::<String>())
-                    .map_err(sensitive::Error::decode_detail_text)?,
+                sensitive_domain::DetailText::try_new(
+                    detail.chars().take(120).collect::<String>(),
+                )
+                .map_err(sensitive::Error::decode_detail_text)?,
             )
             .build())
     }
@@ -992,10 +1036,8 @@ fn parse_key_id(value: String) -> sensitive::Result<sensitive_domain::KeyId> {
 }
 
 fn parse_u32_count(value: i64, field: &'static str) -> sensitive::Result<u32> {
-    u32::try_from(value).map_err(|_| sensitive::Error::InvalidStoredRotationCount {
-        field,
-        value,
-    })
+    u32::try_from(value)
+        .map_err(|_| sensitive::Error::InvalidStoredRotationCount { field, value })
 }
 
 fn ciphertext_evidence(
@@ -1165,10 +1207,15 @@ fn integration_state_from_row(
 ) -> sensitive::Result<sensitive_domain::IntegrationState> {
     let provider_raw = row.get::<String, _>("provider");
     let mode_raw = row.get::<String, _>("mode");
+    let auth_mode_raw = row.get::<Option<String>, _>("auth_mode");
     let cursor_raw = row.get::<Option<String>, _>("cursor");
     let fetch_outcome_raw = row.get::<String, _>("last_fetch_outcome");
     let token_strategy_raw = row.get::<String, _>("token_strategy");
     let error_category_raw = row.get::<Option<String>, _>("last_error_category");
+    let auth_outcome_raw = row.get::<Option<String>, _>("last_auth_outcome");
+    let remote_status_code = row.get::<Option<i64>, _>("last_remote_status_code");
+    let retry_backoff_secs = row.get::<Option<i64>, _>("retry_backoff_secs");
+    let last_successful_mode_raw = row.get::<Option<String>, _>("last_successful_mode");
     let failure_count = row.get::<i64, _>("failure_count");
 
     let provider = provider_raw
@@ -1185,6 +1232,15 @@ fn integration_state_from_row(
         .map(|value| {
             sensitive_domain::SyncCursor::try_new(value.clone())
                 .map_err(|_| sensitive::Error::InvalidStoredSyncCursor { cursor: value })
+        })
+        .transpose()?;
+    let auth_mode = auth_mode_raw
+        .map(|value| {
+            value
+                .parse::<sensitive_domain::ProviderAuthMode>()
+                .map_err(|_| sensitive::Error::InvalidStoredProviderAuthMode {
+                    mode: value.clone(),
+                })
         })
         .transpose()?;
     let last_fetch_outcome = fetch_outcome_raw
@@ -1206,6 +1262,34 @@ fn integration_state_from_row(
                 })
         })
         .transpose()?;
+    let last_auth_outcome = auth_outcome_raw
+        .map(|value| {
+            value
+                .parse::<sensitive_domain::FetchOutcome>()
+                .map_err(|_| sensitive::Error::InvalidStoredFetchOutcome {
+                    outcome: value.clone(),
+                })
+        })
+        .transpose()?;
+    let last_remote_status_code = remote_status_code
+        .map(|value| {
+            u16::try_from(value).map_err(|_| {
+                sensitive::Error::InvalidStoredRemoteStatusCode { status_code: value }
+            })
+        })
+        .transpose()?;
+    let retry_backoff_secs = retry_backoff_secs
+        .map(|value| parse_u32_count(value, "retry_backoff_secs"))
+        .transpose()?;
+    let last_successful_mode = last_successful_mode_raw
+        .map(|value| {
+            value
+                .parse::<sensitive_domain::ProviderMode>()
+                .map_err(|_| sensitive::Error::InvalidStoredProviderMode {
+                    mode: value.clone(),
+                })
+        })
+        .transpose()?;
     let failure_count = u32::try_from(failure_count)
         .map_err(|_| sensitive::Error::InvalidStoredFailureCount { failure_count })?;
 
@@ -1216,10 +1300,15 @@ fn integration_state_from_row(
             sensitive_domain::DetailText::try_new(row.get::<String, _>("endpoint"))
                 .map_err(sensitive::Error::decode_detail_text)?,
         )
+        .maybe_auth_mode(auth_mode)
         .maybe_cursor(cursor)
         .last_fetch_outcome(last_fetch_outcome)
         .token_strategy(token_strategy)
         .maybe_last_error_category(last_error_category)
+        .maybe_last_auth_outcome(last_auth_outcome)
+        .maybe_last_remote_status_code(last_remote_status_code)
+        .maybe_retry_backoff_secs(retry_backoff_secs)
+        .maybe_last_successful_mode(last_successful_mode)
         .maybe_last_successful_fetch_at(
             row.get::<Option<OffsetDateTime>, _>("last_successful_fetch_at")
                 .map(from_offset_datetime),

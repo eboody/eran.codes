@@ -8,6 +8,8 @@ const INTEGRATION_TOKEN_REFRESH_INTERVAL_SECS_DEFAULT: u64 = 900;
 const INTEGRATION_SYNC_INTERVAL_SECS_DEFAULT: u64 = 1200;
 const ENCRYPTION_ROTATION_INTERVAL_SECS_DEFAULT: u64 = 1800;
 const ENCRYPTION_ROTATION_BATCH_SIZE_DEFAULT: usize = 25;
+const SENSITIVE_SANDBOX_TIMEOUT_SECS_DEFAULT: u64 = 10;
+const SENSITIVE_SANDBOX_RETRY_BACKOFF_SECS_DEFAULT: u64 = 45;
 const SESSION_SECRET_MIN_BYTES: usize = 64;
 const DATA_ENCRYPTION_KEY_LEN: usize = 32;
 const LEGACY_DATA_KEY_ID: &str = "legacy_data_key";
@@ -47,6 +49,7 @@ pub struct SensitiveConfig {
     pub data_encryption_keys: Vec<KeyMaterial>,
     pub active_data_key_id: domain::sensitive::KeyId,
     pub disabled_data_key_ids: Vec<domain::sensitive::KeyId>,
+    pub provider_mode: SensitiveProviderRuntimeMode,
     pub token_refresh_interval_secs: u64,
     pub sync_interval_secs: u64,
     pub rotation_interval_secs: u64,
@@ -55,6 +58,16 @@ pub struct SensitiveConfig {
     pub operator_emails: Vec<domain::user::Email>,
     pub provider_stub_port: u16,
     pub provider_stub_failure_mode: SensitiveProviderStubFailureMode,
+    pub sandbox: SensitiveSandboxConfig,
+}
+
+#[derive(Clone, Debug)]
+pub struct SensitiveSandboxConfig {
+    pub base_url: Option<String>,
+    pub client_id: Option<String>,
+    pub client_secret: Option<String>,
+    pub timeout_secs: u64,
+    pub retry_backoff_secs: u64,
 }
 
 impl HttpConfig {
@@ -75,9 +88,9 @@ impl HttpConfig {
 
 impl SensitiveConfig {
     pub fn from_env(http_port: u16) -> Result<Self> {
-        let (data_encryption_keys, active_data_key_id) =
-            data_encryption_config_from_env()?;
+        let (data_encryption_keys, active_data_key_id) = data_encryption_config_from_env()?;
         let disabled_data_key_ids = key_id_list_from_env("DISABLED_DATA_KEY_IDS")?;
+        let provider_mode = provider_mode_from_env()?;
         let token_refresh_interval_secs = integration_interval_secs_from_env(
             "INTEGRATION_TOKEN_REFRESH_INTERVAL_SECS",
             INTEGRATION_TOKEN_REFRESH_INTERVAL_SECS_DEFAULT,
@@ -98,11 +111,25 @@ impl SensitiveConfig {
         let operator_emails = email_list_from_env("SENSITIVE_OPERATOR_EMAILS")?;
         let provider_stub_port = provider_stub_port_from_env(http_port)?;
         let provider_stub_failure_mode = provider_stub_failure_mode_from_env()?;
+        let sandbox = SensitiveSandboxConfig {
+            base_url: optional_env("SENSITIVE_PROVIDER_BASE_URL")?,
+            client_id: optional_env("SENSITIVE_SANDBOX_CLIENT_ID")?,
+            client_secret: optional_env("SENSITIVE_SANDBOX_CLIENT_SECRET")?,
+            timeout_secs: integration_interval_secs_from_env(
+                "SENSITIVE_SANDBOX_TIMEOUT_SECS",
+                SENSITIVE_SANDBOX_TIMEOUT_SECS_DEFAULT,
+            )?,
+            retry_backoff_secs: integration_interval_secs_from_env(
+                "SENSITIVE_SANDBOX_RETRY_BACKOFF_SECS",
+                SENSITIVE_SANDBOX_RETRY_BACKOFF_SECS_DEFAULT,
+            )?,
+        };
 
         Ok(Self {
             data_encryption_keys,
             active_data_key_id,
             disabled_data_key_ids,
+            provider_mode,
             token_refresh_interval_secs,
             sync_interval_secs,
             rotation_interval_secs,
@@ -111,11 +138,17 @@ impl SensitiveConfig {
             operator_emails,
             provider_stub_port,
             provider_stub_failure_mode,
+            sandbox,
         })
     }
 
-    pub fn provider_base_url(&self) -> String {
-        format!("http://127.0.0.1:{}/", self.provider_stub_port)
+    pub fn provider_base_url(&self) -> Option<String> {
+        match self.provider_mode {
+            SensitiveProviderRuntimeMode::Stub => {
+                Some(format!("http://127.0.0.1:{}/", self.provider_stub_port))
+            }
+            SensitiveProviderRuntimeMode::SandboxHttp => self.sandbox.base_url.clone(),
+        }
     }
 
     pub fn provider_stub_addr(&self) -> String {
@@ -123,8 +156,38 @@ impl SensitiveConfig {
     }
 }
 
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+pub enum SensitiveProviderRuntimeMode {
+    Stub,
+    SandboxHttp,
+}
+
+impl SensitiveProviderRuntimeMode {
+    fn from_str(value: &str) -> Result<Self> {
+        match value {
+            "stub" => Ok(Self::Stub),
+            "sandbox_http" => Ok(Self::SandboxHttp),
+            _ => Err(Error::InvalidEnv {
+                name: "SENSITIVE_PROVIDER_MODE",
+                reason: "must be one of: stub, sandbox_http",
+            }),
+        }
+    }
+}
+
 fn required_env(name: &'static str) -> Result<String> {
     utils::envs::get_env(name).map_err(|_| Error::MissingEnv { name })
+}
+
+fn optional_env(name: &'static str) -> Result<Option<String>> {
+    match std::env::var(name) {
+        Ok(value) => Ok(Some(value)),
+        Err(std::env::VarError::NotPresent) => Ok(None),
+        Err(std::env::VarError::NotUnicode(_)) => Err(Error::InvalidEnv {
+            name,
+            reason: "must be valid unicode text",
+        }),
+    }
 }
 
 fn parse_port(value: &str) -> Result<u16> {
@@ -169,7 +232,8 @@ fn decode_key_material(
     })
 }
 
-fn data_encryption_config_from_env() -> Result<(Vec<KeyMaterial>, domain::sensitive::KeyId)> {
+fn data_encryption_config_from_env() -> Result<(Vec<KeyMaterial>, domain::sensitive::KeyId)>
+{
     match std::env::var("DATA_ENCRYPTION_KEYS_JSON") {
         Ok(value) => {
             let keys = parse_data_encryption_keys_json(&value)?;
@@ -237,19 +301,14 @@ fn parse_data_encryption_keys_json(value: &str) -> Result<Vec<KeyMaterial>> {
     Ok(keys)
 }
 
-fn parse_key_id(
-    name: &'static str,
-    value: &str,
-) -> Result<domain::sensitive::KeyId> {
+fn parse_key_id(name: &'static str, value: &str) -> Result<domain::sensitive::KeyId> {
     domain::sensitive::KeyId::try_new(value).map_err(|_| Error::InvalidEnv {
         name,
         reason: "must be a non-empty key id up to 64 characters",
     })
 }
 
-fn key_id_list_from_env(
-    name: &'static str,
-) -> Result<Vec<domain::sensitive::KeyId>> {
+fn key_id_list_from_env(name: &'static str) -> Result<Vec<domain::sensitive::KeyId>> {
     match std::env::var(name) {
         Ok(value) => parse_key_id_list(name, &value),
         Err(std::env::VarError::NotPresent) => Ok(Vec::new()),
@@ -399,6 +458,17 @@ fn provider_stub_port_from_env(http_port: u16) -> Result<u16> {
     }
 }
 
+fn provider_mode_from_env() -> Result<SensitiveProviderRuntimeMode> {
+    match std::env::var("SENSITIVE_PROVIDER_MODE") {
+        Ok(value) => SensitiveProviderRuntimeMode::from_str(&value),
+        Err(std::env::VarError::NotPresent) => Ok(SensitiveProviderRuntimeMode::Stub),
+        Err(std::env::VarError::NotUnicode(_)) => Err(Error::InvalidEnv {
+            name: "SENSITIVE_PROVIDER_MODE",
+            reason: "must be one of: stub, sandbox_http",
+        }),
+    }
+}
+
 fn provider_stub_failure_mode_from_env() -> Result<SensitiveProviderStubFailureMode> {
     match std::env::var("SENSITIVE_PROVIDER_STUB_FAILURE_MODE") {
         Ok(value) => SensitiveProviderStubFailureMode::from_str(&value),
@@ -457,10 +527,11 @@ mod tests {
     use std::sync::{Mutex, OnceLock};
 
     use super::{
-        Error, SensitiveProviderStubFailureMode, data_encryption_config_from_env,
-        parse_data_encryption_key, parse_data_encryption_keys_json, parse_email_list,
-        parse_key_id_list, parse_port, parse_positive_u64_env, parse_positive_usize_env,
-        parse_session_secret, provider_stub_failure_mode_from_env,
+        Error, SensitiveProviderRuntimeMode, SensitiveProviderStubFailureMode,
+        data_encryption_config_from_env, parse_data_encryption_key,
+        parse_data_encryption_keys_json, parse_email_list, parse_key_id_list, parse_port,
+        parse_positive_u64_env, parse_positive_usize_env, parse_session_secret,
+        provider_mode_from_env, provider_stub_failure_mode_from_env,
         provider_stub_port_from_env,
     };
 
@@ -659,9 +730,8 @@ mod tests {
 
     #[test]
     fn parses_key_id_list_and_deduplicates_entries() {
-        let key_ids =
-            parse_key_id_list("DISABLED_DATA_KEY_IDS", "legacy,active,legacy")
-                .expect("key id list should parse");
+        let key_ids = parse_key_id_list("DISABLED_DATA_KEY_IDS", "legacy,active,legacy")
+            .expect("key id list should parse");
 
         assert_eq!(key_ids.len(), 2);
         assert_eq!(key_ids[0].to_string(), "legacy");
@@ -687,6 +757,46 @@ mod tests {
         }
         let port = provider_stub_port_from_env(3002).expect("default port");
         assert_eq!(port, 4002);
+    }
+
+    #[test]
+    fn defaults_provider_mode_to_stub() {
+        let _lock = env_lock();
+        unsafe {
+            std::env::remove_var("SENSITIVE_PROVIDER_MODE");
+        }
+        let mode = provider_mode_from_env().expect("default mode");
+        assert_eq!(mode, SensitiveProviderRuntimeMode::Stub);
+    }
+
+    #[test]
+    fn parses_provider_mode() {
+        let _lock = env_lock();
+        unsafe {
+            std::env::set_var("SENSITIVE_PROVIDER_MODE", "sandbox_http");
+        }
+        let mode = provider_mode_from_env().expect("mode should parse");
+        assert_eq!(mode, SensitiveProviderRuntimeMode::SandboxHttp);
+        unsafe {
+            std::env::remove_var("SENSITIVE_PROVIDER_MODE");
+        }
+    }
+
+    #[test]
+    fn rejects_invalid_provider_mode() {
+        let _lock = env_lock();
+        unsafe {
+            std::env::set_var("SENSITIVE_PROVIDER_MODE", "broken");
+        }
+        let error = provider_mode_from_env().expect_err("mode should be rejected");
+        assert_invalid_env(
+            error,
+            "SENSITIVE_PROVIDER_MODE",
+            "must be one of: stub, sandbox_http",
+        );
+        unsafe {
+            std::env::remove_var("SENSITIVE_PROVIDER_MODE");
+        }
     }
 
     #[test]

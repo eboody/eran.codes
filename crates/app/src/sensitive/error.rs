@@ -17,6 +17,7 @@ pub enum Error {
     Provider {
         operation: ProviderOperation,
         kind: ProviderFailureKind,
+        status_code: Option<u16>,
         source: BoxError,
     },
     #[snafu(display("sensitive repository is missing a provider token after refresh"))]
@@ -25,6 +26,8 @@ pub enum Error {
     InvalidStoredProvider { provider: String },
     #[snafu(display("invalid stored provider mode: {mode}"))]
     InvalidStoredProviderMode { mode: String },
+    #[snafu(display("invalid stored provider auth mode: {mode}"))]
+    InvalidStoredProviderAuthMode { mode: String },
     #[snafu(display("invalid stored sync cursor: {cursor}"))]
     InvalidStoredSyncCursor { cursor: String },
     #[snafu(display("invalid stored sync outcome: {outcome}"))]
@@ -35,6 +38,8 @@ pub enum Error {
     InvalidStoredTokenStrategy { strategy: String },
     #[snafu(display("invalid stored remote error category: {category}"))]
     InvalidStoredRemoteErrorCategory { category: String },
+    #[snafu(display("invalid stored remote status code: {status_code}"))]
+    InvalidStoredRemoteStatusCode { status_code: i64 },
     #[snafu(display("invalid stored failure count: {failure_count}"))]
     InvalidStoredFailureCount { failure_count: i64 },
     #[snafu(display("invalid stored encryption key id: {key_id}"))]
@@ -94,9 +99,13 @@ pub enum ProviderOperation {
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Display, AsRefStr)]
 #[strum(serialize_all = "snake_case")]
 pub enum ProviderFailureKind {
+    Configuration,
     Unauthorized,
+    Forbidden,
     RateLimited,
     MalformedPayload,
+    Timeout,
+    ServerError,
     Transport,
 }
 
@@ -167,6 +176,7 @@ impl Error {
         Self::Provider {
             operation,
             kind: ProviderFailureKind::Transport,
+            status_code: None,
             source: box_error(source),
         }
     }
@@ -179,6 +189,21 @@ impl Error {
         Self::Provider {
             operation,
             kind,
+            status_code: None,
+            source: box_error(source),
+        }
+    }
+
+    pub fn provider_status_failure(
+        operation: ProviderOperation,
+        kind: ProviderFailureKind,
+        status_code: u16,
+        source: impl std::error::Error + Send + Sync + 'static,
+    ) -> Self {
+        Self::Provider {
+            operation,
+            kind,
+            status_code: Some(status_code),
             source: box_error(source),
         }
     }

@@ -87,10 +87,14 @@ impl Keyring {
         }
 
         let Some(active_entry) = entries.get(&active_key_id) else {
-            return Err(Error::UnknownActiveKeyId { key_id: active_key_id });
+            return Err(Error::UnknownActiveKeyId {
+                key_id: active_key_id,
+            });
         };
         if active_entry.status == sensitive::CipherKeyStatus::Disabled {
-            return Err(Error::DisabledActiveKeyId { key_id: active_key_id });
+            return Err(Error::DisabledActiveKeyId {
+                key_id: active_key_id,
+            });
         }
         for disabled_key_id in disabled_key_ids {
             if !entries.contains_key(disabled_key_id) {
@@ -175,9 +179,7 @@ mod tests {
         sensitive::KeyId::try_new(value).expect("key id")
     }
 
-    fn keyring(
-        disabled: &[sensitive::KeyId],
-    ) -> Keyring {
+    fn keyring(disabled: &[sensitive::KeyId]) -> Keyring {
         Keyring::new(
             vec![
                 KeyMaterial {
@@ -218,7 +220,9 @@ mod tests {
         .expect("legacy keyring");
         let current_keyring = keyring(&[]);
         let legacy_ciphertext = legacy_keyring.encrypt("hello").expect("encrypted");
-        let decrypted = current_keyring.decrypt(&legacy_ciphertext).expect("decrypted");
+        let decrypted = current_keyring
+            .decrypt(&legacy_ciphertext)
+            .expect("decrypted");
 
         assert_eq!(decrypted, b"hello");
     }

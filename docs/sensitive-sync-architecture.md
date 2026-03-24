@@ -8,7 +8,7 @@ This note explains what the new secure-data slice proves, where the trust bounda
 - Authorized record payloads are stored encrypted at rest while redacted labels and last-four evidence remain queryable for guest-safe proof surfaces.
 - Ciphertext now carries explicit key IDs, and the runtime can read mixed-key ciphertext through a configured keyring while new writes use the active key.
 - Background token refresh and cursor-based record sync run inside the normal app runtime.
-- The app crosses a real local HTTP boundary through `reqwest` instead of calling an in-process provider helper directly.
+- The app crosses a real HTTP boundary through `reqwest`, with deterministic local stub mode by default and an opt-in sandbox HTTP mode for live outbound connectivity.
 - Unauthorized reads, operator-only token state, and recent access-audit evidence are all visible on `/lab#sensitive-proof`.
 - Operator view now shows provider mode, endpoint provenance, cursor state, token strategy, last fetch outcome, recent remote failure category, active key ID, mixed-key ciphertext counts, stale ciphertext counts, and latest rotation outcome.
 - `/work/sensitive-sync` frames that implementation as the current shipped proof slice.
@@ -26,7 +26,7 @@ This note explains what the new secure-data slice proves, where the trust bounda
 - `infra::sensitive_boundary`
   - Owns the HTTP-backed provider adapter, wire payload decoding, and malformed/unauthorized/rate-limited remote failure classification.
 - `src::sensitive_provider_stub`
-  - Owns the local stub listener that simulates an external token + records service over HTTP.
+  - Owns the local stub listener that simulates an external token + records service over HTTP for deterministic default runs.
 - `http`
   - Owns the lab partial, the proof panel, and the current case-study route.
 
@@ -68,18 +68,26 @@ This note explains what the new secure-data slice proves, where the trust bounda
 - `sensitive_access_events` records allowed and denied attempts for the authorized-read path so the proof surface can show policy outcomes, not just payload access.
 - Bootstrap grants may be reconciled from configured emails, but the enforcement point is the persisted grant table in the normal runtime path.
 
-## Local Integration Boundary
+## Integration Boundary Modes
 
-- The app talks to a local stub over HTTP for both token refresh and record fetches.
+- `stub` mode talks to the local stub over HTTP for token refresh and record fetches.
+- `sandbox_http` mode talks to a configured external sandbox endpoint over HTTPS for the same token + records contract.
 - The stub supports paginated record fetch, deterministic cursors, one-shot unauthorized responses, malformed payload responses, and rate-limited responses.
+- Sandbox mode uses client-credentials token exchange, paginated record fetch, and persisted degraded-boundary state when config is incomplete or the remote endpoint fails.
 - The app persists enough state to prove what happened at that boundary:
+  - provider mode
+  - auth mode
   - current cursor
   - last fetch outcome
+  - last auth outcome
   - token strategy used for the last successful or failed sync
   - last remote error category
+  - last remote status code when the remote returned one
+  - retry/backoff seconds for retryable failures
+  - last successful mode
   - failure count
 - Unauthorized record fetches invalidate the cached token path, refresh once, and retry once.
-- Malformed payloads and rate-limited responses fail closed and record structured failed sync state.
+- Malformed payloads, forbidden responses, server errors, timeouts, and rate-limited responses fail closed and record structured failed sync state.
 
 ## Key Rotation And Custody
 
@@ -97,7 +105,7 @@ This note explains what the new secure-data slice proves, where the trust bounda
 
 ## Scope Limits
 
-- The provider is still a local stub, not a live third-party system.
+- The default provider is still the local stub, and the sandbox path is still a sanitized sandbox contract rather than a production vendor integration.
 - The records are sanitized runtime-proof fixtures, not real healthcare or production vendor data.
 - The slice proves secure storage, application-level key rotation, transport-boundary handling, bounded sync behavior, persisted grants, and access audit.
-- It does not prove live third-party connectivity, HSM/cloud-KMS custody, broad org/team RBAC, or real PHI handling.
+- It does not prove production vendor connectivity, HSM/cloud-KMS custody, broad org/team RBAC, or real PHI handling.

@@ -277,6 +277,8 @@ impl app::sensitive::ProviderClient for SensitiveProvider {
                 domain_sensitive::DetailText::try_new("http://127.0.0.1:4002/")
                     .expect("detail"),
             )
+            .maybe_auth_mode(Some(domain_sensitive::ProviderAuthMode::StubIssuedToken))
+            .maybe_retry_backoff_secs(None)
             .build()
     }
 
@@ -399,7 +401,9 @@ impl app::sensitive::Repository for SensitiveRepo {
             .collect())
     }
 
-    async fn load_key_custody(&self) -> app::sensitive::Result<domain_sensitive::KeyCustodyState> {
+    async fn load_key_custody(
+        &self,
+    ) -> app::sensitive::Result<domain_sensitive::KeyCustodyState> {
         Ok(self.state.lock().expect("repo state").key_custody.clone())
     }
 
@@ -481,8 +485,11 @@ impl app::sensitive::Repository for SensitiveRepo {
         &self,
         run: &domain_sensitive::KeyRotationRun,
     ) -> app::sensitive::Result<()> {
-        self.state.lock().expect("repo state").key_custody.last_rotation_run =
-            Some(run.clone());
+        self.state
+            .lock()
+            .expect("repo state")
+            .key_custody
+            .last_rotation_run = Some(run.clone());
         Ok(())
     }
 
@@ -610,9 +617,7 @@ fn record_proof(record_id: domain_sensitive::Id) -> app::sensitive::RecordProof 
         .synced_at(UNIX_EPOCH)
         .ciphertext(
             app::sensitive::CiphertextEvidence::builder()
-                .key_id(
-                    domain_sensitive::KeyId::try_new("legacy_data_key").unwrap(),
-                )
+                .key_id(domain_sensitive::KeyId::try_new("legacy_data_key").unwrap())
                 .preview("ciphertext-preview".to_string())
                 .bytes(32)
                 .build(),
@@ -684,14 +689,18 @@ fn key_custody_state() -> domain_sensitive::KeyCustodyState {
                 .status(domain_sensitive::CipherKeyStatus::ReadOnlyLegacy)
                 .build(),
         ])
-        .token_counts(vec![domain_sensitive::KeyedCiphertextCount::builder()
-            .key_id(domain_sensitive::KeyId::try_new("legacy_data_key").unwrap())
-            .count(1)
-            .build()])
-        .record_counts(vec![domain_sensitive::KeyedCiphertextCount::builder()
-            .key_id(domain_sensitive::KeyId::try_new("legacy_data_key").unwrap())
-            .count(1)
-            .build()])
+        .token_counts(vec![
+            domain_sensitive::KeyedCiphertextCount::builder()
+                .key_id(domain_sensitive::KeyId::try_new("legacy_data_key").unwrap())
+                .count(1)
+                .build(),
+        ])
+        .record_counts(vec![
+            domain_sensitive::KeyedCiphertextCount::builder()
+                .key_id(domain_sensitive::KeyId::try_new("legacy_data_key").unwrap())
+                .count(1)
+                .build(),
+        ])
         .stale_token_count(1)
         .stale_record_count(1)
         .maybe_last_rotation_run(Some(
@@ -737,14 +746,19 @@ fn integration_state() -> domain_sensitive::IntegrationState {
         .provider(domain_sensitive::Provider::SyntheticSecureFeed)
         .mode(domain_sensitive::ProviderMode::LocalStub)
         .endpoint(domain_sensitive::DetailText::try_new("http://127.0.0.1:4002/").unwrap())
+        .maybe_auth_mode(Some(domain_sensitive::ProviderAuthMode::StubIssuedToken))
         .maybe_cursor(Some(
             domain_sensitive::SyncCursor::try_new("cursor-gamma").unwrap(),
         ))
         .last_fetch_outcome(domain_sensitive::FetchOutcome::Success)
+        .maybe_last_auth_outcome(Some(domain_sensitive::FetchOutcome::Success))
         .token_strategy(domain_sensitive::TokenStrategy::RetryAfterUnauthorized)
         .maybe_last_error_category(Some(
             domain_sensitive::RemoteErrorCategory::Unauthorized,
         ))
+        .maybe_last_remote_status_code(Some(401))
+        .maybe_retry_backoff_secs(Some(45))
+        .maybe_last_successful_mode(Some(domain_sensitive::ProviderMode::LocalStub))
         .maybe_last_successful_fetch_at(Some(UNIX_EPOCH + Duration::from_secs(1)))
         .last_attempted_fetch_at(UNIX_EPOCH + Duration::from_secs(2))
         .failure_count(1)

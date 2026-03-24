@@ -106,6 +106,8 @@ pub struct TokenProof {
 pub struct ProviderBoundaryMeta {
     pub mode: sensitive::ProviderMode,
     pub endpoint: sensitive::DetailText,
+    pub auth_mode: Option<sensitive::ProviderAuthMode>,
+    pub retry_backoff_secs: Option<u32>,
 }
 
 #[derive(Clone, Debug, Builder, PartialEq, Eq)]
@@ -186,10 +188,7 @@ pub trait Repository: Send + Sync {
         rotated_at: SystemTime,
     ) -> Result<KeyRotationProgress>;
     async fn record_sync_run(&self, run: &sensitive::SyncRun) -> Result<()>;
-    async fn record_key_rotation_run(
-        &self,
-        run: &sensitive::KeyRotationRun,
-    ) -> Result<()>;
+    async fn record_key_rotation_run(&self, run: &sensitive::KeyRotationRun) -> Result<()>;
     async fn upsert_access_grants(
         &self,
         user_id: &user::Id,
@@ -504,7 +503,8 @@ impl Service {
         };
 
         if viewer_state.allows_authorized_record() {
-            let authorized_record = match self.repo.load_authorized_record(&record_id).await {
+            let authorized_record = match self.repo.load_authorized_record(&record_id).await
+            {
                 Ok(record) => record,
                 Err(error) if authorized_record_requires_denied_fallback(&error) => {
                     tracing::warn!(
@@ -568,33 +568,63 @@ impl Service {
     async fn ensure_fresh_token(
         &self,
         now: SystemTime,
-    ) -> core::result::Result<(ProviderToken, sensitive::TokenStrategy), SyncAttemptFailure>
-    {
+    ) -> core::result::Result<
+        (
+            ProviderToken,
+            sensitive::TokenStrategy,
+            sensitive::FetchOutcome,
+        ),
+        SyncAttemptFailure,
+    > {
         let current_token = self.load_refreshable_token().await.map_err(|error| {
-            sync_attempt_failure(error, sensitive::TokenStrategy::RefreshedToken)
+            sync_attempt_failure(
+                error,
+                sensitive::TokenStrategy::RefreshedToken,
+                Some(sensitive::FetchOutcome::Failed),
+            )
         })?;
 
         if let Some(token) = current_token {
             if !token_is_stale(&token, now) {
-                return Ok((token, sensitive::TokenStrategy::CachedToken));
+                return Ok((
+                    token,
+                    sensitive::TokenStrategy::CachedToken,
+                    sensitive::FetchOutcome::Success,
+                ));
             }
 
             let refreshed = self
                 .refresh_provider_token_inner(now, Some(&token.access_token))
                 .await
                 .map_err(|error| {
-                    sync_attempt_failure(error, sensitive::TokenStrategy::RefreshedToken)
+                    sync_attempt_failure(
+                        error,
+                        sensitive::TokenStrategy::RefreshedToken,
+                        Some(sensitive::FetchOutcome::Failed),
+                    )
                 })?;
-            return Ok((refreshed, sensitive::TokenStrategy::RefreshedToken));
+            return Ok((
+                refreshed,
+                sensitive::TokenStrategy::RefreshedToken,
+                sensitive::FetchOutcome::Success,
+            ));
         }
 
         let refreshed =
             self.refresh_provider_token_inner(now, None)
                 .await
                 .map_err(|error| {
-                    sync_attempt_failure(error, sensitive::TokenStrategy::RefreshedToken)
+                    sync_attempt_failure(
+                        error,
+                        sensitive::TokenStrategy::RefreshedToken,
+                        Some(sensitive::FetchOutcome::Failed),
+                    )
                 })?;
-        Ok((refreshed, sensitive::TokenStrategy::RefreshedToken))
+        Ok((
+            refreshed,
+            sensitive::TokenStrategy::RefreshedToken,
+            sensitive::FetchOutcome::Success,
+        ))
     }
 
     async fn load_refreshable_token(&self) -> Result<Option<ProviderToken>> {
@@ -656,6 +686,7 @@ impl Service {
                         sync_attempt_failure(
                             error,
                             sensitive::TokenStrategy::RetryAfterUnauthorized,
+                            Some(sensitive::FetchOutcome::Failed),
                         )
                     })?;
                 self.provider
@@ -668,10 +699,15 @@ impl Service {
                         sync_attempt_failure(
                             error,
                             sensitive::TokenStrategy::RetryAfterUnauthorized,
+                            Some(sensitive::FetchOutcome::Success),
                         )
                     })
             }
-            Err(error) => Err(sync_attempt_failure(error, token_strategy)),
+            Err(error) => Err(sync_attempt_failure(
+                error,
+                token_strategy,
+                Some(sensitive::FetchOutcome::Success),
+            )),
         }
     }
 
@@ -682,20 +718,22 @@ impl Service {
         previous_state: Option<&sensitive::IntegrationState>,
     ) -> core::result::Result<SyncSuccess, SyncFailure> {
         let previous_cursor = previous_state.and_then(|state| state.cursor.clone());
-        let (token, token_strategy) =
-            self.ensure_fresh_token(started_at)
-                .await
-                .map_err(|failure| SyncFailure {
-                    integration_state: failed_integration_state(
-                        boundary_meta,
-                        previous_state,
-                        previous_cursor.clone(),
-                        failure.token_strategy,
-                        failure.error_category,
-                        self.clock.now(),
-                    ),
-                    error: failure.error,
-                })?;
+        let (token, token_strategy, auth_outcome) = self
+            .ensure_fresh_token(started_at)
+            .await
+            .map_err(|failure| SyncFailure {
+                integration_state: failed_integration_state(
+                    boundary_meta,
+                    previous_state,
+                    previous_cursor.clone(),
+                    failure.token_strategy,
+                    failure.error_category,
+                    failure.status_code,
+                    failure.auth_outcome,
+                    self.clock.now(),
+                ),
+                error: failure.error,
+            })?;
         let (provider_records, token_strategy) = self
             .fetch_records_with_retry(
                 &token,
@@ -711,6 +749,8 @@ impl Service {
                     previous_cursor.clone(),
                     failure.token_strategy,
                     failure.error_category,
+                    failure.status_code,
+                    failure.auth_outcome.or(Some(auth_outcome)),
                     self.clock.now(),
                 ),
                 error: failure.error,
@@ -727,6 +767,8 @@ impl Service {
                     previous_cursor,
                     token_strategy,
                     provider_error_category(&error),
+                    provider_error_status_code(&error),
+                    Some(auth_outcome),
                     self.clock.now(),
                 ),
                 error,
@@ -736,6 +778,7 @@ impl Service {
             boundary_meta,
             provider_records.cursor,
             token_strategy,
+            auth_outcome,
             finished_at,
         );
         let run = sensitive::SyncRun::builder()
@@ -744,8 +787,9 @@ impl Service {
             .records_seen(records_seen)
             .records_upserted(upserted as u32)
             .detail(sync_detail_text(format!(
-                "{} provider records processed through the local HTTP boundary",
-                records_seen
+                "{} provider records processed through the {} boundary",
+                records_seen,
+                boundary_meta.mode.as_ref()
             )))
             .started_at(started_at)
             .finished_at(finished_at)
@@ -772,17 +816,23 @@ struct SyncAttemptFailure {
     error: Error,
     token_strategy: sensitive::TokenStrategy,
     error_category: Option<sensitive::RemoteErrorCategory>,
+    status_code: Option<u16>,
+    auth_outcome: Option<sensitive::FetchOutcome>,
 }
 
 fn sync_attempt_failure(
     error: Error,
     token_strategy: sensitive::TokenStrategy,
+    auth_outcome: Option<sensitive::FetchOutcome>,
 ) -> SyncAttemptFailure {
     let error_category = provider_error_category(&error);
+    let status_code = provider_error_status_code(&error);
     SyncAttemptFailure {
         error,
         token_strategy,
         error_category,
+        status_code,
+        auth_outcome,
     }
 }
 
@@ -836,14 +886,24 @@ fn authorized_record_requires_denied_fallback(error: &Error) -> bool {
 fn provider_error_category(error: &Error) -> Option<sensitive::RemoteErrorCategory> {
     match error {
         Error::Provider { kind, .. } => Some(match kind {
+            error::ProviderFailureKind::Configuration => {
+                sensitive::RemoteErrorCategory::Configuration
+            }
             error::ProviderFailureKind::Unauthorized => {
                 sensitive::RemoteErrorCategory::Unauthorized
+            }
+            error::ProviderFailureKind::Forbidden => {
+                sensitive::RemoteErrorCategory::Forbidden
             }
             error::ProviderFailureKind::RateLimited => {
                 sensitive::RemoteErrorCategory::RateLimited
             }
             error::ProviderFailureKind::MalformedPayload => {
                 sensitive::RemoteErrorCategory::MalformedPayload
+            }
+            error::ProviderFailureKind::Timeout => sensitive::RemoteErrorCategory::Timeout,
+            error::ProviderFailureKind::ServerError => {
+                sensitive::RemoteErrorCategory::ServerError
             }
             error::ProviderFailureKind::Transport => {
                 sensitive::RemoteErrorCategory::Transport
@@ -853,20 +913,33 @@ fn provider_error_category(error: &Error) -> Option<sensitive::RemoteErrorCatego
     }
 }
 
+fn provider_error_status_code(error: &Error) -> Option<u16> {
+    match error {
+        Error::Provider { status_code, .. } => *status_code,
+        _ => None,
+    }
+}
+
 fn successful_integration_state(
     boundary_meta: &ProviderBoundaryMeta,
     cursor: Option<sensitive::SyncCursor>,
     token_strategy: sensitive::TokenStrategy,
+    auth_outcome: sensitive::FetchOutcome,
     finished_at: SystemTime,
 ) -> sensitive::IntegrationState {
     sensitive::IntegrationState::builder()
         .provider(PROVIDER)
         .mode(boundary_meta.mode)
         .endpoint(boundary_meta.endpoint.clone())
+        .maybe_auth_mode(boundary_meta.auth_mode)
         .maybe_cursor(cursor)
         .last_fetch_outcome(sensitive::FetchOutcome::Success)
         .token_strategy(token_strategy)
         .maybe_last_error_category(None)
+        .maybe_last_auth_outcome(Some(auth_outcome))
+        .maybe_last_remote_status_code(None)
+        .maybe_retry_backoff_secs(None)
+        .maybe_last_successful_mode(Some(boundary_meta.mode))
         .maybe_last_successful_fetch_at(Some(finished_at))
         .last_attempted_fetch_at(finished_at)
         .failure_count(0)
@@ -879,16 +952,23 @@ fn failed_integration_state(
     cursor: Option<sensitive::SyncCursor>,
     token_strategy: sensitive::TokenStrategy,
     error_category: Option<sensitive::RemoteErrorCategory>,
+    status_code: Option<u16>,
+    auth_outcome: Option<sensitive::FetchOutcome>,
     attempted_at: SystemTime,
 ) -> sensitive::IntegrationState {
     sensitive::IntegrationState::builder()
         .provider(PROVIDER)
         .mode(boundary_meta.mode)
         .endpoint(boundary_meta.endpoint.clone())
+        .maybe_auth_mode(boundary_meta.auth_mode)
         .maybe_cursor(cursor)
         .last_fetch_outcome(sensitive::FetchOutcome::Failed)
         .token_strategy(token_strategy)
         .maybe_last_error_category(error_category)
+        .maybe_last_auth_outcome(auth_outcome)
+        .maybe_last_remote_status_code(status_code)
+        .maybe_retry_backoff_secs(retry_backoff_for(boundary_meta, error_category))
+        .maybe_last_successful_mode(previous_successful_mode(previous_state))
         .maybe_last_successful_fetch_at(
             previous_state.and_then(|state| state.last_successful_fetch_at),
         )
@@ -899,6 +979,27 @@ fn failed_integration_state(
                 .unwrap_or(1),
         )
         .build()
+}
+
+fn previous_successful_mode(
+    previous_state: Option<&sensitive::IntegrationState>,
+) -> Option<sensitive::ProviderMode> {
+    previous_state.and_then(|state| state.last_successful_mode.or(Some(state.mode)))
+}
+
+fn retry_backoff_for(
+    boundary_meta: &ProviderBoundaryMeta,
+    error_category: Option<sensitive::RemoteErrorCategory>,
+) -> Option<u32> {
+    match error_category {
+        Some(
+            sensitive::RemoteErrorCategory::RateLimited
+            | sensitive::RemoteErrorCategory::Timeout
+            | sensitive::RemoteErrorCategory::ServerError
+            | sensitive::RemoteErrorCategory::Transport,
+        ) => boundary_meta.retry_backoff_secs,
+        _ => None,
+    }
 }
 
 fn debug_timestamp(value: SystemTime) -> u64 {
@@ -1070,6 +1171,8 @@ impl ProviderClient for DisabledProvider {
                 sensitive::DetailText::try_new("disabled local boundary")
                     .expect("detail text"),
             )
+            .maybe_auth_mode(None)
+            .maybe_retry_backoff_secs(None)
             .build()
     }
 
@@ -1239,11 +1342,12 @@ mod tests {
             let mut state = self.state.lock().expect("repo state");
             state.token = Some(token.clone());
             state.token_writes += 1;
-            state.key_custody.token_counts =
-                vec![sensitive::KeyedCiphertextCount::builder()
+            state.key_custody.token_counts = vec![
+                sensitive::KeyedCiphertextCount::builder()
                     .key_id(active_key_id())
                     .count(1)
-                    .build()];
+                    .build(),
+            ];
             state.key_custody.stale_token_count = 0;
             Ok(())
         }
@@ -1286,11 +1390,12 @@ mod tests {
                         .build()
                 })
                 .collect();
-            state.key_custody.record_counts =
-                vec![sensitive::KeyedCiphertextCount::builder()
+            state.key_custody.record_counts = vec![
+                sensitive::KeyedCiphertextCount::builder()
                     .key_id(active_key_id())
                     .count(state.snapshot.records.len() as u32)
-                    .build()];
+                    .build(),
+            ];
             state.key_custody.stale_record_count = 0;
 
             Ok(upserted)
@@ -1313,22 +1418,25 @@ mod tests {
             let mut state = self.state.lock().expect("repo state");
             let stale_token_count = state.key_custody.stale_token_count;
             let stale_record_count = state.key_custody.stale_record_count;
-            let rows_scanned =
-                stale_token_count.saturating_add(stale_record_count).min(limit as u32);
+            let rows_scanned = stale_token_count
+                .saturating_add(stale_record_count)
+                .min(limit as u32);
             let rows_rewrapped = rows_scanned;
             state.key_custody.stale_token_count = stale_token_count.saturating_sub(1);
-            state.key_custody.stale_record_count =
-                stale_record_count.saturating_sub(rows_rewrapped.saturating_sub(stale_token_count.min(1)));
-            state.key_custody.token_counts =
-                vec![sensitive::KeyedCiphertextCount::builder()
+            state.key_custody.stale_record_count = stale_record_count
+                .saturating_sub(rows_rewrapped.saturating_sub(stale_token_count.min(1)));
+            state.key_custody.token_counts = vec![
+                sensitive::KeyedCiphertextCount::builder()
                     .key_id(active_key_id())
                     .count(1)
-                    .build()];
-            state.key_custody.record_counts =
-                vec![sensitive::KeyedCiphertextCount::builder()
+                    .build(),
+            ];
+            state.key_custody.record_counts = vec![
+                sensitive::KeyedCiphertextCount::builder()
                     .key_id(active_key_id())
                     .count(state.snapshot.records.len() as u32)
-                    .build()];
+                    .build(),
+            ];
 
             Ok(KeyRotationProgress::builder()
                 .active_key_id(active_key_id())
@@ -1336,7 +1444,9 @@ mod tests {
                 .rows_rewrapped(rows_rewrapped)
                 .rows_already_current(0)
                 .rows_failed(0)
-                .detail(rotation_detail_text("stale ciphertext rewrapped to the active key"))
+                .detail(rotation_detail_text(
+                    "stale ciphertext rewrapped to the active key",
+                ))
                 .build())
         }
 
@@ -1417,6 +1527,8 @@ mod tests {
                     sensitive::DetailText::try_new("http://127.0.0.1:4001")
                         .expect("detail text"),
                 )
+                .maybe_auth_mode(Some(sensitive::ProviderAuthMode::StubIssuedToken))
+                .maybe_retry_backoff_secs(None)
                 .build()
         }
 
@@ -1504,14 +1616,18 @@ mod tests {
                     .status(sensitive::CipherKeyStatus::ReadOnlyLegacy)
                     .build(),
             ])
-            .token_counts(vec![sensitive::KeyedCiphertextCount::builder()
-                .key_id(legacy_key_id())
-                .count(1)
-                .build()])
-            .record_counts(vec![sensitive::KeyedCiphertextCount::builder()
-                .key_id(legacy_key_id())
-                .count(1)
-                .build()])
+            .token_counts(vec![
+                sensitive::KeyedCiphertextCount::builder()
+                    .key_id(legacy_key_id())
+                    .count(1)
+                    .build(),
+            ])
+            .record_counts(vec![
+                sensitive::KeyedCiphertextCount::builder()
+                    .key_id(legacy_key_id())
+                    .count(1)
+                    .build(),
+            ])
             .stale_token_count(1)
             .stale_record_count(1)
             .maybe_last_rotation_run(None)
@@ -1625,6 +1741,8 @@ mod tests {
                     sensitive::DetailText::try_new("http://127.0.0.1:4001")
                         .expect("detail text"),
                 )
+                .maybe_auth_mode(Some(sensitive::ProviderAuthMode::StubIssuedToken))
+                .maybe_retry_backoff_secs(None)
                 .build()
         }
 
@@ -1674,6 +1792,8 @@ mod tests {
                     sensitive::DetailText::try_new("http://127.0.0.1:4001")
                         .expect("detail text"),
                 )
+                .maybe_auth_mode(Some(sensitive::ProviderAuthMode::StubIssuedToken))
+                .maybe_retry_backoff_secs(None)
                 .build()
         }
 

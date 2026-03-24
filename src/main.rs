@@ -32,23 +32,25 @@ async fn main() -> error::Result<()> {
         .await
         .context(error::InitInfraSnafu)?;
 
-    let provider_stub_addr = cfg.sensitive.provider_stub_addr();
-    let provider_stub_listener = tokio::net::TcpListener::bind(&provider_stub_addr)
-        .await
-        .context(error::BindSensitiveProviderListenerSnafu {
-        addr: provider_stub_addr.clone(),
-    })?;
-    let provider_stub =
-        sensitive_provider_stub::router(cfg.sensitive.provider_stub_failure_mode);
-    tokio::spawn(async move {
-        if let Err(error) = axum::serve(provider_stub_listener, provider_stub).await {
-            tracing::warn!(?error, "sensitive provider stub exited");
-        }
-    });
-    tracing::info!(
-        "sensitive provider stub listening on http://{}",
-        provider_stub_addr
-    );
+    if cfg.sensitive.provider_mode == config::SensitiveProviderRuntimeMode::Stub {
+        let provider_stub_addr = cfg.sensitive.provider_stub_addr();
+        let provider_stub_listener = tokio::net::TcpListener::bind(&provider_stub_addr)
+            .await
+            .context(error::BindSensitiveProviderListenerSnafu {
+                addr: provider_stub_addr.clone(),
+            })?;
+        let provider_stub =
+            sensitive_provider_stub::router(cfg.sensitive.provider_stub_failure_mode);
+        tokio::spawn(async move {
+            if let Err(error) = axum::serve(provider_stub_listener, provider_stub).await {
+                tracing::warn!(?error, "sensitive provider stub exited");
+            }
+        });
+        tracing::info!(
+            "sensitive provider stub listening on http://{}",
+            provider_stub_addr
+        );
+    }
 
     let user_repo = Arc::new(infra::repo::user::Repository::new(infra.db.clone()));
     let auth_hasher = Arc::new(infra::auth::Argon2Hasher::new());
@@ -83,10 +85,28 @@ async fn main() -> error::Result<()> {
         infra.db.clone(),
         sensitive_crypto,
     ));
-    let sensitive_provider = Arc::new(infra::sensitive_boundary::HttpProvider::new(
-        infra.http.clone(),
-        &cfg.sensitive.provider_base_url(),
-    ));
+    let sensitive_provider = Arc::new(match cfg.sensitive.provider_mode {
+        config::SensitiveProviderRuntimeMode::Stub => {
+            infra::sensitive_boundary::HttpProvider::new_stub(
+                infra.http.clone(),
+                &cfg.sensitive
+                    .provider_base_url()
+                    .expect("stub provider base url should exist"),
+            )
+        }
+        config::SensitiveProviderRuntimeMode::SandboxHttp => {
+            infra::sensitive_boundary::HttpProvider::new_sandbox(
+                infra.http.clone(),
+                infra::sensitive_boundary::SandboxHttpConfig {
+                    base_url: cfg.sensitive.sandbox.base_url.clone(),
+                    client_id: cfg.sensitive.sandbox.client_id.clone(),
+                    client_secret: cfg.sensitive.sandbox.client_secret.clone(),
+                    timeout_secs: cfg.sensitive.sandbox.timeout_secs,
+                    retry_backoff_secs: cfg.sensitive.sandbox.retry_backoff_secs,
+                },
+            )
+        }
+    });
     let sensitive_clock = Arc::new(infra::sensitive::SystemClock::new());
     let sensitive_bootstrap = app::sensitive::BootstrapGrants::new(
         cfg.sensitive.reader_emails.clone(),

@@ -195,6 +195,13 @@ fn boundary_items(snapshot: &app::sensitive::Snapshot) -> Vec<partials::StatusCa
             partials::StatusCardItem::text("mode", state.mode.as_ref()),
             partials::StatusCardItem::text("endpoint", state.endpoint.to_string()),
             partials::StatusCardItem::text(
+                "auth_mode",
+                state
+                    .auth_mode
+                    .map(|mode| mode.as_ref().to_string())
+                    .unwrap_or_else(|| "none".to_string()),
+            ),
+            partials::StatusCardItem::text(
                 "cursor",
                 state
                     .cursor
@@ -205,6 +212,13 @@ fn boundary_items(snapshot: &app::sensitive::Snapshot) -> Vec<partials::StatusCa
             partials::StatusCardItem::text(
                 "last_fetch_outcome",
                 state.last_fetch_outcome.as_ref(),
+            ),
+            partials::StatusCardItem::text(
+                "last_auth_outcome",
+                state
+                    .last_auth_outcome
+                    .map(|outcome| outcome.as_ref().to_string())
+                    .unwrap_or_else(|| "none".to_string()),
             ),
             partials::StatusCardItem::text(
                 "token_strategy",
@@ -222,6 +236,27 @@ fn boundary_items(snapshot: &app::sensitive::Snapshot) -> Vec<partials::StatusCa
                 state
                     .last_successful_fetch_at
                     .map(format_proof_time)
+                    .unwrap_or_else(|| "none".to_string()),
+            ),
+            partials::StatusCardItem::text(
+                "last_remote_status_code",
+                state
+                    .last_remote_status_code
+                    .map(|code| code.to_string())
+                    .unwrap_or_else(|| "none".to_string()),
+            ),
+            partials::StatusCardItem::text(
+                "retry_backoff_secs",
+                state
+                    .retry_backoff_secs
+                    .map(|secs| secs.to_string())
+                    .unwrap_or_else(|| "none".to_string()),
+            ),
+            partials::StatusCardItem::text(
+                "last_successful_mode",
+                state
+                    .last_successful_mode
+                    .map(|mode| mode.as_ref().to_string())
                     .unwrap_or_else(|| "none".to_string()),
             ),
             partials::StatusCardItem::text(
@@ -497,16 +532,27 @@ mod tests {
                         )
                         .expect("detail"),
                     )
+                    .maybe_auth_mode(Some(
+                        domain::sensitive::ProviderAuthMode::StubIssuedToken,
+                    ))
                     .maybe_cursor(Some(
                         domain::sensitive::SyncCursor::try_new("cursor-gamma")
                             .expect("cursor"),
                     ))
                     .last_fetch_outcome(domain::sensitive::FetchOutcome::Success)
+                    .maybe_last_auth_outcome(Some(
+                        domain::sensitive::FetchOutcome::Success,
+                    ))
                     .token_strategy(
                         domain::sensitive::TokenStrategy::RetryAfterUnauthorized,
                     )
                     .maybe_last_error_category(Some(
                         domain::sensitive::RemoteErrorCategory::Unauthorized,
+                    ))
+                    .maybe_last_remote_status_code(Some(401))
+                    .maybe_retry_backoff_secs(Some(45))
+                    .maybe_last_successful_mode(Some(
+                        domain::sensitive::ProviderMode::LocalStub,
                     ))
                     .maybe_last_successful_fetch_at(Some(UNIX_EPOCH))
                     .last_attempted_fetch_at(UNIX_EPOCH)
@@ -668,5 +714,76 @@ mod tests {
         assert!(markup.contains("guest"));
         assert!(markup.contains("authorized_record_read"));
         assert!(markup.contains("denied"));
+    }
+
+    #[test]
+    fn renders_sandbox_boundary_state_for_operator() {
+        let snapshot = app::sensitive::Snapshot::builder()
+            .viewer(
+                app::sensitive::ViewerState::builder()
+                    .tier(app::sensitive::ViewerTier::SensitiveOperator)
+                    .capabilities(vec![
+                        domain::sensitive::AccessCapability::AuthorizedRecordRead,
+                        domain::sensitive::AccessCapability::TokenStatusRead,
+                        domain::sensitive::AccessCapability::AccessAuditRead,
+                    ])
+                    .build(),
+            )
+            .maybe_token(None)
+            .maybe_latest_sync(None)
+            .maybe_integration_state(Some(
+                domain::sensitive::IntegrationState::builder()
+                    .provider(domain::sensitive::Provider::SyntheticSecureFeed)
+                    .mode(domain::sensitive::ProviderMode::SandboxHttp)
+                    .endpoint(
+                        domain::sensitive::DetailText::try_new(
+                            "https://sandbox.example.test/",
+                        )
+                        .expect("detail"),
+                    )
+                    .maybe_auth_mode(Some(
+                        domain::sensitive::ProviderAuthMode::ClientCredentials,
+                    ))
+                    .maybe_cursor(Some(
+                        domain::sensitive::SyncCursor::try_new("cursor-sandbox")
+                            .expect("cursor"),
+                    ))
+                    .last_fetch_outcome(domain::sensitive::FetchOutcome::Failed)
+                    .maybe_last_auth_outcome(Some(
+                        domain::sensitive::FetchOutcome::Failed,
+                    ))
+                    .token_strategy(
+                        domain::sensitive::TokenStrategy::RefreshedToken,
+                    )
+                    .maybe_last_error_category(Some(
+                        domain::sensitive::RemoteErrorCategory::Forbidden,
+                    ))
+                    .maybe_last_remote_status_code(Some(403))
+                    .maybe_retry_backoff_secs(Some(45))
+                    .maybe_last_successful_mode(Some(
+                        domain::sensitive::ProviderMode::LocalStub,
+                    ))
+                    .maybe_last_successful_fetch_at(None)
+                    .last_attempted_fetch_at(UNIX_EPOCH)
+                    .failure_count(2)
+                    .build(),
+            ))
+            .records(Vec::new())
+            .maybe_authorized_record(None)
+            .access_events(Vec::new())
+            .build();
+
+        let markup = SensitiveProof::builder()
+            .snapshot(snapshot)
+            .trace(Vec::new())
+            .build()
+            .render()
+            .into_string();
+
+        assert!(markup.contains("sandbox_http"));
+        assert!(markup.contains("client_credentials"));
+        assert!(markup.contains("403"));
+        assert!(markup.contains("retry_backoff_secs"));
+        assert!(markup.contains("local_stub"));
     }
 }

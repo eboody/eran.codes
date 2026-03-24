@@ -31,7 +31,7 @@ Today the repo proves durable auth and session handling, encrypted sensitive-dat
 - **Secure session posture.** `axum-login`, `tower-sessions`, Argon2, and Postgres-backed session storage are wired into the running app.
 - **Encrypted sensitive-data handling.** Provider tokens and authorized record payloads are stored encrypted at rest, while reviewer-facing proof surfaces expose only redacted data until the authorized path is used.
 - **Key custody evidence.** Ciphertext carries explicit key IDs, new writes use the active key, readable legacy keys keep old ciphertext decryptable, and bounded rotation passes re-seal stale ciphertext over time.
-- **Bounded integration proof.** A local HTTP-backed stub provider, background token refresh, and periodic sync loops prove transport handling, token lifecycle, and sync-state behavior without claiming live third-party integrations.
+- **Bounded integration proof.** Stub mode stays deterministic by default, and an opt-in sandbox HTTP mode can exercise live outbound transport, credential exchange, pagination, and degraded-boundary handling without claiming production vendor operations.
 - **Trust boundaries that stay explicit.** `http`, `app`, `domain`, and `infra` remain separate, so policy and mechanism do not blur together.
 - **Inspectable runtime behavior.** Request metadata, backend flow, and live operational timelines are visible in the UI instead of hidden behind architecture prose.
 - **Realtime delivery as supporting proof.** SSE + Datastar are used to make state changes and transport behavior observable, not as the whole thesis by themselves.
@@ -94,7 +94,7 @@ These pages expose runtime behavior directly in the UI.
 | --- | --- | --- |
 | Lab | [`/lab`](https://eran.codes/lab) | Auth/session posture, encrypted-storage proof, key-custody state, token lifecycle state, sync outcomes, request traces, and SSE transport in one place |
 | Auth durability | [`/register`](https://eran.codes/register) -> [`/login`](https://eran.codes/login) -> [`/protected`](https://eran.codes/protected) | Session lifecycle, auth enforcement, and secure persistent sessions |
-| Sensitive sync case | [`/work/sensitive-sync`](https://eran.codes/work/sensitive-sync) | Current shipped proof of encrypted-at-rest storage, key-versioned ciphertext, persisted sensitive-access grants, local HTTP boundary handling, bounded sync, denied reads, and audited authorized access |
+| Sensitive sync case | [`/work/sensitive-sync`](https://eran.codes/work/sensitive-sync) | Current shipped proof of encrypted-at-rest storage, key-versioned ciphertext, persisted sensitive-access grants, stub-or-sandbox HTTP boundary handling, bounded sync, denied reads, and audited authorized access |
 | Supporting proof archive | [`/work`](https://eran.codes/work) | Archived chat, SSE, and operational case details collapsed into one supporting-proof surface |
 
 While interacting, watch the operational timeline panel. It shows requests, commands, and state changes as they happen.
@@ -142,12 +142,20 @@ Keyring environment:
 - `ACTIVE_DATA_KEY_ID`
 - `DISABLED_DATA_KEY_IDS` as an optional comma-separated list
 
+Provider mode environment:
+- `SENSITIVE_PROVIDER_MODE` (`stub` or `sandbox_http`, defaults to `stub`)
+- `SENSITIVE_PROVIDER_BASE_URL` for sandbox mode
+- `SENSITIVE_SANDBOX_CLIENT_ID` for sandbox mode
+- `SENSITIVE_SANDBOX_CLIENT_SECRET` for sandbox mode
+
 Optional environment:
 - `SESSION_CLEANUP_INTERVAL_SECS` (default `3600`)
 - `INTEGRATION_TOKEN_REFRESH_INTERVAL_SECS` (default `900`)
 - `INTEGRATION_SYNC_INTERVAL_SECS` (default `1200`)
 - `ENCRYPTION_ROTATION_INTERVAL_SECS` (default `1800`)
 - `ENCRYPTION_ROTATION_BATCH_SIZE` (default `25`)
+- `SENSITIVE_SANDBOX_TIMEOUT_SECS` (default `10`)
+- `SENSITIVE_SANDBOX_RETRY_BACKOFF_SECS` (default `45`)
 - `INFRA_DB_MAX_CONNECTIONS` (default `10`)
 - `LOG_FORMAT` (`pretty` or `json`)
 

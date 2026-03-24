@@ -4,7 +4,7 @@
     "page_title": "Current Proof | Encrypted Sensitive Record Sync",
     "eyebrow": "Current Proof · Secure Systems Runtime",
     "title": "Encrypted sensitive records, provider-token lifecycle, and bounded background sync",
-    "summary": "This repo now ships a narrow runtime proof slice for secure backend work: provider tokens and authorized payloads are stored encrypted with explicit key IDs, a local HTTP-backed stub feed syncs into Postgres on a background loop, and the live lab shows persisted sensitive-access grants, key-custody evidence, denied reads, and audited authorized access.",
+    "summary": "This repo now ships a narrow runtime proof slice for secure backend work: provider tokens and authorized payloads are stored encrypted with explicit key IDs, stub mode syncs deterministically by default, sandbox mode can run real outbound HTTPS when configured, and the live lab shows persisted sensitive-access grants, key-custody evidence, denied reads, and audited authorized access.",
     "challenge": {
       "title": "Challenge",
       "items": [
@@ -18,7 +18,7 @@
       "items": [
         "Added a new sensitive-data bounded context across domain, app, infra, and HTTP without splitting the repo into new crates.",
         "Stored provider tokens and authorized record payloads with AES-256-GCM encryption, while keeping only redacted labels and last-four evidence queryable in cleartext.",
-        "Wired a local HTTP-backed stub provider, periodic token refresh, cursor-based record sync, key-versioned ciphertext storage, bounded background rewrap passes, persisted sensitive-access grants, and a live lab panel that exposes denied-vs-allowed reads with recent audit evidence."
+        "Wired a two-mode provider boundary: deterministic local stub by default, plus an opt-in sandbox HTTP adapter with credential exchange, bounded retry/backoff state, cursor-based record sync, key-versioned ciphertext storage, persisted sensitive-access grants, and a live lab panel that exposes denied-vs-allowed reads with recent audit evidence."
       ]
     },
     "outcomes": {
@@ -26,7 +26,7 @@
       "items": [
         "The repo now backs secure-systems claims with a running encrypted-storage, key-rotation, and background-sync slice instead of only narrative direction.",
         "Reviewers can inspect operator-only token status, last sync state, redacted records, ciphertext evidence, key-custody state, denied reads, and audited authorized-read boundaries in the live app.",
-        "The implementation stays sanitized and bounded: stubbed provider data over a real HTTP boundary, explicit trust boundaries, and no overclaim about real PHI or live third-party integrations."
+        "The implementation stays sanitized and bounded: deterministic stub mode for repeatable proof runs, an opt-in sandbox mode for real outbound HTTPS, explicit trust boundaries, and no overclaim about PHI or production vendor operations."
       ]
     },
     "stack": {

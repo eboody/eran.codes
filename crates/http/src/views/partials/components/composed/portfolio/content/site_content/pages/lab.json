@@ -51,7 +51,7 @@
   },
   "sensitive_proof": {
     "title": "Sensitive record proof",
-    "subtitle": "Inspect encrypted-at-rest storage, key-custody state, capability-backed authorized reads, operator-only token visibility, denied-read evidence, and recent access audit state.",
+    "subtitle": "Inspect encrypted-at-rest storage, key-custody state, stub-vs-sandbox boundary mode, capability-backed authorized reads, operator-only token visibility, denied-read evidence, and recent access audit state.",
     "empty_message": "No sensitive-data snapshot loaded yet. Refresh the panel to inspect the current proof surface.",
     "action_label": "Refresh proof"
   },

@@ -8,7 +8,7 @@ These demos now back the secure-systems thesis at a bounded but honest runtime s
 - Encrypted storage: provider tokens and authorized record payloads are stored encrypted at rest in Postgres.
 - Background jobs: startup bootstrapping plus repeating token-refresh and sync loops keep the proof surface current.
 - Redacted vs authorized reads: `/lab` shows guest-safe redacted summaries, denied signed-in reads without grants, and audited authorized detail from the same stored records.
-- Scope guard: the provider is a local HTTP-backed stub and the records are sanitized. The repo proves secure mechanics and transport boundaries, not live healthcare or live vendor integrations.
+- Scope guard: stub mode stays deterministic by default, sandbox mode is opt-in, and the records are sanitized. The repo proves secure mechanics and transport boundaries, not production healthcare or vendor integrations.
 
 ## Identity & Session Durability
 - Auth flow: axum-login provider + AuthSession extractor.
