@@ -152,6 +152,21 @@ const STYLES: &str = r#"
     overflow-wrap: anywhere;
   }
 }
+
+@media (max-width: 20rem) {
+  .ui-pill--log-fields,
+  .ui-pill--path {
+    max-inline-size: 100%;
+    align-items: flex-start;
+    padding-inline: 0.42rem;
+    font-size: var(--text-size-label-2xs);
+    line-height: var(--text-line-reading);
+    text-align: left;
+    white-space: normal;
+    overflow-wrap: anywhere;
+    word-break: break-word;
+  }
+}
 "#;
 
 pub(crate) fn head_styles() -> maud::Markup {

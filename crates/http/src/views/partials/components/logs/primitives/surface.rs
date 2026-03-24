@@ -150,11 +150,13 @@ me .ui-log-group-header {
   align-items: center;
   gap: var(--space-2);
   margin-bottom: var(--space-2);
+  min-width: 0;
 }
 
 me .ui-log-flow-shell {
   display: grid;
   gap: var(--log-flow-shell-gap, var(--space-3));
+  min-width: 0;
 }
 
 me .ui-log-flow-list {
@@ -232,18 +234,21 @@ me .ui-log-flow-item-id {
   font-size: var(--text-size-label-2xs);
   letter-spacing: var(--text-track-fixed-xs);
   color: var(--ui-text-muted);
+  overflow-wrap: anywhere;
 }
 
 me .ui-log-flow-item-title {
   font-size: var(--text-size-meta-lg);
   font-weight: 600;
   line-height: var(--text-line-snug);
+  overflow-wrap: anywhere;
 }
 
 me .ui-log-flow-item-meta {
   display: inline-flex;
   align-items: center;
   gap: var(--space-2);
+  flex-wrap: wrap;
 }
 
 me .ui-log-flow-item-time {
@@ -319,6 +324,7 @@ me .ui-log-flow-event-summary {
   margin: 0;
   font-size: var(--text-size-meta-md);
   line-height: var(--text-line-summary);
+  overflow-wrap: anywhere;
 }
 
 me .ui-log-flow-event-summary-inline {
@@ -386,6 +392,57 @@ me .ui-log-flow-event-summary-inline {
 @media (max-width: 20rem) {
   me[data-log-panels] {
     grid-template-columns: 1fr;
+  }
+
+  me .ui-log-panel {
+    gap: var(--space-2);
+    padding: var(--space-2) var(--space-3);
+  }
+
+  me .ui-log-scroll {
+    max-height: 12rem;
+    gap: var(--space-3);
+    padding-right: 0;
+    scrollbar-gutter: auto;
+  }
+
+  me .ui-log-groups,
+  me .ui-log-flow-list {
+    gap: var(--space-1);
+  }
+
+  me .ui-log-group {
+    padding: var(--space-2);
+  }
+
+  me .ui-log-group-header,
+  me .ui-log-entry,
+  me .ui-log-flow-event-head,
+  me .ui-log-flow-detail-header {
+    align-items: flex-start;
+    gap: var(--space-1);
+  }
+
+  me .ui-log-flow-shell {
+    gap: var(--space-2);
+  }
+
+  me .ui-log-flow-item {
+    gap: calc(var(--space-1) * 0.75);
+    padding: var(--space-2);
+  }
+
+  me .ui-log-flow-item-title,
+  me .ui-log-flow-event-summary,
+  me [data-log-message] {
+    font-size: var(--text-size-label-sm);
+    line-height: var(--text-line-reading);
+  }
+
+  me [data-log-timestamp],
+  me .ui-log-flow-item-id,
+  me .ui-log-flow-item-time {
+    font-size: var(--text-size-label-2xs);
   }
 }
 "#

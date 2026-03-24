@@ -152,6 +152,25 @@ me .ui-code-block__token--macro {
   }
 }
 
+@media (max-width: 20rem) {
+  me {
+    --_code-block-padding: 0.68rem;
+    --_code-block-font-size: var(--text-size-label-sm);
+    gap: calc(var(--space-1) * 0.75);
+  }
+
+  me [data-code-block-header] {
+    align-items: flex-start;
+    flex-direction: column;
+    gap: calc(var(--space-1) * 0.75);
+  }
+
+  me pre {
+    padding-block-start: 0;
+    scrollbar-gutter: auto;
+  }
+}
+
 @media (prefers-color-scheme: dark) {
   me {
     --_code-block-border-color: color-mix(

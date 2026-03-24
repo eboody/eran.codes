@@ -32,6 +32,8 @@ me dt {
   letter-spacing: var(--text-track-caps-wide);
   text-transform: uppercase;
   color: var(--text-subtle);
+  overflow-wrap: anywhere;
+  word-break: break-word;
 }
 
 me dd {
@@ -87,6 +89,19 @@ me[data-key-value-layout='metrics-grid'] dd {
 }
 
 @media (max-width: 20rem) {
+  me {
+    gap: var(--space-1);
+  }
+
+  me dt {
+    font-size: var(--text-size-label-2xs);
+    letter-spacing: var(--text-track-caps-sm);
+  }
+
+  me dd {
+    font-size: var(--text-size-label-sm);
+  }
+
   me[data-key-value-layout='metrics-grid'] {
     grid-template-columns: 1fr;
   }
