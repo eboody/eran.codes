@@ -10,6 +10,7 @@ mod closing;
 mod crate_section;
 mod experience;
 mod hero;
+mod open_source_intro;
 mod skill_groups;
 mod work;
 
@@ -18,6 +19,7 @@ pub use closing::ClosingSection;
 pub use crate_section::CrateSection;
 pub use experience::ExperienceSection;
 pub use hero::PortfolioHero;
+pub use open_source_intro::{OpenSourceHeroAside, OpenSourceMobileIntro};
 pub use skill_groups::SkillGroupsSection;
 pub use work::{SupportingTeaserSection, WorkIndexSection, WorkSection, WorkSectionVariant};
 

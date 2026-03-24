@@ -39,20 +39,20 @@ me .ui-portfolio-lead-surface h1 {
   max-width: 18ch;
 }
 
-me [data-open-source-hero-aside] {
+me .ui-open-source-hero-aside {
   gap: var(--space-3);
 }
 
-me [data-open-source-hero-intro] {
+me .ui-open-source-hero-intro {
   display: grid;
   gap: var(--space-1);
 }
 
-me [data-open-source-hero-intro] p {
+me .ui-open-source-hero-intro p {
   margin: 0;
 }
 
-me [data-open-source-hero-list] {
+me .ui-open-source-hero-list {
   margin: 0;
   padding: 0;
   list-style: none;
@@ -60,32 +60,32 @@ me [data-open-source-hero-list] {
   gap: var(--space-2);
 }
 
-me [data-open-source-hero-item] {
+me .ui-open-source-hero-item {
   display: grid;
   gap: 0.35rem;
   padding-top: var(--space-2);
   border-top: 1px solid color-mix(in srgb, var(--ui-border-soft) 78%, transparent);
 }
 
-me [data-open-source-hero-item] strong,
-me [data-open-source-hero-footnote] strong {
+me .ui-open-source-hero-item strong,
+me .ui-open-source-hero-footnote strong {
   font-size: var(--text-size-label-sm);
   letter-spacing: var(--text-track-ui);
 }
 
-me [data-open-source-hero-item] p,
-me [data-open-source-hero-footnote] {
+me .ui-open-source-hero-item p,
+me .ui-open-source-hero-footnote {
   margin: 0;
   color: var(--ui-text-muted);
 }
 
-me [data-open-source-hero-item-tags] {
+me .ui-open-source-hero-item-tags {
   display: flex;
   flex-wrap: wrap;
   gap: 0.35rem;
 }
 
-me [data-open-source-hero-item-tag] {
+me .ui-open-source-hero-item-tag {
   padding: 0.18rem 0.48rem;
   border-radius: var(--radius-pill);
   border: 1px solid color-mix(in srgb, var(--ui-border-soft) 76%, transparent);
@@ -96,12 +96,12 @@ me [data-open-source-hero-item-tag] {
   color: var(--ui-text-muted);
 }
 
-me [data-open-source-hero-footnote] {
+me .ui-open-source-hero-footnote {
   padding-top: var(--space-2);
   border-top: 1px solid color-mix(in srgb, var(--ui-border-soft) 78%, transparent);
 }
 
-me [data-open-source-mobile-intro] {
+me .ui-open-source-mobile-intro {
   display: none;
 }
 
@@ -169,11 +169,11 @@ me .ui-portfolio-crate-section--standalone .ui-code-block {
     max-inline-size: none;
   }
 
-  me [data-open-source-hero-aside] {
+  me .ui-open-source-hero-aside {
     display: none;
   }
 
-  me [data-open-source-mobile-intro] {
+  me .ui-open-source-mobile-intro {
     display: grid;
     gap: var(--space-1);
     margin-top: var(--space-1);
@@ -181,7 +181,7 @@ me .ui-portfolio-crate-section--standalone .ui-code-block {
     border-top: 1px solid color-mix(in srgb, var(--ui-border-soft) 72%, transparent);
   }
 
-  me [data-open-source-mobile-intro-eyebrow] {
+  me .ui-open-source-mobile-intro-eyebrow {
     margin: 0;
     font-size: var(--text-size-meta-xs);
     letter-spacing: var(--text-track-caps-sm);
@@ -189,7 +189,7 @@ me .ui-portfolio-crate-section--standalone .ui-code-block {
     color: var(--ui-text-muted);
   }
 
-  me [data-open-source-mobile-intro] .ui-portfolio-summary {
+  me .ui-open-source-mobile-intro .ui-portfolio-summary {
     font-size: var(--text-size-body-md);
     line-height: 1.55;
   }
@@ -234,7 +234,7 @@ me .ui-portfolio-crate-section--standalone .ui-code-block {
     line-height: 1.52;
   }
 
-  me [data-open-source-mobile-intro] {
+  me .ui-open-source-mobile-intro {
     gap: calc(var(--space-1) * 0.75);
     margin-top: calc(var(--space-1) * 0.75);
     padding-top: var(--space-1);
@@ -260,33 +260,6 @@ pub struct OpenSource {
 impl Render for OpenSource {
     fn render(&self) -> maud::Markup {
         let content = partials::components::portfolio::content::open_source_index_content();
-        let hero_aside = maud::html! {
-            div data-open-source-hero-aside {
-                div data-open-source-hero-intro {
-                    p class="ui-portfolio-hero-aside-kicker" { "Library proof" }
-                    h2 { "Three crates. One invariants-first through-line." }
-                    p class="ui-portfolio-card-summary" {
-                        "Typestate, nested enum modeling, and namespace discipline packaged as reusable Rust APIs."
-                    }
-                }
-                ul data-open-source-hero-list {
-                    @for card in content.crate_section.cards.iter().take(3) {
-                        li data-open-source-hero-item {
-                            strong { (&card.name) }
-                            div data-open-source-hero-item-tags {
-                                @for tag in card.tags.iter().take(2) {
-                                    span data-open-source-hero-item-tag { (tag) }
-                                }
-                            }
-                        }
-                    }
-                }
-                p data-open-source-hero-footnote {
-                    strong { "What to inspect" }
-                    " Read the API, then check the code and docs against the same published surface."
-                }
-            }
-        };
 
         let body = partials::components::portfolio::Page {
             content: maud::html! {
@@ -294,14 +267,15 @@ impl Render for OpenSource {
                     (css())
                     (partials::components::portfolio::PortfolioHero {
                         content: &content.hero,
-                        aside: Some(hero_aside),
+                        aside: Some(maud::html! {
+                            (partials::components::portfolio::OpenSourceHeroAside {
+                                crate_section: &content.crate_section,
+                            })
+                        }),
                     })
-                    div data-open-source-mobile-intro {
-                        p data-open-source-mobile-intro-eyebrow { "Crate walkthrough" }
-                        p class="ui-portfolio-summary" {
-                            (&content.crate_section.subtitle)
-                        }
-                    }
+                    (partials::components::portfolio::OpenSourceMobileIntro {
+                        crate_section: &content.crate_section,
+                    })
                     (partials::components::portfolio::CrateSection {
                         content: &content.crate_section,
                         show_heading: false,
@@ -333,7 +307,7 @@ mod tests {
         assert!(markup.contains("Library proof"));
         assert!(markup.contains("Three crates. One invariants-first through-line."));
         assert!(markup.contains("What to inspect"));
-        assert!(markup.contains("data-open-source-hero-item-tag"));
+        assert!(markup.contains("ui-open-source-hero-item-tag"));
         assert!(markup.contains("data-portfolio-crate-switcher"));
         assert!(markup.contains("data-code-block"));
         assert!(markup.contains("ui-portfolio-hero-aside"));

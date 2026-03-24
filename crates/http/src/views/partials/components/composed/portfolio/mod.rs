@@ -841,9 +841,9 @@ pub mod content;
 mod sections;
 
 pub use sections::{
-    ArchiveCaseDetailsSection, ClosingSection, CrateSection, ExperienceSection, PortfolioHero,
-    SkillGroupsSection, SupportingTeaserSection, WorkCaseDetail, WorkIndexSection, WorkSection,
-    WorkSectionVariant,
+    ArchiveCaseDetailsSection, ClosingSection, CrateSection, ExperienceSection,
+    OpenSourceHeroAside, OpenSourceMobileIntro, PortfolioHero, SkillGroupsSection,
+    SupportingTeaserSection, WorkCaseDetail, WorkIndexSection, WorkSection, WorkSectionVariant,
 };
 
 pub struct Page {
