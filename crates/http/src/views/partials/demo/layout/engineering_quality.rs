@@ -1,7 +1,7 @@
 use bon::Builder;
 use maud::Render;
 
-use super::SectionHeader;
+use super::SurfaceSection;
 
 crate::views::scoped::inline_css!(
     r#"
@@ -73,13 +73,12 @@ impl Render for EngineeringQuality {
     fn render(&self) -> maud::Markup {
         let content = crate::views::partials::components::portfolio::content::lab_page_content();
 
-        maud::html! {
-            section id="engineering-quality" class="u-surface-card" {
+        SurfaceSection::builder()
+            .id(crate::types::Text::from("engineering-quality"))
+            .title(content.engineering_quality.title.clone())
+            .subtitle(content.engineering_quality.subtitle.clone())
+            .content(maud::html! {
                 (css())
-                (SectionHeader::builder()
-                    .title(content.engineering_quality.title.clone())
-                    .subtitle(content.engineering_quality.subtitle.clone())
-                    .build())
                 div data-info-grid {
                     @for card in &content.engineering_quality.cards {
                         article class="u-inset-card" data-info-card {
@@ -93,7 +92,8 @@ impl Render for EngineeringQuality {
                         }
                     }
                 }
-            }
-        }
+            })
+            .build()
+            .render()
     }
 }

@@ -4,7 +4,7 @@ use maud::{PreEscaped, Render};
 use crate::types::Text;
 use crate::views::partials;
 
-use super::SectionHeader;
+use super::{SurfaceSection, SurfaceSectionAttr};
 
 const REQUEST_BURST_SCRIPT: &str = include_str!(concat!(
     env!("CARGO_MANIFEST_DIR"),
@@ -179,21 +179,19 @@ pub struct RequestBurstDemo {
 
 impl Render for RequestBurstDemo {
     fn render(&self) -> maud::Markup {
-        maud::html! {
-            section
-                id="request-burst-demo"
-                class="u-surface-card"
-                data-request-burst-root
-                data-endpoint=(&self.endpoint)
-                data-concurrency=(self.concurrency)
-            {
+        SurfaceSection::builder()
+            .id(Text::from("request-burst-demo"))
+            .title(Text::from("High-Volume Request Burst"))
+            .subtitle(Text::from(
+                "Use the slider to send a large burst of requests from this browser and watch live request logs and SSE updates in real time.",
+            ))
+            .attrs(vec![
+                SurfaceSectionAttr::flag("data-request-burst-root"),
+                SurfaceSectionAttr::value("data-endpoint", self.endpoint.clone()),
+                SurfaceSectionAttr::value("data-concurrency", self.concurrency.to_string()),
+            ])
+            .content(maud::html! {
                 (css())
-                (SectionHeader::builder()
-                    .title(Text::from("High-Volume Request Burst"))
-                    .subtitle(Text::from(
-                        "Use the slider to send a large burst of requests from this browser and watch live request logs and SSE updates in real time.",
-                    ))
-                    .build())
                 div data-burst-controls {
                     label data-burst-slider {
                         span { "Request count" }
@@ -272,8 +270,9 @@ impl Render for RequestBurstDemo {
                     }
                 }
                 script { (PreEscaped(REQUEST_BURST_SCRIPT)) }
-            }
-        }
+            })
+            .build()
+            .render()
     }
 }
 

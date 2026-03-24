@@ -12,9 +12,9 @@ pub use components::{
 pub use components::Button;
 pub use demo::chat;
 pub use demo::{
-    AuthStatus, BoundaryCheck, DbCheck, EngineeringQuality, HomeHero,
-    OperationalRequestFilter, Ping, RequestBurstDemo, RequestMeta,
-    RequestTraceLog, SessionStatus, TabSetShowcase, TransportLogSet,
-    SensitiveProof, SensitiveProofPanel,
+    AuthStatus, BoundaryCheck, DbCheck, EngineeringQuality, GuestChatFallback,
+    HomeHero, OperationalRequestFilter, OperationsSurface, Ping,
+    RequestBurstDemo, RequestMeta, RequestTraceLog, SessionStatus,
+    TabSetShowcase, TransportLogSet, SensitiveProof, SensitiveProofPanel,
 };
 pub use error::Error;
