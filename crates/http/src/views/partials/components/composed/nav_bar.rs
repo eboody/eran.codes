@@ -342,14 +342,18 @@ me [data-nav-list='auth'] [data-nav-link-cta='true'] {
   }
 
   me [data-nav-list='auth'] {
-    padding-top: var(--space-1);
+    align-items: center;
+    gap: var(--space-2);
+    padding-top: var(--space-2);
     justify-self: stretch;
-    justify-content: flex-start;
+    justify-content: flex-end;
+    border-top: 1px solid color-mix(in srgb, var(--border-subtle) 82%, transparent);
   }
 
   me [data-nav-auth-text] {
     flex-basis: 100%;
     max-inline-size: none;
+    text-align: right;
   }
 }
 "#
