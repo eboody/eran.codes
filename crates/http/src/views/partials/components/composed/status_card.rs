@@ -4,6 +4,8 @@ use maud::Render;
 use crate::types::Text;
 use crate::views::partials::components::KeyValueList;
 
+use super::ResultCard;
+
 #[derive(Clone, Debug, Builder)]
 // ci: style-system-component
 pub struct StatusCard {
@@ -42,12 +44,15 @@ impl Render for StatusCard {
             .map(|item| (item.label.clone(), item.value.clone()))
             .collect();
 
-        maud::html! {
-            div class="u-demo-result-card u-inset-card" data-demo-result data-status-card {
-                p { strong { (&self.title) } }
+        ResultCard::builder()
+            .extra_class("u-status-card")
+            .status_card(true)
+            .content(maud::html! {
+                p class="u-status-card-title" data-status-card-title { strong { (&self.title) } }
                 (KeyValueList::builder().items(items).build())
-            }
-        }
+            })
+            .build()
+            .render()
     }
 }
 

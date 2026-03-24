@@ -429,8 +429,6 @@ me .ui-portfolio-closing .ui-button-row {
 }
 
 me .ui-portfolio-lead-surface .ui-button-row {
-  --button-row-gap: var(--space-2);
-
   padding-top: var(--space-3);
   border-top: 1px solid color-mix(in srgb, var(--ui-border-soft) 82%, transparent);
 }
@@ -742,13 +740,6 @@ me .ui-portfolio-crate-section--standalone .ui-portfolio-inline-links {
   me .ui-portfolio-closing,
   me .ui-portfolio-supporting-teaser {
     gap: var(--space-2);
-  }
-
-  me .ui-portfolio-section-actions .ui-button-row,
-  me .ui-portfolio-lead-surface .ui-button-row,
-  me .ui-portfolio-closing .ui-button-row {
-    --button-row-gap: var(--space-2);
-    --button-row-item-min-inline-size: 9rem;
   }
 
   me .ui-portfolio-section-actions .ui-button-row,

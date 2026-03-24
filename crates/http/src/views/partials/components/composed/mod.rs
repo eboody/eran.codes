@@ -4,6 +4,7 @@ pub mod chat;
 mod demo_result_placeholder;
 mod nav_bar;
 pub mod portfolio;
+mod result_card;
 mod section_header;
 mod status_card;
 pub(crate) mod tab_set;
@@ -17,5 +18,6 @@ pub use demo_result_placeholder::DemoResultPlaceholder;
 pub use nav_bar::{
     NavAuth, NavBar, NavBrand, NavLink, NavLinkList, NavLinkListRole, NavSignedIn,
 };
+pub(crate) use result_card::ResultCard;
 pub use section_header::{SectionHeader, SectionHeaderLevel, SectionHeaderMetaText};
 pub use status_card::{StatusCard, StatusCardItem};

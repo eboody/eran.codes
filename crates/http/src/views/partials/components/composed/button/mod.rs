@@ -96,5 +96,5 @@ pub(crate) fn head_styles() -> maud::Markup {
 pub use attr::DataAttr;
 pub use component::Button;
 pub use role::Role;
-pub use row::Row;
+pub use row::{Row, RowDensity, RowNarrowLayout};
 pub use variant::Variant;

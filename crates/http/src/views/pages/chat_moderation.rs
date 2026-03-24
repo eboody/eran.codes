@@ -127,6 +127,8 @@ impl Render for ChatModeration {
                                         input type="hidden" name="message_id" value=(entry.message_id.as_ref());
                                         input type="hidden" name="reason" value=(&entry.reason);
                                         (partials::button::Row::builder()
+                                            .density(partials::button::RowDensity::Compact)
+                                            .narrow_layout(partials::button::RowNarrowLayout::Stack)
                                             .items(vec![
                                                 partials::button::Button::builder()
                                                     .label(Text::from("Approve"))

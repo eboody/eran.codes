@@ -4,6 +4,8 @@ use maud::Render;
 use crate::types::Text;
 use crate::views::partials::components::EmptyState;
 
+use super::ResultCard;
+
 #[derive(Clone, Debug, Builder)]
 // ci: style-system-component
 pub struct DemoResultPlaceholder {
@@ -13,12 +15,16 @@ pub struct DemoResultPlaceholder {
 
 impl Render for DemoResultPlaceholder {
     fn render(&self) -> maud::Markup {
-        maud::html! {
-            div id=(&self.target_id) class="u-demo-result-card u-muted u-inset-card" data-demo-result {
-                (EmptyState::builder()
+        ResultCard::builder()
+            .target_id(self.target_id.clone())
+            .muted(true)
+            .content(
+                EmptyState::builder()
                     .message(self.message.clone())
-                    .build())
-            }
-        }
+                    .build()
+                    .render(),
+            )
+            .build()
+            .render()
     }
 }

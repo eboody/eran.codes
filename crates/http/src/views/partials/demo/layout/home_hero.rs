@@ -124,7 +124,7 @@ me [data-home-hero-card-detail] {
 
 me [data-home-hero-primary-actions] [data-button-row] {
   --button-row-gap: var(--space-2);
-  --button-row-item-min-inline-size: 0;
+  --button-row-item-min-inline-size: 10.5rem;
   --control-font-size: var(--text-size-body-md);
   --control-padding-block: 0.62rem;
 
@@ -278,14 +278,6 @@ me [data-home-hero-card-secondary-link]:focus-visible {
     margin-top: var(--space-1);
     padding-top: var(--space-2);
   }
-
-  me [data-home-hero-primary-actions] [data-button-row] > * {
-    flex: 1 1 12rem;
-  }
-
-  me [data-home-hero-primary-actions] [data-button-row] :where(a.button, button, .button) {
-    width: 100%;
-  }
 }
 
 @media (max-width: 36rem) {
@@ -304,10 +296,6 @@ me [data-home-hero-card-secondary-link]:focus-visible {
 @media (max-width: 24rem) {
   me {
     --_home-hero-title-measure: 11.4ch;
-  }
-
-  me [data-home-hero-primary-actions] [data-button-row] > * {
-    flex-basis: 100%;
   }
 }
 "#
@@ -336,6 +324,8 @@ impl Render for HomeHero {
                     }
                     div data-home-hero-primary-actions {
                         (partials::button::Row::builder()
+                            .density(partials::button::RowDensity::Compact)
+                            .narrow_layout(partials::button::RowNarrowLayout::Stack)
                             .items(content.hero.actions.iter().map(|action| {
                                 partials::button::Button::builder()
                                     .label(action.label.clone())
@@ -364,6 +354,8 @@ impl Render for HomeHero {
                         p class="u-muted" data-home-hero-card-detail { (&user.email) }
                         div data-home-hero-card-actions {
                             (partials::button::Row::builder()
+                                .density(partials::button::RowDensity::Compact)
+                                .narrow_layout(partials::button::RowNarrowLayout::Stack)
                                 .items(vec![
                                     partials::button::Button::builder()
                                         .label(content.session_card.signed_in_action_label.clone())

@@ -7,25 +7,56 @@ crate::views::scoped::inline_css!(
     r#"
 me {
   margin: var(--space-2) 0 0;
-  padding-left: var(--space-4);
-  font-size: var(--text-size-meta-md);
-  color: var(--ui-text-muted);
+  display: grid;
+  gap: var(--space-2);
 }
 
-me li {
-  margin: var(--space-1) 0;
-  word-break: break-word;
+me [data-key-value-item] {
+  display: grid;
+  grid-template-columns: minmax(0, max-content) minmax(0, 1fr);
+  align-items: start;
+  gap: calc(var(--space-1) * 0.5) var(--space-3);
+}
+
+me dt,
+me dd {
+  margin: 0;
+  min-width: 0;
+}
+
+me dt {
+  font-size: var(--text-size-label-xs);
+  font-weight: 700;
+  letter-spacing: var(--text-track-caps-wide);
+  text-transform: uppercase;
+  color: var(--text-subtle);
+}
+
+me dd {
+  font-size: var(--text-size-meta-md);
+  color: var(--ui-text-muted);
+  overflow-wrap: anywhere;
 }
 
 @media (max-width: 48rem) {
   me {
     margin-top: var(--space-1);
-    padding-left: var(--space-3);
-    font-size: var(--text-size-meta-sm);
+    gap: calc(var(--space-1) * 1.5);
   }
 
-  me li {
-    margin: calc(var(--space-1) * 0.75) 0;
+  me [data-key-value-item] {
+    gap: calc(var(--space-1) * 0.5) var(--space-2);
+  }
+
+  me dd {
+    font-size: var(--text-size-meta-sm);
+  }
+}
+
+@media (max-width: 26rem) {
+  me [data-key-value-item] {
+    grid-template-columns: 1fr;
+    gap: calc(var(--space-1) * 0.5);
   }
 }
 "#
@@ -40,12 +71,34 @@ pub struct KeyValueList {
 impl Render for KeyValueList {
     fn render(&self) -> maud::Markup {
         maud::html! {
-            ul data-key-value-list {
+            dl data-key-value-list {
                 (css())
                 @for (label, value) in &self.items {
-                    li { (label) ": " (value) }
+                    div data-key-value-item {
+                        dt { (label) }
+                        dd { (value) }
+                    }
                 }
-            }
+            } 
         }
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn renders_semantic_key_value_markup() {
+        let markup = KeyValueList::builder()
+            .items(vec![(Text::from("endpoint"), Text::from("/events"))])
+            .build()
+            .render()
+            .into_string();
+
+        assert!(markup.contains("<dl"));
+        assert!(markup.contains("data-key-value-item"));
+        assert!(markup.contains("<dt>endpoint</dt>"));
+        assert!(markup.contains("<dd>/events</dd>"));
     }
 }

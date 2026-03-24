@@ -452,7 +452,7 @@ input[type="password"] {
 .u-section-header {
   display: flex;
   flex-wrap: wrap;
-  align-items: center;
+  align-items: start;
   justify-content: space-between;
   gap: var(--space-3) var(--space-4);
   margin-bottom: var(--space-4);
@@ -474,6 +474,17 @@ input[type="password"] {
   max-width: 58ch;
   color: var(--text-muted);
   font-size: var(--text-size-body-lg);
+}
+
+.u-section-header-actions {
+  display: grid;
+  align-items: start;
+  justify-items: end;
+  min-width: min(100%, 14rem);
+}
+
+.u-section-header-actions > :where(button, a)[data-button] {
+  width: 100%;
 }
 
 .u-section-meta {
@@ -507,6 +518,8 @@ input[type="password"] {
   --button-row-margin-block-start: calc(1.1rem - var(--button-row-padding));
   --button-row-margin-block-end: calc(var(--button-row-padding) * -1);
   --button-row-item-min-inline-size: 10rem;
+  --button-row-grid-template:
+    repeat(auto-fit, minmax(min(100%, var(--button-row-item-min-inline-size)), 1fr));
 
   display: flex;
   flex-wrap: wrap;
@@ -521,6 +534,11 @@ input[type="password"] {
 
 .ui-button-row > :where(button, a)[data-button] {
   min-inline-size: var(--button-row-item-min-inline-size);
+}
+
+.ui-button-row[data-button-row-density='compact'] {
+  --button-row-gap: var(--space-2);
+  --button-row-item-min-inline-size: 9rem;
 }
 
 .u-inset-card {
@@ -550,6 +568,16 @@ input[type="password"] {
 
 .u-demo-result-card > p {
   margin: 0;
+}
+
+.u-status-card {
+  display: grid;
+  gap: var(--space-2);
+}
+
+.u-status-card-title {
+  margin: 0;
+  color: var(--text-strong);
 }
 
 .u-support-results {
@@ -613,12 +641,33 @@ input[type="password"] {
   }
 
   .u-section-header {
+    display: grid;
     gap: var(--space-2) var(--space-3);
     margin-bottom: var(--space-3);
   }
 
   .u-section-header .u-muted {
     font-size: var(--text-size-body-md);
+  }
+
+  .u-section-header-actions {
+    width: 100%;
+    justify-items: stretch;
+  }
+
+  .ui-button-row {
+    display: grid;
+    grid-template-columns: var(--button-row-grid-template);
+    align-items: stretch;
+  }
+
+  .ui-button-row[data-button-row-narrow='stack'] {
+    grid-template-columns: 1fr;
+  }
+
+  .ui-button-row > :where(button, a)[data-button] {
+    min-inline-size: 0;
+    width: 100%;
   }
 
   .u-support-results,
@@ -637,12 +686,25 @@ input[type="password"] {
   :root {
     --nav-scroll-offset: 10.25rem;
   }
+
+  .u-section-meta {
+    margin-top: calc(var(--space-2) * -1);
+  }
 }
 
 @media (max-width: 26rem) {
   :root {
     --control-padding-block-compact: 0.5rem;
     --control-padding-inline-compact: 0.78rem;
+  }
+
+  .ui-button-row {
+    --button-row-gap: var(--space-2);
+    --button-row-item-min-inline-size: min(100%, 8.5rem);
+  }
+
+  .ui-button-row[data-button-row-density='compact'] {
+    --button-row-item-min-inline-size: min(100%, 7.5rem);
   }
 
   .u-demo-result-card {

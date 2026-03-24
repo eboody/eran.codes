@@ -49,7 +49,9 @@ impl Render for SectionHeader {
                     }
                 }
                 @if let Some(action) = &self.action {
-                    (action)
+                    div class="u-section-header-actions" data-section-header-actions {
+                        (action)
+                    }
                 }
             }
             @if let Some(meta) = &self.meta {
@@ -79,10 +81,17 @@ mod tests {
         let markup = SectionHeader::builder()
             .title(Text::from("Chat room"))
             .level(SectionHeaderLevel::H1)
+            .action(
+                button::Button::builder()
+                    .label(Text::from("Inspect"))
+                    .role(button::Role::link("/lab"))
+                    .build(),
+            )
             .build()
             .render()
             .into_string();
 
         assert!(markup.contains("<h1>Chat room</h1>"));
+        assert!(markup.contains("data-section-header-actions"));
     }
 }
