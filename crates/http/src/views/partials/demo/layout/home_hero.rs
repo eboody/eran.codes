@@ -229,7 +229,7 @@ me [data-home-hero-card-secondary-link]:focus-visible {
     --_home-hero-title-size: clamp(1.9rem, 1.5rem + 2.2vw, 2.6rem);
     --_home-hero-title-measure: 14.2ch;
     padding: clamp(1.2rem, 1rem + 1vw, 1.65rem);
-    gap: var(--space-5);
+    gap: var(--space-4);
   }
 
   me [data-home-hero-copy] {
@@ -245,7 +245,7 @@ me [data-home-hero-card-secondary-link]:focus-visible {
     gap: var(--space-1);
   }
 
-  me [data-home-hero-tags] > :nth-child(n + 4) {
+  me [data-home-hero-tags] > :nth-child(n + 3) {
     display: none;
   }
 
@@ -275,8 +275,8 @@ me [data-home-hero-card-secondary-link]:focus-visible {
 
   me [data-home-hero-primary-actions] [data-button-row] {
     width: 100%;
-    margin-top: var(--space-2);
-    padding-top: var(--space-3);
+    margin-top: var(--space-1);
+    padding-top: var(--space-2);
   }
 
   me [data-home-hero-primary-actions] [data-button-row] > * {
