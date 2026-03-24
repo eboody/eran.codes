@@ -50,6 +50,27 @@ me [data-engineering-quality-card-points] {
   }
 }
 
+@media (max-width: 48rem) {
+  me [data-engineering-quality-grid] {
+    gap: var(--space-3);
+  }
+
+  me [data-engineering-quality-card] {
+    --inset-card-padding: var(--space-3);
+    gap: var(--space-1);
+  }
+
+  me [data-engineering-quality-card-title] {
+    margin-bottom: var(--space-1);
+  }
+
+  me [data-engineering-quality-card-points] {
+    margin-top: var(--space-2);
+    gap: var(--space-1);
+    padding-left: var(--space-3);
+  }
+}
+
 @media (hover: hover) {
   me [data-engineering-quality-card]:hover {
     transform: var(--motion-lift-subtle);
