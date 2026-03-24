@@ -179,6 +179,11 @@ me .ui-portfolio-crate-section--standalone .ui-code-block {
     border-top: 1px solid color-mix(in srgb, var(--ui-border-soft) 72%, transparent);
   }
 
+  me .ui-portfolio-crate-section--standalone .ui-portfolio-crate-showcase-copy,
+  me .ui-portfolio-crate-section--standalone .ui-portfolio-crate-showcase-header {
+    gap: var(--space-1);
+  }
+
   me .ui-portfolio-crate-section--standalone .ui-code-block {
     --_code-block-font-size: var(--text-size-meta-xs);
   }
