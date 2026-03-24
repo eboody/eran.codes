@@ -4,6 +4,8 @@ use maud::Render;
 use crate::types::Text;
 use crate::views::partials;
 
+use super::Results;
+
 #[derive(Clone, Debug, Builder)]
 pub struct RequestMeta {
     pub request_id: Option<Text>,
@@ -16,9 +18,10 @@ pub struct RequestMeta {
 
 impl Render for RequestMeta {
     fn render(&self) -> maud::Markup {
-        maud::html! {
-            article id="request-meta-target" {
-                (partials::StatusCard::builder()
+        Results::builder()
+            .target_id(Text::from("request-meta-target"))
+            .summary(
+                partials::StatusCard::builder()
                     .title(Text::from("Request metadata"))
                     .items(vec![
                         partials::StatusCardItem::optional("request_id", self.request_id.clone()),
@@ -27,9 +30,16 @@ impl Render for RequestMeta {
                         partials::StatusCardItem::optional("client_ip", self.client_ip.clone()),
                         partials::StatusCardItem::optional("user_agent", self.user_agent.clone()),
                     ])
-                    .build())
-                (partials::RequestTraceLog::builder().entries(&self.trace).build())
-            }
-        }
+                    .build()
+                    .render(),
+            )
+            .trace(
+                partials::RequestTraceLog::builder()
+                    .entries(&self.trace)
+                    .build()
+                    .render(),
+            )
+            .build()
+            .render()
     }
 }

@@ -4,6 +4,8 @@ use maud::Render;
 use crate::types::Text;
 use crate::views::partials;
 
+use super::Results;
+
 #[derive(Clone, Debug, Builder)]
 pub struct DbCheck {
     pub email: Text,
@@ -13,17 +15,25 @@ pub struct DbCheck {
 
 impl Render for DbCheck {
     fn render(&self) -> maud::Markup {
-        maud::html! {
-            article id="db-check-target" {
-                (partials::StatusCard::builder()
+        Results::builder()
+            .target_id(Text::from("db-check-target"))
+            .summary(
+                partials::StatusCard::builder()
                     .title(Text::from("DB lookup"))
                     .items(vec![
                         partials::StatusCardItem::text("email", self.email.clone()),
                         partials::StatusCardItem::text("result", self.result.clone()),
                     ])
-                    .build())
-                (partials::RequestTraceLog::builder().entries(&self.trace).build())
-            }
-        }
+                    .build()
+                    .render(),
+            )
+            .trace(
+                partials::RequestTraceLog::builder()
+                    .entries(&self.trace)
+                    .build()
+                    .render(),
+            )
+            .build()
+            .render()
     }
 }

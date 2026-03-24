@@ -54,15 +54,8 @@ me [data-burst-selected] strong {
 }
 
 me [data-burst-actions] {
-  display: flex;
-  flex-wrap: wrap;
   align-items: center;
-  position: relative;
-  isolation: isolate;
   gap: var(--space-2) var(--space-3);
-  padding: var(--interactive-bleed);
-  margin: calc(var(--interactive-bleed) * -1);
-  overflow: visible;
 }
 
 me [data-burst-actions] p {
@@ -208,7 +201,7 @@ impl Render for RequestBurstDemo {
                         strong data-burst-count-label { (self.default_requests) }
                         " requests"
                     }
-                    div data-burst-actions {
+                    div class="ui-button-row" data-burst-actions {
                         (partials::button::Button::builder()
                             .label(Text::from("Send burst"))
                             .data_attrs(vec![partials::button::DataAttr::flag("data-burst-run")])

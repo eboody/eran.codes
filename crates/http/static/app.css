@@ -545,6 +545,31 @@ input[type="password"] {
   margin: 0;
 }
 
+.u-support-results {
+  display: grid;
+  gap: var(--space-4);
+}
+
+.u-support-results > :where([data-status-card], [data-demo-result]) {
+  margin-top: 0;
+}
+
+.u-support-card-grid {
+  display: grid;
+  gap: var(--space-4);
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 18rem), 1fr));
+  align-items: start;
+}
+
+.u-support-card-grid > :where([data-status-card], [data-demo-result]) {
+  margin-top: 0;
+  align-self: start;
+}
+
+.u-support-trace {
+  display: grid;
+}
+
 @media (max-width: 48rem) {
   :root {
     --nav-scroll-offset: 9rem;

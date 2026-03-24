@@ -4,6 +4,8 @@ use maud::Render;
 use crate::types::Text;
 use crate::views::partials;
 
+use super::Results;
+
 #[derive(Clone, Copy, Debug)]
 enum AuthStatusLabel {
     Authenticated,
@@ -44,14 +46,22 @@ impl Render for AuthStatus {
             partials::StatusCardItem::optional("expiry", self.expiry.clone()),
         ];
 
-        maud::html! {
-            article id="auth-status-target" {
-                (partials::StatusCard::builder()
+        Results::builder()
+            .target_id(Text::from("auth-status-target"))
+            .summary(
+                partials::StatusCard::builder()
                     .title(Text::from(status))
                     .items(items)
-                    .build())
-                (partials::RequestTraceLog::builder().entries(&self.trace).build())
-            }
-        }
+                    .build()
+                    .render(),
+            )
+            .trace(
+                partials::RequestTraceLog::builder()
+                    .entries(&self.trace)
+                    .build()
+                    .render(),
+            )
+            .build()
+            .render()
     }
 }

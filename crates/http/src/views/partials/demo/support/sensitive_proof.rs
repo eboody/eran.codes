@@ -6,30 +6,7 @@ use maud::{Markup, Render};
 
 use crate::views::partials;
 
-crate::views::scoped::inline_css!(
-    r#"
-me > style + article[data-sensitive-proof-results] {
-  display: grid;
-  gap: var(--space-4);
-}
-
-me [data-sensitive-proof-card-grid] {
-  display: grid;
-  gap: var(--space-4);
-  grid-template-columns: repeat(auto-fit, minmax(min(100%, 18rem), 1fr));
-  align-items: start;
-}
-
-me [data-sensitive-proof-card-grid] > [data-status-card] {
-  margin-top: 0;
-  align-self: start;
-}
-
-me [data-sensitive-proof-trace] {
-  display: grid;
-}
-    "#
-);
+use super::{CardGrid, Results};
 
 #[derive(Clone, Debug, Builder)]
 pub struct SensitiveProof {
@@ -39,24 +16,22 @@ pub struct SensitiveProof {
 
 impl Render for SensitiveProof {
     fn render(&self) -> maud::Markup {
-        let cards = cards::proof_cards(&self.snapshot);
+        let cards = cards::proof_cards(&self.snapshot)
+            .into_iter()
+            .map(render_card)
+            .collect();
 
-        maud::html! {
-            article
-                id="sensitive-proof-target"
-                data-sensitive-proof-results
-            {
-                (css())
-                div data-sensitive-proof-card-grid {
-                    @for card in cards {
-                        (render_card(card))
-                    }
-                }
-                div data-sensitive-proof-trace {
-                    (partials::RequestTraceLog::builder().entries(&self.trace).build())
-                }
-            }
-        }
+        Results::builder()
+            .target_id(crate::types::Text::from("sensitive-proof-target"))
+            .summary(CardGrid::builder().cards(cards).build().render())
+            .trace(
+                partials::RequestTraceLog::builder()
+                    .entries(&self.trace)
+                    .build()
+                    .render(),
+            )
+            .build()
+            .render()
     }
 }
 
@@ -410,7 +385,7 @@ mod tests {
             .render()
             .into_string();
 
-        assert!(markup.contains("data-sensitive-proof-card-grid"));
-        assert!(markup.contains("data-sensitive-proof-results"));
+        assert!(markup.contains("data-support-card-grid"));
+        assert!(markup.contains("data-support-results"));
     }
 }

@@ -4,6 +4,8 @@ use maud::Render;
 use crate::types::Text;
 use crate::views::partials;
 
+use super::Results;
+
 #[derive(Clone, Debug, Builder)]
 pub struct SessionStatus {
     pub session_id: Option<Text>,
@@ -13,17 +15,25 @@ pub struct SessionStatus {
 
 impl Render for SessionStatus {
     fn render(&self) -> maud::Markup {
-        maud::html! {
-            article id="session-status-target" {
-                (partials::StatusCard::builder()
+        Results::builder()
+            .target_id(Text::from("session-status-target"))
+            .summary(
+                partials::StatusCard::builder()
                     .title(Text::from("Session details"))
                     .items(vec![
                         partials::StatusCardItem::optional("session_id", self.session_id.clone()),
                         partials::StatusCardItem::optional("expiry", self.expiry.clone()),
                     ])
-                    .build())
-                (partials::RequestTraceLog::builder().entries(&self.trace).build())
-            }
-        }
+                    .build()
+                    .render(),
+            )
+            .trace(
+                partials::RequestTraceLog::builder()
+                    .entries(&self.trace)
+                    .build()
+                    .render(),
+            )
+            .build()
+            .render()
     }
 }
