@@ -237,8 +237,7 @@ me [data-home-hero-card-secondary-link]:focus-visible {
     padding-inline-end: 0;
   }
 
-  me [data-home-hero-summary],
-  me [data-home-hero-card-status] {
+  me [data-home-hero-summary] {
     font-size: var(--text-size-body-lg);
   }
 
@@ -252,9 +251,21 @@ me [data-home-hero-card-secondary-link]:focus-visible {
 
   me [data-home-hero-card] {
     inline-size: 100%;
+    gap: var(--space-2);
+    padding: var(--space-4);
+  }
+
+  me [data-home-hero-card-status] {
+    font-size: var(--text-size-body-md);
+  }
+
+  me [data-home-hero-card-detail] {
+    font-size: var(--text-size-meta-sm);
   }
 
   me [data-home-hero-card-actions] {
+    gap: var(--space-1);
+    padding-top: var(--space-2);
     justify-items: stretch;
   }
 
