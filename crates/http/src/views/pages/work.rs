@@ -20,6 +20,21 @@ crate::views::scoped::inline_css!(
     margin-top: var(--space-1);
   }
 }
+
+@media (max-width: 26rem) {
+  me [data-work-page] .ui-portfolio-surface {
+    --surface-card-padding: var(--space-3);
+  }
+
+  me [data-work-page] .u-section-copy {
+    gap: var(--space-1);
+  }
+
+  me [data-work-page] .ui-portfolio-work-card,
+  me [data-work-page] .ui-portfolio-archive-entry {
+    gap: var(--space-2);
+  }
+}
 "#
 );
 
