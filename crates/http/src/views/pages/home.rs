@@ -10,7 +10,25 @@ crate::views::scoped::inline_css!(
     r#"
 @media (max-width: 48rem) {
   me [data-home-current-proof] {
-    margin-top: var(--space-1);
+    margin-top: 0;
+  }
+
+  me [data-home-current-proof] .ui-portfolio-surface {
+    --surface-card-padding: var(--space-4);
+
+    gap: var(--space-2);
+  }
+
+  me [data-home-current-proof] .u-section-copy {
+    gap: var(--space-1);
+  }
+
+  me [data-home-current-proof] .ui-portfolio-work-card {
+    gap: var(--space-2);
+  }
+
+  me [data-home-current-proof] .ui-portfolio-card-outcome {
+    padding: var(--space-2);
   }
 }
 "#
