@@ -739,6 +739,13 @@ me .ui-portfolio-crate-section--standalone .ui-portfolio-inline-links {
   }
 
   me .ui-portfolio-section-actions .ui-button-row,
+  me .ui-portfolio-lead-surface .ui-button-row,
+  me .ui-portfolio-closing .ui-button-row {
+    --button-row-gap: var(--space-2);
+    --button-row-item-min-inline-size: 9rem;
+  }
+
+  me .ui-portfolio-section-actions .ui-button-row,
   me .ui-portfolio-closing .ui-button-row {
     margin-top: calc(var(--space-1) - var(--interactive-bleed));
   }
