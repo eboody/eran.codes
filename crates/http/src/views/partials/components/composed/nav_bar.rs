@@ -19,7 +19,7 @@ me {
 
 me > [data-nav] {
   display: grid;
-  grid-template-columns: auto minmax(0, 1fr) clamp(12rem, 16vw, 15rem);
+  grid-template-columns: auto minmax(0, 1fr) auto;
   align-items: center;
   position: relative;
   isolation: isolate;
@@ -57,6 +57,16 @@ me [data-nav-link] {
     color var(--motion-fast),
     background-color var(--motion-fast),
     transform var(--motion-fast);
+}
+
+me [data-nav-trailing] {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  min-width: 0;
+  justify-self: end;
+  padding-inline-start: var(--space-3);
+  border-inline-start: 1px solid color-mix(in srgb, var(--border-subtle) 82%, transparent);
 }
 
 me [data-nav-link-label='compact'] {
@@ -172,12 +182,20 @@ me [data-nav-list='primary'] {
   flex-wrap: wrap;
 }
 
+me [data-nav-list='meta'] {
+  gap: 0.1rem;
+}
+
+me [data-nav-list='meta'] [data-nav-link] {
+  color: color-mix(in srgb, var(--text-muted) 80%, var(--text-body) 20%);
+  font-size: var(--text-size-meta-sm);
+}
+
 me [data-nav-list='auth'] {
-  inline-size: 100%;
   min-width: 0;
   justify-content: flex-end;
   flex-wrap: wrap;
-  justify-self: end;
+  gap: 0.2rem;
 }
 
 me [data-nav-list='auth'] li {
@@ -211,6 +229,15 @@ me [data-nav-auth-action] {
   --_button-font-size: var(--control-font-size-compact);
 }
 
+me [data-nav-list='auth'] [data-nav-link-cta='true'] {
+  color: var(--ui-text-on-accent);
+  border-color: color-mix(in srgb, var(--ui-accent-primary) 56%, var(--border-default));
+  background: var(--ui-accent-primary);
+  box-shadow:
+    inset 0 1px 0 var(--control-edge-accent),
+    0 10px 24px color-mix(in srgb, var(--ui-accent-primary) 18%, transparent);
+}
+
 @media (hover: hover) {
   me [data-nav-link]:not([aria-current="page"]):hover {
     color: var(--text-strong);
@@ -218,8 +245,20 @@ me [data-nav-auth-action] {
     z-index: 1;
   }
 
+  me [data-nav-list='meta'] [data-nav-link]:hover {
+    color: var(--text-strong);
+  }
+
   me [data-nav-brand-link]:hover {
     opacity: 0.9;
+  }
+
+  me [data-nav-list='auth'] [data-nav-link-cta='true']:hover {
+    color: var(--ui-text-on-accent);
+    transform: translateY(-1px);
+    box-shadow:
+      inset 0 1px 0 var(--control-edge-accent-hover),
+      0 14px 28px color-mix(in srgb, var(--ui-accent-primary) 18%, transparent);
   }
 }
 
@@ -252,6 +291,10 @@ me [data-nav-auth-action] {
     scrollbar-width: thin;
   }
 
+  me [data-nav-trailing] {
+    display: contents;
+  }
+
   me [data-nav-list='primary'] [data-nav-link-label='full'] {
     display: none;
   }
@@ -278,6 +321,14 @@ me [data-nav-auth-action] {
 
   me [data-nav-link][aria-current="page"] {
     box-shadow: inset 0 1px 0 var(--surface-edge-default);
+  }
+
+  me [data-nav-list='auth'] {
+    gap: 0.35rem;
+  }
+
+  me [data-nav-list='meta'] {
+    display: none;
   }
 }
 
@@ -312,6 +363,8 @@ pub struct NavLink {
     #[builder(default)]
     pub external: bool,
     #[builder(default)]
+    pub cta: bool,
+    #[builder(default)]
     pub active: bool,
 }
 
@@ -322,7 +375,13 @@ impl Render for NavLink {
         maud::html! {
             li data-nav-link-item-kind=(kind) {
                 @if self.external {
-                    a data-nav-link href=(&self.href) target="_blank" rel="noopener noreferrer" {
+                    a
+                        data-nav-link
+                        data-nav-link-cta=(self.cta)
+                        href=(&self.href)
+                        target="_blank"
+                        rel="noopener noreferrer"
+                    {
                         span data-nav-link-label="full" { (&self.label) }
                         @if let Some(compact_label) = &self.compact_label {
                             span data-nav-link-label="compact" { (compact_label) }
@@ -330,14 +389,19 @@ impl Render for NavLink {
                     }
                 } @else {
                     @if self.active {
-                        a data-nav-link href=(&self.href) aria-current="page" {
+                        a
+                            data-nav-link
+                            data-nav-link-cta=(self.cta)
+                            href=(&self.href)
+                            aria-current="page"
+                        {
                             span data-nav-link-label="full" { (&self.label) }
                             @if let Some(compact_label) = &self.compact_label {
                                 span data-nav-link-label="compact" { (compact_label) }
                             }
                         }
                     } @else {
-                        a data-nav-link href=(&self.href) {
+                        a data-nav-link data-nav-link-cta=(self.cta) href=(&self.href) {
                             span data-nav-link-label="full" { (&self.label) }
                             @if let Some(compact_label) = &self.compact_label {
                                 span data-nav-link-label="compact" { (compact_label) }
@@ -355,6 +419,8 @@ pub enum NavLinkListRole {
     #[default]
     #[strum(serialize = "primary")]
     Primary,
+    #[strum(serialize = "meta")]
+    Meta,
     #[strum(serialize = "auth")]
     Auth,
 }
@@ -465,6 +531,7 @@ impl Render for NavAuth {
 pub struct NavBar {
     pub brand: NavBrand,
     pub links: NavLinkList,
+    pub meta_links: Option<NavLinkList>,
     pub auth: NavAuth,
 }
 
@@ -476,7 +543,12 @@ impl Render for NavBar {
                 nav data-nav {
                     (&self.brand)
                     (&self.links)
-                    (&self.auth)
+                    div data-nav-trailing {
+                        @if let Some(meta_links) = &self.meta_links {
+                            (meta_links)
+                        }
+                        (&self.auth)
+                    }
                 }
             }
         }
@@ -511,6 +583,13 @@ mod tests {
                             .maybe_compact_label(Some(Text::from("Current")))
                             .href(Text::from("/work/sensitive-sync"))
                             .build(),
+                    ])
+                    .build(),
+            )
+            .meta_links(
+                NavLinkList::builder()
+                    .role(NavLinkListRole::Meta)
+                    .children(vec![
                         NavLink::builder()
                             .label(Text::from("GitHub"))
                             .maybe_compact_label(Some(Text::from("GitHub")))
@@ -535,7 +614,50 @@ mod tests {
 
         assert!(markup.contains("white-space: nowrap;"));
         assert!(markup.contains("overscroll-behavior-x: contain;"));
-        assert!(markup.contains("data-nav-link-item-kind=\"external\""));
+        assert!(markup.contains("data-nav-list=\"meta\""));
         assert!(markup.contains("data-nav-link-label=\"compact\""));
+    }
+
+    #[test]
+    fn guest_nav_marks_create_account_as_cta() {
+        let markup = NavBar::builder()
+            .brand(
+                NavBrand::builder()
+                    .label(Text::from("eran.codes"))
+                    .href(Text::from("/"))
+                    .light_logo_src(Text::from("/static/eran.codes-light.svg"))
+                    .dark_logo_src(Text::from("/static/eran.codes-dark.svg"))
+                    .build(),
+            )
+            .links(
+                NavLinkList::builder()
+                    .children(vec![NavLink::builder()
+                        .label(Text::from("Live Proof"))
+                        .href(Text::from("/lab"))
+                        .build()])
+                    .build(),
+            )
+            .auth(NavAuth::Guest(
+                NavLinkList::builder()
+                    .role(NavLinkListRole::Auth)
+                    .children(vec![
+                        NavLink::builder()
+                            .label(Text::from("Sign in"))
+                            .href(Text::from("/login"))
+                            .build(),
+                        NavLink::builder()
+                            .label(Text::from("Create account"))
+                            .href(Text::from("/register"))
+                            .cta(true)
+                            .build(),
+                    ])
+                    .build(),
+            ))
+            .build()
+            .render()
+            .into_string();
+
+        assert!(markup.contains("data-nav-link-cta=\"true\""));
+        assert!(markup.contains(">Create account<"));
     }
 }

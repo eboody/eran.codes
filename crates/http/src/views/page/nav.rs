@@ -17,9 +17,12 @@ pub(super) fn bar(
     current_route: Option<Route>,
     user: Option<&UserNav>,
 ) -> partials::components::NavBar {
+    let (primary_links, meta_links) = portfolio_links(current_route);
+
     partials::components::NavBar::builder()
         .brand(brand())
-        .links(portfolio_links(current_route))
+        .links(primary_links)
+        .maybe_meta_links(meta_links)
         .auth(auth(nav_mode, current_route, user))
         .build()
 }
@@ -53,28 +56,42 @@ fn brand() -> partials::components::NavBrand {
         .build()
 }
 
-fn portfolio_links(current_route: Option<Route>) -> partials::components::NavLinkList {
-    partials::components::NavLinkList::builder()
-        .role(partials::components::NavLinkListRole::Primary)
-        .children(
-            partials::components::portfolio::content::portfolio_nav_links()
-                .iter()
-                .map(|link| {
-                    let href = link.href.to_string();
-                    let active =
-                        !link.kind.is_external() && portfolio_link_is_active(current_route, &href);
+fn portfolio_links(
+    current_route: Option<Route>,
+) -> (
+    partials::components::NavLinkList,
+    Option<partials::components::NavLinkList>,
+) {
+    let (internal_links, external_links): (Vec<_>, Vec<_>) =
+        partials::components::portfolio::content::portfolio_nav_links()
+            .iter()
+            .map(|link| {
+                let href = link.href.to_string();
+                let active =
+                    !link.kind.is_external() && portfolio_link_is_active(current_route, &href);
 
-                    partials::components::NavLink::builder()
-                        .label(link.label.clone())
-                        .maybe_compact_label(compact_label_for_href(&href))
-                        .href(link.href.clone())
-                        .external(link.kind.is_external())
-                        .active(active)
-                        .build()
-                })
-                .collect(),
-        )
-        .build()
+                partials::components::NavLink::builder()
+                    .label(link.label.clone())
+                    .maybe_compact_label(compact_label_for_href(&href))
+                    .href(link.href.clone())
+                    .external(link.kind.is_external())
+                    .active(active)
+                    .build()
+            })
+            .partition(|link| !link.external);
+
+    let primary_links = partials::components::NavLinkList::builder()
+        .role(partials::components::NavLinkListRole::Primary)
+        .children(internal_links)
+        .build();
+    let meta_links = (!external_links.is_empty()).then(|| {
+        partials::components::NavLinkList::builder()
+            .role(partials::components::NavLinkListRole::Meta)
+            .children(external_links)
+            .build()
+    });
+
+    (primary_links, meta_links)
 }
 
 fn auth(
@@ -103,6 +120,7 @@ fn guest_links(current_route: Option<Route>) -> partials::components::NavLinkLis
                 .maybe_compact_label(Some(Text::from("Register")))
                 .href(Text::from(Route::Register.as_str()))
                 .active(current_route == Some(Route::Register))
+                .cta(true)
                 .build(),
         ])
         .build()
