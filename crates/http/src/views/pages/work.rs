@@ -5,6 +5,20 @@ use crate::views::{page, partials};
 
 use super::portfolio_shell;
 
+crate::views::scoped::inline_css!(
+    r#"
+@media (max-width: 48rem) {
+  me [data-work-page] .ui-portfolio-lead-surface {
+    gap: var(--space-3);
+  }
+
+  me [data-work-page] .ui-portfolio-lead-surface .ui-portfolio-summary {
+    font-size: var(--text-size-body-md);
+  }
+}
+"#
+);
+
 #[derive(Builder, Default)]
 pub struct Work {
     #[builder(setters(name = with_user))]
@@ -18,14 +32,17 @@ impl Render for Work {
 
         let body = partials::components::portfolio::Page {
             content: maud::html! {
-                (partials::components::portfolio::WorkIndexSection { content })
-                (partials::components::portfolio::ArchiveCaseDetailsSection {
-                    intro: &content.archive_details,
-                    cases: archive_cases,
-                })
-                (partials::components::portfolio::SupportingTeaserSection {
-                    content: &content.open_source_teaser,
-                })
+                (css())
+                div data-work-page {
+                    (partials::components::portfolio::WorkIndexSection { content })
+                    (partials::components::portfolio::ArchiveCaseDetailsSection {
+                        intro: &content.archive_details,
+                        cases: archive_cases,
+                    })
+                    (partials::components::portfolio::SupportingTeaserSection {
+                        content: &content.open_source_teaser,
+                    })
+                }
             },
         }
         .render();
