@@ -273,22 +273,22 @@ me [data-nav-list='auth'] [data-nav-link-cta='true'] {
   }
 
   me > [data-nav] {
-    grid-template-columns: minmax(0, 1fr) auto;
+    grid-template-columns: 1fr;
     padding: var(--_nav-shell-padding);
     border-radius: var(--ui-radius-md-inset);
     gap: var(--space-2);
   }
 
-  me [data-nav-list='primary'] {
-    display: grid;
-    grid-auto-flow: column;
-    grid-auto-columns: max-content;
-    grid-column: 1 / -1;
+  me [data-nav-brand] {
     justify-content: flex-start;
-    overflow-x: auto;
-    overscroll-behavior-x: contain;
-    padding-bottom: calc(var(--interactive-bleed) * 0.35);
-    scrollbar-width: thin;
+  }
+
+  me [data-nav-list='primary'] {
+    display: flex;
+    flex-wrap: wrap;
+    grid-column: auto;
+    justify-content: flex-start;
+    row-gap: 0.3rem;
   }
 
   me [data-nav-trailing] {
@@ -324,6 +324,7 @@ me [data-nav-list='auth'] [data-nav-link-cta='true'] {
   }
 
   me [data-nav-list='auth'] {
+    grid-column: auto;
     gap: 0.25rem;
   }
 
@@ -333,10 +334,6 @@ me [data-nav-list='auth'] [data-nav-link-cta='true'] {
 }
 
 @media (max-width: 38rem) {
-  me > [data-nav] {
-    grid-template-columns: 1fr;
-  }
-
   me [data-nav-list='primary'] li[data-nav-link-item-kind='external'] {
     display: none;
   }
@@ -345,7 +342,7 @@ me [data-nav-list='auth'] [data-nav-link-cta='true'] {
     align-items: center;
     gap: var(--space-1);
     padding-top: var(--space-1);
-    justify-self: stretch;
+    justify-self: start;
     justify-content: flex-end;
     border-top: 1px solid color-mix(in srgb, var(--border-subtle) 82%, transparent);
   }
@@ -354,6 +351,13 @@ me [data-nav-list='auth'] [data-nav-link-cta='true'] {
     flex-basis: 100%;
     max-inline-size: none;
     text-align: right;
+  }
+}
+
+@media (max-width: 26rem) {
+  me [data-nav-list='primary'] {
+    display: grid;
+    grid-template-columns: repeat(3, max-content);
   }
 }
 "#
@@ -564,7 +568,7 @@ mod tests {
     use super::*;
 
     #[test]
-    fn mobile_nav_preserves_scrolling_chip_contract() {
+    fn mobile_nav_wraps_compact_links_without_horizontal_scrolling() {
         let markup = NavBar::builder()
             .brand(
                 NavBrand::builder()
@@ -617,7 +621,9 @@ mod tests {
             .into_string();
 
         assert!(markup.contains("white-space: nowrap;"));
-        assert!(markup.contains("overscroll-behavior-x: contain;"));
+        assert!(markup.contains("flex-wrap: wrap;"));
+        assert!(!markup.contains("overscroll-behavior-x: contain;"));
+        assert!(markup.contains("grid-template-columns: repeat(3, max-content);"));
         assert!(markup.contains("data-nav-list=\"meta\""));
         assert!(markup.contains("data-nav-link-label=\"compact\""));
     }
