@@ -4,5 +4,4 @@ error[E0599]: no method named `add_user_context` found for struct `http::__types
 4 |     let _pipeline = pipeline.add_user_context();
   |                              ^^^^^^^^^^^^^^^^ method not found in `http::__typestate::RequestLayerPipeline<http::__typestate::TraceAdded>`
   |
-  = note: the method was found for
-          - `http::__typestate::RequestLayerPipeline<http::__typestate::AuditAdded>`
+  = note: the method was found for `http::__typestate::RequestLayerPipeline<http::__typestate::AuditAdded>`

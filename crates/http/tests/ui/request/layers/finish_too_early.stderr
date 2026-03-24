@@ -4,5 +4,4 @@ error[E0599]: no method named `finish` found for struct `http::__typestate::Requ
 4 |     let _router = pipeline.finish();
   |                            ^^^^^^ method not found in `http::__typestate::RequestLayerPipeline<http::__typestate::CoreReady>`
   |
-  = note: the method was found for
-          - `http::__typestate::RequestLayerPipeline<http::__typestate::StateExtensionAdded>`
+  = note: the method was found for `http::__typestate::RequestLayerPipeline<http::__typestate::StateExtensionAdded>`

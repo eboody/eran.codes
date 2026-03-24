@@ -222,6 +222,32 @@ me .ui-portfolio-crate-section--standalone .ui-code-block {
   }
 
 }
+
+@media (max-width: 26rem) {
+  me .ui-portfolio-lead-surface h1 {
+    max-width: 13.2ch;
+    font-size: clamp(2rem, 1.72rem + 0.95vw, 2.3rem);
+  }
+
+  me .ui-portfolio-summary {
+    font-size: var(--text-size-body-md);
+    line-height: 1.52;
+  }
+
+  me [data-open-source-mobile-intro] {
+    gap: calc(var(--space-1) * 0.75);
+    margin-top: calc(var(--space-1) * 0.75);
+    padding-top: var(--space-1);
+  }
+
+  me .ui-portfolio-badges {
+    gap: calc(var(--space-1) * 0.85);
+  }
+
+  me .ui-portfolio-badges li {
+    padding: 0.28rem 0.55rem;
+  }
+}
 "#
 );
 
