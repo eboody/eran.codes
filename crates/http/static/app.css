@@ -492,7 +492,8 @@ input[type="password"] {
   display: grid;
   align-items: start;
   justify-items: end;
-  min-width: min(100%, 14rem);
+  inline-size: min(100%, 14rem);
+  min-width: 0;
 }
 
 .u-section-header-actions > :where(button, a)[data-button] {
@@ -645,10 +646,12 @@ input[type="password"] {
   gap: var(--page-stack-gap);
   margin-top: var(--page-stack-margin-top);
   padding-bottom: calc(var(--space-section) + var(--page-stack-padding-extra));
+  min-width: 0;
 }
 
 .u-page-stack > :where(header, section, article, div) {
   margin-top: 0;
+  min-width: 0;
   scroll-margin-top: var(--nav-scroll-offset);
 }
 

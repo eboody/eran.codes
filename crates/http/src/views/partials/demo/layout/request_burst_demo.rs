@@ -157,11 +157,15 @@ me [data-burst-delta] {
   }
 
   me [data-burst-actions] {
+    display: grid;
+    grid-template-columns: 1fr;
     gap: var(--space-1);
   }
 
   me [data-burst-actions-note] {
     font-size: var(--text-size-meta-sm);
+    max-inline-size: 100%;
+    overflow-wrap: anywhere;
   }
 
   me .ui-request-burst-result {

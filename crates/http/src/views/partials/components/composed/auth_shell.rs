@@ -27,10 +27,20 @@ me [data-auth-header] {
   gap: var(--space-2);
 }
 
-me [data-auth-summary] {
+me [data-auth-header] > :where(h1, p) {
   margin: 0;
+  max-inline-size: 100%;
+  overflow-wrap: anywhere;
+  word-break: break-word;
+}
+
+me [data-auth-summary] {
   max-width: 46ch;
   color: var(--text-muted);
+}
+
+me > [data-auth-card][data-auth-card-variant='account'] [data-auth-header] > h1 {
+  text-wrap: balance;
 }
 
 me [data-auth-message] {

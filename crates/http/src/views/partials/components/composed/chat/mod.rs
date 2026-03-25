@@ -130,7 +130,7 @@ me [data-chat-connection-state='disconnected'] {
 me > [data-chat-columns] {
   display: grid;
   gap: var(--chat-gap-columns);
-  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 17.5rem), 1fr));
 }
 
 me > [data-chat-columns] > [data-chat-panel] {
@@ -138,6 +138,7 @@ me > [data-chat-columns] > [data-chat-panel] {
   grid-template-rows: minmax(0, 1fr) auto;
   gap: var(--chat-space-2);
   min-height: 0;
+  min-width: 0;
 }
 
 me > [data-chat-columns] > [data-chat-panel] > [data-chat-compose] {
@@ -199,6 +200,7 @@ me [data-chat-window] {
   height: var(--chat-window-height);
   display: grid;
   grid-template-rows: auto minmax(0, 1fr);
+  min-width: 0;
 }
 
 me [data-chat-window] > header {
@@ -210,6 +212,7 @@ me [data-chat-window] > header {
   padding: var(--chat-space-1) var(--chat-space-2);
   border-bottom: 1px solid var(--chat-shell-header-separator);
   background: var(--chat-shell-header-bg);
+  min-width: 0;
 }
 
 me [data-chat-window] > header > [data-chat-role] {
@@ -251,6 +254,7 @@ me [data-chat-window] > header > [data-chat-room-state="offline"] {
 me [data-chat-feed] {
   min-height: 0;
   display: flex;
+  min-width: 0;
 }
 
 me [data-chat-feed] > [data-chat-messages] {
@@ -263,12 +267,14 @@ me [data-chat-feed] > [data-chat-messages] {
   overflow-y: auto;
   flex: 1;
   min-height: 0;
+  min-width: 0;
 }
 
 me [data-chat-feed] > [data-chat-messages] > [data-chat-message] {
   display: flex;
   align-items: flex-end;
   gap: var(--chat-avatar-gap);
+  min-width: 0;
 }
 
 me [data-chat-feed] > [data-chat-messages][data-chat-side="right"] > [data-chat-message] {
@@ -389,6 +395,22 @@ me [data-chat-feed] > [data-chat-messages] > [data-chat-message] > [data-chat-bu
   me > [data-chat-columns] > [data-chat-panel] > [data-chat-compose] > [data-chat-compose-row] > button {
     width: 100%;
     min-width: 0;
+  }
+}
+
+@media (max-width: 26rem) {
+  me {
+    --chat-avatar-size: 1.45rem;
+    --chat-bubble-max: 100%;
+  }
+
+  me [data-chat-window] > header {
+    flex-wrap: wrap;
+    align-items: flex-start;
+  }
+
+  me [data-chat-feed] > [data-chat-messages] {
+    padding: var(--chat-space-1);
   }
 }
 "#

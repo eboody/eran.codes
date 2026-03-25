@@ -203,9 +203,25 @@ me [data-nav-list='auth'] li {
 }
 
 me [data-nav-auth-text] {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.28rem;
   font-size: var(--_nav-link-font-size);
   color: var(--text-muted);
+  min-width: 0;
   max-inline-size: 8.75rem;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+me [data-nav-auth-prefix] {
+  flex: none;
+  white-space: nowrap;
+}
+
+me [data-nav-auth-name] {
+  min-width: 0;
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
@@ -421,7 +437,7 @@ me [data-nav-list='auth'] [data-nav-link-cta='true'] {
   me [data-nav-auth-text] {
     flex-basis: 100%;
     max-inline-size: none;
-    text-align: right;
+    justify-content: flex-end;
   }
 
   me [data-nav-guest-auth] .ui-button-row {
@@ -464,7 +480,7 @@ me [data-nav-list='auth'] [data-nav-link-cta='true'] {
 
   me [data-nav-auth-text] {
     grid-column: 1 / -1;
-    text-align: left;
+    justify-content: flex-start;
   }
 
   me [data-nav-guest-auth] .ui-button-row {
@@ -481,6 +497,10 @@ me [data-nav-list='auth'] [data-nav-link-cta='true'] {
 }
 
 @media (max-width: 23rem) {
+  me [data-nav-auth-prefix] {
+    display: none;
+  }
+
   me [data-nav-guest-auth] .ui-button-row {
     --button-row-grid-template: 1fr;
   }
@@ -618,10 +638,15 @@ pub struct NavSignedIn {
 
 impl Render for NavSignedIn {
     fn render(&self) -> maud::Markup {
+        let auth_label = format!("Signed in as {}", self.username);
+
         maud::html! {
             ul data-nav-list="auth" {
                 li {
-                    span data-nav-auth-text { "Signed in as " (&self.username) }
+                    span data-nav-auth-text aria-label=(auth_label) {
+                        span data-nav-auth-prefix { "Signed in as" }
+                        span data-nav-auth-name title=(&self.username) { (&self.username) }
+                    }
                 }
                 li {
                     a data-nav-link href=(&self.account_href) { "Account" }
@@ -822,5 +847,20 @@ mod tests {
         assert!(markup.contains("class=\"button secondary\""));
         assert!(markup.contains("href=\"/register\""));
         assert!(markup.contains(">Create account<"));
+    }
+
+    #[test]
+    fn signed_in_nav_exposes_split_auth_status() {
+        let markup = NavSignedIn::builder()
+            .username(Text::from("responsiveaudit"))
+            .account_href(Text::from("/protected"))
+            .logout_action(Text::from("/logout"))
+            .build()
+            .render()
+            .into_string();
+
+        assert!(markup.contains("data-nav-auth-prefix"));
+        assert!(markup.contains("data-nav-auth-name"));
+        assert!(markup.contains("aria-label=\"Signed in as responsiveaudit\""));
     }
 }

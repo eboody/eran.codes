@@ -14,6 +14,7 @@ me {
   --_home-hero-title-line-height: 0.95;
 
   display: grid;
+  grid-template-columns: minmax(0, 1fr);
   gap: clamp(2.05rem, 1.35rem + 2vw, 3.2rem);
   align-items: start;
   padding: clamp(1.95rem, 1.35rem + 1.5vw, 2.95rem);
@@ -83,6 +84,7 @@ me [data-home-hero-tags] .ui-pill {
 
 me [data-home-hero-card] {
   display: grid;
+  grid-template-columns: minmax(0, 1fr);
   gap: var(--space-3);
   align-content: start;
   inline-size: min(100%, 23rem);
@@ -97,6 +99,10 @@ me [data-home-hero-card] {
     ),
     var(--surface-raised);
   box-shadow: inset 0 1px 0 var(--surface-edge-default);
+}
+
+me [data-home-hero-card] > * {
+  min-width: 0;
 }
 
 me [data-home-hero-card-title] {
@@ -114,12 +120,16 @@ me [data-home-hero-card-status] {
   font-size: var(--text-size-body-md);
   line-height: var(--text-line-summary);
   color: color-mix(in srgb, var(--text-body) 90%, var(--text-muted) 10%);
+  overflow-wrap: anywhere;
+  word-break: break-word;
 }
 
 me [data-home-hero-card-detail] {
   margin: 0;
   max-width: 31ch;
   color: color-mix(in srgb, var(--text-muted) 94%, var(--text-body) 6%);
+  overflow-wrap: anywhere;
+  word-break: break-word;
 }
 
 me [data-home-hero-primary-actions] [data-button-row] {
