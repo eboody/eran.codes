@@ -9,6 +9,8 @@ crate::views::scoped::inline_css!(
 me {
   --_nav-shell-padding: 0.75rem 0.85rem;
   --_nav-link-font-size: var(--text-size-meta-md);
+  --_nav-brand-wrap-size: 2.6rem;
+  --_nav-brand-mark-size: 2.1rem;
   position: sticky;
   top: var(--nav-sticky-offset);
   z-index: 20;
@@ -136,6 +138,9 @@ me [data-nav-brand-mark-wrap] {
   display: inline-flex;
   align-items: center;
   justify-content: center;
+  inline-size: var(--_nav-brand-wrap-size);
+  block-size: var(--_nav-brand-wrap-size);
+  flex: none;
   isolation: isolate;
 }
 
@@ -143,8 +148,8 @@ me [data-nav-brand-mark-wrap]::before {
   content: "";
   position: absolute;
   inset: auto;
-  inline-size: 2.6rem;
-  block-size: 2.6rem;
+  inline-size: 100%;
+  block-size: 100%;
   top: 50%;
   left: 50%;
   z-index: 0;
@@ -161,8 +166,8 @@ me [data-nav-brand-mark-wrap]::before {
 
 me [data-nav-brand-mark] {
   display: block;
-  inline-size: 2.1rem;
-  block-size: 2.1rem;
+  inline-size: var(--_nav-brand-mark-size);
+  block-size: var(--_nav-brand-mark-size);
   flex: none;
   filter: drop-shadow(0.18rem 0.24rem 0.8rem color-mix(in srgb, black 18%, transparent));
 }
@@ -343,6 +348,8 @@ me [data-nav-list='auth'] [data-nav-link-cta='true'] {
 @media (max-width: 48rem) {
   me {
     --_nav-shell-padding: 0.58rem 0.72rem;
+    --_nav-brand-wrap-size: 2.25rem;
+    --_nav-brand-mark-size: 1.85rem;
     position: static;
     top: auto;
     --_nav-link-font-size: var(--text-size-meta-xs);
@@ -386,11 +393,6 @@ me [data-nav-list='auth'] [data-nav-link-cta='true'] {
     overflow: hidden;
     text-overflow: ellipsis;
     white-space: nowrap;
-  }
-
-  me [data-nav-brand-mark] {
-    inline-size: 1.85rem;
-    block-size: 1.85rem;
   }
 
   me [data-nav-brand-text] {

@@ -132,6 +132,7 @@
   --motion-standard: 220ms var(--ease-3);
   --local-tab-panel-enter-offset: calc(var(--space-2) * 0.5);
   --shell-max-inline: 1180px;
+  --shell-max-inline-wide: calc(100vw - (var(--shell-gutter) * 2));
   --shell-gutter: clamp(1rem, 2.5vw, 2rem);
   --shell-gutter-tight: clamp(0.85rem, 2vw, 1.15rem);
   --nav-sticky-offset: clamp(0.35rem, 0.1rem + 0.9vw, 0.85rem);
@@ -361,6 +362,10 @@ body {
 .u-container {
   inline-size: min(var(--shell-max-inline), calc(100% - (var(--shell-gutter) * 2)));
   margin-inline: auto;
+}
+
+.u-container--wide {
+  inline-size: min(var(--shell-max-inline-wide), calc(100% - (var(--shell-gutter) * 2)));
 }
 
 main.u-container {

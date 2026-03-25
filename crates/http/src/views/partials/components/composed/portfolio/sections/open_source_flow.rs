@@ -5,14 +5,14 @@ use crate::views::partials::components::portfolio::content::OpenSourceIndexConte
 crate::views::scoped::inline_css!(
     r#"
 me {
-  --open-source-inline-size: min(104rem, calc(100vw - (var(--shell-gutter) * 2)));
+  --open-source-max-inline-size: min(104rem, calc(100vw - (var(--shell-gutter) * 2)));
 
   display: grid;
   gap: clamp(1.35rem, 1.05rem + 0.9vw, 2.1rem);
-  inline-size: var(--open-source-inline-size);
-  max-inline-size: none;
+  inline-size: min(100%, var(--open-source-max-inline-size));
+  max-inline-size: var(--open-source-max-inline-size);
   margin-top: var(--space-5);
-  margin-inline: calc((100% - var(--open-source-inline-size)) / 2);
+  margin-inline: auto;
 }
 
 me > .ui-portfolio-surface {

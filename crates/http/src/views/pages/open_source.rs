@@ -20,11 +20,12 @@ impl Render for OpenSource {
             },
         }
         .render();
-        portfolio_shell::render(
+        portfolio_shell::render_with_frame_width(
             &content.page_title.to_string(),
             body,
             crate::paths::Route::OpenSource,
             self.user.clone(),
+            page::FrameWidth::Wide,
         )
     }
 }
@@ -47,6 +48,7 @@ mod tests {
         assert!(markup.contains("data-portfolio-crate-switcher"));
         assert!(markup.contains("data-code-block"));
         assert!(markup.contains("ui-portfolio-hero-aside"));
+        assert!(markup.contains("u-container--wide"));
         assert!(!markup.contains("Open-source crate deep dives"));
     }
 }

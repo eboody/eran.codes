@@ -9,7 +9,27 @@ pub(super) fn render(
     current_route: Route,
     user: Option<page::UserNav>,
 ) -> Markup {
-    let page_content = page::Frame::builder().content(content).build().render();
+    render_with_frame_width(
+        title,
+        content,
+        current_route,
+        user,
+        page::FrameWidth::Standard,
+    )
+}
+
+pub(super) fn render_with_frame_width(
+    title: &str,
+    content: Markup,
+    current_route: Route,
+    user: Option<page::UserNav>,
+    frame_width: page::FrameWidth,
+) -> Markup {
+    let page_content = page::Frame::builder()
+        .content(content)
+        .width(frame_width)
+        .build()
+        .render();
 
     page::Layout::builder()
         .title(title)

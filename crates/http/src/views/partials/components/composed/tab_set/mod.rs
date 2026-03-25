@@ -188,6 +188,8 @@ me.ui-portfolio-crate-gallery--flat {
 me.ui-portfolio-crate-gallery--flat .tab-set__tabs {
   gap: var(--space-2);
   padding-block-end: calc(var(--space-2) + var(--interactive-bleed));
+  padding-inline: 0;
+  margin-inline: 0;
   border-bottom-color: color-mix(in srgb, var(--border-default) 48%, transparent);
 }
 

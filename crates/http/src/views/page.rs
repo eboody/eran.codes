@@ -56,12 +56,30 @@ impl Render for UserNav {
 #[derive(Debug, Builder)]
 pub struct Frame {
     pub content: Markup,
+    #[builder(default)]
+    pub width: FrameWidth,
+}
+
+#[derive(Clone, Copy, Debug, Default)]
+pub enum FrameWidth {
+    #[default]
+    Standard,
+    Wide,
+}
+
+impl FrameWidth {
+    fn class_name(self) -> &'static str {
+        match self {
+            Self::Standard => "u-container",
+            Self::Wide => "u-container u-container--wide",
+        }
+    }
 }
 
 impl Render for Frame {
     fn render(&self) -> Markup {
         maud::html! {
-            main class="u-container" data-page-frame {
+            main class=(self.width.class_name()) data-page-frame {
                 (css())
                 (&self.content)
             }
@@ -285,6 +303,18 @@ mod tests {
 
         assert!(markup.contains("data-page-frame"));
         assert!(markup.contains("data-page-section"));
+    }
+
+    #[test]
+    fn wide_frame_renders_wide_container_class() {
+        let markup = Frame::builder()
+            .content(maud::html! { div {} })
+            .width(FrameWidth::Wide)
+            .build()
+            .render()
+            .into_string();
+
+        assert!(markup.contains("u-container u-container--wide"));
     }
 
     #[test]
