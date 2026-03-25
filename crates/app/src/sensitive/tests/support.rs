@@ -421,6 +421,38 @@ impl ProviderClient for RetryAfterUnauthorizedProvider {
     }
 }
 
+pub(super) struct ConfigurationFailingProvider;
+
+#[async_trait]
+impl ProviderClient for ConfigurationFailingProvider {
+    fn boundary_meta(&self, _provider: sensitive::Provider) -> ProviderBoundaryMeta {
+        sandbox_meta()
+    }
+
+    async fn refresh_token(
+        &self,
+        _provider: sensitive::Provider,
+        _now: SystemTime,
+        _current_token: Option<&SecretString>,
+    ) -> Result<ProviderToken> {
+        Err(failure::Error::provider_failure(
+            ProviderOperation::RefreshToken,
+            ProviderFailureKind::Configuration,
+            std::io::Error::other("sandbox credentials missing"),
+        ))
+    }
+
+    async fn fetch_records(
+        &self,
+        _provider: sensitive::Provider,
+        _token: &ProviderToken,
+        _cursor: Option<&sensitive::SyncCursor>,
+        _now: SystemTime,
+    ) -> Result<ProviderRecords> {
+        unreachable!("fetch_records should not run when refresh_token fails")
+    }
+}
+
 pub(super) fn example_record() -> sensitive::Record {
     sensitive::Record::builder()
         .external_id(
@@ -588,6 +620,18 @@ fn local_stub_meta() -> ProviderBoundaryMeta {
         )
         .auth_mode(sensitive::ProviderAuthMode::StubIssuedToken)
         .maybe_retry_backoff_secs(None)
+        .build()
+}
+
+pub(super) fn sandbox_meta() -> ProviderBoundaryMeta {
+    ProviderBoundaryMeta::builder()
+        .mode(sensitive::ProviderMode::SandboxHttp)
+        .endpoint(
+            sensitive::DetailText::try_new("https://sandbox.example.test")
+                .expect("detail text"),
+        )
+        .auth_mode(sensitive::ProviderAuthMode::ClientCredentials)
+        .retry_backoff_secs(45)
         .build()
 }
 
