@@ -104,6 +104,7 @@ impl EventsConnectionFlow<FilterApplied> {
         let (receiver, session_guard) = self.state.sse.subscribe(&self.session);
         let cleanup_guard = ConnectionCleanupGuard::new(
             stream_key,
+            self.state.sse.clone(),
             self.state.demo.surreal.guard.clone(),
             self.state.demo.surreal.cancel.clone(),
             self.state.demo.chat_room_bindings.clone(),
@@ -140,6 +141,8 @@ impl EventsConnectionFlow<Ready> {
         let session_id = self.session_id;
 
         let stream = stream! {
+            // Bind cleanup first so the session guard drops before cleanup runs.
+            // Registry presence is the truth surface for "last connection wins".
             let _cleanup_guard = cleanup_guard;
             let _session_guard = session_guard;
             loop {
@@ -242,6 +245,7 @@ pub async fn events(
 
 struct ConnectionCleanupGuard {
     stream_key: crate::sse::StreamKey,
+    sse: crate::sse::Registry,
     surreal_guard: std::sync::Arc<
         dashmap::DashMap<crate::sse::StreamKey, std::sync::Arc<tokio::sync::Mutex<()>>>,
     >,
@@ -255,6 +259,7 @@ struct ConnectionCleanupGuard {
 impl ConnectionCleanupGuard {
     fn new(
         stream_key: crate::sse::StreamKey,
+        sse: crate::sse::Registry,
         surreal_guard: std::sync::Arc<
             dashmap::DashMap<crate::sse::StreamKey, std::sync::Arc<tokio::sync::Mutex<()>>>,
         >,
@@ -266,6 +271,7 @@ impl ConnectionCleanupGuard {
     ) -> Self {
         Self {
             stream_key,
+            sse,
             surreal_guard,
             surreal_cancel,
             chat_room_bindings,
@@ -276,6 +282,9 @@ impl ConnectionCleanupGuard {
 
 impl Drop for ConnectionCleanupGuard {
     fn drop(&mut self) {
+        if self.sse.has_stream_key(&self.stream_key) {
+            return;
+        }
         if let Some((_, token)) = self.surreal_cancel.remove(&self.stream_key) {
             token.cancel();
         }
@@ -346,6 +355,7 @@ mod tests {
 
         let cleanup_a = ConnectionCleanupGuard::new(
             tab_a.stream_key().clone(),
+            registry.clone(),
             surreal_guard.clone(),
             surreal_cancel.clone(),
             crate::chat_demo::room::Bindings::new(),
@@ -353,6 +363,7 @@ mod tests {
         );
         let cleanup_b = ConnectionCleanupGuard::new(
             tab_b.stream_key().clone(),
+            registry.clone(),
             surreal_guard.clone(),
             surreal_cancel.clone(),
             crate::chat_demo::room::Bindings::new(),
@@ -378,5 +389,77 @@ mod tests {
         assert!(!trace_log.snapshot_session(&session_id).is_empty());
         assert!(surreal_guard.get(tab_b.stream_key()).is_none());
         assert!(surreal_cancel.get(tab_b.stream_key()).is_none());
+    }
+
+    #[test]
+    fn cleanup_waits_for_last_connection_on_same_stream_key() {
+        let registry = crate::sse::Registry::new();
+        let trace_log = crate::trace_log::Store::builder()
+            .with_sse(registry.clone())
+            .with_emit_sse(false)
+            .build();
+        let session_id = SessionId::new("session-dup");
+        let handle = crate::sse::Handle::with_tab(
+            session_id.clone(),
+            Some(SseTabId::new("tab-dup")),
+        );
+        let (_rx_a, guard_a) = registry.subscribe(&handle);
+        let (_rx_b, guard_b) = registry.subscribe(&handle);
+
+        let surreal_guard = std::sync::Arc::new(DashMap::<
+            crate::sse::StreamKey,
+            std::sync::Arc<tokio::sync::Mutex<()>>,
+        >::new());
+        let surreal_cancel = std::sync::Arc::new(DashMap::<
+            crate::sse::StreamKey,
+            tokio_util::sync::CancellationToken,
+        >::new());
+        surreal_guard.insert(
+            handle.stream_key().clone(),
+            std::sync::Arc::new(tokio::sync::Mutex::new(())),
+        );
+        surreal_cancel.insert(
+            handle.stream_key().clone(),
+            tokio_util::sync::CancellationToken::new(),
+        );
+        let room_bindings = crate::chat_demo::room::Bindings::new();
+        let room_id = domain::chat::room::Id::new_v4();
+        room_bindings.bind(&handle, room_id);
+        trace_log.set_stream_flow_filter(&session_id, handle.tab_id(), Some("chat"));
+
+        let cleanup_a = ConnectionCleanupGuard::new(
+            handle.stream_key().clone(),
+            registry.clone(),
+            surreal_guard.clone(),
+            surreal_cancel.clone(),
+            room_bindings.clone(),
+            trace_log.clone(),
+        );
+        let cleanup_b = ConnectionCleanupGuard::new(
+            handle.stream_key().clone(),
+            registry.clone(),
+            surreal_guard.clone(),
+            surreal_cancel.clone(),
+            room_bindings.clone(),
+            trace_log.clone(),
+        );
+
+        drop(guard_a);
+        drop(cleanup_a);
+
+        assert!(registry.has_stream_key(handle.stream_key()));
+        assert!(trace_log.has_stream_flow_filter(handle.stream_key()));
+        assert!(surreal_guard.get(handle.stream_key()).is_some());
+        assert!(surreal_cancel.get(handle.stream_key()).is_some());
+        assert_eq!(room_bindings.room_id_for(&handle), Some(room_id));
+
+        drop(guard_b);
+        drop(cleanup_b);
+
+        assert!(!registry.has_stream_key(handle.stream_key()));
+        assert!(!trace_log.has_stream_flow_filter(handle.stream_key()));
+        assert!(surreal_guard.get(handle.stream_key()).is_none());
+        assert!(surreal_cancel.get(handle.stream_key()).is_none());
+        assert_eq!(room_bindings.room_id_for(&handle), None);
     }
 }

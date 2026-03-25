@@ -1,6 +1,10 @@
 use std::{
     collections::VecDeque,
-    sync::{Arc, Mutex},
+    hash::Hash,
+    sync::{
+        Arc, Mutex,
+        atomic::{AtomicU64, Ordering},
+    },
 };
 
 use bon::{Builder, bon};
@@ -70,13 +74,43 @@ impl TraceEntry {
     }
 }
 
+#[derive(Clone, Debug)]
+struct TraceQueue {
+    entries: VecDeque<TraceEntry>,
+    last_touched: u64,
+}
+
+impl TraceQueue {
+    fn new(last_touched: u64) -> Self {
+        Self {
+            entries: VecDeque::new(),
+            last_touched,
+        }
+    }
+
+    fn push(
+        &mut self,
+        entry: TraceEntry,
+        max_entries: usize,
+        last_touched: u64,
+    ) -> TraceEntry {
+        if self.entries.len() >= max_entries {
+            self.entries.pop_front();
+        }
+        self.last_touched = last_touched;
+        self.entries.push_back(entry);
+        self.entries.back().cloned().expect("trace entry")
+    }
+}
+
 #[derive(Clone)]
 pub struct Store {
-    requests: Arc<DashMap<RequestId, VecDeque<TraceEntry>>>,
-    sessions: Arc<DashMap<SessionId, VecDeque<TraceEntry>>>,
+    requests: Arc<DashMap<RequestId, TraceQueue>>,
+    sessions: Arc<DashMap<SessionId, TraceQueue>>,
     flow_filters: Arc<DashMap<sse::StreamKey, FlowFilterTerms>>,
     global: Arc<Mutex<VecDeque<TraceEntry>>>,
     max_entries: usize,
+    next_touch: Arc<AtomicU64>,
     sse: sse::Registry,
     emit_sse: bool,
 }
@@ -89,6 +123,7 @@ impl Store {
             flow_filters: Arc::new(DashMap::new()),
             global: Arc::new(Mutex::new(VecDeque::new())),
             max_entries,
+            next_touch: Arc::new(AtomicU64::new(0)),
             sse,
             emit_sse,
         }
@@ -100,20 +135,13 @@ impl Store {
         session_id: Option<&SessionId>,
         entry: TraceEntry,
     ) {
-        let mut queue = self.requests.entry(request_id.clone()).or_default();
-        if queue.len() >= self.max_entries {
-            queue.pop_front();
-        }
-        queue.push_back(entry);
-
-        let entry = queue.back().cloned().expect("entry");
+        let touch = self.next_touch();
+        let entry = self.record_scoped_entry(&self.requests, request_id, entry, touch);
+        self.prune_scoped_keys(&self.requests);
 
         if let Some(session_id) = session_id {
-            let mut session_queue = self.sessions.entry(session_id.clone()).or_default();
-            if session_queue.len() >= self.max_entries {
-                session_queue.pop_front();
-            }
-            session_queue.push_back(entry.clone());
+            self.record_scoped_entry(&self.sessions, session_id, entry.clone(), touch);
+            self.prune_scoped_keys(&self.sessions);
         }
 
         if let Ok(mut global) = self.global.lock() {
@@ -133,11 +161,9 @@ impl Store {
 
     pub fn record_sse_event(&self, session_id: Option<&SessionId>, entry: TraceEntry) {
         if let Some(session_id) = session_id {
-            let mut session_queue = self.sessions.entry(session_id.clone()).or_default();
-            if session_queue.len() >= self.max_entries {
-                session_queue.pop_front();
-            }
-            session_queue.push_back(entry.clone());
+            let touch = self.next_touch();
+            self.record_scoped_entry(&self.sessions, session_id, entry.clone(), touch);
+            self.prune_scoped_keys(&self.sessions);
         }
 
         if let Ok(mut global) = self.global.lock() {
@@ -220,14 +246,14 @@ impl Store {
     pub fn snapshot_request(&self, request_id: &RequestId) -> Vec<TraceEntry> {
         self.requests
             .get(request_id)
-            .map(|queue| queue.iter().cloned().collect())
+            .map(|queue| queue.entries.iter().cloned().collect())
             .unwrap_or_default()
     }
 
     pub fn snapshot_session(&self, session_id: &SessionId) -> Vec<TraceEntry> {
         self.sessions
             .get(session_id)
-            .map(|queue| queue.iter().cloned().collect())
+            .map(|queue| queue.entries.iter().cloned().collect())
             .unwrap_or_default()
     }
 
@@ -238,11 +264,56 @@ impl Store {
             .unwrap_or_default()
     }
 
+    #[cfg(test)]
+    pub(crate) fn has_stream_flow_filter(&self, stream_key: &sse::StreamKey) -> bool {
+        self.flow_filters.contains_key(stream_key)
+    }
+
     fn filter_terms_for_stream(&self, stream_key: &sse::StreamKey) -> FlowFilterTerms {
         let Some(query) = self.flow_filters.get(stream_key) else {
             return FlowFilterTerms::default();
         };
         query.clone()
+    }
+
+    fn next_touch(&self) -> u64 {
+        self.next_touch.fetch_add(1, Ordering::Relaxed) + 1
+    }
+
+    fn record_scoped_entry<K>(
+        &self,
+        map: &DashMap<K, TraceQueue>,
+        key: &K,
+        entry: TraceEntry,
+        touch: u64,
+    ) -> TraceEntry
+    where
+        K: Clone + Eq + Hash,
+    {
+        let mut queue = map
+            .entry(key.clone())
+            .or_insert_with(|| TraceQueue::new(touch));
+        queue.push(entry, self.max_entries, touch)
+    }
+
+    fn prune_scoped_keys<K>(&self, map: &DashMap<K, TraceQueue>)
+    where
+        K: Clone + Eq + Hash,
+    {
+        let len = map.len();
+        if len <= self.max_entries {
+            return;
+        }
+
+        let mut keys: Vec<(K, u64)> = map
+            .iter()
+            .map(|entry| (entry.key().clone(), entry.value().last_touched))
+            .collect();
+        keys.sort_by_key(|(_, touch)| *touch);
+
+        for (key, _) in keys.into_iter().take(len - self.max_entries) {
+            map.remove(&key);
+        }
     }
 }
 
@@ -255,5 +326,72 @@ impl Store {
         #[builder(default = true, setters(name = with_emit_sse))] emit_sse: bool,
     ) -> Self {
         Self::new(sse, max_entries, emit_sse)
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    fn trace_entry(message: &str) -> TraceEntry {
+        TraceEntry::builder()
+            .timestamp(TimestampText::new("2026-03-25 00:00:00"))
+            .level(LogLevelText::new("INFO"))
+            .target(LogTargetText::new("demo.request"))
+            .message(LogMessageText::new(message))
+            .fields(Vec::new())
+            .build()
+    }
+
+    #[test]
+    fn prunes_oldest_request_and_session_keys_at_store_bound() {
+        let store = Store::builder()
+            .with_sse(crate::sse::Registry::new())
+            .with_max_entries(2)
+            .with_emit_sse(false)
+            .build();
+        let request_a = RequestId::new("req-a");
+        let request_b = RequestId::new("req-b");
+        let request_c = RequestId::new("req-c");
+        let session_a = SessionId::new("session-a");
+        let session_b = SessionId::new("session-b");
+        let session_c = SessionId::new("session-c");
+
+        store.record_with_session(&request_a, Some(&session_a), trace_entry("request-a"));
+        store.record_with_session(&request_b, Some(&session_b), trace_entry("request-b"));
+        store.record_with_session(&request_c, Some(&session_c), trace_entry("request-c"));
+
+        assert!(store.snapshot_request(&request_a).is_empty());
+        assert_eq!(store.snapshot_request(&request_b).len(), 1);
+        assert_eq!(store.snapshot_request(&request_c).len(), 1);
+
+        assert!(store.snapshot_session(&session_a).is_empty());
+        assert_eq!(store.snapshot_session(&session_b).len(), 1);
+        assert_eq!(store.snapshot_session(&session_c).len(), 1);
+
+        let global = store.snapshot_global();
+        assert_eq!(global.len(), 2);
+        assert_eq!(global[0].message.to_string(), "request-b");
+        assert_eq!(global[1].message.to_string(), "request-c");
+    }
+
+    #[test]
+    fn record_sse_event_prunes_oldest_session_keys() {
+        let store = Store::builder()
+            .with_sse(crate::sse::Registry::new())
+            .with_max_entries(2)
+            .with_emit_sse(false)
+            .build();
+        let session_a = SessionId::new("session-a");
+        let session_b = SessionId::new("session-b");
+        let session_c = SessionId::new("session-c");
+
+        store.record_sse_event(Some(&session_a), trace_entry("sse-a"));
+        store.record_sse_event(Some(&session_b), trace_entry("sse-b"));
+        store.record_sse_event(Some(&session_c), trace_entry("sse-c"));
+
+        assert!(store.snapshot_session(&session_a).is_empty());
+        assert_eq!(store.snapshot_session(&session_b).len(), 1);
+        assert_eq!(store.snapshot_session(&session_c).len(), 1);
     }
 }

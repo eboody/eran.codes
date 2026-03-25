@@ -280,6 +280,10 @@ impl Registry {
             .map(|entry| entry.key().clone())
             .collect()
     }
+
+    pub(crate) fn has_stream_key(&self, key: &StreamKey) -> bool {
+        self.sessions.contains_key(key)
+    }
 }
 
 pub struct SessionGuard {
