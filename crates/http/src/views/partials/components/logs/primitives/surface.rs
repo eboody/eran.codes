@@ -46,6 +46,7 @@ me .ui-log-scroll {
   flex-direction: column;
   gap: var(--space-4);
   min-height: 0;
+  min-width: 0;
   padding: var(--log-scroll-padding, 0 var(--space-1) 0 0);
   border: var(--log-scroll-border, 0);
   border-radius: var(--log-scroll-radius, 0);
@@ -72,6 +73,7 @@ me .ui-log-entries {
   display: flex;
   flex-direction: column;
   gap: var(--space-3);
+  min-width: 0;
 }
 
 me .ui-log-entry {
@@ -86,6 +88,7 @@ me [data-log-timestamp] {
   font-variant-numeric: tabular-nums;
   font-size: var(--text-size-label-xs);
   line-height: var(--text-line-flat);
+  overflow-wrap: anywhere;
 }
 
 me [data-log-message] {
@@ -99,9 +102,11 @@ me .ui-pill--log-fields {
 }
 
 me .ui-pill-cluster {
-  display: inline-flex;
+  display: flex;
   flex-wrap: wrap;
   gap: var(--space-2);
+  max-inline-size: 100%;
+  min-width: 0;
 }
 
 me .ui-log-table {
@@ -155,6 +160,7 @@ me .ui-log-group-header {
 
 me .ui-log-flow-shell {
   display: grid;
+  grid-template-columns: minmax(0, 1fr);
   gap: var(--log-flow-shell-gap, var(--space-3));
   min-width: 0;
 }
@@ -163,6 +169,7 @@ me .ui-log-flow-list {
   display: flex;
   flex-direction: column;
   gap: var(--space-2);
+  min-width: 0;
 }
 
 me .ui-log-flow-item {
@@ -188,6 +195,7 @@ me .ui-log-flow-item {
   text-decoration: none;
   text-align: left;
   transition: var(--log-flow-item-transition, none);
+  min-width: 0;
 }
 
 me .ui-log-flow-item:hover {
@@ -259,6 +267,7 @@ me .ui-log-flow-item-time {
 
 me .ui-log-flow-details {
   min-height: 0;
+  min-width: 0;
   padding: var(--log-flow-details-padding, 0);
   border: var(--log-flow-details-border, 0);
   border-radius: var(--log-flow-details-radius, 0);
@@ -270,6 +279,7 @@ me .ui-log-flow-detail {
   display: none;
   flex-direction: column;
   gap: var(--space-2);
+  min-width: 0;
 }
 
 me .ui-log-flow-detail.is-default {
@@ -299,6 +309,8 @@ me .ui-log-flow-detail-header {
 me .ui-log-flow-detail-title {
   margin: 0;
   font-size: var(--log-flow-detail-title-size, var(--control-font-size));
+  min-width: 0;
+  overflow-wrap: anywhere;
 }
 
 me .ui-log-flow-event {
@@ -307,6 +319,7 @@ me .ui-log-flow-event {
   gap: var(--space-1);
   padding-block: var(--log-flow-event-padding-block, 0);
   border-bottom: var(--log-flow-event-border, 0);
+  min-width: 0;
 }
 
 me .ui-log-flow-event:last-child {
@@ -317,7 +330,13 @@ me .ui-log-flow-event:last-child {
 me .ui-log-flow-event-head {
   display: flex;
   align-items: center;
+  flex-wrap: wrap;
   gap: var(--space-2);
+  min-width: 0;
+}
+
+me .ui-log-flow-event-head > * {
+  min-width: 0;
 }
 
 me .ui-log-flow-event-summary {
@@ -423,6 +442,11 @@ me .ui-log-flow-event-summary-inline {
     gap: var(--space-1);
   }
 
+  me .ui-log-flow-detail-header {
+    flex-direction: column;
+    justify-content: flex-start;
+  }
+
   me .ui-log-flow-shell {
     gap: var(--space-2);
   }
@@ -433,6 +457,7 @@ me .ui-log-flow-event-summary-inline {
   }
 
   me .ui-log-flow-item-title,
+  me .ui-log-flow-detail-title,
   me .ui-log-flow-event-summary,
   me [data-log-message] {
     font-size: var(--text-size-label-sm);

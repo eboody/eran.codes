@@ -12,6 +12,8 @@ const STYLES: &str = r#"
   --pill-padding-inline: 0.55rem;
   display: inline-flex;
   align-items: center;
+  min-width: 0;
+  max-inline-size: 100%;
   padding: var(--pill-padding-block) var(--pill-padding-inline);
   border-radius: var(--radius-pill);
   border: 1px solid var(--pill-accent, var(--ui-border-muted));
@@ -155,6 +157,7 @@ const STYLES: &str = r#"
 
 @media (max-width: 20rem) {
   .ui-pill--log-fields,
+  .ui-pill--log-target,
   .ui-pill--path {
     max-inline-size: 100%;
     align-items: flex-start;
