@@ -17,10 +17,12 @@ pub(super) fn chat_incoming_event(
         entry,
         &[
             (LogFieldKey::Receiver, "receiver"),
-            (LogFieldKey::UserId, "user_id"),
             (LogFieldKey::PayloadBytes, "payload_bytes"),
         ],
     );
+    if entry.field_text(LogFieldKey::UserId).is_some() {
+        pills.push(log::vm::redaction::authenticated_user_pill());
+    }
 
     (
         Text::from(format!("Backend accepted chat message from {sender}")),

@@ -44,7 +44,7 @@ fn backend_demo_db_event_summary_includes_normalized_statement() {
     assert!(event
         .pills
         .iter()
-        .any(|pill| pill.text.to_string() == "$1=2e44a2af"));
+        .any(|pill| pill.text.to_string() == "$1=(redacted)"));
 }
 
 #[test]

@@ -3,6 +3,7 @@ mod entry_fields;
 mod grouped_stream;
 #[cfg(test)]
 mod network_tables;
+mod redaction;
 mod request_flow;
 
 pub use chat_flow_rows::chat_flow_rows;

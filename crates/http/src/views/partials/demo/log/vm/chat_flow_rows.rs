@@ -1,7 +1,7 @@
 use maud::{Markup, Render};
 
 use crate::trace_log::{
-    demo_chat::{Direction as FlowDirection, Sender as ChatSender, short_hyphenated_text},
+    demo_chat::{Direction as FlowDirection, Sender as ChatSender},
     store,
 };
 use crate::types::{LogFieldKey, Text};
@@ -51,17 +51,8 @@ fn receiver_pill(entry: &store::TraceEntry) -> Markup {
 }
 
 fn user_pill(entry: &store::TraceEntry) -> Markup {
-    let Some(user_id) = entry.field_text(LogFieldKey::UserId) else {
-        return components::Pill::fields("user:unknown").render();
-    };
-    let short_id = short_hyphenated_text(user_id);
     let sender = ChatSender::from_entry(entry);
-    let (label, kind) = match sender {
-        ChatSender::You => (format!("You ({short_id})"), components::BadgeKind::You),
-        ChatSender::Demo => (format!("Demo ({short_id})"), components::BadgeKind::Demo),
-        ChatSender::Unknown => (format!("User ({short_id})"), components::BadgeKind::Secondary),
-    };
-    components::Pill::badge(label, kind).render()
+    super::redaction::chat_user_pill(sender, entry.field_text(LogFieldKey::UserId)).render()
 }
 
 #[cfg(test)]
@@ -121,5 +112,25 @@ mod tests {
         assert!(rendered.contains("unknown"));
         assert!(rendered.contains("to:clients"));
         assert!(rendered.contains("user:unknown"));
+    }
+
+    #[test]
+    fn user_ids_are_redacted_from_chat_flow_rows() {
+        let row = entry(
+            "12:00:01",
+            vec![
+                ("sender", "you"),
+                ("receiver", "server"),
+                ("user_id", "abc-def"),
+            ],
+        );
+        let rows = chat_flow_rows(&[&row]);
+
+        let rendered = rows[0]
+            .iter()
+            .map(|cell| cell.clone().into_string())
+            .collect::<String>();
+        assert!(rendered.contains("You (redacted)"));
+        assert!(!rendered.contains("abc-def"));
     }
 }

@@ -1,6 +1,7 @@
 use crate::trace_log::store;
 use crate::types::{LogFieldKey, Text};
 use crate::views::partials::components;
+use crate::views::partials::demo::log::vm::redaction;
 
 pub(super) fn method_or_unknown(entry: &store::TraceEntry) -> Text {
     entry
@@ -43,12 +44,14 @@ pub(super) fn field_pills(entry: &store::TraceEntry) -> Vec<components::Pill> {
             (LogFieldKey::LatencyMs, "latency_ms"),
             (LogFieldKey::Sender, "sender"),
             (LogFieldKey::Receiver, "receiver"),
-            (LogFieldKey::UserId, "user_id"),
             (LogFieldKey::Selector, "selector"),
             (LogFieldKey::Mode, "mode"),
             (LogFieldKey::PayloadBytes, "payload_bytes"),
         ],
     );
+    if entry.field_text(LogFieldKey::UserId).is_some() {
+        pills.push(redaction::authenticated_user_pill());
+    }
     push_db_bind_pills(&mut pills, entry);
 
     if pills.is_empty() {
@@ -71,8 +74,8 @@ pub(super) fn push_fields_as_pills(
 }
 
 fn push_db_bind_pills(pills: &mut Vec<components::Pill>, entry: &store::TraceEntry) {
-    for (index, value) in db_bind_values(entry) {
-        pills.push(components::Pill::fields(format!("${index}={value}")));
+    for (index, _) in db_bind_values(entry) {
+        pills.push(redaction::redacted_bind_pill(index));
     }
 }
 

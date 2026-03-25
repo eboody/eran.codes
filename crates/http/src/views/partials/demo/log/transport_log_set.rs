@@ -37,7 +37,7 @@ impl Render for TransportLogSet<'_> {
             .layout(components::logs::primitives::SurfaceLayout::Panels)
             .children(vec![
                 components::logs::primitives::Panel::builder()
-                    .title(Text::from("System flow timeline"))
+                    .title(Text::from("Session flow timeline"))
                     .body(components::logs::primitives::PanelBody::Content(flow_body))
                     .build(),
             ])
@@ -93,7 +93,7 @@ mod tests {
 
         assert!(markup.contains("id=\"network-log-target\""));
         assert_eq!(markup.matches("id=\"network-log-target\"").count(), 1);
-        assert!(markup.contains("System flow timeline"));
+        assert!(markup.contains("Session flow timeline"));
         assert!(markup.contains("No request flows yet."));
     }
 
@@ -184,5 +184,59 @@ mod tests {
 
         assert!(!markup.contains("GET /events"));
         assert!(markup.contains("POST /demo/chat/messages"));
+    }
+
+    #[test]
+    fn redacts_authenticated_user_ids_and_db_bind_values_from_flow_timeline() {
+        let entries = vec![
+            entry(
+                "12:00:01",
+                "demo.request",
+                "request.end",
+                vec![
+                    ("request_id", "req-redact-111"),
+                    ("method", "POST"),
+                    ("path", "/demo/chat/messages"),
+                    ("status", "202"),
+                ],
+            ),
+            entry(
+                "12:00:02",
+                "app::chat::service",
+                "moderation check passed",
+                vec![
+                    ("request_id", "req-redact-111"),
+                    ("user_id", "user-1"),
+                ],
+            ),
+            entry(
+                "12:00:03",
+                "demo.db",
+                "\"db query\"",
+                vec![
+                    ("request_id", "req-redact-111"),
+                    (
+                        "db_statement",
+                        "SELECT id FROM chat_rooms WHERE id = $1 AND created_by = $2",
+                    ),
+                    ("db_bind_1", "room-secret"),
+                    ("db_bind_2", "owner-secret"),
+                ],
+            ),
+        ];
+
+        let markup = TransportLogSet::builder()
+            .entries(&entries)
+            .build()
+            .render()
+            .into_string();
+
+        assert!(markup.contains("Session flow timeline"));
+        assert!(markup.contains("user=authenticated (redacted)"));
+        assert!(markup.contains("$1=(redacted)"));
+        assert!(markup.contains("$2=(redacted)"));
+        assert!(!markup.contains("user-1"));
+        assert!(!markup.contains("room-secret"));
+        assert!(!markup.contains("owner-secret"));
     }
 }

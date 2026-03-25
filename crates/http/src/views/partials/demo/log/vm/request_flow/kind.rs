@@ -37,6 +37,7 @@ pub(super) fn flow_event(entry: &store::TraceEntry) -> Option<FlowEvent> {
         (target::Kind::Known(target::Known::DemoSse), _) => Some(FlowEvent::Sse),
         (target::Kind::Known(target::Known::DemoRequest), _)
         | (target::Kind::Known(target::Known::DemoRequestDiagnostic), _)
+        | (target::Kind::Known(target::Known::DemoDb), _)
         | (target::Kind::Known(target::Known::DemoChat), _) => {
             Some(FlowEvent::Backend)
         }
