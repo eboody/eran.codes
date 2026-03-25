@@ -556,25 +556,25 @@ impl RecordPayload {
             .external_id(self.external_id)
             .label(
                 sensitive_domain::Label::try_new(self.redacted_label)
-                    .map_err(|source| malformed_payload_error(source))?,
+                    .map_err(malformed_payload_error)?,
             )
             .last4(
                 sensitive_domain::Last4::try_new(self.redacted_last4)
-                    .map_err(|source| malformed_payload_error(source))?,
+                    .map_err(malformed_payload_error)?,
             )
             .authorized(
                 sensitive_domain::AuthorizedFields::builder()
                     .subject_name(
                         sensitive_domain::DetailText::try_new(self.subject_name)
-                            .map_err(|source| malformed_payload_error(source))?,
+                            .map_err(malformed_payload_error)?,
                     )
                     .classification(
                         sensitive_domain::DetailText::try_new(self.classification)
-                            .map_err(|source| malformed_payload_error(source))?,
+                            .map_err(malformed_payload_error)?,
                     )
                     .note(
                         sensitive_domain::DetailText::try_new(self.note)
-                            .map_err(|source| malformed_payload_error(source))?,
+                            .map_err(malformed_payload_error)?,
                     )
                     .build(),
             )
