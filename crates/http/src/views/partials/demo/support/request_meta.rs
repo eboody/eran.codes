@@ -25,10 +25,22 @@ impl Render for RequestMeta {
                     .title(Text::from("Request metadata"))
                     .items(vec![
                         partials::StatusCardItem::optional("request_id", self.request_id.clone()),
-                        partials::StatusCardItem::optional("session_id", self.session_id.clone()),
-                        partials::StatusCardItem::optional("user_id", self.user_id.clone()),
-                        partials::StatusCardItem::optional("client_ip", self.client_ip.clone()),
-                        partials::StatusCardItem::optional("user_agent", self.user_agent.clone()),
+                        partials::StatusCardItem::text(
+                            "session_id",
+                            super::present_redacted(&self.session_id),
+                        ),
+                        partials::StatusCardItem::text(
+                            "user_id",
+                            super::authenticated_redacted(&self.user_id),
+                        ),
+                        partials::StatusCardItem::text(
+                            "client_ip",
+                            super::captured_redacted(&self.client_ip),
+                        ),
+                        partials::StatusCardItem::text(
+                            "user_agent",
+                            super::captured_redacted(&self.user_agent),
+                        ),
                     ])
                     .build()
                     .render(),
@@ -41,5 +53,33 @@ impl Render for RequestMeta {
             )
             .build()
             .render()
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn redacts_internal_request_metadata_values() {
+        let markup = RequestMeta::builder()
+            .maybe_request_id(Some(Text::from("req-123")))
+            .maybe_session_id(Some(Text::from("session-abc")))
+            .maybe_user_id(Some(Text::from("user-xyz")))
+            .maybe_client_ip(Some(Text::from("203.0.113.5")))
+            .maybe_user_agent(Some(Text::from("ExampleBrowser/1.0")))
+            .trace(Vec::new())
+            .build()
+            .render()
+            .into_string();
+
+        assert!(markup.contains("req-123"));
+        assert!(markup.contains("present (redacted)"));
+        assert!(markup.contains("authenticated (redacted)"));
+        assert!(markup.contains("captured (redacted)"));
+        assert!(!markup.contains("session-abc"));
+        assert!(!markup.contains("user-xyz"));
+        assert!(!markup.contains("203.0.113.5"));
+        assert!(!markup.contains("ExampleBrowser/1.0"));
     }
 }

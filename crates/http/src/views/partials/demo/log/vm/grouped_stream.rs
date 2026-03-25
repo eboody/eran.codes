@@ -99,19 +99,22 @@ fn compact_fields(entry: &store::TraceEntry) -> Vec<components::Pill> {
     entry
         .fields
         .iter()
-        .filter_map(|(name, value)| {
-            let field_kind = LogFieldKey::try_from(name).ok();
-            if matches!(
-                field_kind,
-                Some(LogFieldKey::Method | LogFieldKey::Path | LogFieldKey::Status)
-            ) {
-                return None;
-            }
-            let value = Text::from(value.to_string());
-            Some(components::Pill::fields(format!("{}={}", name, value)))
-        })
+        .filter_map(|(name, value)| public_support_pill(name, value))
         .take(2)
         .collect()
+}
+
+fn public_support_pill(
+    name: &crate::types::LogFieldName,
+    value: &crate::types::LogFieldValue,
+) -> Option<components::Pill> {
+    let rendered = match LogFieldKey::try_from(name).ok()? {
+        LogFieldKey::LatencyMs => format!("latency_ms={value}"),
+        LogFieldKey::Sender => format!("source={value}"),
+        _ => return None,
+    };
+
+    Some(components::Pill::fields(rendered))
 }
 
 #[cfg(test)]
@@ -143,5 +146,47 @@ mod tests {
         assert!(markup.contains("request_id=def"));
         assert!(markup.contains("2 events"));
         assert!(markup.contains("1 events"));
+    }
+
+    #[test]
+    fn grouped_feed_hides_private_context_fields_and_keeps_safe_operational_pills() {
+        let entry = store::TraceEntry::builder()
+            .timestamp(TimestampText::new("12:00:00"))
+            .level(LogLevelText::new("info"))
+            .target(LogTargetText::new("demo.request"))
+            .message(LogMessageText::new("request.end"))
+            .fields(vec![
+                (
+                    LogFieldName::new("request_id"),
+                    LogFieldValue::new("req-abc-123"),
+                ),
+                (
+                    LogFieldName::new("session_id"),
+                    LogFieldValue::new("session-raw"),
+                ),
+                (LogFieldName::new("user_id"), LogFieldValue::new("user-raw")),
+                (
+                    LogFieldName::new("sse_tab_id"),
+                    LogFieldValue::new("tab-raw"),
+                ),
+                (
+                    LogFieldName::new("latency_ms"),
+                    LogFieldValue::new("12"),
+                ),
+                (LogFieldName::new("sender"), LogFieldValue::new("lab")),
+            ])
+            .build();
+
+        let markup = build_grouped_feed([&entry]).render().into_string();
+
+        assert!(markup.contains("request_id=req"));
+        assert!(markup.contains("latency_ms=12"));
+        assert!(markup.contains("source=lab"));
+        assert!(!markup.contains("session-raw"));
+        assert!(!markup.contains("session_id="));
+        assert!(!markup.contains("user-raw"));
+        assert!(!markup.contains("user_id="));
+        assert!(!markup.contains("tab-raw"));
+        assert!(!markup.contains("sse_tab_id="));
     }
 }

@@ -21,7 +21,10 @@ impl Render for SessionStatus {
                 partials::StatusCard::builder()
                     .title(Text::from("Session details"))
                     .items(vec![
-                        partials::StatusCardItem::optional("session_id", self.session_id.clone()),
+                        partials::StatusCardItem::text(
+                            "session_id",
+                            super::present_redacted(&self.session_id),
+                        ),
                         partials::StatusCardItem::optional("expiry", self.expiry.clone()),
                     ])
                     .build()
@@ -35,5 +38,24 @@ impl Render for SessionStatus {
             )
             .build()
             .render()
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn redacts_session_id() {
+        let markup = SessionStatus::builder()
+            .maybe_session_id(Some(Text::from("session-1")))
+            .maybe_expiry(Some(Text::from("soon")))
+            .trace(Vec::new())
+            .build()
+            .render()
+            .into_string();
+
+        assert!(markup.contains("present (redacted)"));
+        assert!(!markup.contains("session-1"));
     }
 }

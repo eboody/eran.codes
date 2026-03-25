@@ -28,7 +28,7 @@ impl Render for RequestTraceLog<'_> {
             .layout(components::logs::primitives::SurfaceLayout::Stack)
             .children(vec![
                 components::logs::primitives::Panel::builder()
-                    .title(Text::from("Trace log"))
+                    .title(Text::from("Redacted trace log"))
                     .body(body)
                     .build(),
             ])

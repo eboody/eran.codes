@@ -243,6 +243,7 @@ mod tests {
 
     #[test]
     fn renders_operator_audit_evidence() {
+        let viewer_id = domain::user::Id::new_v4();
         let snapshot = app::sensitive::Snapshot::builder()
             .viewer(
                 app::sensitive::ViewerState::builder()
@@ -259,19 +260,34 @@ mod tests {
             .maybe_integration_state(None)
             .records(Vec::new())
             .maybe_authorized_record(None)
-            .access_events(vec![domain::sensitive::AccessEvent::builder()
-                .maybe_user_id(None)
-                .capability(domain::sensitive::AccessCapability::AuthorizedRecordRead)
-                .maybe_record_id(None)
-                .outcome(domain::sensitive::AccessOutcome::Denied)
-                .detail(
-                    domain::sensitive::DetailText::try_new(
-                        "sign in required before authorized record read",
+            .access_events(vec![
+                domain::sensitive::AccessEvent::builder()
+                    .maybe_user_id(Some(viewer_id))
+                    .capability(domain::sensitive::AccessCapability::AuthorizedRecordRead)
+                    .maybe_record_id(None)
+                    .outcome(domain::sensitive::AccessOutcome::Allowed)
+                    .detail(
+                        domain::sensitive::DetailText::try_new(
+                            "authorized record decrypted under persisted grant",
+                        )
+                        .expect("detail"),
                     )
-                    .expect("detail"),
-                )
-                .occurred_at(UNIX_EPOCH)
-                .build()])
+                    .occurred_at(UNIX_EPOCH)
+                    .build(),
+                domain::sensitive::AccessEvent::builder()
+                    .maybe_user_id(None)
+                    .capability(domain::sensitive::AccessCapability::AuthorizedRecordRead)
+                    .maybe_record_id(None)
+                    .outcome(domain::sensitive::AccessOutcome::Denied)
+                    .detail(
+                        domain::sensitive::DetailText::try_new(
+                            "sign in required before authorized record read",
+                        )
+                        .expect("detail"),
+                    )
+                    .occurred_at(UNIX_EPOCH)
+                    .build(),
+            ])
             .build();
 
         let markup = SensitiveProof::builder()
@@ -282,9 +298,12 @@ mod tests {
             .into_string();
 
         assert!(markup.contains("Recent access audit"));
+        assert!(markup.contains("authenticated (redacted)"));
         assert!(markup.contains("guest"));
         assert!(markup.contains("authorized_record_read"));
+        assert!(markup.contains("allowed"));
         assert!(markup.contains("denied"));
+        assert!(!markup.contains(&viewer_id.as_ref().to_string()));
     }
 
     #[test]

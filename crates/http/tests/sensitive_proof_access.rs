@@ -609,6 +609,25 @@ async fn login_cookie(app: axum::Router) -> String {
         .expect("eran.sid cookie")
 }
 
+fn raw_session_id(cookie_header: &str) -> &str {
+    cookie_header
+        .strip_prefix("eran.sid=")
+        .expect("session cookie prefix")
+}
+
+fn assert_redacted_support_trace(body: &str, hidden_values: &[&str]) {
+    assert!(body.contains("Redacted trace log"));
+    assert!(!body.contains("session_id="));
+    assert!(!body.contains("user_id="));
+    assert!(!body.contains("sse_tab_id="));
+    for value in hidden_values {
+        assert!(
+            !body.contains(value),
+            "support trace should redact `{value}`\n{body}"
+        );
+    }
+}
+
 fn record_proof(record_id: domain_sensitive::Id) -> app::sensitive::RecordProof {
     app::sensitive::RecordProof::builder()
         .id(record_id)
@@ -770,7 +789,7 @@ async fn guest_sensitive_proof_shows_sign_in_gate() {
     let app = test_app(Vec::new());
     let response = app
         .oneshot(
-            Request::get("/partials/sensitive-proof")
+            Request::get("/partials/sensitive-proof?sseTabId=proof-tab")
                 .body(Body::empty())
                 .unwrap(),
         )
@@ -784,15 +803,18 @@ async fn guest_sensitive_proof_shows_sign_in_gate() {
     assert!(body.contains("guest"));
     assert!(body.contains("Sign in to request the authorized sample record path."));
     assert!(!body.contains("Authorized path only."));
+    assert_redacted_support_trace(&body, &["proof-tab"]);
 }
 
 #[tokio::test]
 async fn signed_in_viewer_without_grant_shows_denied_state() {
     let app = test_app(Vec::new());
     let cookie_header = login_cookie(app.clone()).await;
+    let session_id = raw_session_id(&cookie_header).to_string();
+    let user_id = USER_ID.to_string();
     let response = app
         .oneshot(
-            Request::get("/partials/sensitive-proof")
+            Request::get("/partials/sensitive-proof?sseTabId=proof-tab")
                 .header(axum::http::header::COOKIE, cookie_header)
                 .body(Body::empty())
                 .unwrap(),
@@ -808,6 +830,7 @@ async fn signed_in_viewer_without_grant_shows_denied_state() {
         "Signed-in viewer is denied until an authorized_record_read grant exists."
     ));
     assert!(!body.contains("Authorized path only."));
+    assert_redacted_support_trace(&body, &["proof-tab", &session_id, &user_id]);
 }
 
 #[tokio::test]
@@ -816,9 +839,11 @@ async fn reader_sensitive_proof_shows_authorized_record_but_hides_operator_panel
         domain_sensitive::AccessCapability::AuthorizedRecordRead,
     ]);
     let cookie_header = login_cookie(app.clone()).await;
+    let session_id = raw_session_id(&cookie_header).to_string();
+    let user_id = USER_ID.to_string();
     let response = app
         .oneshot(
-            Request::get("/partials/sensitive-proof")
+            Request::get("/partials/sensitive-proof?sseTabId=proof-tab")
                 .header(axum::http::header::COOKIE, cookie_header)
                 .body(Body::empty())
                 .unwrap(),
@@ -836,6 +861,7 @@ async fn reader_sensitive_proof_shows_authorized_record_but_hides_operator_panel
     assert!(
         body.contains("Recent access-audit evidence is restricted to sensitive operators.")
     );
+    assert_redacted_support_trace(&body, &["proof-tab", &session_id, &user_id]);
 }
 
 #[tokio::test]
@@ -846,9 +872,11 @@ async fn operator_sensitive_proof_shows_token_and_audit_evidence() {
         domain_sensitive::AccessCapability::AccessAuditRead,
     ]);
     let cookie_header = login_cookie(app.clone()).await;
+    let session_id = raw_session_id(&cookie_header).to_string();
+    let user_id = USER_ID.to_string();
     let response = app
         .oneshot(
-            Request::get("/partials/sensitive-proof")
+            Request::get("/partials/sensitive-proof?sseTabId=proof-tab")
                 .header(axum::http::header::COOKIE, cookie_header)
                 .body(Body::empty())
                 .unwrap(),
@@ -870,4 +898,63 @@ async fn operator_sensitive_proof_shows_token_and_audit_evidence() {
     assert!(body.contains("Key custody"));
     assert!(body.contains("active_data_key"));
     assert!(body.contains("legacy_data_key: 1"));
+    assert!(body.contains("authenticated (redacted)"));
+    assert_redacted_support_trace(&body, &["proof-tab", &session_id, &user_id]);
+}
+
+#[tokio::test]
+async fn guest_request_meta_redacts_internal_request_context() {
+    let app = test_app(Vec::new());
+    let response = app
+        .oneshot(
+            Request::get("/partials/request-meta?sseTabId=request-meta-tab")
+                .header("x-request-id", "req-meta-guest")
+                .header("x-real-ip", "203.0.113.5")
+                .header(axum::http::header::USER_AGENT, "ExampleBrowser/1.0")
+                .body(Body::empty())
+                .unwrap(),
+        )
+        .await
+        .unwrap();
+
+    assert_eq!(response.status(), axum::http::StatusCode::OK);
+    let body = to_bytes(response.into_body(), usize::MAX).await.unwrap();
+    let body = String::from_utf8_lossy(&body);
+    assert!(body.contains("req-meta-guest"));
+    assert!(body.contains("present (redacted)"));
+    assert!(body.contains("captured (redacted)"));
+    assert!(!body.contains("203.0.113.5"));
+    assert!(!body.contains("ExampleBrowser/1.0"));
+    assert_redacted_support_trace(&body, &["request-meta-tab"]);
+}
+
+#[tokio::test]
+async fn signed_in_request_meta_redacts_authenticated_identifiers() {
+    let app = test_app(Vec::new());
+    let cookie_header = login_cookie(app.clone()).await;
+    let session_id = raw_session_id(&cookie_header).to_string();
+    let user_id = USER_ID.to_string();
+    let response = app
+        .oneshot(
+            Request::get("/partials/request-meta?sseTabId=request-meta-tab")
+                .header(axum::http::header::COOKIE, cookie_header)
+                .header("x-request-id", "req-meta-user")
+                .header("x-real-ip", "198.51.100.7")
+                .header(axum::http::header::USER_AGENT, "SignedInBrowser/2.0")
+                .body(Body::empty())
+                .unwrap(),
+        )
+        .await
+        .unwrap();
+
+    assert_eq!(response.status(), axum::http::StatusCode::OK);
+    let body = to_bytes(response.into_body(), usize::MAX).await.unwrap();
+    let body = String::from_utf8_lossy(&body);
+    assert!(body.contains("req-meta-user"));
+    assert!(body.contains("authenticated (redacted)"));
+    assert!(body.contains("present (redacted)"));
+    assert!(body.contains("captured (redacted)"));
+    assert!(!body.contains("198.51.100.7"));
+    assert!(!body.contains("SignedInBrowser/2.0"));
+    assert_redacted_support_trace(&body, &["request-meta-tab", &session_id, &user_id]);
 }

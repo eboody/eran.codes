@@ -27,9 +27,7 @@ pub(super) fn format_key_counts(
 }
 
 pub(super) fn event_actor(event: &domain::sensitive::AccessEvent) -> String {
-    event.user_id
-        .map(|user_id| user_id.as_ref().to_string())
-        .unwrap_or_else(|| "guest".to_string())
+    super::super::viewer_actor_redacted(&event.user_id).to_string()
 }
 
 pub(super) fn format_proof_time(value: std::time::SystemTime) -> String {
