@@ -102,8 +102,5 @@ pub async fn sensitive_proof_partial(
     Extension(state): Extension<crate::State>,
 ) -> crate::Result<impl IntoResponse> {
     tracing::info!(target: "demo.sensitive", "sensitive proof requested");
-    let prepared = sensitive_proof_flow::IncomingFlow::new()
-        .prepare_snapshot(&auth_session, &state)
-        .await?;
-    Ok(prepared.into_response())
+    sensitive_proof_flow::prepare_snapshot_response(&auth_session, &state).await
 }

@@ -14,10 +14,8 @@ pub struct HttpProvider {
     auth_mode: Option<sensitive_domain::ProviderAuthMode>,
     retry_backoff_secs: Option<u32>,
     endpoint: sensitive_domain::DetailText,
-    base_url: Option<reqwest::Url>,
-    sandbox_credentials: Option<SandboxCredentials>,
     request_timeout: Option<Duration>,
-    degraded_reason: Option<String>,
+    boundary: BoundaryReadiness,
 }
 
 #[derive(Clone, Debug)]
@@ -33,6 +31,29 @@ pub struct SandboxHttpConfig {
 struct SandboxCredentials {
     client_id: SandboxClientId,
     client_secret: SecretString,
+}
+
+#[derive(Clone)]
+enum BoundaryReadiness {
+    Ready(ReadyBoundary),
+    Degraded { reason: String },
+}
+
+#[derive(Clone)]
+struct ReadyBoundary {
+    base_url: reqwest::Url,
+    auth: BoundaryAuth,
+}
+
+#[derive(Clone)]
+enum BoundaryAuth {
+    Stub,
+    Sandbox(SandboxCredentials),
+}
+
+struct UsableBoundary<'a> {
+    base_url: &'a reqwest::Url,
+    auth: &'a BoundaryAuth,
 }
 
 #[derive(Clone, Debug, PartialEq, Eq, serde::Serialize, serde::Deserialize)]
@@ -103,10 +124,11 @@ impl HttpProvider {
             auth_mode: Some(sensitive_domain::ProviderAuthMode::StubIssuedToken),
             retry_backoff_secs: None,
             endpoint: detail_text(base_url.as_str()),
-            base_url: Some(base_url),
-            sandbox_credentials: None,
             request_timeout: None,
-            degraded_reason: None,
+            boundary: BoundaryReadiness::Ready(ReadyBoundary {
+                base_url,
+                auth: BoundaryAuth::Stub,
+            }),
         }
     }
 
@@ -131,26 +153,29 @@ impl HttpProvider {
                 .and_then(SandboxBaseUrl::as_url)
                 .map(|url| detail_text(url.as_str()))
                 .unwrap_or_else(|| detail_text("sandbox endpoint not configured")),
-            base_url: parsed_url,
-            sandbox_credentials: if degraded_reason.is_none() {
-                Some(SandboxCredentials {
-                    client_id: config
-                        .client_id
-                        .expect("sandbox client id should exist when config is complete"),
-                    client_secret: SecretString::new(
-                        config
-                            .client_secret
-                            .expect(
-                                "sandbox client secret should exist when config is complete",
-                            )
-                            .into_boxed_str(),
-                    ),
-                })
-            } else {
-                None
-            },
             request_timeout: Some(config.timeout),
-            degraded_reason,
+            boundary: if let Some(reason) = degraded_reason {
+                BoundaryReadiness::Degraded { reason }
+            } else {
+                BoundaryReadiness::Ready(ReadyBoundary {
+                    base_url: parsed_url.expect(
+                        "sandbox base url should exist when config is complete",
+                    ),
+                    auth: BoundaryAuth::Sandbox(SandboxCredentials {
+                        client_id: config
+                            .client_id
+                            .expect("sandbox client id should exist when config is complete"),
+                        client_secret: SecretString::new(
+                            config
+                                .client_secret
+                                .expect(
+                                    "sandbox client secret should exist when config is complete",
+                                )
+                                .into_boxed_str(),
+                        ),
+                    }),
+                })
+            },
         }
     }
 
@@ -158,26 +183,14 @@ impl HttpProvider {
         &self,
         current_token: Option<&SecretString>,
     ) -> sensitive::Result<TokenRefreshResponse> {
-        if let Some(reason) = self.degraded_reason.as_deref() {
-            return Err(configuration_error(
-                sensitive::ProviderOperation::RefreshToken,
-                reason,
-            ));
-        }
-
-        let base_url = self.base_url.as_ref().ok_or_else(|| {
-            configuration_error(
-                sensitive::ProviderOperation::RefreshToken,
-                "provider base url is unavailable",
-            )
-        })?;
+        let boundary = self.usable_boundary(sensitive::ProviderOperation::RefreshToken)?;
         let response = self
             .request_builder_with_timeout(self.http.post(endpoint_url(
-                base_url,
+                boundary.base_url,
                 "token",
                 sensitive::ProviderOperation::RefreshToken,
             )?))
-            .json(&self.refresh_request_body(current_token))
+            .json(&self.refresh_request_body(boundary.auth, current_token))
             .send()
             .await
             .map_err(|source| {
@@ -209,14 +222,9 @@ impl HttpProvider {
         token: &sensitive::ProviderToken,
         cursor: Option<&sensitive_domain::SyncCursor>,
     ) -> sensitive::Result<RecordsPageResponse> {
-        let base_url = self.base_url.as_ref().ok_or_else(|| {
-            configuration_error(
-                sensitive::ProviderOperation::FetchRecords,
-                "provider base url is unavailable",
-            )
-        })?;
+        let boundary = self.usable_boundary(sensitive::ProviderOperation::FetchRecords)?;
         let mut endpoint = endpoint_url(
-            base_url,
+            boundary.base_url,
             "records",
             sensitive::ProviderOperation::FetchRecords,
         )?;
@@ -254,17 +262,35 @@ impl HttpProvider {
 
     fn refresh_request_body(
         &self,
+        auth: &BoundaryAuth,
         current_token: Option<&SecretString>,
     ) -> RefreshRequestBody {
-        match &self.sandbox_credentials {
-            Some(credentials) => RefreshRequestBody::Sandbox(SandboxTokenExchangeRequest {
-                client_id: credentials.client_id.clone(),
-                client_secret: credentials.client_secret.expose_secret().to_string(),
-                grant_type: "client_credentials".to_string(),
-            }),
-            None => RefreshRequestBody::Stub(TokenRefreshRequest {
+        match auth {
+            BoundaryAuth::Sandbox(credentials) => {
+                RefreshRequestBody::Sandbox(SandboxTokenExchangeRequest {
+                    client_id: credentials.client_id.clone(),
+                    client_secret: credentials.client_secret.expose_secret().to_string(),
+                    grant_type: "client_credentials".to_string(),
+                })
+            }
+            BoundaryAuth::Stub => RefreshRequestBody::Stub(TokenRefreshRequest {
                 has_current_token: current_token.is_some(),
             }),
+        }
+    }
+
+    fn usable_boundary(
+        &self,
+        operation: sensitive::ProviderOperation,
+    ) -> sensitive::Result<UsableBoundary<'_>> {
+        match &self.boundary {
+            BoundaryReadiness::Ready(boundary) => Ok(UsableBoundary {
+                base_url: &boundary.base_url,
+                auth: &boundary.auth,
+            }),
+            BoundaryReadiness::Degraded { reason } => {
+                Err(configuration_error(operation, reason))
+            }
         }
     }
 
@@ -989,6 +1015,50 @@ mod tests {
             error,
             sensitive::failure::Error::Provider {
                 operation: sensitive::ProviderOperation::RefreshToken,
+                kind: sensitive::ProviderFailureKind::Configuration,
+                status_code: None,
+                ..
+            }
+        ));
+    }
+
+    #[tokio::test]
+    async fn sandbox_fetch_fails_closed_when_config_is_incomplete() {
+        let provider = HttpProvider::new_sandbox(
+            reqwest::Client::new(),
+            SandboxHttpConfig {
+                base_url: Some(SandboxBaseUrl::Parsed(
+                    reqwest::Url::parse("https://127.0.0.1:9/")
+                        .expect("test url should parse"),
+                )),
+                client_id: Some(SandboxClientId::new("sandbox-client")),
+                client_secret: None,
+                timeout: Duration::from_secs(10),
+                retry_backoff: Duration::from_secs(45),
+            },
+        );
+        let token = sensitive::ProviderToken::builder()
+            .status(
+                sensitive_domain::TokenStatus::builder()
+                    .provider(test_provider())
+                    .expires_at(UNIX_EPOCH + Duration::from_secs(300))
+                    .refreshed_at(UNIX_EPOCH)
+                    .build(),
+            )
+            .access_token(SecretString::new(
+                "cached-token".to_string().into_boxed_str(),
+            ))
+            .build();
+
+        let error = provider
+            .fetch_records(test_provider(), &token, None, UNIX_EPOCH)
+            .await
+            .expect_err("sandbox fetch should fail closed");
+
+        assert!(matches!(
+            error,
+            sensitive::failure::Error::Provider {
+                operation: sensitive::ProviderOperation::FetchRecords,
                 kind: sensitive::ProviderFailureKind::Configuration,
                 status_code: None,
                 ..

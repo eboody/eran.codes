@@ -17,55 +17,167 @@ impl Service {
     #[tracing::instrument(skip(self))]
     pub async fn run_sync(&self) -> Result<sensitive::SyncRun> {
         let started_at = self.clock.now();
-        let boundary_meta = self.provider.boundary_meta(PROVIDER);
-        let previous_state = self.repo.load_integration_state(PROVIDER).await?;
-        match self
-            .run_sync_success(started_at, &boundary_meta, previous_state.as_ref())
-            .await
-        {
-            Ok(success) => {
-                self.repo
-                    .upsert_integration_state(&success.integration_state)
-                    .await?;
-                self.repo.record_sync_run(&success.run).await?;
+        let sync = SyncContext::new(
+            started_at,
+            self.provider.boundary_meta(PROVIDER),
+            self.repo.load_integration_state(PROVIDER).await?,
+        );
+
+        match self.execute_sync(&sync).await {
+            Ok(completed) => {
+                self.persist_completed_sync(&completed).await?;
                 tracing::info!(
                     target: "demo.sensitive",
-                    records_seen = success.run.records_seen,
-                    records_upserted = success.run.records_upserted,
+                    records_seen = completed.run.records_seen,
+                    records_upserted = completed.run.records_upserted,
                     "sensitive runtime sync completed",
                 );
-                Ok(success.run)
+                Ok(completed.run)
             }
             Err(failure) => {
-                let failed_run = sensitive::SyncRun::builder()
-                    .provider(PROVIDER)
-                    .outcome(sensitive::SyncOutcome::Failed)
-                    .records_seen(0)
-                    .records_upserted(0)
-                    .detail(sync_detail_text(failure.error.to_string()))
-                    .started_at(started_at)
-                    .finished_at(self.clock.now())
-                    .build();
-                if let Err(state_error) = self
-                    .repo
-                    .upsert_integration_state(&failure.integration_state)
-                    .await
-                {
-                    tracing::warn!(
-                        target: "demo.sensitive",
-                        ?state_error,
-                        "failed to persist failed integration state",
-                    );
-                }
-                if let Err(record_error) = self.repo.record_sync_run(&failed_run).await {
-                    tracing::warn!(
-                        target: "demo.sensitive",
-                        ?record_error,
-                        "failed to persist failed sync run",
-                    );
-                }
+                self.persist_failed_sync(sync.started_at, &failure).await;
                 Err(failure.error)
             }
+        }
+    }
+
+    async fn execute_sync(
+        &self,
+        sync: &SyncContext,
+    ) -> core::result::Result<CompletedSync, Failure> {
+        let token_stage = self.acquire_sync_token(sync).await?;
+        let fetched_stage = self.fetch_sync_records(sync, token_stage).await?;
+        self.persist_sync_success(sync, fetched_stage).await
+    }
+
+    async fn acquire_sync_token(
+        &self,
+        sync: &SyncContext,
+    ) -> core::result::Result<TokenStage, Failure> {
+        self.ensure_fresh_token(sync.started_at)
+            .await
+            .map(|(token, token_strategy, auth_outcome)| TokenStage {
+                token,
+                token_strategy,
+                auth_outcome,
+            })
+            .map_err(|failure| sync.failure(failure, self.clock.now()))
+    }
+
+    async fn fetch_sync_records(
+        &self,
+        sync: &SyncContext,
+        token_stage: TokenStage,
+    ) -> core::result::Result<FetchedRecordsStage, Failure> {
+        let TokenStage {
+            token,
+            token_strategy,
+            auth_outcome,
+        } = token_stage;
+        let (provider_records, token_strategy) = self
+            .fetch_records_with_retry(
+                &token,
+                sync.previous_cursor.as_ref(),
+                sync.started_at,
+                token_strategy,
+            )
+            .await
+            .map_err(|failure| {
+                sync.failure(failure.with_auth_outcome(auth_outcome), self.clock.now())
+            })?;
+
+        Ok(FetchedRecordsStage {
+            records: provider_records.records,
+            cursor: provider_records.cursor,
+            token_strategy,
+            auth_outcome,
+        })
+    }
+
+    async fn persist_sync_success(
+        &self,
+        sync: &SyncContext,
+        fetched_stage: FetchedRecordsStage,
+    ) -> core::result::Result<CompletedSync, Failure> {
+        let FetchedRecordsStage {
+            records,
+            cursor,
+            token_strategy,
+            auth_outcome,
+        } = fetched_stage;
+        let records_seen = records.len() as u32;
+        let upserted = self
+            .repo
+            .upsert_records(&records, sync.started_at)
+            .await
+            .map_err(|error| {
+                sync.failure(
+                    SyncAttemptFailure::from_error(
+                        error,
+                        token_strategy,
+                        Some(auth_outcome),
+                    ),
+                    self.clock.now(),
+                )
+            })?;
+        let finished_at = self.clock.now();
+        let integration_state =
+            sync.success_state(cursor, token_strategy, auth_outcome, finished_at);
+        let run = sensitive::SyncRun::builder()
+            .provider(PROVIDER)
+            .outcome(sensitive::SyncOutcome::Success)
+            .records_seen(records_seen)
+            .records_upserted(upserted as u32)
+            .detail(sync_detail_text(format!(
+                "{} provider records processed through the {} boundary",
+                records_seen,
+                sync.boundary_meta.mode.as_ref()
+            )))
+            .started_at(sync.started_at)
+            .finished_at(finished_at)
+            .build();
+
+        Ok(CompletedSync {
+            run,
+            integration_state,
+        })
+    }
+
+    async fn persist_completed_sync(&self, completed: &CompletedSync) -> Result<()> {
+        self.repo
+            .upsert_integration_state(&completed.integration_state)
+            .await?;
+        self.repo.record_sync_run(&completed.run).await
+    }
+
+    async fn persist_failed_sync(&self, started_at: SystemTime, failure: &Failure) {
+        let failed_run = sensitive::SyncRun::builder()
+            .provider(PROVIDER)
+            .outcome(sensitive::SyncOutcome::Failed)
+            .records_seen(0)
+            .records_upserted(0)
+            .detail(sync_detail_text(failure.error.to_string()))
+            .started_at(started_at)
+            .finished_at(self.clock.now())
+            .build();
+
+        if let Err(state_error) = self
+            .repo
+            .upsert_integration_state(&failure.integration_state)
+            .await
+        {
+            tracing::warn!(
+                target: "demo.sensitive",
+                ?state_error,
+                "failed to persist failed integration state",
+            );
+        }
+        if let Err(record_error) = self.repo.record_sync_run(&failed_run).await {
+            tracing::warn!(
+                target: "demo.sensitive",
+                ?record_error,
+                "failed to persist failed sync run",
+            );
         }
     }
 
@@ -78,10 +190,10 @@ impl Service {
             sensitive::TokenStrategy,
             sensitive::FetchOutcome,
         ),
-        AttemptFailure,
+        SyncAttemptFailure,
     > {
         let current_token = self.load_refreshable_token().await.map_err(|error| {
-            sync_attempt_failure(
+            SyncAttemptFailure::from_error(
                 error,
                 sensitive::TokenStrategy::RefreshedToken,
                 Some(sensitive::FetchOutcome::Failed),
@@ -101,7 +213,7 @@ impl Service {
                 .refresh_provider_token_inner(now, Some(&token.access_token))
                 .await
                 .map_err(|error| {
-                    sync_attempt_failure(
+                    SyncAttemptFailure::from_error(
                         error,
                         sensitive::TokenStrategy::RefreshedToken,
                         Some(sensitive::FetchOutcome::Failed),
@@ -118,7 +230,7 @@ impl Service {
             self.refresh_provider_token_inner(now, None)
                 .await
                 .map_err(|error| {
-                    sync_attempt_failure(
+                    SyncAttemptFailure::from_error(
                         error,
                         sensitive::TokenStrategy::RefreshedToken,
                         Some(sensitive::FetchOutcome::Failed),
@@ -171,7 +283,7 @@ impl Service {
         cursor: Option<&sensitive::SyncCursor>,
         now: SystemTime,
         token_strategy: sensitive::TokenStrategy,
-    ) -> core::result::Result<(ProviderRecords, sensitive::TokenStrategy), AttemptFailure>
+    ) -> core::result::Result<(ProviderRecords, sensitive::TokenStrategy), SyncAttemptFailure>
     {
         match self
             .provider
@@ -187,7 +299,7 @@ impl Service {
                     .refresh_provider_token_inner(now, Some(&token.access_token))
                     .await
                     .map_err(|error| {
-                        sync_attempt_failure(
+                        SyncAttemptFailure::from_error(
                             error,
                             sensitive::TokenStrategy::RetryAfterUnauthorized,
                             Some(sensitive::FetchOutcome::Failed),
@@ -200,113 +312,124 @@ impl Service {
                         (records, sensitive::TokenStrategy::RetryAfterUnauthorized)
                     })
                     .map_err(|error| {
-                        sync_attempt_failure(
+                        SyncAttemptFailure::from_error(
                             error,
                             sensitive::TokenStrategy::RetryAfterUnauthorized,
                             Some(sensitive::FetchOutcome::Success),
                         )
                     })
             }
-            Err(error) => Err(sync_attempt_failure(
+            Err(error) => Err(SyncAttemptFailure::from_error(
                 error,
                 token_strategy,
                 Some(sensitive::FetchOutcome::Success),
             )),
         }
     }
+}
 
-    async fn run_sync_success(
-        &self,
+struct SyncContext {
+    started_at: SystemTime,
+    boundary_meta: ProviderBoundaryMeta,
+    previous_state: Option<sensitive::IntegrationState>,
+    previous_cursor: Option<sensitive::SyncCursor>,
+}
+
+impl SyncContext {
+    fn new(
         started_at: SystemTime,
-        boundary_meta: &ProviderBoundaryMeta,
-        previous_state: Option<&sensitive::IntegrationState>,
-    ) -> core::result::Result<Success, Failure> {
-        let previous_cursor = previous_state.and_then(|state| state.cursor.clone());
-        let (token, token_strategy, auth_outcome) = self
-            .ensure_fresh_token(started_at)
-            .await
-            .map_err(|failure| Failure {
-                integration_state: failed_integration_state(
-                    boundary_meta,
-                    previous_state,
-                    previous_cursor.clone(),
-                    failure.token_strategy,
-                    failure.error_category,
-                    failure.status_code,
-                    failure.auth_outcome,
-                    self.clock.now(),
-                ),
-                error: failure.error,
-            })?;
-        let (provider_records, token_strategy) = self
-            .fetch_records_with_retry(
-                &token,
-                previous_cursor.as_ref(),
-                started_at,
-                token_strategy,
-            )
-            .await
-            .map_err(|failure| Failure {
-                integration_state: failed_integration_state(
-                    boundary_meta,
-                    previous_state,
-                    previous_cursor.clone(),
-                    failure.token_strategy,
-                    failure.error_category,
-                    failure.status_code,
-                    failure.auth_outcome.or(Some(auth_outcome)),
-                    self.clock.now(),
-                ),
-                error: failure.error,
-            })?;
-        let records_seen = provider_records.records.len() as u32;
-        let upserted = self
-            .repo
-            .upsert_records(&provider_records.records, started_at)
-            .await
-            .map_err(|error| Failure {
-                integration_state: failed_integration_state(
-                    boundary_meta,
-                    previous_state,
-                    previous_cursor,
-                    token_strategy,
-                    provider_error_category(&error),
-                    provider_error_status_code(&error),
-                    Some(auth_outcome),
-                    self.clock.now(),
-                ),
-                error,
-            })?;
-        let finished_at = self.clock.now();
-        let integration_state = successful_integration_state(
+        boundary_meta: ProviderBoundaryMeta,
+        previous_state: Option<sensitive::IntegrationState>,
+    ) -> Self {
+        let previous_cursor = previous_state
+            .as_ref()
+            .and_then(|state| state.cursor.clone());
+        Self {
+            started_at,
             boundary_meta,
-            provider_records.cursor,
-            token_strategy,
-            auth_outcome,
-            finished_at,
-        );
-        let run = sensitive::SyncRun::builder()
-            .provider(PROVIDER)
-            .outcome(sensitive::SyncOutcome::Success)
-            .records_seen(records_seen)
-            .records_upserted(upserted as u32)
-            .detail(sync_detail_text(format!(
-                "{} provider records processed through the {} boundary",
-                records_seen,
-                boundary_meta.mode.as_ref()
-            )))
-            .started_at(started_at)
-            .finished_at(finished_at)
-            .build();
+            previous_state,
+            previous_cursor,
+        }
+    }
 
-        Ok(Success {
-            run,
-            integration_state,
-        })
+    fn failure(&self, failure: SyncAttemptFailure, attempted_at: SystemTime) -> Failure {
+        Failure {
+            integration_state: sensitive::IntegrationState::builder()
+                .provider(PROVIDER)
+                .mode(self.boundary_meta.mode)
+                .endpoint(self.boundary_meta.endpoint.clone())
+                .maybe_auth_mode(self.boundary_meta.auth_mode)
+                .maybe_cursor(self.previous_cursor.clone())
+                .last_fetch_outcome(sensitive::FetchOutcome::Failed)
+                .token_strategy(failure.token_strategy)
+                .maybe_last_error_category(failure.error_category)
+                .maybe_last_auth_outcome(failure.auth_outcome)
+                .maybe_last_remote_status_code(failure.status_code)
+                .maybe_retry_backoff_secs(retry_backoff_for(
+                    &self.boundary_meta,
+                    failure.error_category,
+                ))
+                .maybe_last_successful_mode(previous_successful_mode(
+                    self.previous_state.as_ref(),
+                ))
+                .maybe_last_successful_fetch_at(
+                    self.previous_state
+                        .as_ref()
+                        .and_then(|state| state.last_successful_fetch_at),
+                )
+                .last_attempted_fetch_at(attempted_at)
+                .failure_count(
+                    self.previous_state
+                        .as_ref()
+                        .map(|state| state.failure_count.saturating_add(1))
+                        .unwrap_or(1),
+                )
+                .build(),
+            error: failure.error,
+        }
+    }
+
+    fn success_state(
+        &self,
+        cursor: Option<sensitive::SyncCursor>,
+        token_strategy: sensitive::TokenStrategy,
+        auth_outcome: sensitive::FetchOutcome,
+        finished_at: SystemTime,
+    ) -> sensitive::IntegrationState {
+        sensitive::IntegrationState::builder()
+            .provider(PROVIDER)
+            .mode(self.boundary_meta.mode)
+            .endpoint(self.boundary_meta.endpoint.clone())
+            .maybe_auth_mode(self.boundary_meta.auth_mode)
+            .maybe_cursor(cursor)
+            .last_fetch_outcome(sensitive::FetchOutcome::Success)
+            .token_strategy(token_strategy)
+            .maybe_last_error_category(None)
+            .last_auth_outcome(auth_outcome)
+            .maybe_last_remote_status_code(None)
+            .maybe_retry_backoff_secs(None)
+            .last_successful_mode(self.boundary_meta.mode)
+            .last_successful_fetch_at(finished_at)
+            .last_attempted_fetch_at(finished_at)
+            .failure_count(0)
+            .build()
     }
 }
 
-struct Success {
+struct TokenStage {
+    token: ProviderToken,
+    token_strategy: sensitive::TokenStrategy,
+    auth_outcome: sensitive::FetchOutcome,
+}
+
+struct FetchedRecordsStage {
+    records: Vec<sensitive::Record>,
+    cursor: Option<sensitive::SyncCursor>,
+    token_strategy: sensitive::TokenStrategy,
+    auth_outcome: sensitive::FetchOutcome,
+}
+
+struct CompletedSync {
     run: sensitive::SyncRun,
     integration_state: sensitive::IntegrationState,
 }
@@ -316,7 +439,7 @@ struct Failure {
     integration_state: sensitive::IntegrationState,
 }
 
-struct AttemptFailure {
+struct SyncAttemptFailure {
     error: failure::Error,
     token_strategy: sensitive::TokenStrategy,
     error_category: Option<sensitive::RemoteErrorCategory>,
@@ -324,19 +447,26 @@ struct AttemptFailure {
     auth_outcome: Option<sensitive::FetchOutcome>,
 }
 
-fn sync_attempt_failure(
-    error: failure::Error,
-    token_strategy: sensitive::TokenStrategy,
-    auth_outcome: Option<sensitive::FetchOutcome>,
-) -> AttemptFailure {
-    let error_category = provider_error_category(&error);
-    let status_code = provider_error_status_code(&error);
-    AttemptFailure {
-        error,
-        token_strategy,
-        error_category,
-        status_code,
-        auth_outcome,
+impl SyncAttemptFailure {
+    fn from_error(
+        error: failure::Error,
+        token_strategy: sensitive::TokenStrategy,
+        auth_outcome: Option<sensitive::FetchOutcome>,
+    ) -> Self {
+        let error_category = provider_error_category(&error);
+        let status_code = provider_error_status_code(&error);
+        Self {
+            error,
+            token_strategy,
+            error_category,
+            status_code,
+            auth_outcome,
+        }
+    }
+
+    fn with_auth_outcome(mut self, auth_outcome: sensitive::FetchOutcome) -> Self {
+        self.auth_outcome = self.auth_outcome.or(Some(auth_outcome));
+        self
     }
 }
 
@@ -395,67 +525,6 @@ fn provider_error_status_code(error: &failure::Error) -> Option<u16> {
         failure::Error::Provider { status_code, .. } => *status_code,
         _ => None,
     }
-}
-
-fn successful_integration_state(
-    boundary_meta: &ProviderBoundaryMeta,
-    cursor: Option<sensitive::SyncCursor>,
-    token_strategy: sensitive::TokenStrategy,
-    auth_outcome: sensitive::FetchOutcome,
-    finished_at: SystemTime,
-) -> sensitive::IntegrationState {
-    sensitive::IntegrationState::builder()
-        .provider(PROVIDER)
-        .mode(boundary_meta.mode)
-        .endpoint(boundary_meta.endpoint.clone())
-        .maybe_auth_mode(boundary_meta.auth_mode)
-        .maybe_cursor(cursor)
-        .last_fetch_outcome(sensitive::FetchOutcome::Success)
-        .token_strategy(token_strategy)
-        .maybe_last_error_category(None)
-        .last_auth_outcome(auth_outcome)
-        .maybe_last_remote_status_code(None)
-        .maybe_retry_backoff_secs(None)
-        .last_successful_mode(boundary_meta.mode)
-        .last_successful_fetch_at(finished_at)
-        .last_attempted_fetch_at(finished_at)
-        .failure_count(0)
-        .build()
-}
-
-fn failed_integration_state(
-    boundary_meta: &ProviderBoundaryMeta,
-    previous_state: Option<&sensitive::IntegrationState>,
-    cursor: Option<sensitive::SyncCursor>,
-    token_strategy: sensitive::TokenStrategy,
-    error_category: Option<sensitive::RemoteErrorCategory>,
-    status_code: Option<u16>,
-    auth_outcome: Option<sensitive::FetchOutcome>,
-    attempted_at: SystemTime,
-) -> sensitive::IntegrationState {
-    sensitive::IntegrationState::builder()
-        .provider(PROVIDER)
-        .mode(boundary_meta.mode)
-        .endpoint(boundary_meta.endpoint.clone())
-        .maybe_auth_mode(boundary_meta.auth_mode)
-        .maybe_cursor(cursor)
-        .last_fetch_outcome(sensitive::FetchOutcome::Failed)
-        .token_strategy(token_strategy)
-        .maybe_last_error_category(error_category)
-        .maybe_last_auth_outcome(auth_outcome)
-        .maybe_last_remote_status_code(status_code)
-        .maybe_retry_backoff_secs(retry_backoff_for(boundary_meta, error_category))
-        .maybe_last_successful_mode(previous_successful_mode(previous_state))
-        .maybe_last_successful_fetch_at(
-            previous_state.and_then(|state| state.last_successful_fetch_at),
-        )
-        .last_attempted_fetch_at(attempted_at)
-        .failure_count(
-            previous_state
-                .map(|state| state.failure_count.saturating_add(1))
-                .unwrap_or(1),
-        )
-        .build()
 }
 
 fn previous_successful_mode(
