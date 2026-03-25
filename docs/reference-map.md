@@ -20,6 +20,7 @@ If a requested fact is not present in local sources, explicitly say it is not fo
 ## Task Routing
 
 ### Architecture and Boundaries
+- `docs/presentation-tightening-plan.md`
 - `docs/resume-realignment.md`
 - `docs/sensitive-sync-architecture.md`
 - `docs/site-content-authoring.md`
@@ -66,7 +67,7 @@ If a requested fact is not present in local sources, explicitly say it is not fo
 - `docs/maud/elements-attributes.md`
 
 ### Visual UX/UI and Showcase Direction
-- `docs/portfolio-demos-plan.md`
+- `docs/presentation-tightening-plan.md`
 - `docs/portfolio-demos.md`
 - `docs/professionalism-breakdown.md`
 - `artifacts/visual/audits/latest/ux-signoff.md`

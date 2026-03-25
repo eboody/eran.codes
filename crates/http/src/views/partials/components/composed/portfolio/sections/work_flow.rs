@@ -4,7 +4,7 @@ use crate::views::partials::components::portfolio::content::{
     ArchivedWorkCaseContent, WorkIndexContent,
 };
 
-use super::{ArchiveCaseDetailsSection, SupportingTeaserSection, WorkIndexSection};
+use super::{ArchiveCaseDetailsSection, WorkIndexSection};
 
 pub struct WorkFlow<'a> {
     pub content: &'a WorkIndexContent,
@@ -20,9 +20,6 @@ impl Render for WorkFlow<'_> {
             (ArchiveCaseDetailsSection {
                 intro: &self.content.archive_details,
                 cases: self.archive_cases,
-            })
-            (SupportingTeaserSection {
-                content: &self.content.open_source_teaser,
             })
         }
     }
@@ -48,6 +45,6 @@ mod tests {
 
         assert!(markup.contains(content.current_proof_section.title.to_string().as_str()));
         assert!(markup.contains(content.archive_details.title.to_string().as_str()));
-        assert!(markup.contains(content.open_source_teaser.title.to_string().as_str()));
+        assert!(!markup.contains(content.open_source_teaser.title.to_string().as_str()));
     }
 }

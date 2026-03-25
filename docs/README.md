@@ -7,8 +7,9 @@ This repo has two documentation layers:
 ## Start Here
 
 - [Root README](../README.md) for the current thesis, proof surfaces, and quick evaluation path
+- [Presentation Tightening Plan](./presentation-tightening-plan.md) for the active work to reduce noise and tighten the reviewer path
 - [Resume Realignment Status](./resume-realignment.md) for what the original proof pivot identified and what has now shipped
-- [Resume Alignment Packaging Status](./refactor-plan.md) for what the shared-content, IA-hardening, supporting-proof route-policy, and archive-collapse passes changed
+- [Resume Alignment Packaging Status](./refactor-plan.md) for the historical shared-content, IA-hardening, supporting-proof route-policy, and archive-collapse passes
 - [Site Content Authoring Guide](./site-content-authoring.md) for what belongs in `site_content/` versus runtime-owned code
 - [Sensitive Sync Architecture](./sensitive-sync-architecture.md) for the new encrypted-storage, token-lifecycle, and bounded-sync proof
 - [Auth + Sessions](./auth-sessions.md) for the session/auth portion of the shipped security proof
@@ -16,6 +17,7 @@ This repo has two documentation layers:
 
 ## Architecture And Boundaries
 
+- [Presentation Tightening Plan](./presentation-tightening-plan.md)
 - [Sensitive Sync Architecture](./sensitive-sync-architecture.md)
 - [Professionalism In Practice](./professionalism-breakdown.md)
 - [Project Audit](./project-audit.md)

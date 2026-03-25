@@ -419,6 +419,9 @@ async fn home_page_includes_portfolio_sections() {
         "I ship systems that remove operational bottlenecks and improve execution speed."
     ));
     assert!(!body.contains("Current implementation and supporting proof"));
+    assert!(!body.contains("Selected projects"));
+    assert!(!body.contains("Skills and technical focus"));
+    assert!(!body.contains("Open-source systems design work"));
 }
 
 #[tokio::test]
@@ -453,7 +456,6 @@ enum PortfolioHomeContract {
     HeroSection,
     PivotHeadline,
     ExperienceTitle,
-    SelectedProjectsTitle,
     CurrentProofTitle,
     CurrentProofNav,
     CurrentProofRoute,
@@ -462,9 +464,6 @@ enum PortfolioHomeContract {
     OpenSourceRoute,
     LabRoute,
     ResumeRoute,
-    WorkCaseRoute,
-    OpenSourceTitle,
-    SkillsTitle,
     BrandMarkWrap,
     LightBrandLogo,
     DarkBrandLogo,
@@ -481,7 +480,6 @@ impl PortfolioHomeContract {
             PortfolioHomeContract::HeroSection,
             PortfolioHomeContract::PivotHeadline,
             PortfolioHomeContract::ExperienceTitle,
-            PortfolioHomeContract::SelectedProjectsTitle,
             PortfolioHomeContract::CurrentProofTitle,
             PortfolioHomeContract::CurrentProofNav,
             PortfolioHomeContract::CurrentProofRoute,
@@ -490,9 +488,6 @@ impl PortfolioHomeContract {
             PortfolioHomeContract::OpenSourceRoute,
             PortfolioHomeContract::LabRoute,
             PortfolioHomeContract::ResumeRoute,
-            PortfolioHomeContract::WorkCaseRoute,
-            PortfolioHomeContract::OpenSourceTitle,
-            PortfolioHomeContract::SkillsTitle,
             PortfolioHomeContract::BrandMarkWrap,
             PortfolioHomeContract::LightBrandLogo,
             PortfolioHomeContract::DarkBrandLogo,
@@ -511,7 +506,6 @@ impl PortfolioHomeContract {
                 "I build secure backend systems with explicit trust boundaries."
             }
             PortfolioHomeContract::ExperienceTitle => "Most relevant experience",
-            PortfolioHomeContract::SelectedProjectsTitle => "Selected projects",
             PortfolioHomeContract::CurrentProofTitle => "Current secure-data proof",
             PortfolioHomeContract::CurrentProofNav => "Current Proof",
             PortfolioHomeContract::CurrentProofRoute => "href=\"/work/sensitive-sync\"",
@@ -520,9 +514,6 @@ impl PortfolioHomeContract {
             PortfolioHomeContract::OpenSourceRoute => "href=\"/open-source\"",
             PortfolioHomeContract::LabRoute => "href=\"/lab\"",
             PortfolioHomeContract::ResumeRoute => "href=\"/resume.txt\"",
-            PortfolioHomeContract::WorkCaseRoute => "href=\"/work#chat-realtime\"",
-            PortfolioHomeContract::OpenSourceTitle => "Open-source systems design work",
-            PortfolioHomeContract::SkillsTitle => "Skills and technical focus",
             PortfolioHomeContract::BrandMarkWrap => "data-nav-brand-mark-wrap",
             PortfolioHomeContract::LightBrandLogo => "/static/eran.codes-light.svg",
             PortfolioHomeContract::DarkBrandLogo => "/static/eran.codes-dark.svg",
@@ -603,7 +594,7 @@ async fn work_index_prioritizes_current_proof_before_supporting_archive() {
     let body = to_bytes(response.into_body(), usize::MAX).await.unwrap();
     let body = String::from_utf8_lossy(&body);
     let current_title = "Current flagship proof";
-    let archive_subtitle = "These older case studies stay reachable as archived support.";
+    let archive_subtitle = "These archived cases stay brief on the index.";
     let current_case = "Encrypted Sensitive Record Sync in Rust";
     let archive_case = "Automated Fundraiser Acknowledgment at Scale";
 
@@ -615,7 +606,7 @@ async fn work_index_prioritizes_current_proof_before_supporting_archive() {
         body.find(current_case).unwrap() < body.find(archive_case).unwrap(),
         "current proof card should render before archived supporting cases",
     );
-    assert!(body.contains("Archived supporting-proof details"));
+    assert!(body.contains("Archived case notes"));
     assert!(body.contains("id=\"chat-realtime\""));
     assert!(body.contains("id=\"command-sse\""));
     assert!(body.contains("id=\"operational-visibility\""));
@@ -634,26 +625,30 @@ async fn work_archive_renders_legacy_case_details() {
     let body = to_bytes(response.into_body(), usize::MAX).await.unwrap();
     let body = String::from_utf8_lossy(&body);
 
-    for (anchor_id, summary, implementation_marker) in [
+    for (anchor_id, title, summary, implementation_marker) in [
         (
             "chat-realtime",
+            "Automated fundraiser acknowledgments to remove high-volume backlog",
             "This archived GoodUnited case study is supporting proof of execution under operational pressure.",
             "Built a Playwright + TypeScript automation worker to emulate the existing browser workflow end to end.",
         ),
         (
             "command-sse",
+            "Replaced delayed CSV workflows with realtime fundraiser + donation visibility",
             "This archived fundraiser pipeline is supporting proof of building under live integration pressure.",
             "Built an Express + Svelte + MongoDB app for event participants to create fundraisers in one click.",
         ),
         (
             "operational-visibility",
+            "Built a custom Substack publishing platform around a CMS event pipeline",
             "This archived Rust publishing platform is supporting proof of systems design under integration constraints.",
             "Built a custom Substack client/integration layer for publish-oriented automation paths.",
         ),
     ] {
         assert!(body.contains(&format!("id=\"{anchor_id}\"")));
+        assert!(body.contains(title));
         assert!(body.contains(summary));
-        assert!(body.contains(implementation_marker));
+        assert!(!body.contains(implementation_marker));
     }
     assert!(body.contains("Back to supporting proof archive"));
     assert!(body.contains("Review current proof case"));

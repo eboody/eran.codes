@@ -26,7 +26,7 @@ impl Render for Work<'_> {
                 }
             }).extra_class("ui-portfolio-lead-surface ui-portfolio-lead-surface--compact"))
 
-            (case_sections(self.content, ArchiveHeading::Page))
+            (case_sections(self.content))
         }
     }
 }
@@ -85,20 +85,13 @@ impl Render for ArchivedWork<'_> {
                             actions: &self.content.actions,
                         })
                     }
-                }).extra_class("ui-portfolio-lead-surface"))
-                (case_sections(self.content, ArchiveHeading::Archive))
+                }).extra_class("ui-portfolio-lead-surface ui-portfolio-lead-surface--compact"))
             }
         }
     }
 }
 
-#[derive(Clone, Copy)]
-enum ArchiveHeading {
-    Page,
-    Archive,
-}
-
-fn case_sections(content: &WorkCaseContent, heading: ArchiveHeading) -> maud::Markup {
+fn case_sections(content: &WorkCaseContent) -> maud::Markup {
     let sections = [
         (&content.challenge.title, &content.challenge.items),
         (&content.implementation.title, &content.implementation.items),
@@ -110,14 +103,7 @@ fn case_sections(content: &WorkCaseContent, heading: ArchiveHeading) -> maud::Ma
         (CardGrid::new(maud::html! {
             @for (title, items) in sections {
                 (InsetCard::new(maud::html! {
-                    @match heading {
-                        ArchiveHeading::Page => {
-                            h2 { (title) }
-                        }
-                        ArchiveHeading::Archive => {
-                            h4 { (title) }
-                        }
-                    }
+                    h2 { (title) }
                     ul class="ui-portfolio-list" {
                         @for item in items {
                             li { (item) }

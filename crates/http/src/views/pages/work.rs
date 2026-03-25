@@ -39,20 +39,18 @@ mod tests {
     use super::*;
 
     #[test]
-    fn renders_case_studies_and_open_source_teaser() {
+    fn renders_current_proof_and_compact_archive() {
         let content = partials::components::portfolio::content::work_index_content();
         let markup = Work::default().render().into_string();
         let lead_title = content.title.to_string();
         let current_title = content.current_proof_section.title.to_string();
         let supporting_subtitle = content.supporting_cases_section.subtitle.to_string();
         let archive_title = content.archive_details.title.to_string();
-        let teaser_title = content.open_source_teaser.title.to_string();
 
         assert!(markup.contains(lead_title.as_str()));
         assert!(markup.contains(current_title.as_str()));
         assert!(markup.contains(supporting_subtitle.as_str()));
         assert!(markup.contains(archive_title.as_str()));
-        assert!(markup.contains(teaser_title.as_str()));
         assert!(!markup.contains("data-code-block"));
         assert!(!markup.contains("data-portfolio-crate-switcher"));
         assert!(!markup.contains("images/work/chat-realtime"));
@@ -69,11 +67,7 @@ mod tests {
             markup.find(supporting_subtitle.as_str()).unwrap()
                 < markup.find(archive_title.as_str()).unwrap()
         );
-        assert!(
-            markup.find(archive_title.as_str()).unwrap()
-                < markup.find(teaser_title.as_str()).unwrap()
-        );
-        assert!(markup.contains("Current proof first. Archived shipped systems second."));
+        assert!(markup.contains("Current proof first. Supporting archive below."));
         assert!(markup.contains("Encrypted Sensitive Record Sync in Rust"));
         assert!(
             markup.find("Encrypted Sensitive Record Sync in Rust").unwrap()
@@ -84,13 +78,13 @@ mod tests {
         assert!(markup.contains("id=\"chat-realtime\""));
         assert!(markup.contains("id=\"command-sse\""));
         assert!(markup.contains("id=\"operational-visibility\""));
-        assert!(markup.contains("Need the code-level proof too?"));
-        assert!(markup.contains("Explore open-source work"));
+        assert!(!markup.contains(content.open_source_teaser.title.to_string().as_str()));
+        assert!(!markup.contains("Explore open-source work"));
         assert!(!markup.contains("Current implementation proof plus supporting shipped systems."));
     }
 
     #[test]
-    fn archive_details_render_from_shared_work_case_content() {
+    fn archive_entries_render_anchored_compact_summaries() {
         let markup = Work::default().render().into_string();
 
         for case in partials::components::portfolio::content::supporting_archive_cases() {
@@ -100,8 +94,9 @@ mod tests {
                 .expect("archived work case should expose an anchor id");
 
             assert!(markup.contains(&format!("id=\"{anchor_id}\"")));
+            assert!(markup.contains(case.content.title.to_string().as_str()));
             assert!(markup.contains(case.content.summary.to_string().as_str()));
-            assert!(markup.contains(case.content.implementation.items[0].to_string().as_str()));
+            assert!(!markup.contains(case.content.implementation.items[0].to_string().as_str()));
         }
     }
 }

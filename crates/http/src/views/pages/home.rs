@@ -38,20 +38,11 @@ mod tests {
         let content = partials::components::portfolio::content::portfolio_home_content();
         let markup = Home::default().render().into_string();
         let experience_title = content.experience_section.title.to_string();
-        let project_title = content.project_section.title.to_string();
         let proof_title = content.current_proof_section.title.to_string();
-        let skills_title = content.skill_section.title.to_string();
 
         assert!(
             markup.find(proof_title.as_str()).unwrap()
                 < markup.find(experience_title.as_str()).unwrap()
-        );
-        assert!(
-            markup.find(experience_title.as_str()).unwrap()
-                < markup.find(project_title.as_str()).unwrap()
-        );
-        assert!(
-            markup.find(proof_title.as_str()).unwrap() < markup.find(skills_title.as_str()).unwrap()
         );
         assert!(markup.contains("I build secure backend systems with explicit trust boundaries."));
         assert!(!markup.contains("I ship systems that remove operational bottlenecks and improve execution speed."));
@@ -59,5 +50,8 @@ mod tests {
         assert!(markup.contains("Current secure-data proof"));
         assert!(markup.contains("href=\"/resume.txt\""));
         assert!(markup.contains("ui-portfolio-hero-aside"));
+        assert!(!markup.contains(content.project_section.title.to_string().as_str()));
+        assert!(!markup.contains(content.open_source_teaser.title.to_string().as_str()));
+        assert!(!markup.contains(content.skill_section.title.to_string().as_str()));
     }
 }

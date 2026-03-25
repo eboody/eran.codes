@@ -1,8 +1,12 @@
-# Resume Alignment Packaging Status
+# Resume Alignment Packaging Status (Historical)
 
 As of March 23, 2026, the resume-first content unification, the IA-hardening pass, the supporting-proof route-policy pass, and the archive-collapse pass are all shipped.
 
-This file is no longer a forward plan for the shared-content refactor. It is the status note for the packaging phases that followed the secure-data proof slice.
+This file is no longer the active forward plan for the site.
+
+Use [Presentation Tightening Plan](./presentation-tightening-plan.md) for the current execution plan.
+
+This file remains as the historical status note for the packaging phases that followed the secure-data proof slice.
 
 ## What Changed
 

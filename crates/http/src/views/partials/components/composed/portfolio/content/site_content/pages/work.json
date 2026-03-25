@@ -1,8 +1,8 @@
 {
   "page_title": "Supporting Proof | Eran Boodnero",
   "eyebrow": "Supporting proof archive",
-  "title": "Current proof first. Archived shipped systems second.",
-  "summary": "Start with the current secure-data runtime slice, then use the archived case studies as supporting evidence for delivery under load, integration pressure, and operational constraints.",
+  "title": "Current proof first. Supporting archive below.",
+  "summary": "Use the secure-data runtime slice as the main evidence. The archived cases below are compact support for delivery under load, integration pressure, and operational constraints.",
   "current_proof": {
     "title": "Current flagship proof",
     "subtitle": "The secure-data slice is the repo's strongest current proof surface: encrypted storage, persisted sensitive-access grants, background sync, and audited authorized-read decisions.",
@@ -18,7 +18,7 @@
   },
   "supporting_cases": {
     "title": "Supporting proof archive",
-    "subtitle": "These older case studies stay reachable as archived support. They show delivery under operational load, live integrations, and automation constraints, but they are not the current flagship proof.",
+    "subtitle": "These archived cases stay brief on the index. They support the current proof with examples of delivery under load, live integrations, and automation constraints.",
     "project_slugs": [
       "chat_realtime",
       "command_sse",
@@ -26,8 +26,8 @@
     ]
   },
   "archive_details": {
-    "title": "Archived supporting-proof details",
-    "subtitle": "The legacy cases now live here as anchored archive entries. The dedicated current-proof route stays `/work/sensitive-sync`, and the live runtime proof stays on `/lab`.",
+    "title": "Archived case notes",
+    "subtitle": "Each archived entry stays anchored here as a short summary. The dedicated current-proof route remains `/work/sensitive-sync`, and the live runtime proof remains `/lab`.",
     "entry_label": "Archived supporting proof"
   },
   "open_source_teaser": {

@@ -11,11 +11,11 @@ pub use fixture_loader::{
 };
 pub(super) use model as types;
 pub use model::{
-    ArchiveDetailsContent, ArchivedWorkCaseContent, ClosingContent, CmsActionLink,
-    CrateCardContent, CrateSectionContent, CtaKind,
+    ArchiveDetailsContent, ArchivedWorkCaseContent, CmsActionLink, CrateCardContent,
+    CrateSectionContent, CtaKind,
     ExperienceRoleContent, ExperienceSectionContent, OpenSourceIndexContent, PortfolioHeroContent,
-    PortfolioHomeContent, SkillGroupContent, SkillSectionContent, WorkCardContent,
-    WorkCaseContent, WorkCaseSlug, WorkIndexContent, WorkSectionContent,
+    PortfolioHomeContent, WorkCardContent, WorkCaseContent, WorkCaseSlug, WorkIndexContent,
+    WorkSectionContent,
 };
 
 #[cfg(test)]

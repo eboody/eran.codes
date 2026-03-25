@@ -4,7 +4,7 @@ use super::{CardFooter, CardGrid, InsetCard, LeadCopy, SectionActions, SectionCo
 use crate::types::Text;
 use crate::views::partials;
 use crate::views::partials::components::portfolio::content::{
-    ClosingContent, WorkCardContent, WorkIndexContent, WorkSectionContent,
+    WorkCardContent, WorkIndexContent, WorkSectionContent,
 };
 
 #[derive(Clone, Copy, Debug, Default)]
@@ -71,24 +71,6 @@ impl Render for IndexSection<'_> {
                     })
                 }
             }
-        }
-    }
-}
-
-pub struct SupportingTeaserSection<'a> {
-    pub content: &'a ClosingContent,
-}
-
-impl Render for SupportingTeaserSection<'_> {
-    fn render(&self) -> maud::Markup {
-        maud::html! {
-            (Surface::section(maud::html! {
-                h2 { (&self.content.title) }
-                p class="ui-portfolio-summary" { (&self.content.summary) }
-                (SectionActions {
-                    actions: &self.content.actions,
-                })
-            }).extra_class("ui-portfolio-supporting-teaser"))
         }
     }
 }

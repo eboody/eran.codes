@@ -3,16 +3,9 @@
   "hero": {
     "eyebrow": "Los Angeles · Backend / Systems Engineer · Rust",
     "title": "I build secure backend systems with explicit trust boundaries.",
-    "summary": "This repo now proves durable auth and session handling, encrypted sensitive-record storage, application-level key rotation, provider-token lifecycle, default stub sync plus opt-in sandbox HTTP sync, and live runtime inspection in Rust.",
+    "summary": "This repo demonstrates durable auth, encrypted sensitive-record storage, application-level key rotation, and live runtime inspection in Rust.",
     "badges": [
-      "Rust",
-      "Auth + Sessions",
-      "PostgreSQL",
-      "Argon2",
-      "Typed Boundaries",
-      "SSE",
-      "Tracing",
-      "Datastar"
+      "Rust"
     ],
     "action_refs": [
       {

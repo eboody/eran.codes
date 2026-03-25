@@ -6,7 +6,6 @@ use crate::views::partials;
 use super::content::{CmsActionLink, CtaKind};
 
 mod case_detail;
-mod closing;
 mod crate_section;
 mod current_proof_aside;
 mod experience;
@@ -14,12 +13,10 @@ mod hero;
 mod home_flow;
 mod open_source_flow;
 mod open_source_intro;
-mod skill_groups;
 mod work;
 mod work_flow;
 
 pub use case_detail::{ArchiveCaseDetailsSection, Work as WorkCaseDetail};
-pub use closing::Section as ClosingSection;
 pub use crate_section::CrateSection;
 pub use current_proof_aside::CurrentProofHeroAside;
 pub use experience::Section as ExperienceSection;
@@ -27,10 +24,8 @@ pub use hero::Portfolio as PortfolioHero;
 pub use home_flow::HomeFlow;
 pub use open_source_flow::OpenSourceFlow;
 pub use open_source_intro::{OpenSourceHeroAside, OpenSourceMobileIntro};
-pub use skill_groups::Section as SkillGroupsSection;
 pub use work::{
-    IndexSection as WorkIndexSection, Section as WorkSection,
-    SectionVariant as WorkSectionVariant, SupportingTeaserSection,
+    IndexSection as WorkIndexSection, Section as WorkSection, SectionVariant as WorkSectionVariant,
 };
 pub use work_flow::WorkFlow;
 

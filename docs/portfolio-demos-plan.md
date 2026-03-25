@@ -2,7 +2,11 @@
 
 Use [Portfolio Demo Concepts](./portfolio-demos.md) for the current shipped demo catalog.
 
-This file is not the source for what the repo proves today. It exists to track the most useful follow-on demo work after the shipped secure-data slice.
+This file tracks follow-on demo ideas.
+
+Use [Presentation Tightening Plan](./presentation-tightening-plan.md) for the current execution plan.
+
+The current site plan lives elsewhere. Keep this note for post-shipped demo work after the secure-data slice.
 
 ## Current Shipped Anchors
 

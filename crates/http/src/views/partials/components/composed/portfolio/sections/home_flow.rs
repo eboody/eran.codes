@@ -3,8 +3,7 @@ use maud::Render;
 use crate::views::partials::components::portfolio::content::PortfolioHomeContent;
 
 use super::{
-    ClosingSection, CurrentProofHeroAside, ExperienceSection, PortfolioHero, SkillGroupsSection,
-    WorkSection, WorkSectionVariant,
+    CurrentProofHeroAside, ExperienceSection, PortfolioHero, WorkSection, WorkSectionVariant,
 };
 
 pub struct HomeFlow<'a> {
@@ -31,23 +30,6 @@ impl Render for HomeFlow<'_> {
             (ExperienceSection {
                 content: &self.content.experience_section,
             })
-            (WorkSection {
-                content: &self.content.project_section,
-                variant: WorkSectionVariant::Standard,
-            })
-            (ClosingSection {
-                title: &self.content.open_source_teaser.title,
-                summary: &self.content.open_source_teaser.summary,
-                actions: &self.content.open_source_teaser.actions,
-            })
-            (SkillGroupsSection {
-                content: &self.content.skill_section,
-            })
-            (ClosingSection {
-                title: &self.content.contact_section.title,
-                summary: &self.content.contact_section.summary,
-                actions: &self.content.contact_section.actions,
-            })
         }
     }
 }
@@ -64,6 +46,9 @@ mod tests {
 
         assert!(markup.contains(content.current_proof_section.title.to_string().as_str()));
         assert!(markup.contains("ui-portfolio-hero-aside"));
-        assert!(markup.contains(content.skill_section.title.to_string().as_str()));
+        assert!(markup.contains(content.experience_section.title.to_string().as_str()));
+        assert!(!markup.contains(content.project_section.title.to_string().as_str()));
+        assert!(!markup.contains(content.skill_section.title.to_string().as_str()));
+        assert!(!markup.contains(content.open_source_teaser.title.to_string().as_str()));
     }
 }

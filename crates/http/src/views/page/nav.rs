@@ -62,36 +62,49 @@ fn portfolio_links(
     partials::components::NavLinkList,
     Option<partials::components::NavLinkList>,
 ) {
-    let (internal_links, external_links): (Vec<_>, Vec<_>) =
+    let (primary_children, meta_children) =
         partials::components::portfolio::content::portfolio_nav_links()
             .iter()
-            .map(|link| {
+            .fold((Vec::new(), Vec::new()), |mut grouped_links, link| {
                 let href = link.href.to_string();
                 let active =
                     !link.kind.is_external() && portfolio_link_is_active(current_route, &href);
 
-                partials::components::NavLink::builder()
+                let nav_link = partials::components::NavLink::builder()
                     .label(link.label.clone())
                     .maybe_compact_label(compact_label_for_href(&href))
                     .href(link.href.clone())
                     .external(link.kind.is_external())
                     .active(active)
-                    .build()
-            })
-            .partition(|link| !link.external);
+                    .build();
+
+                if is_primary_portfolio_nav_href(&href) {
+                    grouped_links.0.push(nav_link);
+                } else {
+                    grouped_links.1.push(nav_link);
+                }
+
+                grouped_links
+            });
 
     let primary_links = partials::components::NavLinkList::builder()
         .role(partials::components::NavLinkListRole::Primary)
-        .children(internal_links)
+        .children(primary_children)
         .build();
-    let meta_links = (!external_links.is_empty()).then(|| {
+    let meta_links = (!meta_children.is_empty()).then(|| {
         partials::components::NavLinkList::builder()
             .role(partials::components::NavLinkListRole::Meta)
-            .children(external_links)
+            .children(meta_children)
             .build()
     });
 
     (primary_links, meta_links)
+}
+
+fn is_primary_portfolio_nav_href(href: &str) -> bool {
+    href == Route::Lab.as_str()
+        || href == Route::WorkSensitiveSync.as_str()
+        || href == Route::OpenSource.as_str()
 }
 
 fn auth(
@@ -146,6 +159,31 @@ mod tests {
     use maud::Render;
 
     use super::*;
+
+    #[test]
+    fn portfolio_links_keep_primary_review_path_compact() {
+        let (primary_links, meta_links) = portfolio_links(Some(Route::Home));
+        let primary_labels: Vec<_> = primary_links
+            .children
+            .iter()
+            .map(|link| link.label.to_string())
+            .collect();
+        let meta_labels: Vec<_> = meta_links
+            .expect("meta links")
+            .children
+            .iter()
+            .map(|link| link.label.to_string())
+            .collect();
+
+        assert_eq!(
+            primary_labels,
+            vec!["Live Proof", "Current Proof", "Open Source"]
+        );
+        assert_eq!(
+            meta_labels,
+            vec!["Supporting Proof", "Resume", "GitHub", "LinkedIn", "Contact"]
+        );
+    }
 
     #[test]
     fn login_route_promotes_sign_in_guest_action() {
