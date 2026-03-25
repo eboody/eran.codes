@@ -97,6 +97,20 @@ These pages expose runtime behavior directly in the UI.
 | Sensitive sync case | [`/work/sensitive-sync`](https://eran.codes/work/sensitive-sync) | Current shipped proof of encrypted-at-rest storage, key-versioned ciphertext, persisted sensitive-access grants, stub-or-sandbox HTTP boundary handling, bounded sync, denied reads, and audited authorized access |
 | Supporting proof archive | [`/work`](https://eran.codes/work) | Archived chat, SSE, and operational case details collapsed into one supporting-proof surface |
 
+## Concrete Proof Artifacts
+
+### Live sensitive-proof panel
+
+[![Live sensitive-proof panel](./docs/static/readme/lab-sensitive-proof.png)](https://eran.codes/lab#sensitive-proof)
+
+The lab proof panel shows the access-policy boundary, guest-safe redacted records, operator-only token and key-custody state, and recent access-audit evidence in one surface.
+
+### Current proof case
+
+[![Current proof case](./docs/static/readme/sensitive-sync-case.png)](https://eran.codes/work/sensitive-sync)
+
+The current proof case is the static companion to the lab panel. It frames the encrypted-record slice, provider-token lifecycle, bounded sync, and the scope limits of the secure-data claim surface.
+
 While interacting, watch the operational timeline panel. It shows requests, commands, and state changes as they happen.
 
 ## Evaluate It In Five Minutes

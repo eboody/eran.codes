@@ -370,6 +370,88 @@ async fn login_redirects_to_next() {
 }
 
 #[tokio::test]
+async fn login_drops_unsafe_next_and_redirects_to_protected() {
+    let app = test_app();
+    let body = "email=demo%40example.com&password=password&next=%2F%2Fevil.example";
+    let response = app
+        .clone()
+        .oneshot(
+            Request::post("/login")
+                .header(
+                    axum::http::header::CONTENT_TYPE,
+                    "application/x-www-form-urlencoded",
+                )
+                .body(Body::from(body))
+                .unwrap(),
+        )
+        .await
+        .unwrap();
+
+    assert_eq!(response.status(), StatusCode::SEE_OTHER);
+    let location = response
+        .headers()
+        .get(axum::http::header::LOCATION)
+        .unwrap()
+        .to_str()
+        .unwrap();
+    assert_eq!(location, "/protected");
+}
+
+#[tokio::test]
+async fn login_form_drops_unsafe_next_from_guest_render() {
+    let app = test_app();
+    let response = app
+        .oneshot(
+            Request::get("/login?next=%2F%2Fevil.example")
+                .body(Body::empty())
+                .unwrap(),
+        )
+        .await
+        .unwrap();
+
+    assert_eq!(response.status(), StatusCode::OK);
+    let body = to_bytes(response.into_body(), usize::MAX).await.unwrap();
+    let body = String::from_utf8_lossy(&body);
+
+    assert!(
+        !body.contains("name=\"next\""),
+        "guest login form should not keep an unsafe next field\n{body}",
+    );
+    assert!(
+        !body.contains("next=%2F%2Fevil.example"),
+        "guest login page should not echo an unsafe next target\n{body}",
+    );
+    assert!(
+        body.contains("href=\"/register\""),
+        "guest login page should fall back to the plain register route\n{body}",
+    );
+}
+
+#[tokio::test]
+async fn authenticated_login_form_drops_unsafe_next_and_redirects_to_protected() {
+    let app = test_app();
+    let cookie_header = login_cookie(app.clone()).await;
+    let response = app
+        .oneshot(
+            Request::get("/login?next=%2F%2Fevil.example")
+                .header(axum::http::header::COOKIE, cookie_header)
+                .body(Body::empty())
+                .unwrap(),
+        )
+        .await
+        .unwrap();
+
+    assert_eq!(response.status(), StatusCode::SEE_OTHER);
+    let location = response
+        .headers()
+        .get(axum::http::header::LOCATION)
+        .unwrap()
+        .to_str()
+        .unwrap();
+    assert_eq!(location, "/protected");
+}
+
+#[tokio::test]
 async fn login_sets_session_cookie_and_allows_chat_moderation() {
     let app = test_app();
     let cookie_header = login_cookie(app.clone()).await;
@@ -384,6 +466,51 @@ async fn login_sets_session_cookie_and_allows_chat_moderation() {
         .unwrap();
 
     assert_eq!(response.status(), StatusCode::OK);
+}
+
+#[tokio::test]
+async fn logout_clears_authenticated_session_and_reprotects_routes() {
+    let app = test_app();
+    let cookie_header = login_cookie(app.clone()).await;
+
+    let logout = app
+        .clone()
+        .oneshot(
+            Request::post("/logout")
+                .header(axum::http::header::COOKIE, cookie_header.clone())
+                .body(Body::empty())
+                .unwrap(),
+        )
+        .await
+        .unwrap();
+
+    assert_eq!(logout.status(), StatusCode::SEE_OTHER);
+    let logout_location = logout
+        .headers()
+        .get(axum::http::header::LOCATION)
+        .unwrap()
+        .to_str()
+        .unwrap();
+    assert_eq!(logout_location, "/");
+
+    let protected = app
+        .oneshot(
+            Request::get("/protected")
+                .header(axum::http::header::COOKIE, cookie_header)
+                .body(Body::empty())
+                .unwrap(),
+        )
+        .await
+        .unwrap();
+
+    assert!(protected.status().is_redirection());
+    let protected_location = protected
+        .headers()
+        .get(axum::http::header::LOCATION)
+        .unwrap()
+        .to_str()
+        .unwrap();
+    assert_eq!(protected_location, "/login?next=%2Fprotected");
 }
 
 #[tokio::test]
