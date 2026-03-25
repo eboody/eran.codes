@@ -1,6 +1,7 @@
 pub mod audit;
 mod create_room_flow;
-mod error;
+#[path = "error.rs"]
+pub mod failure;
 mod join_room_flow;
 mod list_messages_flow;
 mod moderate_message_flow;
@@ -16,14 +17,14 @@ use nutype::nutype;
 use strum_macros::{Display, EnumString};
 
 use domain::chat;
-pub use error::{Error, RepositoryOperation, Result};
+pub use failure::{RepositoryOperation, Result};
 
 #[derive(Clone, Debug, Builder)]
 pub struct PostMessage {
     pub room_id: chat::room::Id,
     pub user_id: chat::UserId,
     pub body: chat::message::Body,
-    pub client_id: Option<chat::client::Id>,
+    pub client_id: Option<chat::Client>,
 }
 
 #[derive(Clone, Debug, Builder)]
@@ -138,7 +139,7 @@ pub struct Service {
 }
 
 impl Service {
-    pub fn new(
+    fn new(
         repo: Arc<dyn Repository>,
         moderation: Arc<dyn moderation::Queue>,
         rate_limiter: Arc<dyn RateLimiter>,

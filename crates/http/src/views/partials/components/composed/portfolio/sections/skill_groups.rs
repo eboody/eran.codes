@@ -5,11 +5,11 @@ use crate::views::partials::components::portfolio::content::{
     SkillGroupContent, SkillSectionContent,
 };
 
-pub struct SkillGroupsSection<'a> {
+pub struct Section<'a> {
     pub content: &'a SkillSectionContent,
 }
 
-impl Render for SkillGroupsSection<'_> {
+impl Render for Section<'_> {
     fn render(&self) -> maud::Markup {
         maud::html! {
             (Surface::section(maud::html! {

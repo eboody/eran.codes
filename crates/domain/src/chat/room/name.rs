@@ -1,5 +1,5 @@
 use nutype::nutype;
-use snafu::prelude::*;
+use snafu::Snafu;
 
 #[nutype(
     sanitize(trim),

@@ -1,6 +1,6 @@
 use maud::Render;
 
-use super::showcase::CrateShowcase;
+use super::showcase::Crate as Showcase;
 use crate::types::Text;
 use crate::views::partials::components::portfolio::content::CrateCardContent;
 use crate::views::partials::components::{
@@ -104,11 +104,11 @@ me .ui-portfolio-crate-panel {
 "#
 );
 
-pub(super) struct CrateShowcaseSwitcher<'a> {
+pub(super) struct CrateShowcase<'a> {
     pub cards: &'a [CrateCardContent],
 }
 
-impl Render for CrateShowcaseSwitcher<'_> {
+impl Render for CrateShowcase<'_> {
     fn render(&self) -> maud::Markup {
         let tabs = self
             .cards
@@ -163,7 +163,7 @@ impl Render for CrateShowcasePanel<'_> {
             class: "ui-portfolio-crate-panel",
             is_selected: self.tab_index == 0,
             content: maud::html! {
-                (CrateShowcase { card: self.card })
+                (Showcase { card: self.card })
             },
         }
         .render()
@@ -188,7 +188,7 @@ mod tests {
 
     #[test]
     fn switcher_uses_local_tab_root_and_initial_selection() {
-        let markup = CrateShowcaseSwitcher {
+        let markup = CrateShowcase {
             cards: &[CrateCardContent {
                 name: Text::from("statum"),
                 summary: Text::from("summary"),

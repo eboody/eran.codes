@@ -3,12 +3,12 @@ use maud::Render;
 use super::{LeadCopy, Surface, render_actions};
 use crate::views::partials::components::portfolio::content::PortfolioHeroContent;
 
-pub struct PortfolioHero<'a> {
+pub struct Portfolio<'a> {
     pub content: &'a PortfolioHeroContent,
     pub aside: Option<maud::Markup>,
 }
 
-impl Render for PortfolioHero<'_> {
+impl Render for Portfolio<'_> {
     fn render(&self) -> maud::Markup {
         maud::html! {
             (Surface::header(maud::html! {

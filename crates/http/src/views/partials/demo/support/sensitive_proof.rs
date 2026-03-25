@@ -62,7 +62,7 @@ mod tests {
                     ])
                     .build(),
             )
-            .maybe_token(Some(
+            .token(
                 app::sensitive::TokenProof::builder()
                     .status(
                         domain::sensitive::TokenStatus::builder()
@@ -82,8 +82,8 @@ mod tests {
                             .build(),
                     )
                     .build(),
-            ))
-            .maybe_latest_sync(Some(
+            )
+            .latest_sync(
                 domain::sensitive::SyncRun::builder()
                     .provider(domain::sensitive::Provider::SyntheticSecureFeed)
                     .outcome(domain::sensitive::SyncOutcome::Success)
@@ -98,8 +98,8 @@ mod tests {
                     .started_at(UNIX_EPOCH)
                     .finished_at(UNIX_EPOCH)
                     .build(),
-            ))
-            .maybe_integration_state(Some(
+            )
+            .integration_state(
                 domain::sensitive::IntegrationState::builder()
                     .provider(domain::sensitive::Provider::SyntheticSecureFeed)
                     .mode(domain::sensitive::ProviderMode::LocalStub)
@@ -109,34 +109,28 @@ mod tests {
                         )
                         .expect("detail"),
                     )
-                    .maybe_auth_mode(Some(
-                        domain::sensitive::ProviderAuthMode::StubIssuedToken,
-                    ))
-                    .maybe_cursor(Some(
+                    .auth_mode(domain::sensitive::ProviderAuthMode::StubIssuedToken)
+                    .cursor(
                         domain::sensitive::SyncCursor::try_new("cursor-gamma")
                             .expect("cursor"),
-                    ))
+                    )
                     .last_fetch_outcome(domain::sensitive::FetchOutcome::Success)
-                    .maybe_last_auth_outcome(Some(
-                        domain::sensitive::FetchOutcome::Success,
-                    ))
+                    .last_auth_outcome(domain::sensitive::FetchOutcome::Success)
                     .token_strategy(
                         domain::sensitive::TokenStrategy::RetryAfterUnauthorized,
                     )
-                    .maybe_last_error_category(Some(
+                    .last_error_category(
                         domain::sensitive::RemoteErrorCategory::Unauthorized,
-                    ))
-                    .maybe_last_remote_status_code(Some(401))
-                    .maybe_retry_backoff_secs(Some(45))
-                    .maybe_last_successful_mode(Some(
-                        domain::sensitive::ProviderMode::LocalStub,
-                    ))
-                    .maybe_last_successful_fetch_at(Some(UNIX_EPOCH))
+                    )
+                    .last_remote_status_code(401)
+                    .retry_backoff_secs(45)
+                    .last_successful_mode(domain::sensitive::ProviderMode::LocalStub)
+                    .last_successful_fetch_at(UNIX_EPOCH)
                     .last_attempted_fetch_at(UNIX_EPOCH)
                     .failure_count(1)
                     .build(),
-            ))
-            .maybe_key_custody(Some(
+            )
+            .key_custody(
                 domain::sensitive::KeyCustodyState::builder()
                     .active_key_id(
                         domain::sensitive::KeyId::try_new("active_data_key")
@@ -176,7 +170,7 @@ mod tests {
                         .build()])
                     .stale_token_count(1)
                     .stale_record_count(2)
-                    .maybe_last_rotation_run(Some(
+                    .last_rotation_run(
                         domain::sensitive::KeyRotationRun::builder()
                             .active_key_id(
                                 domain::sensitive::KeyId::try_new("active_data_key")
@@ -196,9 +190,9 @@ mod tests {
                             .started_at(UNIX_EPOCH)
                             .finished_at(UNIX_EPOCH)
                             .build(),
-                    ))
+                    )
                     .build(),
-            ))
+            )
             .records(Vec::new())
             .maybe_authorized_record(None)
             .access_events(Vec::new())
@@ -308,7 +302,7 @@ mod tests {
             )
             .maybe_token(None)
             .maybe_latest_sync(None)
-            .maybe_integration_state(Some(
+            .integration_state(
                 domain::sensitive::IntegrationState::builder()
                     .provider(domain::sensitive::Provider::SyntheticSecureFeed)
                     .mode(domain::sensitive::ProviderMode::SandboxHttp)
@@ -318,33 +312,25 @@ mod tests {
                         )
                         .expect("detail"),
                     )
-                    .maybe_auth_mode(Some(
-                        domain::sensitive::ProviderAuthMode::ClientCredentials,
-                    ))
-                    .maybe_cursor(Some(
+                    .auth_mode(domain::sensitive::ProviderAuthMode::ClientCredentials)
+                    .cursor(
                         domain::sensitive::SyncCursor::try_new("cursor-sandbox")
                             .expect("cursor"),
-                    ))
+                    )
                     .last_fetch_outcome(domain::sensitive::FetchOutcome::Failed)
-                    .maybe_last_auth_outcome(Some(
-                        domain::sensitive::FetchOutcome::Failed,
-                    ))
+                    .last_auth_outcome(domain::sensitive::FetchOutcome::Failed)
                     .token_strategy(
                         domain::sensitive::TokenStrategy::RefreshedToken,
                     )
-                    .maybe_last_error_category(Some(
-                        domain::sensitive::RemoteErrorCategory::Forbidden,
-                    ))
-                    .maybe_last_remote_status_code(Some(403))
-                    .maybe_retry_backoff_secs(Some(60))
-                    .maybe_last_successful_mode(Some(
-                        domain::sensitive::ProviderMode::SandboxHttp,
-                    ))
-                    .maybe_last_successful_fetch_at(Some(UNIX_EPOCH))
+                    .last_error_category(domain::sensitive::RemoteErrorCategory::Forbidden)
+                    .last_remote_status_code(403)
+                    .retry_backoff_secs(60)
+                    .last_successful_mode(domain::sensitive::ProviderMode::SandboxHttp)
+                    .last_successful_fetch_at(UNIX_EPOCH)
                     .last_attempted_fetch_at(UNIX_EPOCH)
                     .failure_count(2)
                     .build(),
-            ))
+            )
             .records(Vec::new())
             .maybe_authorized_record(None)
             .access_events(Vec::new())

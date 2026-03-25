@@ -245,7 +245,11 @@ pub async fn audit_middleware(
     let user_id = context.as_ref().and_then(|value| value.user_id.clone());
     let sse_tab_id = context.as_ref().and_then(|value| value.sse_tab_id.clone());
     let latency_ms = started_at.elapsed().as_millis().to_string();
-    let sender = ChatSender::from_path(path.as_str());
+    let sender = path
+        .parse::<crate::paths::Route>()
+        .ok()
+        .and_then(|route| ChatSender::try_from(route).ok())
+        .unwrap_or_default();
     let sent_at = now_timestamp_short();
 
     state.trace_log.record_with_session(

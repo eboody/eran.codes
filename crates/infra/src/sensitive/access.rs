@@ -17,7 +17,7 @@ impl Repository {
         .fetch_all(&self.pg)
         .await
         .map_err(|source| {
-            sensitive::Error::query_repository(
+            sensitive::failure::Error::query_repository(
                 RepositoryOperation::LoadAccessGrants,
                 source,
             )
@@ -52,7 +52,7 @@ impl Repository {
             .execute(&self.pg)
             .await
             .map_err(|source| {
-                sensitive::Error::query_repository(
+                sensitive::failure::Error::query_repository(
                     RepositoryOperation::UpsertAccessGrants,
                     source,
                 )
@@ -88,7 +88,7 @@ impl Repository {
         .execute(&self.pg)
         .await
         .map_err(|source| {
-            sensitive::Error::query_repository(
+            sensitive::failure::Error::query_repository(
                 RepositoryOperation::RecordAccessEvent,
                 source,
             )
@@ -113,7 +113,7 @@ impl Repository {
         .fetch_all(&self.pg)
         .await
         .map_err(|source| {
-            sensitive::Error::query_repository(
+            sensitive::failure::Error::query_repository(
                 RepositoryOperation::ListAccessEvents,
                 source,
             )

@@ -5,9 +5,9 @@ mod panel;
 mod surface;
 mod table;
 
-pub use auto_scroll::{AutoScroll, AutoScrollScope};
+pub use auto_scroll::{AutoScroll, Scope as AutoScrollScope};
 pub use empty_state::EmptyState;
 pub use event_row::EventRow;
-pub use panel::{Panel, PanelBody};
-pub use surface::{Surface, SurfaceLayout};
-pub use table::{Table, TableVariant};
+pub use panel::{Body as PanelBody, Panel};
+pub use surface::{Layout as SurfaceLayout, Surface};
+pub use table::{Table, Variant as TableVariant};

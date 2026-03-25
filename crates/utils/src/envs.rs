@@ -1,5 +1,7 @@
 use std::{env, str::FromStr};
 
+use snafu::Snafu;
+
 use crate::b64::b64u_decode;
 
 pub fn get_env(name: &'static str) -> Result<String> {
@@ -27,43 +29,15 @@ pub fn get_env_b64u_as_u8s(name: &'static str) -> Result<Vec<u8>> {
 // region:    --- Error
 pub type Result<T> = core::result::Result<T, Error>;
 
-#[derive(Debug)]
+#[derive(Debug, Snafu)]
 pub enum Error {
+    #[snafu(display("missing required environment variable `{name}`"))]
     MissingEnv {
         name: &'static str,
         source: env::VarError,
     },
-    WrongFormat {
-        name: &'static str,
-        reason: String,
-    },
+    #[snafu(display("invalid value for `{name}`: {reason}"))]
+    WrongFormat { name: &'static str, reason: String },
 }
-
-// region:    --- Error Boilerplate
-impl core::fmt::Display for Error {
-    fn fmt(
-        &self,
-        fmt: &mut core::fmt::Formatter,
-    ) -> core::result::Result<(), core::fmt::Error> {
-        match self {
-            Error::MissingEnv { name, .. } => {
-                write!(fmt, "missing required environment variable `{name}`")
-            }
-            Error::WrongFormat { name, reason } => {
-                write!(fmt, "invalid value for `{name}`: {reason}")
-            }
-        }
-    }
-}
-
-impl std::error::Error for Error {
-    fn source(&self) -> Option<&(dyn std::error::Error + 'static)> {
-        match self {
-            Error::MissingEnv { source, .. } => Some(source),
-            Error::WrongFormat { .. } => None,
-        }
-    }
-}
-// endregion: --- Error Boilerplate
 
 // endregion: --- Error

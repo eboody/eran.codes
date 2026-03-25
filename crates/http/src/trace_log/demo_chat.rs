@@ -18,19 +18,23 @@ pub(crate) enum Sender {
 }
 
 impl Sender {
-    pub fn from_path(path: &str) -> Self {
-        match path.parse::<Route>().ok() {
-            Some(Route::ChatMessages) => Self::You,
-            Some(Route::ChatMessagesDemo) => Self::Demo,
-            _ => Self::Unknown,
-        }
-    }
-
     pub fn from_entry(entry: &store::TraceEntry) -> Self {
         let Some(sender) = entry.field_text(LogFieldKey::Sender) else {
             return Self::Unknown;
         };
         Self::from_str(&sender.to_string()).unwrap_or_default()
+    }
+}
+
+impl TryFrom<Route> for Sender {
+    type Error = ();
+
+    fn try_from(value: Route) -> core::result::Result<Self, Self::Error> {
+        match value {
+            Route::ChatMessages => Ok(Self::You),
+            Route::ChatMessagesDemo => Ok(Self::Demo),
+            _ => Err(()),
+        }
     }
 }
 

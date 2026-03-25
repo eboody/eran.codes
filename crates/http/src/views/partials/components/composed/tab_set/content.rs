@@ -4,7 +4,7 @@ use crate::types::Text;
 use crate::views::partials::components::primitives::Icon;
 
 #[derive(Debug, Clone, Deserialize)]
-pub(crate) struct TabSetContent {
+pub(crate) struct TabSet {
     pub tabs: Vec<Tab>,
 }
 

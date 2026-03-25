@@ -5,13 +5,13 @@ use crate::views::partials::components::portfolio::content::CmsActionLink;
 
 use super::{SectionActions, Surface};
 
-pub struct ClosingSection<'a> {
+pub struct Section<'a> {
     pub title: &'a Text,
     pub summary: &'a Text,
     pub actions: &'a [CmsActionLink],
 }
 
-impl Render for ClosingSection<'_> {
+impl Render for Section<'_> {
     fn render(&self) -> maud::Markup {
         maud::html! {
             (Surface::section(maud::html! {

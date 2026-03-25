@@ -1,5 +1,5 @@
 use domain::user;
-use snafu::prelude::*;
+use snafu::Snafu;
 use strum_macros::Display;
 
 use super::BoxError;

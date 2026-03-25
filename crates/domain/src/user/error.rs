@@ -1,4 +1,4 @@
-use snafu::prelude::*;
+use snafu::Snafu;
 
 use crate::user::{EmailError, UsernameError};
 

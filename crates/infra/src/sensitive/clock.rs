@@ -1,15 +1,15 @@
 use super::*;
 
 #[derive(Default)]
-pub struct SystemClock;
+pub struct System;
 
-impl SystemClock {
+impl System {
     pub fn new() -> Self {
         Self
     }
 }
 
-impl sensitive::Clock for SystemClock {
+impl sensitive::Clock for System {
     fn now(&self) -> SystemTime {
         SystemTime::now()
     }

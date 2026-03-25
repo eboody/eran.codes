@@ -42,12 +42,6 @@ pub mod target {
     }
 
     impl Kind {
-        pub fn parse(value: &str) -> Self {
-            Known::from_str(value)
-                .map(Self::Known)
-                .unwrap_or_else(|_| Self::Other(LogTargetText::new(value)))
-        }
-
         pub fn is_demo(&self) -> bool {
             matches!(
                 self,
@@ -64,6 +58,16 @@ pub mod target {
 
         pub fn is_demo_sse(&self) -> bool {
             matches!(self, Self::Known(Known::DemoSse))
+        }
+    }
+
+    impl FromStr for Kind {
+        type Err = core::convert::Infallible;
+
+        fn from_str(value: &str) -> core::result::Result<Self, Self::Err> {
+            Ok(Known::from_str(value)
+                .map(Self::Known)
+                .unwrap_or_else(|_| Self::Other(LogTargetText::new(value))))
         }
     }
 
@@ -115,11 +119,13 @@ pub mod message {
         Other(LogMessageText),
     }
 
-    impl Kind {
-        pub fn parse(value: &str) -> Self {
-            Known::from_str(value)
+    impl FromStr for Kind {
+        type Err = core::convert::Infallible;
+
+        fn from_str(value: &str) -> core::result::Result<Self, Self::Err> {
+            Ok(Known::from_str(value)
                 .map(Self::Known)
-                .unwrap_or_else(|_| Self::Other(LogMessageText::new(value)))
+                .unwrap_or_else(|_| Self::Other(LogMessageText::new(value))))
         }
     }
 
@@ -131,7 +137,10 @@ pub mod message {
 }
 
 pub(crate) fn classify(target: &str, message: &str) -> (target::Kind, message::Kind) {
-    (target::Kind::parse(target), message::Kind::parse(message))
+    (
+        target.parse().expect("target kind parsing is infallible"),
+        message.parse().expect("message kind parsing is infallible"),
+    )
 }
 
 pub(crate) fn should_skip_event(target: &target::Kind, message: &message::Kind) -> bool {
@@ -153,21 +162,33 @@ pub(crate) fn should_skip_event(target: &target::Kind, message: &message::Kind) 
 
 #[cfg(test)]
 mod tests {
-    use super::{message, should_skip_event, target};
+    use super::should_skip_event;
 
     #[test]
     fn skip_rules_reject_sse_connection_lifecycle_events() {
         assert!(should_skip_event(
-            &target::Kind::parse("http::handlers::sse"),
-            &message::Kind::parse("sse connected")
+            &"http::handlers::sse"
+                .parse::<super::target::Kind>()
+                .expect("target kind parsing is infallible"),
+            &"sse connected"
+                .parse::<super::message::Kind>()
+                .expect("message kind parsing is infallible")
         ));
         assert!(should_skip_event(
-            &target::Kind::parse("http::handlers::sse"),
-            &message::Kind::parse("sse disconnected")
+            &"http::handlers::sse"
+                .parse::<super::target::Kind>()
+                .expect("target kind parsing is infallible"),
+            &"sse disconnected"
+                .parse::<super::message::Kind>()
+                .expect("message kind parsing is infallible")
         ));
         assert!(!should_skip_event(
-            &target::Kind::parse("http::handlers::sse"),
-            &message::Kind::parse("other event")
+            &"http::handlers::sse"
+                .parse::<super::target::Kind>()
+                .expect("target kind parsing is infallible"),
+            &"other event"
+                .parse::<super::message::Kind>()
+                .expect("message kind parsing is infallible")
         ));
     }
 }

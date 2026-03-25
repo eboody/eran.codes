@@ -1,12 +1,12 @@
 use crate::types::Text;
 
 #[derive(Clone, Debug)]
-pub enum DataAttr {
+pub enum Data {
     Flag(Text),
     Value { name: Text, value: Text },
 }
 
-impl DataAttr {
+impl Data {
     pub fn flag(name: impl Into<Text>) -> Self {
         let name = name.into();
         debug_assert!(name.to_string().starts_with("data-"));

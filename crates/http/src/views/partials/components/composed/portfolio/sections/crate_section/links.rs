@@ -2,11 +2,11 @@ use maud::Render;
 
 use crate::views::partials::components::portfolio::content::CrateCardContent;
 
-pub(super) struct CrateLinks<'a> {
+pub(super) struct Crate<'a> {
     pub card: &'a CrateCardContent,
 }
 
-impl Render for CrateLinks<'_> {
+impl Render for Crate<'_> {
     fn render(&self) -> maud::Markup {
         maud::html! {
             nav class="ui-portfolio-inline-links" aria-label=(format!("{} links", self.card.name)) {

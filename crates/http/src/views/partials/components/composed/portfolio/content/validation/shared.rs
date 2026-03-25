@@ -3,7 +3,7 @@ pub(super) use std::collections::HashSet;
 pub(super) use crate::{paths::Route, types::Text};
 
 pub(super) use super::super::CrateGalleryContent;
-pub(super) use super::super::crate_gallery::CrateGalleryPreviewContent;
+pub(super) use super::super::crate_gallery::PreviewContent;
 pub(super) use super::super::types::{
     ActionBundleContent, ActionLibraryFragment, ArchiveDetailsContent, CaseListSection,
     ClosingContent, ClosingCopy, CmsActionLink, CmsImageAsset, ContactMethodContent,

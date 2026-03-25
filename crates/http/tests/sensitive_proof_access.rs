@@ -565,11 +565,11 @@ fn test_app(capabilities: Vec<domain_sensitive::AccessCapability>) -> axum::Rout
         .with_id_generator(Arc::new(Ids))
         .build();
     let sensitive_repo = Arc::new(SensitiveRepo::new(capabilities));
-    let sensitive = app::sensitive::Service::new(
-        sensitive_repo,
-        Arc::new(SensitiveProvider),
-        Arc::new(FixedSensitiveClock),
-    );
+    let sensitive = app::sensitive::Service::builder()
+        .with_repo(sensitive_repo)
+        .with_provider(Arc::new(SensitiveProvider))
+        .with_clock(Arc::new(FixedSensitiveClock))
+        .build();
     let state = app_http::State::builder()
         .with_user(user_service)
         .with_auth(auth_service)

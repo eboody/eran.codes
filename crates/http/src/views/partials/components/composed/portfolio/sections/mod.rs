@@ -18,17 +18,20 @@ mod skill_groups;
 mod work;
 mod work_flow;
 
-pub use case_detail::{ArchiveCaseDetailsSection, WorkCaseDetail};
-pub use closing::ClosingSection;
+pub use case_detail::{ArchiveCaseDetailsSection, Work as WorkCaseDetail};
+pub use closing::Section as ClosingSection;
 pub use crate_section::CrateSection;
 pub use current_proof_aside::CurrentProofHeroAside;
-pub use experience::ExperienceSection;
-pub use hero::PortfolioHero;
+pub use experience::Section as ExperienceSection;
+pub use hero::Portfolio as PortfolioHero;
 pub use home_flow::HomeFlow;
 pub use open_source_flow::OpenSourceFlow;
 pub use open_source_intro::{OpenSourceHeroAside, OpenSourceMobileIntro};
-pub use skill_groups::SkillGroupsSection;
-pub use work::{SupportingTeaserSection, WorkIndexSection, WorkSection, WorkSectionVariant};
+pub use skill_groups::Section as SkillGroupsSection;
+pub use work::{
+    IndexSection as WorkIndexSection, Section as WorkSection,
+    SectionVariant as WorkSectionVariant, SupportingTeaserSection,
+};
 pub use work_flow::WorkFlow;
 
 #[derive(Clone, Copy, Debug)]

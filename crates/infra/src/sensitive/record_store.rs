@@ -17,7 +17,7 @@ impl Repository {
         .fetch_optional(&self.pg)
         .await
         .map_err(|source| {
-            sensitive::Error::query_repository(
+            sensitive::failure::Error::query_repository(
                 RepositoryOperation::LoadAuthorizedRecord,
                 source,
             )
@@ -33,10 +33,10 @@ impl Repository {
                     nonce: row.get("authorized_nonce"),
                     ciphertext: row.get("authorized_ciphertext"),
                 })
-                .map_err(sensitive::Error::decrypt_record)?;
+                .map_err(sensitive::failure::Error::decrypt_record)?;
             let authorized: sensitive_domain::AuthorizedFields =
                 serde_json::from_slice(&payload)
-                    .map_err(sensitive::Error::decode_authorized_fields)?;
+                    .map_err(sensitive::failure::Error::decode_authorized_fields)?;
 
             Ok(sensitive_domain::AuthorizedRecord::builder()
                 .id(sensitive_domain::Id::from(row.get::<uuid::Uuid, _>("id")))
@@ -44,13 +44,13 @@ impl Repository {
                     sensitive_domain::Label::try_new(
                         row.get::<String, _>("redacted_label"),
                     )
-                    .map_err(sensitive::Error::decode_label)?,
+                    .map_err(sensitive::failure::Error::decode_label)?,
                 )
                 .last4(
                     sensitive_domain::Last4::try_new(
                         row.get::<String, _>("redacted_last4"),
                     )
-                    .map_err(sensitive::Error::decode_last4)?,
+                    .map_err(sensitive::failure::Error::decode_last4)?,
                 )
                 .authorized(authorized)
                 .synced_at(mapping::from_offset_datetime(row.get("synced_at")))
@@ -67,7 +67,7 @@ impl Repository {
         let mut upserted = 0;
         for record in records {
             let authorized_json = serde_json::to_vec(&record.authorized)
-                .map_err(sensitive::Error::encode_authorized_fields)?;
+                .map_err(sensitive::failure::Error::encode_authorized_fields)?;
             let payload_fingerprint =
                 mapping::payload_fingerprint(record, &authorized_json);
             let external_id = record.external_id.to_string();
@@ -82,7 +82,7 @@ impl Repository {
             .fetch_optional(&self.pg)
             .await
             .map_err(|source| {
-                sensitive::Error::query_repository(
+                sensitive::failure::Error::query_repository(
                     RepositoryOperation::UpsertRecords,
                     source,
                 )
@@ -93,7 +93,7 @@ impl Repository {
             let encrypted = self
                 .crypto
                 .encrypt(&authorized_json)
-                .map_err(sensitive::Error::encrypt_record)?;
+                .map_err(sensitive::failure::Error::encrypt_record)?;
 
             sqlx::query(
                 r#"
@@ -130,7 +130,7 @@ impl Repository {
             .execute(&self.pg)
             .await
             .map_err(|source| {
-                sensitive::Error::query_repository(
+                sensitive::failure::Error::query_repository(
                     RepositoryOperation::UpsertRecords,
                     source,
                 )

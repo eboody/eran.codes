@@ -127,8 +127,8 @@ async fn operator_snapshot_exposes_token_sync_and_audit() {
     let record_id = sensitive::Id::new_v4();
     let (service, repo) = service_with_state(RepoState {
         snapshot: StoredSnapshot::builder()
-            .maybe_token(Some(token_proof()))
-            .maybe_latest_sync(Some(latest_sync()))
+            .token(token_proof())
+            .latest_sync(latest_sync())
             .records(vec![record_proof(record_id)])
             .build(),
         authorized_record: Some(authorized_record(record_id)),
@@ -178,8 +178,8 @@ async fn reader_snapshot_hides_token_and_access_audit() {
     let record_id = sensitive::Id::new_v4();
     let (service, _repo) = service_with_state(RepoState {
         snapshot: StoredSnapshot::builder()
-            .maybe_token(Some(token_proof()))
-            .maybe_latest_sync(Some(latest_sync()))
+            .token(token_proof())
+            .latest_sync(latest_sync())
             .records(vec![record_proof(record_id)])
             .build(),
         authorized_record: Some(authorized_record(record_id)),

@@ -1,7 +1,7 @@
 use secrecy::{ExposeSecret, SecretString};
 use statum::{machine, state, transition};
 
-use super::{Error, Register};
+use super::{Register, failure};
 use domain::user;
 
 #[derive(Clone, Debug, PartialEq)]
@@ -62,7 +62,7 @@ impl RegisterUserFlow<Incoming> {
     pub(super) async fn register(
         self,
         service: &super::Service,
-    ) -> Result<RegisterUserFlow<Persisted>, Error> {
+    ) -> Result<RegisterUserFlow<Persisted>, failure::Error> {
         let email_available = self.verify_email_availability(service).await?;
         let materialized = email_available.materialize_user(user::Id::new_v4());
         let hashed = materialized.hash_password(service.hasher.as_ref())?;
@@ -73,7 +73,7 @@ impl RegisterUserFlow<Incoming> {
     async fn verify_email_availability(
         self,
         service: &super::Service,
-    ) -> Result<RegisterUserFlow<EmailAvailable>, Error> {
+    ) -> Result<RegisterUserFlow<EmailAvailable>, failure::Error> {
         let existing_user = service.users.find_by_email(self.email()).await?;
         self.classify_email_availability(existing_user)
             .require_available()
@@ -159,7 +159,7 @@ impl RegisterUserFlow<PasswordHashed> {
     async fn persist(
         self,
         repo: &dyn super::Repository,
-    ) -> Result<RegisterUserFlow<Persisted>, Error> {
+    ) -> Result<RegisterUserFlow<Persisted>, failure::Error> {
         repo.create_with_credentials(self.user(), self.password_hash())
             .await?;
         Ok(self.mark_persisted())
@@ -176,10 +176,10 @@ impl RegisterUserFlow<UserMaterialized> {
     fn hash_password(
         self,
         hasher: &dyn crate::auth::password::Hasher,
-    ) -> Result<RegisterUserFlow<PasswordHashed>, Error> {
+    ) -> Result<RegisterUserFlow<PasswordHashed>, failure::Error> {
         let password_hash = hasher
             .hash(self.password().expose_secret())
-            .map_err(Error::hash_password)?;
+            .map_err(failure::Error::hash_password)?;
         Ok(self.attach_password_hash(password_hash))
     }
 }
@@ -192,12 +192,12 @@ pub(super) enum EmailAvailabilityOutcome {
 impl EmailAvailabilityOutcome {
     pub(super) fn require_available(
         self,
-    ) -> Result<RegisterUserFlow<EmailAvailable>, Error> {
+    ) -> Result<RegisterUserFlow<EmailAvailable>, failure::Error> {
         match self {
             Self::Available(available) => Ok(available),
             Self::Taken(taken) => {
                 let _ = taken;
-                Err(Error::EmailTaken)
+                Err(failure::Error::EmailTaken)
             }
         }
     }
@@ -235,7 +235,7 @@ mod tests {
         let result = incoming
             .classify_email_availability(Some(build_existing_user()))
             .require_available();
-        assert!(matches!(result, Err(Error::EmailTaken)));
+        assert!(matches!(result, Err(failure::Error::EmailTaken)));
     }
 
     #[test]
@@ -293,7 +293,7 @@ mod tests {
                 .push(user.id);
             match self.create_outcome {
                 CreateOutcome::Ok => Ok(()),
-                CreateOutcome::EmailTaken => Err(super::super::Error::EmailTaken),
+                CreateOutcome::EmailTaken => Err(super::super::failure::Error::EmailTaken),
             }
         }
     }
@@ -379,7 +379,7 @@ mod tests {
             .register(&service)
             .await;
 
-        assert!(matches!(result, Err(Error::EmailTaken)));
+        assert!(matches!(result, Err(failure::Error::EmailTaken)));
         assert_eq!(repo.created_users().len(), 1);
     }
 
@@ -401,7 +401,7 @@ mod tests {
 
         assert!(matches!(
             result,
-            Err(Error::HashPassword {
+            Err(failure::Error::HashPassword {
                 source: crate::auth::Error::HashPassword { .. },
             })
         ));

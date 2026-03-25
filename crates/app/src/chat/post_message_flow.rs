@@ -2,7 +2,7 @@ use std::time::SystemTime;
 
 use statum::{machine, state, transition};
 
-use super::{Error, PostMessage, audit, moderation};
+use super::{PostMessage, audit, failure, moderation};
 use domain::chat;
 
 #[derive(Clone, Debug, PartialEq)]
@@ -35,7 +35,7 @@ pub(super) struct PostMessageFlow<PostMessageState> {
     room_id: chat::room::Id,
     user_id: chat::UserId,
     body: chat::message::Body,
-    client_id: Option<chat::client::Id>,
+    client_id: Option<chat::Client>,
 }
 
 #[transition]
@@ -162,7 +162,7 @@ impl PostMessageFlow<Incoming> {
     pub(super) async fn post(
         self,
         service: &super::Service,
-    ) -> Result<PostMessageFlow<Audited>, Error> {
+    ) -> Result<PostMessageFlow<Audited>, failure::Error> {
         let room_verified = self.verify_room(service).await?;
         let membership_verified = room_verified.verify_membership(service).await?;
         let rate_limited = membership_verified.check_rate_limit(service).await?;
@@ -179,7 +179,7 @@ impl PostMessageFlow<Incoming> {
     async fn verify_room(
         self,
         service: &super::Service,
-    ) -> Result<PostMessageFlow<RoomVerified>, Error> {
+    ) -> Result<PostMessageFlow<RoomVerified>, failure::Error> {
         let room_exists = service.repo.find_room(self.room_id()).await?.is_some();
         self.classify_room_lookup(room_exists).require_room()
     }
@@ -207,7 +207,7 @@ impl PostMessageFlow<RoomVerified> {
     async fn verify_membership(
         self,
         service: &super::Service,
-    ) -> Result<PostMessageFlow<MembershipVerified>, Error> {
+    ) -> Result<PostMessageFlow<MembershipVerified>, failure::Error> {
         let is_member = service
             .repo
             .is_member(self.room_id(), self.user_id())
@@ -220,7 +220,7 @@ impl PostMessageFlow<MembershipVerified> {
     async fn check_rate_limit(
         self,
         service: &super::Service,
-    ) -> Result<PostMessageFlow<RateLimitPassed>, Error> {
+    ) -> Result<PostMessageFlow<RateLimitPassed>, failure::Error> {
         service
             .rate_limiter
             .check(self.room_id(), self.user_id())
@@ -288,10 +288,12 @@ pub(super) enum RoomLookupOutcome {
 }
 
 impl RoomLookupOutcome {
-    pub(super) fn require_room(self) -> Result<PostMessageFlow<RoomVerified>, Error> {
+    pub(super) fn require_room(
+        self,
+    ) -> Result<PostMessageFlow<RoomVerified>, failure::Error> {
         match self {
             Self::Found(found) => Ok(found),
-            Self::Missing => Err(Error::RoomNotFound),
+            Self::Missing => Err(failure::Error::RoomNotFound),
         }
     }
 }
@@ -304,10 +306,10 @@ pub(super) enum MembershipOutcome {
 impl MembershipOutcome {
     pub(super) fn require_member(
         self,
-    ) -> Result<PostMessageFlow<MembershipVerified>, Error> {
+    ) -> Result<PostMessageFlow<MembershipVerified>, failure::Error> {
         match self {
             Self::Member(member) => Ok(member),
-            Self::NotMember => Err(Error::NotMember),
+            Self::NotMember => Err(failure::Error::NotMember),
         }
     }
 }
@@ -316,7 +318,7 @@ impl BuiltPostMessage {
     pub(super) async fn persist(
         self,
         repo: &dyn super::Repository,
-    ) -> Result<PersistedPostMessage, Error> {
+    ) -> Result<PersistedPostMessage, failure::Error> {
         match self {
             Self::Visible(visible) => {
                 repo.insert_message(&visible.state_data.message).await?;
@@ -339,7 +341,7 @@ impl PersistedPostMessage {
     pub(super) async fn enqueue_if_pending(
         self,
         moderation: &dyn super::moderation::Queue,
-    ) -> Result<ReadyForAudit, Error> {
+    ) -> Result<ReadyForAudit, failure::Error> {
         match self {
             Self::Visible(visible) => Ok(ReadyForAudit::Visible(visible)),
             Self::Pending(pending) => {
@@ -378,7 +380,7 @@ impl ReadyForAudit {
     async fn record_audit(
         self,
         service: &super::Service,
-    ) -> Result<PostMessageFlow<Audited>, Error> {
+    ) -> Result<PostMessageFlow<Audited>, failure::Error> {
         let (room_id, user_id, message_id, status) = {
             let message = self.message();
             (message.room_id, message.user_id, message.id, message.status)
@@ -472,7 +474,7 @@ mod tests {
     fn classify_room_lookup_rejects_missing_room() {
         let incoming = PostMessageFlow::<Incoming>::from_command(build_command("hello"));
         let result = incoming.classify_room_lookup(false).require_room();
-        assert!(matches!(result, Err(Error::RoomNotFound)));
+        assert!(matches!(result, Err(failure::Error::RoomNotFound)));
     }
 
     #[test]
@@ -483,7 +485,7 @@ mod tests {
             .require_room()
             .expect("room exists");
         let result = room_verified.classify_membership(false).require_member();
-        assert!(matches!(result, Err(Error::NotMember)));
+        assert!(matches!(result, Err(failure::Error::NotMember)));
     }
 
     struct TestRepository {

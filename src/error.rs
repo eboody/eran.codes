@@ -1,4 +1,4 @@
-use snafu::prelude::*;
+use snafu::Snafu;
 
 pub type Result<T> = core::result::Result<T, Error>;
 

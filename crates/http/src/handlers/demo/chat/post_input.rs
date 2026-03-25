@@ -1,6 +1,6 @@
 use domain::chat;
 
-use super::{ChatSignals, DemoChatSignals};
+use super::{DemoChatSignals, Signals};
 use crate::request;
 use crate::types::{Text, UserIdText};
 
@@ -27,7 +27,7 @@ pub(super) struct PostInput {
 impl PostInput {
     pub(super) fn from_authenticated_signals(
         state: &crate::State,
-        signals: ChatSignals,
+        signals: Signals,
         user: &crate::auth::User,
     ) -> crate::Result<Self> {
         let room_id = room_id_from_binding(state)?;
@@ -69,7 +69,7 @@ impl PostInput {
 fn parse_message_body(value: &str) -> crate::Result<domain::chat::message::Body> {
     domain::chat::message::Body::try_new(value)
         .map_err(domain::chat::Error::from)
-        .map_err(app::chat::Error::from)
+        .map_err(app::chat::failure::Error::from)
         .map_err(crate::Error::from)
 }
 

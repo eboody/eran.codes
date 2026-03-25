@@ -1,9 +1,9 @@
 use super::*;
 
-pub(super) struct DisabledRepository;
+pub(super) struct Repository;
 
 #[async_trait]
-impl Repository for DisabledRepository {
+impl super::Repository for Repository {
     async fn load_snapshot(&self) -> Result<StoredSnapshot> {
         Ok(StoredSnapshot::builder()
             .maybe_token(None)
@@ -121,10 +121,10 @@ impl Repository for DisabledRepository {
     }
 }
 
-pub(super) struct DisabledProvider;
+pub(super) struct Provider;
 
 #[async_trait]
-impl ProviderClient for DisabledProvider {
+impl super::ProviderClient for Provider {
     fn boundary_meta(&self, _provider: sensitive::Provider) -> ProviderBoundaryMeta {
         ProviderBoundaryMeta::builder()
             .mode(sensitive::ProviderMode::LocalStub)
@@ -171,9 +171,9 @@ impl ProviderClient for DisabledProvider {
     }
 }
 
-pub(super) struct DisabledClock;
+pub(super) struct Clock;
 
-impl Clock for DisabledClock {
+impl super::Clock for Clock {
     fn now(&self) -> SystemTime {
         UNIX_EPOCH
     }

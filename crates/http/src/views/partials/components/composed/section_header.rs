@@ -12,18 +12,18 @@ pub enum SectionHeaderLevel {
 }
 
 #[derive(Clone, Copy, Debug, Default)]
-pub enum SectionHeaderDensity {
+pub enum Density {
     #[default]
     Standard,
     Compact,
 }
 
 #[derive(Clone, Debug, Builder)]
-pub struct SectionHeaderMetaText {
+pub struct MetaText {
     pub text: Text,
 }
 
-impl Render for SectionHeaderMetaText {
+impl Render for MetaText {
     fn render(&self) -> maud::Markup {
         maud::html! {
             p class="u-muted" { (&self.text) }
@@ -37,18 +37,18 @@ pub struct SectionHeader {
     pub title: Text,
     pub subtitle: Option<Text>,
     pub action: Option<button::Button>,
-    pub meta: Option<SectionHeaderMetaText>,
+    pub meta: Option<MetaText>,
     #[builder(default)]
     pub level: SectionHeaderLevel,
     #[builder(default)]
-    pub density: SectionHeaderDensity,
+    pub density: Density,
 }
 
 impl Render for SectionHeader {
     fn render(&self) -> maud::Markup {
         let class_name = match self.density {
-            SectionHeaderDensity::Standard => "u-section-header",
-            SectionHeaderDensity::Compact => "u-section-header u-section-header--compact",
+            Density::Standard => "u-section-header",
+            Density::Compact => "u-section-header u-section-header--compact",
         };
 
         maud::html! {
@@ -113,7 +113,7 @@ mod tests {
     fn can_render_compact_density() {
         let markup = SectionHeader::builder()
             .title(Text::from("Sensitive record proof"))
-            .density(SectionHeaderDensity::Compact)
+            .density(Density::Compact)
             .build()
             .render()
             .into_string();

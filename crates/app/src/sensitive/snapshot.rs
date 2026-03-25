@@ -161,11 +161,11 @@ pub(super) fn sorted_capabilities(
     capabilities
 }
 
-fn authorized_record_requires_denied_fallback(error: &Error) -> bool {
+fn authorized_record_requires_denied_fallback(error: &failure::Error) -> bool {
     matches!(
         error,
-        Error::Repository {
-            source: error::RepositoryError::DecryptRecord { .. },
+        failure::Error::Repository {
+            source: failure::Repository::DecryptRecord { .. },
         }
     )
 }

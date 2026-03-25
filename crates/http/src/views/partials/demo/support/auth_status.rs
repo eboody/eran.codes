@@ -7,16 +7,16 @@ use crate::views::partials;
 use super::Results;
 
 #[derive(Clone, Copy, Debug)]
-enum AuthStatusLabel {
+enum Label {
     Authenticated,
     Anonymous,
 }
 
-impl From<AuthStatusLabel> for Text {
-    fn from(value: AuthStatusLabel) -> Self {
+impl From<Label> for Text {
+    fn from(value: Label) -> Self {
         match value {
-            AuthStatusLabel::Authenticated => Text::from("Authenticated"),
-            AuthStatusLabel::Anonymous => Text::from("Anonymous"),
+            Label::Authenticated => Text::from("Authenticated"),
+            Label::Anonymous => Text::from("Anonymous"),
         }
     }
 }
@@ -34,9 +34,9 @@ pub struct AuthStatus {
 impl Render for AuthStatus {
     fn render(&self) -> maud::Markup {
         let status = if self.user_id.is_some() {
-            AuthStatusLabel::Authenticated
+            Label::Authenticated
         } else {
-            AuthStatusLabel::Anonymous
+            Label::Anonymous
         };
         let items = vec![
             partials::StatusCardItem::optional("user_id", self.user_id.clone()),

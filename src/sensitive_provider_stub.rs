@@ -6,7 +6,7 @@ use std::sync::{
 use axum::{
     Json, Router,
     extract::{Query, State},
-    http::{HeaderMap, StatusCode, header},
+    http::{self, StatusCode, header},
     response::IntoResponse,
     routing::{get, post},
 };
@@ -63,7 +63,7 @@ async fn refresh_token(
 async fn records_page(
     State(state): State<StubState>,
     Query(query): Query<RecordsQuery>,
-    headers: HeaderMap,
+    headers: http::HeaderMap,
 ) -> impl IntoResponse {
     if !bearer_token_present(&headers) {
         return error_response(
@@ -95,7 +95,10 @@ async fn records_page(
                 StatusCode::OK,
                 Json(RecordsPageResponse {
                     records: vec![RecordPayload {
-                        external_id: "synthetic-alpha".to_string(),
+                        external_id: domain::sensitive::ExternalId::try_new(
+                            "synthetic-alpha",
+                        )
+                        .expect("stub external id should be valid"),
                         redacted_label: "Alpha file".to_string(),
                         redacted_last4: "bad".to_string(),
                         subject_name: "Case alpha".to_string(),
@@ -118,7 +121,7 @@ async fn records_page(
         .into_response()
 }
 
-fn bearer_token_present(headers: &HeaderMap) -> bool {
+fn bearer_token_present(headers: &http::HeaderMap) -> bool {
     headers
         .get(header::AUTHORIZATION)
         .and_then(|value| value.to_str().ok())
@@ -133,11 +136,7 @@ fn error_response(
 ) -> axum::response::Response {
     (
         status,
-        Json(RemoteErrorResponse {
-            category: Some(category.to_string()),
-            error: None,
-            message: Some(message.to_string()),
-        }),
+        Json(RemoteErrorResponse::message(category, message)),
     )
         .into_response()
 }
@@ -195,7 +194,8 @@ fn record(
     note: &str,
 ) -> RecordPayload {
     RecordPayload {
-        external_id: external_id.to_string(),
+        external_id: domain::sensitive::ExternalId::try_new(external_id)
+            .expect("stub external id should be valid"),
         redacted_label: redacted_label.to_string(),
         redacted_last4: redacted_last4.to_string(),
         subject_name: subject_name.to_string(),

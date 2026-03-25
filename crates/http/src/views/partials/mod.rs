@@ -1,6 +1,7 @@
 pub mod components;
 mod demo;
-mod error;
+#[path = "error.rs"]
+pub(crate) mod transport_error;
 
 // ci: descriptive-module-import crate::views::partials::chat
 pub use components::button;
@@ -15,4 +16,3 @@ pub use demo::{
     AuthStatus, BoundaryCheck, DbCheck, LabFlow, OperationalRequestFilter, Ping, RequestMeta,
     RequestTraceLog, SensitiveProof, SessionStatus, TransportLogSet,
 };
-pub use error::Error;

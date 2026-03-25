@@ -13,7 +13,7 @@ pub(crate) fn head_styles() -> maud::Markup {
     button::head_styles()
 }
 
-pub use auth_shell::{AuthShell, AuthShellVariant};
+pub use auth_shell::{AuthShell, Variant as AuthShellVariant};
 pub use demo_result_placeholder::DemoResultPlaceholder;
 pub use nav_bar::{
     NavAuth, NavBar, NavBrand, NavGuestAuth, NavLink, NavLinkList, NavLinkListRole,
@@ -21,6 +21,7 @@ pub use nav_bar::{
 };
 pub(crate) use result_card::ResultCard;
 pub use section_header::{
-    SectionHeader, SectionHeaderDensity, SectionHeaderLevel, SectionHeaderMetaText,
+    Density as SectionHeaderDensity, MetaText as SectionHeaderMetaText, SectionHeader,
+    SectionHeaderLevel,
 };
-pub use status_card::{StatusCard, StatusCardItem};
+pub use status_card::{Item as StatusCardItem, StatusCard};

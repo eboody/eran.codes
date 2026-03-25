@@ -9,7 +9,7 @@ use async_trait::async_trait;
 use bon::Builder;
 use nutype::nutype;
 use secrecy::SecretString;
-use snafu::prelude::*;
+use snafu::Snafu;
 
 use domain::user;
 
@@ -60,7 +60,9 @@ impl Error {
 
     pub fn hash_password(source: impl std::error::Error + Send + Sync + 'static) -> Self {
         Self::HashPassword {
-            source: password::HashError(box_error(source)),
+            source: password::HashError {
+                source: box_error(source),
+            },
         }
     }
 
@@ -68,7 +70,9 @@ impl Error {
         source: impl std::error::Error + Send + Sync + 'static,
     ) -> Self {
         Self::ParseStoredPasswordHash {
-            source: password::HashError(box_error(source)),
+            source: password::HashError {
+                source: box_error(source),
+            },
         }
     }
 }

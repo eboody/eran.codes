@@ -1,7 +1,7 @@
 use bon::Builder;
 use nutype::nutype;
 
-use super::room;
+use super::{client, room};
 
 #[nutype(
     sanitize(trim),
@@ -56,13 +56,6 @@ pub struct Message {
     pub user_id: room::UserId,
     pub body: Body,
     pub status: Status,
-    pub client_id: Option<ClientId>,
+    pub client_id: Option<client::Id>,
     pub created_at: std::time::SystemTime,
 }
-
-#[nutype(
-    sanitize(trim),
-    validate(not_empty, len_char_max = 128),
-    derive(Debug, Clone, PartialEq, Eq, Display)
-)]
-pub struct ClientId(String);

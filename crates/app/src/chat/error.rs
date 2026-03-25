@@ -1,16 +1,16 @@
-use snafu::prelude::*;
+use snafu::Snafu;
 use strum_macros::Display;
 
 pub type Result<T> = core::result::Result<T, Error>;
 
-type BoxError = Box<dyn std::error::Error + Send + Sync + 'static>;
+type Boxed = std::boxed::Box<dyn std::error::Error + Send + Sync + 'static>;
 
 #[derive(Debug, Snafu)]
 pub enum Error {
     #[snafu(display("{source}"))]
     Domain { source: domain::chat::Error },
     #[snafu(display("{source}"))]
-    Repository { source: RepositoryError },
+    Repository { source: Repository },
     #[snafu(display("invalid room id: {source}"))]
     InvalidRoomId { source: uuid::Error },
     #[snafu(display("invalid message id: {source}"))]
@@ -70,11 +70,11 @@ pub enum RepositoryOperation {
 }
 
 #[derive(Debug, Snafu)]
-pub enum RepositoryError {
+pub enum Repository {
     #[snafu(display("chat repository query failed while {operation}: {source}"))]
     Query {
         operation: RepositoryOperation,
-        source: BoxError,
+        source: Boxed,
     },
     #[snafu(display("failed to decode room name: {source}"))]
     DecodeRoomName {
@@ -110,7 +110,7 @@ impl From<domain::chat::Error> for Error {
     }
 }
 
-fn box_error(source: impl std::error::Error + Send + Sync + 'static) -> BoxError {
+fn box_error(source: impl std::error::Error + Send + Sync + 'static) -> Boxed {
     Box::new(source)
 }
 
@@ -120,7 +120,7 @@ impl Error {
         source: impl std::error::Error + Send + Sync + 'static,
     ) -> Self {
         Self::Repository {
-            source: RepositoryError::Query {
+            source: Repository::Query {
                 operation,
                 source: box_error(source),
             },
@@ -129,25 +129,25 @@ impl Error {
 
     pub fn decode_room_name(source: domain::chat::room::name::Error) -> Self {
         Self::Repository {
-            source: RepositoryError::DecodeRoomName { source },
+            source: Repository::DecodeRoomName { source },
         }
     }
 
     pub fn decode_client_id(source: domain::chat::client::IdError) -> Self {
         Self::Repository {
-            source: RepositoryError::DecodeClientId { source },
+            source: Repository::DecodeClientId { source },
         }
     }
 
     pub fn decode_message_body(source: domain::chat::message::BodyError) -> Self {
         Self::Repository {
-            source: RepositoryError::DecodeMessageBody { source },
+            source: Repository::DecodeMessageBody { source },
         }
     }
 
     pub fn decode_moderation_room_name(source: domain::chat::room::name::Error) -> Self {
         Self::Repository {
-            source: RepositoryError::DecodeModerationRoomName { source },
+            source: Repository::DecodeModerationRoomName { source },
         }
     }
 
@@ -155,19 +155,19 @@ impl Error {
         source: domain::chat::message::BodyError,
     ) -> Self {
         Self::Repository {
-            source: RepositoryError::DecodeModerationMessageBody { source },
+            source: Repository::DecodeModerationMessageBody { source },
         }
     }
 
     pub fn decode_moderation_reason(source: super::moderation::ReasonError) -> Self {
         Self::Repository {
-            source: RepositoryError::DecodeModerationReason { source },
+            source: Repository::DecodeModerationReason { source },
         }
     }
 
     pub fn decode_moderation_timestamp(source: super::TimestampTextError) -> Self {
         Self::Repository {
-            source: RepositoryError::DecodeModerationTimestamp { source },
+            source: Repository::DecodeModerationTimestamp { source },
         }
     }
 

@@ -5,20 +5,22 @@ use axum::http::{
 };
 use datastar::prelude::PatchSignals;
 use maud::Render;
-use snafu::prelude::*;
+use snafu::Snafu;
 
 pub type Result<T> = core::result::Result<T, Error>;
 
 #[derive(Debug, Snafu)]
 pub enum Error {
     #[snafu(display("{source}"))]
-    User { source: app::user::Error },
+    User { source: app::user::failure::Error },
     #[snafu(display("{source}"))]
     Auth { source: app::auth::Error },
     #[snafu(display("{source}"))]
-    Chat { source: app::chat::Error },
+    Chat { source: app::chat::failure::Error },
     #[snafu(display("{source}"))]
-    Sensitive { source: app::sensitive::Error },
+    Sensitive {
+        source: app::sensitive::failure::Error,
+    },
     #[snafu(display("{source}"))]
     ExtractJson {
         source: axum::extract::rejection::JsonRejection,
@@ -31,8 +33,8 @@ pub enum Error {
     Internal,
 }
 
-impl From<app::user::Error> for Error {
-    fn from(source: app::user::Error) -> Self {
+impl From<app::user::failure::Error> for Error {
+    fn from(source: app::user::failure::Error) -> Self {
         Self::User { source }
     }
 }
@@ -44,7 +46,7 @@ enum ErrorResponse {
         view: crate::views::page::Error,
     },
     Datastar {
-        presentation: ErrorPresentation,
+        presentation: Presentation,
     },
 }
 
@@ -54,14 +56,14 @@ impl From<app::auth::Error> for Error {
     }
 }
 
-impl From<app::chat::Error> for Error {
-    fn from(source: app::chat::Error) -> Self {
+impl From<app::chat::failure::Error> for Error {
+    fn from(source: app::chat::failure::Error) -> Self {
         Self::Chat { source }
     }
 }
 
-impl From<app::sensitive::Error> for Error {
-    fn from(source: app::sensitive::Error) -> Self {
+impl From<app::sensitive::failure::Error> for Error {
+    fn from(source: app::sensitive::failure::Error) -> Self {
         Self::Sensitive { source }
     }
 }
@@ -133,7 +135,7 @@ impl From<axum_login::Error<crate::auth::Backend>> for Error {
 }
 
 #[derive(Clone, Copy, Debug)]
-struct ErrorPresentation {
+struct Presentation {
     kind: &'static str,
     status: axum::http::StatusCode,
     title: &'static str,
@@ -141,37 +143,37 @@ struct ErrorPresentation {
 }
 
 impl Error {
-    fn presentation(&self) -> ErrorPresentation {
+    fn presentation(&self) -> Presentation {
         match self {
-            Error::ExtractJson { .. } => ErrorPresentation {
+            Error::ExtractJson { .. } => Presentation {
                 kind: "validation",
                 status: axum::http::StatusCode::BAD_REQUEST,
                 title: "Bad request",
                 message: "Invalid request body.",
             },
-            Error::ChatRoomBindingMissing => ErrorPresentation {
+            Error::ChatRoomBindingMissing => Presentation {
                 kind: "precondition",
                 status: axum::http::StatusCode::PRECONDITION_FAILED,
                 title: "Reconnect and retry",
                 message: "The live chat tab is not ready yet. Reconnect and retry.",
             },
-            Error::ChatRoomBindingMismatch => ErrorPresentation {
+            Error::ChatRoomBindingMismatch => Presentation {
                 kind: "conflict",
                 status: axum::http::StatusCode::CONFLICT,
                 title: "Wrong chat room",
                 message: "This tab is bound to a different chat room. Refresh and retry.",
             },
             Error::User {
-                source: app::user::Error::Domain { .. },
-            } => ErrorPresentation {
+                source: app::user::failure::Error::Domain { .. },
+            } => Presentation {
                 kind: "validation",
                 status: axum::http::StatusCode::BAD_REQUEST,
                 title: "Invalid input",
                 message: "Invalid input.",
             },
             Error::User {
-                source: app::user::Error::EmailTaken,
-            } => ErrorPresentation {
+                source: app::user::failure::Error::EmailTaken,
+            } => Presentation {
                 kind: "conflict",
                 status: axum::http::StatusCode::CONFLICT,
                 title: "Email already in use",
@@ -179,8 +181,9 @@ impl Error {
             },
             Error::User {
                 source:
-                    app::user::Error::HashPassword { .. } | app::user::Error::Repository { .. },
-            } => ErrorPresentation {
+                    app::user::failure::Error::HashPassword { .. }
+                    | app::user::failure::Error::Repository { .. },
+            } => Presentation {
                 kind: "internal",
                 status: axum::http::StatusCode::INTERNAL_SERVER_ERROR,
                 title: "Internal server error",
@@ -188,7 +191,7 @@ impl Error {
             },
             Error::Auth {
                 source: app::auth::Error::InvalidAuthenticatedUserId { .. },
-            } => ErrorPresentation {
+            } => Presentation {
                 kind: "auth",
                 status: axum::http::StatusCode::UNAUTHORIZED,
                 title: "Unauthorized",
@@ -199,39 +202,41 @@ impl Error {
                     app::auth::Error::Repository { .. }
                     | app::auth::Error::HashPassword { .. }
                     | app::auth::Error::ParseStoredPasswordHash { .. },
-            } => ErrorPresentation {
+            } => Presentation {
                 kind: "internal",
                 status: axum::http::StatusCode::INTERNAL_SERVER_ERROR,
                 title: "Internal server error",
                 message: "Internal server error.",
             },
             Error::Chat {
-                source: app::chat::Error::RateLimited,
-            } => ErrorPresentation {
+                source: app::chat::failure::Error::RateLimited,
+            } => Presentation {
                 kind: "rate_limit",
                 status: axum::http::StatusCode::TOO_MANY_REQUESTS,
                 title: "Too many messages",
                 message: "Slow down and try again.",
             },
             Error::Chat {
-                source: app::chat::Error::RoomNotFound | app::chat::Error::MessageNotFound,
-            } => ErrorPresentation {
+                source:
+                    app::chat::failure::Error::RoomNotFound
+                    | app::chat::failure::Error::MessageNotFound,
+            } => Presentation {
                 kind: "not_found",
                 status: axum::http::StatusCode::NOT_FOUND,
                 title: "Not found",
                 message: "The chat room or message was not found.",
             },
             Error::Chat {
-                source: app::chat::Error::NotMember,
-            } => ErrorPresentation {
+                source: app::chat::failure::Error::NotMember,
+            } => Presentation {
                 kind: "forbidden",
                 status: axum::http::StatusCode::FORBIDDEN,
                 title: "Access denied",
                 message: "You are not a member of this room.",
             },
             Error::Chat {
-                source: app::chat::Error::ModerationStateConflict,
-            } => ErrorPresentation {
+                source: app::chat::failure::Error::ModerationStateConflict,
+            } => Presentation {
                 kind: "conflict",
                 status: axum::http::StatusCode::CONFLICT,
                 title: "Moderation conflict",
@@ -239,12 +244,12 @@ impl Error {
             },
             Error::Chat {
                 source:
-                    app::chat::Error::InvalidRoomId { .. }
-                    | app::chat::Error::InvalidMessageId { .. }
-                    | app::chat::Error::InvalidModerationDecision { .. }
-                    | app::chat::Error::InvalidModerationReason { .. }
-                    | app::chat::Error::Domain { .. },
-            } => ErrorPresentation {
+                    app::chat::failure::Error::InvalidRoomId { .. }
+                    | app::chat::failure::Error::InvalidMessageId { .. }
+                    | app::chat::failure::Error::InvalidModerationDecision { .. }
+                    | app::chat::failure::Error::InvalidModerationReason { .. }
+                    | app::chat::failure::Error::Domain { .. },
+            } => Presentation {
                 kind: "validation",
                 status: axum::http::StatusCode::BAD_REQUEST,
                 title: "Invalid input",
@@ -252,12 +257,12 @@ impl Error {
             },
             Error::Chat {
                 source:
-                    app::chat::Error::Repository { .. }
-                    | app::chat::Error::InvalidStoredMessageStatus { .. }
-                    | app::chat::Error::InvalidStoredModerationStatus { .. },
+                    app::chat::failure::Error::Repository { .. }
+                    | app::chat::failure::Error::InvalidStoredMessageStatus { .. }
+                    | app::chat::failure::Error::InvalidStoredModerationStatus { .. },
             }
             | Error::Sensitive { .. }
-            | Error::Internal => ErrorPresentation {
+            | Error::Internal => Presentation {
                 kind: "internal",
                 status: axum::http::StatusCode::INTERNAL_SERVER_ERROR,
                 title: "Internal server error",
@@ -294,7 +299,7 @@ mod tests {
 
     #[test]
     fn page_errors_keep_http_status_codes() {
-        let response = Error::from(app::user::Error::EmailTaken)
+        let response = Error::from(app::user::failure::Error::EmailTaken)
             .error_response_for_kind(crate::request::Kind::Page);
 
         match response {
@@ -310,7 +315,7 @@ mod tests {
 
     #[tokio::test]
     async fn datastar_errors_use_signal_patch_contract() {
-        let response = Error::from(app::chat::Error::NotMember)
+        let response = Error::from(app::chat::failure::Error::NotMember)
             .error_response_for_kind(crate::request::Kind::Datastar)
             .into_response();
 
@@ -340,9 +345,10 @@ mod tests {
 
     #[test]
     fn validation_errors_map_to_bad_request_for_pages() {
-        let response =
-            Error::from(app::chat::Error::invalid_moderation_decision("bad room"))
-                .error_response_for_kind(crate::request::Kind::Page);
+        let response = Error::from(app::chat::failure::Error::invalid_moderation_decision(
+            "bad room",
+        ))
+        .error_response_for_kind(crate::request::Kind::Page);
 
         match response {
             ErrorResponse::Page { status, view } => {

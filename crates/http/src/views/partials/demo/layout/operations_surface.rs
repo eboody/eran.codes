@@ -4,7 +4,7 @@ use maud::Render;
 use crate::types::Text;
 use crate::views::partials;
 
-use super::{SurfaceSection, SurfaceSectionAttr};
+use super::{Attr, SurfaceSection};
 
 crate::views::scoped::inline_css!(
     r#"
@@ -117,7 +117,7 @@ impl Render for OperationsSurface {
             .id(Text::from("operations-surface"))
             .title(content.operations_surface.title.clone())
             .subtitle(content.operations_surface.subtitle.clone())
-            .attrs(vec![SurfaceSectionAttr::flag("data-operations-surface")])
+            .attrs(vec![Attr::flag("data-operations-surface")])
             .content(maud::html! {
                 (css())
                 (partials::OperationalRequestFilter::builder()

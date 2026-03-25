@@ -82,7 +82,7 @@ pub struct Store {
 }
 
 impl Store {
-    pub fn new(sse: sse::Registry, max_entries: usize, emit_sse: bool) -> Self {
+    fn new(sse: sse::Registry, max_entries: usize, emit_sse: bool) -> Self {
         Self {
             requests: Arc::new(DashMap::new()),
             sessions: Arc::new(DashMap::new()),
@@ -192,7 +192,10 @@ impl Store {
         tab_id: Option<&SseTabId>,
         filter_query: Option<&str>,
     ) {
-        let stream_key = sse::StreamKey::new(session_id.clone(), tab_id.cloned());
+        let stream_key = match tab_id.cloned() {
+            Some(tab_id) => sse::StreamKey::with_tab(session_id.clone(), tab_id),
+            None => sse::StreamKey::new(session_id.clone()),
+        };
         let terms = filter_query.map(FlowFilterTerms::from).unwrap_or_default();
         if terms.is_empty() {
             self.flow_filters.remove(&stream_key);

@@ -1,11 +1,11 @@
-use snafu::prelude::*;
+use snafu::Snafu;
 use strum_macros::Display;
 
 use domain::user;
 
 pub type Result<T> = core::result::Result<T, Error>;
 
-type BoxError = Box<dyn std::error::Error + Send + Sync + 'static>;
+type Boxed = std::boxed::Box<dyn std::error::Error + Send + Sync + 'static>;
 
 #[derive(Debug, Snafu)]
 pub enum Error {
@@ -14,7 +14,7 @@ pub enum Error {
     #[snafu(display("user password hashing failed: {source}"))]
     HashPassword { source: crate::auth::Error },
     #[snafu(display("{source}"))]
-    Repository { source: RepositoryError },
+    Repository { source: Repository },
     #[snafu(display("email already in use"))]
     EmailTaken,
 }
@@ -34,11 +34,11 @@ pub enum RepositoryOperation {
 }
 
 #[derive(Debug, Snafu)]
-pub enum RepositoryError {
+pub enum Repository {
     #[snafu(display("user repository query failed while {operation}: {source}"))]
     Query {
         operation: RepositoryOperation,
-        source: BoxError,
+        source: Boxed,
     },
     #[snafu(display("failed to decode username from row: {source}"))]
     DecodeUsername { source: user::UsernameError },
@@ -52,7 +52,7 @@ impl From<domain::user::Error> for Error {
     }
 }
 
-fn box_error(source: impl std::error::Error + Send + Sync + 'static) -> BoxError {
+fn box_error(source: impl std::error::Error + Send + Sync + 'static) -> Boxed {
     Box::new(source)
 }
 
@@ -68,7 +68,7 @@ impl Error {
         source: impl std::error::Error + Send + Sync + 'static,
     ) -> Self {
         Self::Repository {
-            source: RepositoryError::Query {
+            source: Repository::Query {
                 operation,
                 source: box_error(source),
             },
@@ -77,13 +77,13 @@ impl Error {
 
     pub fn decode_username(source: user::UsernameError) -> Self {
         Self::Repository {
-            source: RepositoryError::DecodeUsername { source },
+            source: Repository::DecodeUsername { source },
         }
     }
 
     pub fn decode_email(source: user::EmailError) -> Self {
         Self::Repository {
-            source: RepositoryError::DecodeEmail { source },
+            source: Repository::DecodeEmail { source },
         }
     }
 

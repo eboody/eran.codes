@@ -5,11 +5,11 @@ use crate::views::partials::components::portfolio::content::{
     ExperienceRoleContent, ExperienceSectionContent,
 };
 
-pub struct ExperienceSection<'a> {
+pub struct Section<'a> {
     pub content: &'a ExperienceSectionContent,
 }
 
-impl Render for ExperienceSection<'_> {
+impl Render for Section<'_> {
     fn render(&self) -> maud::Markup {
         let feature_layout = self.content.roles.len() == 1;
         let section_class = if feature_layout {
@@ -26,7 +26,7 @@ impl Render for ExperienceSection<'_> {
                 })
                 (CardGrid::new(maud::html! {
                     @for role in &self.content.roles {
-                        (ExperienceRoleCard {
+                        (RoleCard {
                             role,
                             feature_layout,
                         })
@@ -37,12 +37,12 @@ impl Render for ExperienceSection<'_> {
     }
 }
 
-struct ExperienceRoleCard<'a> {
+struct RoleCard<'a> {
     role: &'a ExperienceRoleContent,
     feature_layout: bool,
 }
 
-impl Render for ExperienceRoleCard<'_> {
+impl Render for RoleCard<'_> {
     fn render(&self) -> maud::Markup {
         let extra_class = if self.feature_layout {
             "ui-portfolio-experience-card ui-portfolio-experience-card--feature"

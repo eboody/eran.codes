@@ -1,20 +1,12 @@
 use nutype::nutype;
+use snafu::Snafu;
 
 use super::{BoxError, Result};
 
-#[derive(Debug)]
-pub struct HashError(pub(super) BoxError);
-
-impl core::fmt::Display for HashError {
-    fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
-        write!(f, "{}", self.0)
-    }
-}
-
-impl std::error::Error for HashError {
-    fn source(&self) -> Option<&(dyn std::error::Error + 'static)> {
-        Some(&*self.0)
-    }
+#[derive(Debug, Snafu)]
+#[snafu(display("{source}"))]
+pub struct HashError {
+    pub(super) source: BoxError,
 }
 
 pub trait Hasher: Send + Sync {

@@ -4,7 +4,7 @@ use maud::Render;
 use crate::types::Text;
 use crate::views::partials;
 
-use super::{SurfaceSection, SurfaceSectionAttr};
+use super::{Attr, SurfaceSection};
 
 #[derive(Clone, Debug, Builder)]
 pub struct SensitiveProofPanel {}
@@ -34,8 +34,8 @@ impl Render for SensitiveProofPanel {
                     .build(),
             )
             .attrs(vec![
-                SurfaceSectionAttr::flag("data-sensitive-proof"),
-                SurfaceSectionAttr::value("data-init", request_action),
+                Attr::flag("data-sensitive-proof"),
+                Attr::value("data-init", request_action),
             ])
             .header_density(partials::components::SectionHeaderDensity::Compact)
             .content(maud::html! {

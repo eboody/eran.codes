@@ -113,7 +113,7 @@ impl Repository for TestRepository {
         let mut state = self.state.lock().expect("repo state");
         if state.token_load_failures_remaining > 0 {
             state.token_load_failures_remaining -= 1;
-            return Err(Error::decrypt_token(std::io::Error::other(
+            return Err(failure::Error::decrypt_token(std::io::Error::other(
                 "stored token ciphertext could not be decrypted",
             )));
         }
@@ -330,9 +330,7 @@ impl ProviderClient for TestProvider {
     ) -> Result<ProviderRecords> {
         Ok(ProviderRecords::builder()
             .records(self.records.clone())
-            .maybe_cursor(Some(
-                sensitive::SyncCursor::try_new("cursor-alpha").expect("cursor"),
-            ))
+            .cursor(sensitive::SyncCursor::try_new("cursor-alpha").expect("cursor"))
             .build())
     }
 }
@@ -371,7 +369,7 @@ impl ProviderClient for FailingProvider {
         _cursor: Option<&sensitive::SyncCursor>,
         _now: SystemTime,
     ) -> Result<ProviderRecords> {
-        Err(Error::provider_request(
+        Err(failure::Error::provider_request(
             ProviderOperation::FetchRecords,
             std::io::Error::other("synthetic provider offline"),
         ))
@@ -409,7 +407,7 @@ impl ProviderClient for RetryAfterUnauthorizedProvider {
             self.unauthorized_remaining.lock().expect("retry state");
         if *unauthorized_remaining > 0 {
             *unauthorized_remaining -= 1;
-            return Err(Error::provider_failure(
+            return Err(failure::Error::provider_failure(
                 ProviderOperation::FetchRecords,
                 ProviderFailureKind::Unauthorized,
                 std::io::Error::other("provider forced unauthorized retry"),
@@ -418,9 +416,7 @@ impl ProviderClient for RetryAfterUnauthorizedProvider {
 
         Ok(ProviderRecords::builder()
             .records(self.records.clone())
-            .maybe_cursor(Some(
-                sensitive::SyncCursor::try_new("cursor-retried").expect("cursor"),
-            ))
+            .cursor(sensitive::SyncCursor::try_new("cursor-retried").expect("cursor"))
             .build())
     }
 }
@@ -574,13 +570,13 @@ pub(super) fn service_with_state(state: RepoState) -> (Service, Arc<TestReposito
         token_refreshes: Mutex::new(0),
         records: vec![example_record()],
     });
-    let service = Service::new(
-        repo.clone(),
-        provider,
-        Arc::new(FixedClock {
+    let service = Service::builder()
+        .with_repo(repo.clone())
+        .with_provider(provider)
+        .with_clock(Arc::new(FixedClock {
             now: UNIX_EPOCH + Duration::from_secs(100),
-        }),
-    );
+        }))
+        .build();
     (service, repo)
 }
 
@@ -590,7 +586,7 @@ fn local_stub_meta() -> ProviderBoundaryMeta {
         .endpoint(
             sensitive::DetailText::try_new("http://127.0.0.1:4001").expect("detail text"),
         )
-        .maybe_auth_mode(Some(sensitive::ProviderAuthMode::StubIssuedToken))
+        .auth_mode(sensitive::ProviderAuthMode::StubIssuedToken)
         .maybe_retry_backoff_secs(None)
         .build()
 }

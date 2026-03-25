@@ -1,14 +1,14 @@
 use maud::Render;
 
 use super::super::InsetCard;
-use super::links::CrateLinks;
+use super::links::Crate as Links;
 use crate::views::partials::components::portfolio::content::CrateCardContent;
 
-pub(super) struct CrateCard<'a> {
+pub(super) struct Crate<'a> {
     pub card: &'a CrateCardContent,
 }
 
-impl Render for CrateCard<'_> {
+impl Render for Crate<'_> {
     fn render(&self) -> maud::Markup {
         maud::html! {
             (InsetCard::new(maud::html! {
@@ -26,7 +26,7 @@ impl Render for CrateCard<'_> {
                         }
                     }
                 }
-                (CrateLinks { card: self.card })
+                (Links { card: self.card })
             }))
         }
     }

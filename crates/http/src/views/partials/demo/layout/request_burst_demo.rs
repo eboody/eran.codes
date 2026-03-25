@@ -2,12 +2,9 @@ use bon::Builder;
 use maud::{PreEscaped, Render};
 
 use crate::types::Text;
-use crate::views::partials;
-use crate::views::partials::components::{
-    KeyValueItem, KeyValueList, KeyValueListLayout, KeyValueValueAttr, ResultCard,
-};
+use crate::views::partials::{self, components};
 
-use super::{SurfaceSection, SurfaceSectionAttr};
+use super::{Attr, SurfaceSection};
 
 const REQUEST_BURST_SCRIPT: &str = include_str!(concat!(
     env!("CARGO_MANIFEST_DIR"),
@@ -200,9 +197,9 @@ impl Render for RequestBurstDemo {
                 "Use the slider to send a large burst of requests from this browser and watch live request logs and SSE updates in real time.",
             ))
             .attrs(vec![
-                SurfaceSectionAttr::flag("data-request-burst-root"),
-                SurfaceSectionAttr::value("data-endpoint", self.endpoint.clone()),
-                SurfaceSectionAttr::value("data-concurrency", self.concurrency.to_string()),
+                Attr::flag("data-request-burst-root"),
+                Attr::value("data-endpoint", self.endpoint.clone()),
+                Attr::value("data-concurrency", self.concurrency.to_string()),
             ])
             .content(maud::html! {
                 (css())
@@ -234,14 +231,14 @@ impl Render for RequestBurstDemo {
                             "Browser-observed latency and throughput"
                         }
                     }
-                    (ResultCard::builder()
+                    (components::ResultCard::builder()
                         .extra_class("ui-request-burst-result")
                         .content(maud::html! {
                             p class="ui-request-burst-status" data-burst-status {
                                 "Ready. Choose a burst size and run the load."
                             }
-                            (KeyValueList::builder()
-                                .layout(KeyValueListLayout::MetricsGrid)
+                            (components::KeyValueList::builder()
+                                .layout(components::KeyValueListLayout::MetricsGrid)
                                 .items(vec![
                                     burst_metric("Endpoint", "data-burst-endpoint", self.endpoint.clone()),
                                     burst_metric("Workers", "data-burst-workers", self.concurrency.to_string()),
@@ -270,11 +267,11 @@ fn burst_metric(
     label: impl Into<Text>,
     value_attr: impl Into<Text>,
     value: impl Into<Text>,
-) -> KeyValueItem {
-    KeyValueItem::builder()
+) -> components::KeyValueItem {
+    components::KeyValueItem::builder()
         .label(label.into())
         .value(value.into())
-        .value_attrs(vec![KeyValueValueAttr::flag(value_attr)])
+        .value_attrs(vec![components::KeyValueValueAttr::flag(value_attr)])
         .build()
 }
 

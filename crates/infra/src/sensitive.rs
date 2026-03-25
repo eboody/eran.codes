@@ -17,7 +17,7 @@ use sqlx::{PgPool, Row, types::time::OffsetDateTime};
 
 use crate::crypto::{Keyring, SealedValue};
 
-pub use clock::SystemClock;
+pub use clock::System as SystemClock;
 
 pub struct Repository {
     pg: PgPool,

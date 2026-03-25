@@ -1,16 +1,16 @@
-use snafu::prelude::*;
+use snafu::Snafu;
 use strum_macros::{AsRefStr, Display};
 
 pub type Result<T> = core::result::Result<T, Error>;
 
-type BoxError = Box<dyn std::error::Error + Send + Sync + 'static>;
+type Boxed = std::boxed::Box<dyn std::error::Error + Send + Sync + 'static>;
 
 #[derive(Debug, Snafu)]
 pub enum Error {
     #[snafu(display("{source}"))]
     Domain { source: domain::sensitive::Error },
     #[snafu(display("{source}"))]
-    Repository { source: RepositoryError },
+    Repository { source: Repository },
     #[snafu(display(
         "sensitive provider request failed while {operation} ({kind}): {source}"
     ))]
@@ -18,7 +18,7 @@ pub enum Error {
         operation: ProviderOperation,
         kind: ProviderFailureKind,
         status_code: Option<u16>,
-        source: BoxError,
+        source: Boxed,
     },
     #[snafu(display("sensitive repository is missing a provider token after refresh"))]
     MissingProviderToken,
@@ -110,11 +110,11 @@ pub enum ProviderFailureKind {
 }
 
 #[derive(Debug, Snafu)]
-pub enum RepositoryError {
+pub enum Repository {
     #[snafu(display("sensitive repository query failed while {operation}: {source}"))]
     Query {
         operation: RepositoryOperation,
-        source: BoxError,
+        source: Boxed,
     },
     #[snafu(display("failed to decode sensitive label: {source}"))]
     DecodeLabel {
@@ -133,20 +133,20 @@ pub enum RepositoryError {
         source: domain::sensitive::DetailTextError,
     },
     #[snafu(display("failed to encode authorized fields for storage: {source}"))]
-    EncodeAuthorizedFields { source: BoxError },
+    EncodeAuthorizedFields { source: Boxed },
     #[snafu(display("failed to decode authorized fields from storage: {source}"))]
-    DecodeAuthorizedFields { source: BoxError },
+    DecodeAuthorizedFields { source: Boxed },
     #[snafu(display("failed to encrypt provider token for storage: {source}"))]
-    EncryptToken { source: BoxError },
+    EncryptToken { source: Boxed },
     #[snafu(display("failed to decrypt provider token from storage: {source}"))]
-    DecryptToken { source: BoxError },
+    DecryptToken { source: Boxed },
     #[snafu(display("failed to encrypt sensitive record for storage: {source}"))]
-    EncryptRecord { source: BoxError },
+    EncryptRecord { source: Boxed },
     #[snafu(display("failed to decrypt sensitive record from storage: {source}"))]
-    DecryptRecord { source: BoxError },
+    DecryptRecord { source: Boxed },
 }
 
-fn box_error(source: impl std::error::Error + Send + Sync + 'static) -> BoxError {
+fn box_error(source: impl std::error::Error + Send + Sync + 'static) -> Boxed {
     Box::new(source)
 }
 
@@ -162,7 +162,7 @@ impl Error {
         source: impl std::error::Error + Send + Sync + 'static,
     ) -> Self {
         Self::Repository {
-            source: RepositoryError::Query {
+            source: Repository::Query {
                 operation,
                 source: box_error(source),
             },
@@ -210,25 +210,25 @@ impl Error {
 
     pub fn decode_label(source: domain::sensitive::LabelError) -> Self {
         Self::Repository {
-            source: RepositoryError::DecodeLabel { source },
+            source: Repository::DecodeLabel { source },
         }
     }
 
     pub fn decode_last4(source: domain::sensitive::Last4Error) -> Self {
         Self::Repository {
-            source: RepositoryError::DecodeLast4 { source },
+            source: Repository::DecodeLast4 { source },
         }
     }
 
     pub fn decode_external_id(source: domain::sensitive::ExternalIdError) -> Self {
         Self::Repository {
-            source: RepositoryError::DecodeExternalId { source },
+            source: Repository::DecodeExternalId { source },
         }
     }
 
     pub fn decode_detail_text(source: domain::sensitive::DetailTextError) -> Self {
         Self::Repository {
-            source: RepositoryError::DecodeDetailText { source },
+            source: Repository::DecodeDetailText { source },
         }
     }
 
@@ -236,7 +236,7 @@ impl Error {
         source: impl std::error::Error + Send + Sync + 'static,
     ) -> Self {
         Self::Repository {
-            source: RepositoryError::EncodeAuthorizedFields {
+            source: Repository::EncodeAuthorizedFields {
                 source: box_error(source),
             },
         }
@@ -246,7 +246,7 @@ impl Error {
         source: impl std::error::Error + Send + Sync + 'static,
     ) -> Self {
         Self::Repository {
-            source: RepositoryError::DecodeAuthorizedFields {
+            source: Repository::DecodeAuthorizedFields {
                 source: box_error(source),
             },
         }
@@ -254,7 +254,7 @@ impl Error {
 
     pub fn encrypt_token(source: impl std::error::Error + Send + Sync + 'static) -> Self {
         Self::Repository {
-            source: RepositoryError::EncryptToken {
+            source: Repository::EncryptToken {
                 source: box_error(source),
             },
         }
@@ -262,7 +262,7 @@ impl Error {
 
     pub fn decrypt_token(source: impl std::error::Error + Send + Sync + 'static) -> Self {
         Self::Repository {
-            source: RepositoryError::DecryptToken {
+            source: Repository::DecryptToken {
                 source: box_error(source),
             },
         }
@@ -270,7 +270,7 @@ impl Error {
 
     pub fn encrypt_record(source: impl std::error::Error + Send + Sync + 'static) -> Self {
         Self::Repository {
-            source: RepositoryError::EncryptRecord {
+            source: Repository::EncryptRecord {
                 source: box_error(source),
             },
         }
@@ -278,7 +278,7 @@ impl Error {
 
     pub fn decrypt_record(source: impl std::error::Error + Send + Sync + 'static) -> Self {
         Self::Repository {
-            source: RepositoryError::DecryptRecord {
+            source: Repository::DecryptRecord {
                 source: box_error(source),
             },
         }

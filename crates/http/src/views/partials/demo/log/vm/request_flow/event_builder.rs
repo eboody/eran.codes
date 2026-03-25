@@ -5,7 +5,7 @@ use crate::views::partials::demo::log;
 
 mod backend;
 mod chat;
-mod request;
+mod request_event;
 #[cfg(test)]
 mod tests;
 
@@ -15,10 +15,10 @@ pub(super) fn build_flow_event(
 ) -> components::logs::composed::FlowEvent {
     let (summary, stage_label, pills) = match kind {
         log::vm::request_flow::kind::FlowEvent::RequestEnd => {
-            request::request_end_event(entry)
+            request_event::request_end_event(entry)
         }
         log::vm::request_flow::kind::FlowEvent::RequestStart => {
-            request::request_start_event(entry)
+            request_event::request_start_event(entry)
         }
         log::vm::request_flow::kind::FlowEvent::ChatIncoming => {
             chat::chat_incoming_event(entry)

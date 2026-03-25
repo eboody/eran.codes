@@ -1,7 +1,7 @@
 use super::shared::*;
 
 pub(super) fn validate_used_entries(content: &SiteContent) {
-    let mut usage = ContentUsage::default();
+    let mut usage = Content::default();
 
     record_link_refs_usage(content, &content.nav_links, &mut usage);
     record_link_refs_usage(content, &content.ui_copy.home.hero.action_refs, &mut usage);
@@ -89,14 +89,14 @@ pub(super) fn validate_used_entries(content: &SiteContent) {
 }
 
 #[derive(Default)]
-struct ContentUsage {
+struct Content {
     action_ids: HashSet<String>,
     action_bundle_ids: HashSet<String>,
     contact_method_ids: HashSet<String>,
     work_case_slugs: HashSet<WorkCaseSlug>,
 }
 
-fn record_link_refs_usage(content: &SiteContent, references: &[LinkReference], usage: &mut ContentUsage) {
+fn record_link_refs_usage(content: &SiteContent, references: &[LinkReference], usage: &mut Content) {
     for reference in references {
         match reference {
             LinkReference::Action { id } => {
@@ -120,7 +120,7 @@ fn record_link_refs_usage(content: &SiteContent, references: &[LinkReference], u
     }
 }
 
-fn record_direct_link_ref_usage(reference: &DirectLinkReference, usage: &mut ContentUsage) {
+fn record_direct_link_ref_usage(reference: &DirectLinkReference, usage: &mut Content) {
     match reference {
         DirectLinkReference::Action { id } => {
             usage.action_ids.insert(id.to_string());
@@ -131,7 +131,7 @@ fn record_direct_link_ref_usage(reference: &DirectLinkReference, usage: &mut Con
     }
 }
 
-fn record_work_case_slugs(slugs: &[WorkCaseSlug], usage: &mut ContentUsage) {
+fn record_work_case_slugs(slugs: &[WorkCaseSlug], usage: &mut Content) {
     usage.work_case_slugs.extend(slugs.iter().copied());
 }
 

@@ -52,10 +52,10 @@ impl RegisterFlow<Incoming> {
             Ok(_) => Ok(RegistrationOutcome::Succeeded(
                 self.mark_registration_succeeded(),
             )),
-            Err(app::user::Error::EmailTaken) => {
+            Err(app::user::failure::Error::EmailTaken) => {
                 Ok(RegistrationOutcome::EmailTaken(self.mark_email_taken()))
             }
-            Err(app::user::Error::Domain { .. }) => {
+            Err(app::user::failure::Error::Domain { .. }) => {
                 Ok(RegistrationOutcome::InvalidInput(self.mark_invalid_input()))
             }
             Err(error) => Err(error.into()),
@@ -183,7 +183,7 @@ mod tests {
             RegisterFlow::<Incoming>::from_form(register_form()).expect("incoming");
 
         let outcome = incoming
-            .apply_registration_result(Err(app::user::Error::EmailTaken))
+            .apply_registration_result(Err(app::user::failure::Error::EmailTaken))
             .expect("classified");
         assert!(matches!(outcome, RegistrationOutcome::EmailTaken(_)));
     }
@@ -194,7 +194,7 @@ mod tests {
             RegisterFlow::<Incoming>::from_form(register_form()).expect("incoming");
 
         let outcome = incoming
-            .apply_registration_result(Err(app::user::Error::Domain {
+            .apply_registration_result(Err(app::user::failure::Error::Domain {
                 source: domain::user::Error::Email {
                     source: domain::user::Email::try_new("not-an-email")
                         .expect_err("invalid email"),

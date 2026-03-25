@@ -28,8 +28,18 @@ pub struct StreamKey {
 }
 
 impl StreamKey {
-    pub fn new(session_id: SessionId, tab_id: Option<SseTabId>) -> Self {
-        Self { session_id, tab_id }
+    pub fn new(session_id: SessionId) -> Self {
+        Self {
+            session_id,
+            tab_id: None,
+        }
+    }
+
+    pub fn with_tab(session_id: SessionId, tab_id: SseTabId) -> Self {
+        Self {
+            session_id,
+            tab_id: Some(tab_id),
+        }
     }
 
     pub fn session_id(&self) -> &SessionId {

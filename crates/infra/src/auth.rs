@@ -5,7 +5,7 @@ use argon2::{
 use async_trait::async_trait;
 use domain::user;
 use rand_core::OsRng;
-use snafu::prelude::*;
+use snafu::{ResultExt, Snafu};
 use sqlx::{PgPool, Row, postgres::PgRow, types::time};
 
 pub struct Repository {

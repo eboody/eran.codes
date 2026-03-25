@@ -7,15 +7,15 @@ use crate::types::Text;
 pub type Cell = maud::Markup;
 
 #[derive(Clone, Copy, Debug, Default)]
-pub enum TableVariant {
+pub enum Variant {
     #[default]
     Default,
     ChatFlow,
 }
 
-impl TableVariant {
+impl Variant {
     fn is_chat_flow(self) -> bool {
-        matches!(self, TableVariant::ChatFlow)
+        matches!(self, Variant::ChatFlow)
     }
 }
 
@@ -24,7 +24,7 @@ pub struct Table {
     pub headers: Vec<Text>,
     pub rows: Vec<Vec<Cell>>,
     #[builder(default)]
-    pub variant: TableVariant,
+    pub variant: Variant,
 }
 
 impl Render for Table {

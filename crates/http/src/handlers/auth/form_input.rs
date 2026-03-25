@@ -61,6 +61,6 @@ impl TryFrom<RegisterForm> for RegisterInput {
 fn parse_email(value: crate::types::Text) -> crate::Result<domain::user::Email> {
     domain::user::Email::try_new(value.to_string())
         .map_err(domain::user::Error::from)
-        .map_err(app::user::Error::from)
+        .map_err(app::user::failure::Error::from)
         .map_err(crate::Error::from)
 }

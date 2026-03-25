@@ -89,20 +89,36 @@ async fn main() -> error::Result<()> {
         config::SensitiveProviderRuntimeMode::Stub => {
             infra::sensitive_boundary::HttpProvider::new_stub(
                 infra.http.clone(),
-                &cfg.sensitive
+                cfg.sensitive
                     .provider_base_url()
-                    .expect("stub provider base url should exist"),
+                    .expect("stub provider base url should exist")
+                    .parse()
+                    .expect("stub provider base url should parse"),
             )
         }
         config::SensitiveProviderRuntimeMode::SandboxHttp => {
             infra::sensitive_boundary::HttpProvider::new_sandbox(
                 infra.http.clone(),
                 infra::sensitive_boundary::SandboxHttpConfig {
-                    base_url: cfg.sensitive.sandbox.base_url.clone(),
-                    client_id: cfg.sensitive.sandbox.client_id.clone(),
+                    base_url: cfg
+                        .sensitive
+                        .sandbox
+                        .base_url
+                        .clone()
+                        .map(infra::sensitive_boundary::SandboxBaseUrl::parse),
+                    client_id: cfg
+                        .sensitive
+                        .sandbox
+                        .client_id
+                        .clone()
+                        .map(infra::sensitive_boundary::SandboxClientId::new),
                     client_secret: cfg.sensitive.sandbox.client_secret.clone(),
-                    timeout_secs: cfg.sensitive.sandbox.timeout_secs,
-                    retry_backoff_secs: cfg.sensitive.sandbox.retry_backoff_secs,
+                    timeout: std::time::Duration::from_secs(
+                        cfg.sensitive.sandbox.timeout_secs,
+                    ),
+                    retry_backoff: std::time::Duration::from_secs(
+                        cfg.sensitive.sandbox.retry_backoff_secs,
+                    ),
                 },
             )
         }
@@ -112,9 +128,12 @@ async fn main() -> error::Result<()> {
         cfg.sensitive.reader_emails.clone(),
         cfg.sensitive.operator_emails.clone(),
     );
-    let sensitive_service =
-        app::sensitive::Service::new(sensitive_repo, sensitive_provider, sensitive_clock)
-            .with_bootstrap_grants(sensitive_bootstrap);
+    let sensitive_service = app::sensitive::Service::builder()
+        .with_repo(sensitive_repo)
+        .with_provider(sensitive_provider)
+        .with_clock(sensitive_clock)
+        .build()
+        .with_bootstrap_grants(sensitive_bootstrap);
 
     let session_key = Key::from(&cfg.http.session_secret);
     let http_state = http::State::builder()

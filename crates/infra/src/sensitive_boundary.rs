@@ -22,17 +22,60 @@ pub struct HttpProvider {
 
 #[derive(Clone, Debug)]
 pub struct SandboxHttpConfig {
-    pub base_url: Option<String>,
-    pub client_id: Option<String>,
+    pub base_url: Option<SandboxBaseUrl>,
+    pub client_id: Option<SandboxClientId>,
     pub client_secret: Option<String>,
-    pub timeout_secs: u64,
-    pub retry_backoff_secs: u64,
+    pub timeout: Duration,
+    pub retry_backoff: Duration,
 }
 
 #[derive(Clone)]
 struct SandboxCredentials {
-    client_id: String,
+    client_id: SandboxClientId,
     client_secret: SecretString,
+}
+
+#[derive(Clone, Debug, PartialEq, Eq, serde::Serialize, serde::Deserialize)]
+#[serde(transparent)]
+pub struct SandboxClientId(String);
+
+impl SandboxClientId {
+    pub fn new(value: impl Into<String>) -> Self {
+        Self(value.into())
+    }
+
+    fn is_blank(&self) -> bool {
+        self.0.trim().is_empty()
+    }
+}
+
+impl AsRef<str> for SandboxClientId {
+    fn as_ref(&self) -> &str {
+        &self.0
+    }
+}
+
+#[derive(Clone, Debug, PartialEq, Eq)]
+pub enum SandboxBaseUrl {
+    Parsed(reqwest::Url),
+    Invalid(String),
+}
+
+impl SandboxBaseUrl {
+    pub fn parse(value: impl Into<String>) -> Self {
+        let value = value.into();
+        match reqwest::Url::parse(&value) {
+            Ok(url) => Self::Parsed(url),
+            Err(_) => Self::Invalid(value),
+        }
+    }
+
+    fn as_url(&self) -> Option<&reqwest::Url> {
+        match self {
+            Self::Parsed(url) => Some(url),
+            Self::Invalid(_) => None,
+        }
+    }
 }
 
 enum RefreshRequestBody {
@@ -53,17 +96,14 @@ impl serde::Serialize for RefreshRequestBody {
 }
 
 impl HttpProvider {
-    pub fn new_stub(http: reqwest::Client, base_url: &str) -> Self {
+    pub fn new_stub(http: reqwest::Client, base_url: reqwest::Url) -> Self {
         Self {
             http,
             mode: sensitive_domain::ProviderMode::LocalStub,
             auth_mode: Some(sensitive_domain::ProviderAuthMode::StubIssuedToken),
             retry_backoff_secs: None,
-            endpoint: detail_text(base_url),
-            base_url: Some(
-                reqwest::Url::parse(base_url)
-                    .expect("sensitive provider base url should parse"),
-            ),
+            endpoint: detail_text(base_url.as_str()),
+            base_url: Some(base_url),
             sandbox_credentials: None,
             request_timeout: None,
             degraded_reason: None,
@@ -73,19 +113,23 @@ impl HttpProvider {
     pub fn new_sandbox(http: reqwest::Client, config: SandboxHttpConfig) -> Self {
         let parsed_url = config
             .base_url
-            .as_deref()
-            .and_then(|value| reqwest::Url::parse(value).ok());
-        let degraded_reason = sandbox_config_error(&config, parsed_url.as_ref());
+            .as_ref()
+            .and_then(SandboxBaseUrl::as_url)
+            .cloned();
+        let degraded_reason = sandbox_config_error(&config);
 
         Self {
             http,
             mode: sensitive_domain::ProviderMode::SandboxHttp,
             auth_mode: Some(sensitive_domain::ProviderAuthMode::ClientCredentials),
-            retry_backoff_secs: Some(config.retry_backoff_secs.min(u32::MAX as u64) as u32),
+            retry_backoff_secs: Some(
+                config.retry_backoff.as_secs().min(u32::MAX as u64) as u32
+            ),
             endpoint: config
                 .base_url
-                .as_deref()
-                .map(detail_text)
+                .as_ref()
+                .and_then(SandboxBaseUrl::as_url)
+                .map(|url| detail_text(url.as_str()))
                 .unwrap_or_else(|| detail_text("sandbox endpoint not configured")),
             base_url: parsed_url,
             sandbox_credentials: if degraded_reason.is_none() {
@@ -105,7 +149,7 @@ impl HttpProvider {
             } else {
                 None
             },
-            request_timeout: Some(Duration::from_secs(config.timeout_secs)),
+            request_timeout: Some(config.timeout),
             degraded_reason,
         }
     }
@@ -152,7 +196,7 @@ impl HttpProvider {
             .json::<TokenRefreshResponse>()
             .await
             .map_err(|source| {
-                sensitive::Error::provider_failure(
+                sensitive::failure::Error::provider_failure(
                     sensitive::ProviderOperation::RefreshToken,
                     sensitive::ProviderFailureKind::MalformedPayload,
                     source,
@@ -200,7 +244,7 @@ impl HttpProvider {
             .json::<RecordsPageResponse>()
             .await
             .map_err(|source| {
-                sensitive::Error::provider_failure(
+                sensitive::failure::Error::provider_failure(
                     sensitive::ProviderOperation::FetchRecords,
                     sensitive::ProviderFailureKind::MalformedPayload,
                     source,
@@ -254,7 +298,7 @@ impl ProviderClient for HttpProvider {
     ) -> sensitive::Result<sensitive::ProviderToken> {
         let response = self.send_refresh_request(current_token).await?;
         if response.access_token.trim().is_empty() {
-            return Err(sensitive::Error::provider_failure(
+            return Err(sensitive::failure::Error::provider_failure(
                 sensitive::ProviderOperation::RefreshToken,
                 sensitive::ProviderFailureKind::MalformedPayload,
                 std::io::Error::other("provider returned an empty access token"),
@@ -318,7 +362,7 @@ impl ProviderClient for HttpProvider {
 
 fn parse_cursor(value: &str) -> sensitive::Result<sensitive_domain::SyncCursor> {
     sensitive_domain::SyncCursor::try_new(value).map_err(|source| {
-        sensitive::Error::provider_failure(
+        sensitive::failure::Error::provider_failure(
             sensitive::ProviderOperation::FetchRecords,
             sensitive::ProviderFailureKind::MalformedPayload,
             source,
@@ -329,7 +373,7 @@ fn parse_cursor(value: &str) -> sensitive::Result<sensitive_domain::SyncCursor> 
 async fn provider_status_error(
     operation: sensitive::ProviderOperation,
     response: reqwest::Response,
-) -> sensitive::Error {
+) -> sensitive::failure::Error {
     let status = response.status();
     let remote_error = response.json::<RemoteErrorResponse>().await.ok();
     let detail = remote_error
@@ -347,7 +391,7 @@ async fn provider_status_error(
         _ => sensitive::ProviderFailureKind::Transport,
     };
 
-    sensitive::Error::provider_status_failure(
+    sensitive::failure::Error::provider_status_failure(
         operation,
         kind,
         status.as_u16(),
@@ -362,47 +406,46 @@ fn endpoint_url(
 ) -> sensitive::Result<reqwest::Url> {
     base_url
         .join(path)
-        .map_err(|source| sensitive::Error::provider_request(operation, source))
+        .map_err(|source| sensitive::failure::Error::provider_request(operation, source))
 }
 
 fn provider_request_error(
     operation: sensitive::ProviderOperation,
     source: reqwest::Error,
-) -> sensitive::Error {
+) -> sensitive::failure::Error {
     if source.is_timeout() {
-        return sensitive::Error::provider_failure(
+        return sensitive::failure::Error::provider_failure(
             operation,
             sensitive::ProviderFailureKind::Timeout,
             source,
         );
     }
 
-    sensitive::Error::provider_request(operation, source)
+    sensitive::failure::Error::provider_request(operation, source)
 }
 
 fn configuration_error(
     operation: sensitive::ProviderOperation,
     message: &str,
-) -> sensitive::Error {
-    sensitive::Error::provider_failure(
+) -> sensitive::failure::Error {
+    sensitive::failure::Error::provider_failure(
         operation,
         sensitive::ProviderFailureKind::Configuration,
         std::io::Error::other(message.to_string()),
     )
 }
 
-fn sandbox_config_error(
-    config: &SandboxHttpConfig,
-    parsed_url: Option<&reqwest::Url>,
-) -> Option<String> {
-    if let Some(url) = parsed_url {
-        if url.scheme() != "https" {
+fn sandbox_config_error(config: &SandboxHttpConfig) -> Option<String> {
+    match config.base_url.as_ref() {
+        Some(SandboxBaseUrl::Parsed(url)) if url.scheme() != "https" => {
             return Some("SENSITIVE_PROVIDER_BASE_URL must use https".to_string());
         }
-    } else if config.base_url.is_some() {
-        return Some(
-            "SENSITIVE_PROVIDER_BASE_URL must be a valid absolute URL".to_string(),
-        );
+        Some(SandboxBaseUrl::Invalid(_)) => {
+            return Some(
+                "SENSITIVE_PROVIDER_BASE_URL must be a valid absolute URL".to_string(),
+            );
+        }
+        _ => {}
     }
 
     let mut missing = Vec::new();
@@ -411,10 +454,8 @@ fn sandbox_config_error(
     }
     if config
         .client_id
-        .as_deref()
-        .map(str::trim)
-        .unwrap_or_default()
-        .is_empty()
+        .as_ref()
+        .is_none_or(SandboxClientId::is_blank)
     {
         missing.push("SENSITIVE_SANDBOX_CLIENT_ID");
     }
@@ -455,7 +496,7 @@ pub struct TokenRefreshRequest {
 
 #[derive(Clone, Debug, Serialize, Deserialize)]
 pub struct SandboxTokenExchangeRequest {
-    pub client_id: String,
+    pub client_id: SandboxClientId,
     pub client_secret: String,
     pub grant_type: String,
 }
@@ -475,7 +516,7 @@ pub struct RecordsPageResponse {
 
 #[derive(Clone, Debug, Serialize, Deserialize)]
 pub struct RecordPayload {
-    pub external_id: String,
+    pub external_id: sensitive_domain::ExternalId,
     pub redacted_label: String,
     pub redacted_last4: String,
     pub subject_name: String,
@@ -486,10 +527,7 @@ pub struct RecordPayload {
 impl RecordPayload {
     fn try_into_domain(self) -> sensitive::Result<sensitive_domain::Record> {
         Ok(sensitive_domain::Record::builder()
-            .external_id(
-                sensitive_domain::ExternalId::try_new(self.external_id)
-                    .map_err(|source| malformed_payload_error(source))?,
-            )
+            .external_id(self.external_id)
             .label(
                 sensitive_domain::Label::try_new(self.redacted_label)
                     .map_err(|source| malformed_payload_error(source))?,
@@ -521,26 +559,61 @@ impl RecordPayload {
 #[derive(Clone, Debug, Serialize, Deserialize)]
 pub struct RemoteErrorResponse {
     #[serde(default)]
-    pub category: Option<String>,
-    #[serde(default)]
-    pub error: Option<String>,
-    #[serde(default)]
-    pub message: Option<String>,
+    category: Option<String>,
+    #[serde(flatten)]
+    detail: RemoteErrorDetail,
 }
 
 impl RemoteErrorResponse {
+    pub fn message(category: impl Into<String>, message: impl Into<String>) -> Self {
+        Self {
+            category: Some(category.into()),
+            detail: RemoteErrorDetail::Message {
+                message: message.into(),
+            },
+        }
+    }
+
     fn detail(&self) -> Option<&str> {
-        self.message
-            .as_deref()
-            .or(self.error.as_deref())
-            .or(self.category.as_deref())
+        self.detail.message_or_error().or(self.category.as_deref())
+    }
+}
+
+#[derive(Clone, Debug, Default, Serialize, Deserialize)]
+#[serde(untagged)]
+enum RemoteErrorDetail {
+    #[default]
+    Empty,
+    Message {
+        message: String,
+    },
+    Error {
+        error: String,
+    },
+    MessageAndError {
+        message: String,
+        error: String,
+    },
+}
+
+impl RemoteErrorDetail {
+    fn message_or_error(&self) -> Option<&str> {
+        match self {
+            Self::Empty => None,
+            Self::Message { message } => Some(message.as_str()),
+            Self::Error { error } => Some(error.as_str()),
+            Self::MessageAndError { message, error } if !message.is_empty() => {
+                Some(message.as_str())
+            }
+            Self::MessageAndError { error, .. } => Some(error.as_str()),
+        }
     }
 }
 
 fn malformed_payload_error(
     source: impl std::error::Error + Send + Sync + 'static,
-) -> sensitive::Error {
-    sensitive::Error::provider_failure(
+) -> sensitive::failure::Error {
+    sensitive::failure::Error::provider_failure(
         sensitive::ProviderOperation::FetchRecords,
         sensitive::ProviderFailureKind::MalformedPayload,
         source,
@@ -564,7 +637,7 @@ mod tests {
         after: Option<String>,
     }
 
-    async fn spawn_test_server(router: Router) -> String {
+    async fn spawn_test_server(router: Router) -> reqwest::Url {
         let listener = tokio::net::TcpListener::bind("127.0.0.1:0")
             .await
             .expect("listener");
@@ -574,7 +647,7 @@ mod tests {
                 .await
                 .expect("server should run");
         });
-        format!("http://{addr}/")
+        reqwest::Url::parse(&format!("http://{addr}/")).expect("test url should parse")
     }
 
     fn test_provider() -> sensitive_domain::Provider {
@@ -605,7 +678,10 @@ mod tests {
                     Json(match query.after.as_deref() {
                         None => RecordsPageResponse {
                             records: vec![RecordPayload {
-                                external_id: "stub-alpha".to_string(),
+                                external_id: sensitive_domain::ExternalId::try_new(
+                                    "stub-alpha",
+                                )
+                                .expect("test external id should be valid"),
                                 redacted_label: "Alpha file".to_string(),
                                 redacted_last4: "1001".to_string(),
                                 subject_name: "Case alpha".to_string(),
@@ -617,7 +693,10 @@ mod tests {
                         },
                         Some("cursor-alpha") => RecordsPageResponse {
                             records: vec![RecordPayload {
-                                external_id: "stub-beta".to_string(),
+                                external_id: sensitive_domain::ExternalId::try_new(
+                                    "stub-beta",
+                                )
+                                .expect("test external id should be valid"),
                                 redacted_label: "Beta ledger".to_string(),
                                 redacted_last4: "2002".to_string(),
                                 subject_name: "Case beta".to_string(),
@@ -640,7 +719,7 @@ mod tests {
     #[tokio::test]
     async fn fetch_records_accumulates_paginated_http_pages() {
         let base_url = spawn_test_server(paginated_success_router()).await;
-        let provider = HttpProvider::new_stub(reqwest::Client::new(), &base_url);
+        let provider = HttpProvider::new_stub(reqwest::Client::new(), base_url);
         let token = refresh_token_for(&provider).await;
 
         let records = provider
@@ -679,16 +758,15 @@ mod tests {
                 get(|| async {
                     (
                         StatusCode::UNAUTHORIZED,
-                        Json(RemoteErrorResponse {
-                            category: Some("unauthorized".to_string()),
-                            error: None,
-                            message: Some("stub forced unauthorized".to_string()),
-                        }),
+                        Json(RemoteErrorResponse::message(
+                            "unauthorized",
+                            "stub forced unauthorized",
+                        )),
                     )
                 }),
             );
         let base_url = spawn_test_server(router).await;
-        let provider = HttpProvider::new_stub(reqwest::Client::new(), &base_url);
+        let provider = HttpProvider::new_stub(reqwest::Client::new(), base_url);
         let token = refresh_token_for(&provider).await;
 
         let error = provider
@@ -698,7 +776,7 @@ mod tests {
 
         assert!(matches!(
             error,
-            sensitive::Error::Provider {
+            sensitive::failure::Error::Provider {
                 operation: sensitive::ProviderOperation::FetchRecords,
                 kind: sensitive::ProviderFailureKind::Unauthorized,
                 ..
@@ -723,7 +801,10 @@ mod tests {
                 get(|| async {
                     Json(RecordsPageResponse {
                         records: vec![RecordPayload {
-                            external_id: "stub-alpha".to_string(),
+                            external_id: sensitive_domain::ExternalId::try_new(
+                                "stub-alpha",
+                            )
+                            .expect("test external id should be valid"),
                             redacted_label: "Alpha file".to_string(),
                             redacted_last4: "bad".to_string(),
                             subject_name: "Case alpha".to_string(),
@@ -736,7 +817,7 @@ mod tests {
                 }),
             );
         let base_url = spawn_test_server(router).await;
-        let provider = HttpProvider::new_stub(reqwest::Client::new(), &base_url);
+        let provider = HttpProvider::new_stub(reqwest::Client::new(), base_url);
         let token = refresh_token_for(&provider).await;
 
         let error = provider
@@ -746,7 +827,7 @@ mod tests {
 
         assert!(matches!(
             error,
-            sensitive::Error::Provider {
+            sensitive::failure::Error::Provider {
                 operation: sensitive::ProviderOperation::FetchRecords,
                 kind: sensitive::ProviderFailureKind::MalformedPayload,
                 ..
@@ -780,7 +861,7 @@ mod tests {
                 }),
             );
         let base_url = spawn_test_server(router).await;
-        let provider = HttpProvider::new_stub(reqwest::Client::new(), &base_url);
+        let provider = HttpProvider::new_stub(reqwest::Client::new(), base_url);
         let token = refresh_token_for(&provider).await;
 
         let error = provider
@@ -790,7 +871,7 @@ mod tests {
 
         assert!(matches!(
             error,
-            sensitive::Error::Provider {
+            sensitive::failure::Error::Provider {
                 operation: sensitive::ProviderOperation::FetchRecords,
                 kind: sensitive::ProviderFailureKind::MalformedPayload,
                 ..
@@ -815,16 +896,15 @@ mod tests {
                 get(|| async {
                     (
                         StatusCode::FORBIDDEN,
-                        Json(RemoteErrorResponse {
-                            category: Some("forbidden".to_string()),
-                            error: None,
-                            message: Some("sandbox forbids this account".to_string()),
-                        }),
+                        Json(RemoteErrorResponse::message(
+                            "forbidden",
+                            "sandbox forbids this account",
+                        )),
                     )
                 }),
             );
         let base_url = spawn_test_server(router).await;
-        let provider = HttpProvider::new_stub(reqwest::Client::new(), &base_url);
+        let provider = HttpProvider::new_stub(reqwest::Client::new(), base_url);
         let token = refresh_token_for(&provider).await;
 
         let error = provider
@@ -834,7 +914,7 @@ mod tests {
 
         assert!(matches!(
             error,
-            sensitive::Error::Provider {
+            sensitive::failure::Error::Provider {
                 operation: sensitive::ProviderOperation::FetchRecords,
                 kind: sensitive::ProviderFailureKind::Forbidden,
                 status_code: Some(403),
@@ -860,16 +940,15 @@ mod tests {
                 get(|| async {
                     (
                         StatusCode::BAD_GATEWAY,
-                        Json(RemoteErrorResponse {
-                            category: Some("server_error".to_string()),
-                            error: None,
-                            message: Some("sandbox upstream timed out".to_string()),
-                        }),
+                        Json(RemoteErrorResponse::message(
+                            "server_error",
+                            "sandbox upstream timed out",
+                        )),
                     )
                 }),
             );
         let base_url = spawn_test_server(router).await;
-        let provider = HttpProvider::new_stub(reqwest::Client::new(), &base_url);
+        let provider = HttpProvider::new_stub(reqwest::Client::new(), base_url);
         let token = refresh_token_for(&provider).await;
 
         let error = provider
@@ -879,7 +958,7 @@ mod tests {
 
         assert!(matches!(
             error,
-            sensitive::Error::Provider {
+            sensitive::failure::Error::Provider {
                 operation: sensitive::ProviderOperation::FetchRecords,
                 kind: sensitive::ProviderFailureKind::ServerError,
                 status_code: Some(502),
@@ -894,10 +973,10 @@ mod tests {
             reqwest::Client::new(),
             SandboxHttpConfig {
                 base_url: None,
-                client_id: Some("sandbox-client".to_string()),
+                client_id: Some(SandboxClientId::new("sandbox-client")),
                 client_secret: None,
-                timeout_secs: 10,
-                retry_backoff_secs: 45,
+                timeout: Duration::from_secs(10),
+                retry_backoff: Duration::from_secs(45),
             },
         );
 
@@ -908,7 +987,7 @@ mod tests {
 
         assert!(matches!(
             error,
-            sensitive::Error::Provider {
+            sensitive::failure::Error::Provider {
                 operation: sensitive::ProviderOperation::RefreshToken,
                 kind: sensitive::ProviderFailureKind::Configuration,
                 status_code: None,

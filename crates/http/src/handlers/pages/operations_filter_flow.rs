@@ -111,8 +111,11 @@ mod tests {
     fn refreshed_state_returns_no_content() {
         let cookies = Cookies::default();
         let key = Key::generate();
-        let trace_log =
-            crate::trace_log::Store::new(crate::sse::Registry::new(), 32, false);
+        let trace_log = crate::trace_log::Store::builder()
+            .with_sse(crate::sse::Registry::new())
+            .with_max_entries(32)
+            .with_emit_sse(false)
+            .build();
         let refreshed = OperationsFilterFlow::<Incoming>::new(None, None)
             .bind_session(&cookies, &key)
             .apply_filter(&trace_log)

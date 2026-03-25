@@ -4,17 +4,17 @@ use bon::Builder;
 use maud::{Escaper, Markup, Render};
 
 use crate::types::Text;
+use crate::views::partials::components;
 
 use super::SectionHeader;
-use crate::views::partials::components::SectionHeaderDensity;
 
 #[derive(Clone, Debug)]
-pub enum SurfaceSectionAttr {
+pub enum Attr {
     Flag(Text),
     Value { name: Text, value: Text },
 }
 
-impl SurfaceSectionAttr {
+impl Attr {
     pub fn flag(name: impl Into<Text>) -> Self {
         let name = name.into();
         debug_assert!(name.to_string().starts_with("data-"));
@@ -40,9 +40,9 @@ pub struct SurfaceSection {
     pub id: Option<Text>,
     pub extra_class: Option<Text>,
     #[builder(default)]
-    pub attrs: Vec<SurfaceSectionAttr>,
+    pub attrs: Vec<Attr>,
     #[builder(default)]
-    pub header_density: SectionHeaderDensity,
+    pub header_density: components::SectionHeaderDensity,
 }
 
 impl Render for SurfaceSection {
@@ -75,11 +75,11 @@ impl SurfaceSection {
     }
 }
 
-fn write_attrs(buffer: &mut String, attrs: &[SurfaceSectionAttr]) {
+fn write_attrs(buffer: &mut String, attrs: &[Attr]) {
     for attr in attrs {
         match attr {
-            SurfaceSectionAttr::Flag(name) => write_flag_attr(buffer, name),
-            SurfaceSectionAttr::Value { name, value } => write_attr(buffer, name, value),
+            Attr::Flag(name) => write_flag_attr(buffer, name),
+            Attr::Value { name, value } => write_attr(buffer, name, value),
         }
     }
 }
@@ -113,10 +113,10 @@ mod tests {
             .title(Text::from("Example"))
             .subtitle(Text::from("Subtitle"))
             .attrs(vec![
-                SurfaceSectionAttr::flag("data-example"),
-                SurfaceSectionAttr::value("data-state", "ready"),
+                Attr::flag("data-example"),
+                Attr::value("data-state", "ready"),
             ])
-            .header_density(SectionHeaderDensity::Compact)
+            .header_density(components::SectionHeaderDensity::Compact)
             .content(maud::html! { p { "content" } })
             .build()
             .render()

@@ -188,7 +188,7 @@ pub struct CrateCardContent {
     pub name: Text,
     pub summary: Text,
     pub highlights: Vec<Text>,
-    pub gallery: Option<crate_gallery::CrateGalleryContent>,
+    pub gallery: Option<crate_gallery::Content>,
     pub repository_url: Text,
     pub repository_label: Text,
     pub docs_url: Option<Text>,

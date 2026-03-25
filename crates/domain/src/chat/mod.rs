@@ -1,8 +1,10 @@
 pub mod client;
-mod error;
+#[path = "error.rs"]
+mod failure;
 pub mod message;
 pub mod room;
 
-pub use error::{Error, Result};
+pub use client::Id as Client;
+pub use failure::{Error, Result};
 pub use message::Message;
 pub use room::{Room, UserId};

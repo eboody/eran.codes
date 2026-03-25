@@ -4,7 +4,7 @@ use serde::{Deserialize, Deserializer};
 use crate::types::Text;
 use crate::views::proper_theme::ThemeColor;
 
-pub(crate) type IconToken = Text;
+pub(crate) type Token = Text;
 const FALLBACK_ICON_TOKEN: &str = "circle";
 const STYLES: &str = r#"
 .ui-icon {
@@ -21,7 +21,7 @@ pub(crate) fn head_styles() -> maud::Markup {
 
 #[derive(Clone, Debug)]
 pub(crate) struct Icon {
-    pub token: IconToken,
+    pub token: Token,
     pub color: Option<ThemeColor>,
 }
 
@@ -73,7 +73,7 @@ impl Render for Icon {
     }
 }
 
-fn normalize_icon_token(token: Text) -> IconToken {
+fn normalize_icon_token(token: Text) -> Token {
     let raw = token.to_string();
     if is_valid_icon_token(&raw) {
         token

@@ -55,19 +55,19 @@ async fn run_sync_refreshes_missing_token_and_records_idempotent_runs() {
 #[tokio::test]
 async fn failed_sync_records_failed_outcome() {
     let repo = Arc::new(TestRepository::new(RepoState::default()));
-    let service = Service::new(
-        repo.clone(),
-        Arc::new(FailingProvider),
-        Arc::new(FixedClock {
+    let service = Service::builder()
+        .with_repo(repo.clone())
+        .with_provider(Arc::new(FailingProvider))
+        .with_clock(Arc::new(FixedClock {
             now: UNIX_EPOCH + Duration::from_secs(100),
-        }),
-    );
+        }))
+        .build();
 
     let error = service.run_sync().await.expect_err("sync should fail");
 
     assert!(matches!(
         error,
-        Error::Provider {
+        failure::Error::Provider {
             operation: ProviderOperation::FetchRecords,
             ..
         }
@@ -83,16 +83,16 @@ async fn failed_sync_records_failed_outcome() {
 #[tokio::test]
 async fn unauthorized_fetch_retries_with_refreshed_token_and_records_boundary_state() {
     let repo = Arc::new(TestRepository::new(RepoState::default()));
-    let service = Service::new(
-        repo.clone(),
-        Arc::new(RetryAfterUnauthorizedProvider {
+    let service = Service::builder()
+        .with_repo(repo.clone())
+        .with_provider(Arc::new(RetryAfterUnauthorizedProvider {
             unauthorized_remaining: std::sync::Mutex::new(1),
             records: vec![example_record()],
-        }),
-        Arc::new(FixedClock {
+        }))
+        .with_clock(Arc::new(FixedClock {
             now: UNIX_EPOCH + Duration::from_secs(100),
-        }),
-    );
+        }))
+        .build();
 
     let run = service.run_sync().await.expect("sync should recover");
 

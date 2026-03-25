@@ -1,4 +1,5 @@
-mod error;
+#[path = "error.rs"]
+pub mod failure;
 mod input;
 mod register_user_flow;
 
@@ -9,7 +10,7 @@ use bon::Builder;
 use secrecy::SecretString;
 
 use domain::user;
-pub use error::{Error, RepositoryOperation, Result};
+pub use failure::{RepositoryOperation, Result};
 pub use input::Input;
 
 #[derive(Clone, Debug, Builder)]
@@ -90,7 +91,7 @@ mod tests {
         ) -> Result<()> {
             match self.create_outcome {
                 CreateOutcome::Ok => Ok(()),
-                CreateOutcome::EmailTaken => Err(Error::EmailTaken),
+                CreateOutcome::EmailTaken => Err(failure::Error::EmailTaken),
             }
         }
     }
@@ -156,7 +157,7 @@ mod tests {
             )
             .await;
 
-        assert!(matches!(result, Err(Error::EmailTaken)));
+        assert!(matches!(result, Err(failure::Error::EmailTaken)));
     }
 
     #[test]
@@ -195,7 +196,7 @@ mod tests {
 
         assert!(matches!(
             result,
-            Err(Error::HashPassword {
+            Err(failure::Error::HashPassword {
                 source: crate::auth::Error::HashPassword { .. },
             })
         ));

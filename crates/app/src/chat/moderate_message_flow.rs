@@ -1,6 +1,6 @@
 use statum::{machine, state, transition};
 
-use super::{Error, ModerateMessage, PendingMutationResult, audit, moderation};
+use super::{ModerateMessage, PendingMutationResult, audit, failure, moderation};
 use domain::chat;
 
 #[derive(Clone, Debug, PartialEq)]
@@ -63,14 +63,14 @@ impl ModerateMessageFlow<Incoming> {
     pub(super) fn load_lookup(
         self,
         message: Option<chat::Message>,
-    ) -> Result<ModerateMessageFlow<MessageLoaded>, Error> {
+    ) -> Result<ModerateMessageFlow<MessageLoaded>, failure::Error> {
         self.classify_lookup(message).require_message()
     }
 
     pub(super) async fn moderate(
         self,
         service: &super::Service,
-    ) -> Result<ModerateMessageFlow<Audited>, Error> {
+    ) -> Result<ModerateMessageFlow<Audited>, failure::Error> {
         let loaded = self.load_from_repo(service).await?;
         let pending = loaded.classify_pending().require_pending()?;
         let resolved = pending.resolve();
@@ -85,7 +85,7 @@ impl ModerateMessageFlow<Incoming> {
     async fn load_from_repo(
         self,
         service: &super::Service,
-    ) -> Result<ModerateMessageFlow<MessageLoaded>, Error> {
+    ) -> Result<ModerateMessageFlow<MessageLoaded>, failure::Error> {
         let message_lookup = service.repo.find_message(&self.message_id()).await?;
         self.load_lookup(message_lookup)
     }
@@ -229,7 +229,7 @@ impl ModerateMessageFlow<Resolved> {
     async fn apply_message_status(
         self,
         service: &super::Service,
-    ) -> Result<ModerateMessageFlow<MessageStatusApplied>, Error> {
+    ) -> Result<ModerateMessageFlow<MessageStatusApplied>, failure::Error> {
         let message_update = service
             .repo
             .update_message_status(&self.message_id(), self.message_status())
@@ -243,7 +243,7 @@ impl ModerateMessageFlow<MessageStatusApplied> {
     async fn complete_queue(
         self,
         service: &super::Service,
-    ) -> Result<ModerateMessageFlow<QueueCompletionApplied>, Error> {
+    ) -> Result<ModerateMessageFlow<QueueCompletionApplied>, failure::Error> {
         let queue_update = service
             .moderation
             .complete_if_pending(
@@ -270,7 +270,7 @@ impl ModerateMessageFlow<AuditPrepared> {
     async fn record_audit(
         self,
         service: &super::Service,
-    ) -> Result<ModerateMessageFlow<Audited>, Error> {
+    ) -> Result<ModerateMessageFlow<Audited>, failure::Error> {
         service
             .audit
             .record(service.audit_entry(
@@ -318,10 +318,10 @@ pub(super) enum MessageLookupOutcome {
 impl MessageLookupOutcome {
     pub(super) fn require_message(
         self,
-    ) -> Result<ModerateMessageFlow<MessageLoaded>, Error> {
+    ) -> Result<ModerateMessageFlow<MessageLoaded>, failure::Error> {
         match self {
             Self::Found(found) => Ok(found),
-            Self::Missing => Err(Error::MessageNotFound),
+            Self::Missing => Err(failure::Error::MessageNotFound),
         }
     }
 }
@@ -334,10 +334,10 @@ pub(super) enum PendingOutcome {
 impl PendingOutcome {
     pub(super) fn require_pending(
         self,
-    ) -> Result<ModerateMessageFlow<PendingVerified>, Error> {
+    ) -> Result<ModerateMessageFlow<PendingVerified>, failure::Error> {
         match self {
             Self::Pending(pending) => Ok(pending),
-            Self::Conflict => Err(Error::ModerationStateConflict),
+            Self::Conflict => Err(failure::Error::ModerationStateConflict),
         }
     }
 }
@@ -350,10 +350,10 @@ pub(super) enum MessageStatusUpdateOutcome {
 impl MessageStatusUpdateOutcome {
     pub(super) fn require_applied(
         self,
-    ) -> Result<ModerateMessageFlow<MessageStatusApplied>, Error> {
+    ) -> Result<ModerateMessageFlow<MessageStatusApplied>, failure::Error> {
         match self {
             Self::Applied(applied) => Ok(applied),
-            Self::Conflict => Err(Error::ModerationStateConflict),
+            Self::Conflict => Err(failure::Error::ModerationStateConflict),
         }
     }
 }
@@ -366,10 +366,10 @@ pub(super) enum QueueCompletionUpdateOutcome {
 impl QueueCompletionUpdateOutcome {
     pub(super) fn require_applied(
         self,
-    ) -> Result<ModerateMessageFlow<QueueCompletionApplied>, Error> {
+    ) -> Result<ModerateMessageFlow<QueueCompletionApplied>, failure::Error> {
         match self {
             Self::Applied(applied) => Ok(applied),
-            Self::Conflict => Err(Error::ModerationStateConflict),
+            Self::Conflict => Err(failure::Error::ModerationStateConflict),
         }
     }
 }
@@ -617,7 +617,10 @@ mod tests {
             .expect("loaded");
 
         let result = loaded.classify_pending().require_pending();
-        assert!(matches!(result, Err(Error::ModerationStateConflict)));
+        assert!(matches!(
+            result,
+            Err(failure::Error::ModerationStateConflict)
+        ));
     }
 
     #[test]
@@ -652,7 +655,10 @@ mod tests {
         let status_err = resolved
             .classify_message_status_update(PendingMutationResult::NotPendingOrMissing)
             .require_applied();
-        assert!(matches!(status_err, Err(Error::ModerationStateConflict)));
+        assert!(matches!(
+            status_err,
+            Err(failure::Error::ModerationStateConflict)
+        ));
     }
 
     #[test]
@@ -662,7 +668,7 @@ mod tests {
         let incoming = ModerateMessageFlow::<Incoming>::from_command(command);
 
         let result = incoming.load_lookup(None);
-        assert!(matches!(result, Err(Error::MessageNotFound)));
+        assert!(matches!(result, Err(failure::Error::MessageNotFound)));
     }
 
     #[test]

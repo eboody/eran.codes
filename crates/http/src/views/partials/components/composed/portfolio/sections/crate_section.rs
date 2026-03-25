@@ -5,9 +5,9 @@ mod switcher;
 
 use maud::Render;
 
-use self::card::CrateCard;
-use self::showcase::CrateShowcase;
-use self::switcher::CrateShowcaseSwitcher;
+use self::card::Crate as Card;
+use self::showcase::Crate as Showcase;
+use self::switcher::CrateShowcase as ShowcaseSwitcher;
 use super::{SectionCopy, Surface};
 use crate::views::partials::components::portfolio::content::{CrateCardContent, CrateSectionContent};
 
@@ -29,13 +29,13 @@ impl Render for CrateSection<'_> {
                     })
                 }
                 @if uses_switcher {
-                    (CrateShowcaseSwitcher {
+                    (ShowcaseSwitcher {
                         cards: &self.content.cards,
                     })
                 } @else {
                     div class="ui-portfolio-showcase-stack" {
                         @for card in &self.content.cards {
-                            (CrateShowcase { card })
+                            (Showcase { card })
                         }
                     }
                 }
@@ -51,7 +51,7 @@ impl Render for CrateSection<'_> {
                 }
                 div class="ui-portfolio-card-grid" {
                     @for card in &self.content.cards {
-                        (CrateCard { card })
+                        (Card { card })
                     }
                 }
             })

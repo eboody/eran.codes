@@ -6,11 +6,11 @@ use crate::views::partials::components::portfolio::content::{
 
 use super::{CardGrid, InsetCard, LeadCopy, SectionActions, SectionCopy, Surface};
 
-pub struct WorkCaseDetail<'a> {
+pub struct Work<'a> {
     pub content: &'a WorkCaseContent,
 }
 
-impl Render for WorkCaseDetail<'_> {
+impl Render for Work<'_> {
     fn render(&self) -> maud::Markup {
         maud::html! {
             (Surface::section(maud::html! {
@@ -47,7 +47,7 @@ impl Render for ArchiveCaseDetailsSection<'_> {
             }).extra_class("ui-portfolio-case-archive-intro"))
             div class="ui-portfolio-showcase-stack" {
                 @for case in self.cases {
-                    (ArchivedWorkCaseDetail {
+                    (ArchivedWork {
                         slug: case.slug,
                         content: &case.content,
                         entry_label: &self.intro.entry_label,
@@ -58,13 +58,13 @@ impl Render for ArchiveCaseDetailsSection<'_> {
     }
 }
 
-struct ArchivedWorkCaseDetail<'a> {
+struct ArchivedWork<'a> {
     slug: crate::views::partials::components::portfolio::content::WorkCaseSlug,
     content: &'a WorkCaseContent,
     entry_label: &'a crate::types::Text,
 }
 
-impl Render for ArchivedWorkCaseDetail<'_> {
+impl Render for ArchivedWork<'_> {
     fn render(&self) -> maud::Markup {
         let anchor_id = self
             .slug

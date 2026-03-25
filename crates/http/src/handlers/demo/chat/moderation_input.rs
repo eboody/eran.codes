@@ -30,10 +30,9 @@ impl ModerationInput {
 fn parse_message_id(
     value: &crate::types::Text,
 ) -> crate::Result<domain::chat::message::Id> {
-    let id = value
-        .to_string()
-        .parse::<uuid::Uuid>()
-        .map_err(|error| crate::Error::from(app::chat::Error::invalid_message_id(error)))?;
+    let id = value.to_string().parse::<uuid::Uuid>().map_err(|error| {
+        crate::Error::from(app::chat::failure::Error::invalid_message_id(error))
+    })?;
 
     Ok(domain::chat::message::Id::from(id))
 }
@@ -42,7 +41,7 @@ fn parse_decision(
     value: &crate::types::Text,
 ) -> crate::Result<app::chat::moderation::Decision> {
     app::chat::moderation::Decision::from_str(&value.to_string()).map_err(|_| {
-        crate::Error::from(app::chat::Error::invalid_moderation_decision(
+        crate::Error::from(app::chat::failure::Error::invalid_moderation_decision(
             value.to_string(),
         ))
     })
@@ -54,7 +53,9 @@ fn parse_reason(
     value
         .map(|value| {
             app::chat::moderation::Reason::try_new(value.to_string()).map_err(|error| {
-                crate::Error::from(app::chat::Error::invalid_moderation_reason(error))
+                crate::Error::from(app::chat::failure::Error::invalid_moderation_reason(
+                    error,
+                ))
             })
         })
         .transpose()

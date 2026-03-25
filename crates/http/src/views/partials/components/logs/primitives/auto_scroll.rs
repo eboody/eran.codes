@@ -4,7 +4,7 @@ use maud::{PreEscaped, Render};
 use crate::types::Text;
 
 #[derive(Clone, Copy, Debug, Default)]
-pub enum AutoScrollScope {
+pub enum Scope {
     Single,
     #[default]
     All,
@@ -15,7 +15,7 @@ pub struct AutoScroll {
     pub root_id: Text,
     pub selector: Text,
     #[builder(default)]
-    pub scope: AutoScrollScope,
+    pub scope: Scope,
 }
 
 impl Render for AutoScroll {
@@ -23,7 +23,7 @@ impl Render for AutoScroll {
         let root_id = escape_js_single_quoted(&self.root_id.to_string());
         let selector = escape_js_single_quoted(&self.selector.to_string());
         let script = match self.scope {
-            AutoScrollScope::Single => format!(
+            Scope::Single => format!(
                 r#"
 (() => {{
   const root = document.getElementById('{root_id}');
@@ -37,7 +37,7 @@ impl Render for AutoScroll {
 }})();
 "#
             ),
-            AutoScrollScope::All => format!(
+            Scope::All => format!(
                 r#"
 (() => {{
   const root = document.getElementById('{root_id}');

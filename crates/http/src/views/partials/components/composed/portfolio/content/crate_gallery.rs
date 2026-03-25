@@ -5,34 +5,30 @@ use crate::views::partials::components::primitives::Icon;
 use crate::views::partials::components::tab_set;
 
 #[derive(Clone, Debug, Deserialize)]
-pub(crate) struct CrateGalleryContent {
+pub(crate) struct Content {
     pub(crate) id: Text,
     pub(crate) aria_label: Text,
-    pub(crate) tabs: Vec<CrateGalleryTabContent>,
+    pub(crate) tabs: Vec<TabContent>,
 }
 
-impl CrateGalleryContent {
-    pub(crate) fn tab_set_content(&self) -> tab_set::content::TabSetContent {
-        tab_set::content::TabSetContent {
-            tabs: self
-                .tabs
-                .iter()
-                .map(CrateGalleryTabContent::tab_set_tab)
-                .collect(),
+impl Content {
+    pub(crate) fn tab_set_content(&self) -> tab_set::content::TabSet {
+        tab_set::content::TabSet {
+            tabs: self.tabs.iter().map(TabContent::tab_set_tab).collect(),
         }
     }
 }
 
 #[derive(Clone, Debug, Deserialize)]
-pub(crate) struct CrateGalleryTabContent {
+pub(crate) struct TabContent {
     pub(crate) id: Text,
-    pub(crate) label: CrateGalleryLabelContent,
+    pub(crate) label: LabelContent,
     pub(crate) icon: Option<Icon>,
-    pub(crate) preview: CrateGalleryPreviewContent,
-    pub(crate) body: CrateGalleryBodyContent,
+    pub(crate) preview: PreviewContent,
+    pub(crate) body: BodyContent,
 }
 
-impl CrateGalleryTabContent {
+impl TabContent {
     fn tab_set_tab(&self) -> tab_set::content::Tab {
         tab_set::content::Tab {
             id: self.id.clone(),
@@ -46,13 +42,13 @@ impl CrateGalleryTabContent {
 }
 
 #[derive(Clone, Debug, Deserialize)]
-pub(crate) struct CrateGalleryLabelContent {
+pub(crate) struct LabelContent {
     pub(crate) primary: Text,
     #[serde(default)]
     pub(crate) secondary: Option<Text>,
 }
 
-impl CrateGalleryLabelContent {
+impl LabelContent {
     fn tab_set_label(&self) -> tab_set::content::Label {
         tab_set::content::Label {
             primary: self.primary.clone(),
@@ -62,43 +58,37 @@ impl CrateGalleryLabelContent {
 }
 
 #[derive(Clone, Debug, Deserialize)]
-pub(crate) struct CrateGalleryPreviewContent {
+pub(crate) struct PreviewContent {
     #[serde(default)]
-    pub(crate) code_examples: Vec<CrateGalleryCodeExampleContent>,
+    pub(crate) code_examples: Vec<CodeExampleContent>,
     #[serde(default)]
-    pub(crate) image: Option<CrateGalleryImageContent>,
+    pub(crate) image: Option<ImageContent>,
     #[serde(default)]
-    pub(crate) badge: Option<CrateGalleryBadgeContent>,
+    pub(crate) badge: Option<BadgeContent>,
 }
 
-impl CrateGalleryPreviewContent {
+impl PreviewContent {
     fn tab_set_preview(&self) -> tab_set::content::Preview {
         tab_set::content::Preview {
             code_examples: self
                 .code_examples
                 .iter()
-                .map(CrateGalleryCodeExampleContent::tab_set_code_example)
+                .map(CodeExampleContent::tab_set_code_example)
                 .collect(),
-            image: self
-                .image
-                .as_ref()
-                .map(CrateGalleryImageContent::tab_set_image),
-            badge: self
-                .badge
-                .as_ref()
-                .map(CrateGalleryBadgeContent::tab_set_badge),
+            image: self.image.as_ref().map(ImageContent::tab_set_image),
+            badge: self.badge.as_ref().map(BadgeContent::tab_set_badge),
         }
     }
 }
 
 #[derive(Clone, Debug, Deserialize)]
-pub(crate) struct CrateGalleryCodeExampleContent {
+pub(crate) struct CodeExampleContent {
     #[serde(default)]
     pub(crate) label: Option<Text>,
     pub(crate) code: Text,
 }
 
-impl CrateGalleryCodeExampleContent {
+impl CodeExampleContent {
     fn tab_set_code_example(&self) -> tab_set::content::CodeExample {
         tab_set::content::CodeExample {
             label: self.label.clone(),
@@ -108,13 +98,13 @@ impl CrateGalleryCodeExampleContent {
 }
 
 #[derive(Clone, Debug, Deserialize)]
-pub(crate) struct CrateGalleryImageContent {
+pub(crate) struct ImageContent {
     pub(crate) asset_ref: Text,
     #[serde(default, rename = "alt")]
     pub(crate) alt: Option<Text>,
 }
 
-impl CrateGalleryImageContent {
+impl ImageContent {
     fn tab_set_image(&self) -> tab_set::content::Image {
         tab_set::content::Image {
             asset_ref: self.asset_ref.clone(),
@@ -124,11 +114,11 @@ impl CrateGalleryImageContent {
 }
 
 #[derive(Clone, Debug, Deserialize)]
-pub(crate) struct CrateGalleryBadgeContent {
+pub(crate) struct BadgeContent {
     pub(crate) text: Text,
 }
 
-impl CrateGalleryBadgeContent {
+impl BadgeContent {
     fn tab_set_badge(&self) -> tab_set::content::Badge {
         tab_set::content::Badge {
             text: self.text.clone(),
@@ -137,14 +127,14 @@ impl CrateGalleryBadgeContent {
 }
 
 #[derive(Clone, Debug, Deserialize)]
-pub(crate) struct CrateGalleryBodyContent {
+pub(crate) struct BodyContent {
     pub(crate) title: Text,
     #[serde(default)]
     pub(crate) subtitle: Option<Text>,
-    pub(crate) features: Vec<CrateGalleryFeatureContent>,
+    pub(crate) features: Vec<FeatureContent>,
 }
 
-impl CrateGalleryBodyContent {
+impl BodyContent {
     fn tab_set_body(&self) -> tab_set::content::Body {
         tab_set::content::Body {
             title: self.title.clone(),
@@ -152,18 +142,18 @@ impl CrateGalleryBodyContent {
             features: self
                 .features
                 .iter()
-                .map(CrateGalleryFeatureContent::tab_set_feature)
+                .map(FeatureContent::tab_set_feature)
                 .collect(),
         }
     }
 }
 
 #[derive(Clone, Debug, Deserialize)]
-pub(crate) struct CrateGalleryFeatureContent {
+pub(crate) struct FeatureContent {
     pub(crate) text: Text,
 }
 
-impl CrateGalleryFeatureContent {
+impl FeatureContent {
     fn tab_set_feature(&self) -> tab_set::content::Feature {
         tab_set::content::Feature {
             text: self.text.clone(),

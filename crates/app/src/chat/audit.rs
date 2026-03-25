@@ -26,20 +26,14 @@ pub enum Action {
 }
 
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Display, EnumString)]
+#[strum(serialize_all = "snake_case")]
 pub enum Key {
-    #[strum(serialize = "room_id")]
     RoomId,
-    #[strum(serialize = "message_id")]
     MessageId,
-    #[strum(serialize = "status")]
     Status,
-    #[strum(serialize = "decision")]
     Decision,
-    #[strum(serialize = "reason")]
     Reason,
-    #[strum(serialize = "timestamp_ms")]
     TimestampMs,
-    #[strum(serialize = "role")]
     Role,
 }
 

@@ -16,7 +16,7 @@ impl Repository {
         .fetch_optional(&self.pg)
         .await
         .map_err(|source| {
-            sensitive::Error::query_repository(RepositoryOperation::LoadToken, source)
+            sensitive::failure::Error::query_repository(RepositoryOperation::LoadToken, source)
         })?;
 
         row.map(|row| {
@@ -24,7 +24,7 @@ impl Repository {
             let provider =
                 provider_raw
                     .parse::<sensitive_domain::Provider>()
-                    .map_err(|_| sensitive::Error::InvalidStoredProvider {
+                    .map_err(|_| sensitive::failure::Error::InvalidStoredProvider {
                         provider: provider_raw.clone(),
                     })?;
             let decrypted = self
@@ -34,9 +34,9 @@ impl Repository {
                     nonce: row.get("token_nonce"),
                     ciphertext: row.get("token_ciphertext"),
                 })
-                .map_err(sensitive::Error::decrypt_token)?;
-            let token_text =
-                String::from_utf8(decrypted).map_err(sensitive::Error::decrypt_token)?;
+                .map_err(sensitive::failure::Error::decrypt_token)?;
+            let token_text = String::from_utf8(decrypted)
+                .map_err(sensitive::failure::Error::decrypt_token)?;
 
             Ok(sensitive::ProviderToken::builder()
                 .status(
@@ -61,7 +61,7 @@ impl Repository {
         let encrypted = self
             .crypto
             .encrypt(token.access_token.expose_secret())
-            .map_err(sensitive::Error::encrypt_token)?;
+            .map_err(sensitive::failure::Error::encrypt_token)?;
 
         sqlx::query(
             r#"
@@ -92,7 +92,10 @@ impl Repository {
         .execute(&self.pg)
         .await
         .map_err(|source| {
-            sensitive::Error::query_repository(RepositoryOperation::UpsertToken, source)
+            sensitive::failure::Error::query_repository(
+                RepositoryOperation::UpsertToken,
+                source,
+            )
         })?;
 
         Ok(())

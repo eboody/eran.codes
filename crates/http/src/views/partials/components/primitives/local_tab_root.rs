@@ -2,12 +2,12 @@ use maud::{Markup, Render};
 
 use crate::types::Text;
 
-pub(crate) enum LocalTabRootSurface<'a> {
+pub(crate) enum Surface<'a> {
     Standard { id: &'a str, class: &'a str },
     PortfolioCrateSwitcher,
 }
 
-impl<'a> LocalTabRootSurface<'a> {
+impl<'a> Surface<'a> {
     pub(crate) fn standard(id: &'a str, class: &'a str) -> Self {
         Self::Standard { id, class }
     }
@@ -18,7 +18,7 @@ impl<'a> LocalTabRootSurface<'a> {
 }
 
 pub(crate) struct LocalTabRoot<'a> {
-    pub surface: LocalTabRootSurface<'a>,
+    pub surface: Surface<'a>,
     pub active_tab_id: Text,
     pub content: Markup,
 }
@@ -26,7 +26,7 @@ pub(crate) struct LocalTabRoot<'a> {
 impl Render for LocalTabRoot<'_> {
     fn render(&self) -> Markup {
         match &self.surface {
-            LocalTabRootSurface::Standard { id, class } => maud::html! {
+            Surface::Standard { id, class } => maud::html! {
                 section
                     id=(id)
                     class=(class)
@@ -35,7 +35,7 @@ impl Render for LocalTabRoot<'_> {
                     (&self.content)
                 }
             },
-            LocalTabRootSurface::PortfolioCrateSwitcher => maud::html! {
+            Surface::PortfolioCrateSwitcher => maud::html! {
                 section
                     data-portfolio-crate-switcher
                     data-local-tabs-root
@@ -54,7 +54,7 @@ mod tests {
     #[test]
     fn renders_standard_local_tab_root_contract() {
         let markup = LocalTabRoot {
-            surface: LocalTabRootSurface::standard("root-id", "root-class"),
+            surface: Surface::standard("root-id", "root-class"),
             active_tab_id: Text::from("alpha"),
             content: maud::html! {
                 p { "Example" }
@@ -72,7 +72,7 @@ mod tests {
     #[test]
     fn renders_portfolio_switcher_marker_when_requested() {
         let markup = LocalTabRoot {
-            surface: LocalTabRootSurface::portfolio_crate_switcher(),
+            surface: Surface::portfolio_crate_switcher(),
             active_tab_id: Text::from("crate_0"),
             content: maud::html! {
                 p { "Example" }

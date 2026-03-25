@@ -4,13 +4,13 @@ use maud::Render;
 use super::Button;
 
 #[derive(Clone, Copy, Debug, Default)]
-pub enum RowDensity {
+pub enum Density {
     #[default]
     Default,
     Compact,
 }
 
-impl RowDensity {
+impl Density {
     const fn as_attr(self) -> &'static str {
         match self {
             Self::Default => "default",
@@ -20,13 +20,13 @@ impl RowDensity {
 }
 
 #[derive(Clone, Copy, Debug, Default)]
-pub enum RowFrame {
+pub enum Frame {
     #[default]
     Bleed,
     Contained,
 }
 
-impl RowFrame {
+impl Frame {
     const fn as_attr(self) -> &'static str {
         match self {
             Self::Bleed => "bleed",
@@ -36,13 +36,13 @@ impl RowFrame {
 }
 
 #[derive(Clone, Copy, Debug, Default)]
-pub enum RowNarrowLayout {
+pub enum NarrowLayout {
     #[default]
     AutoGrid,
     Stack,
 }
 
-impl RowNarrowLayout {
+impl NarrowLayout {
     const fn as_attr(self) -> &'static str {
         match self {
             Self::AutoGrid => "auto-grid",
@@ -55,11 +55,11 @@ impl RowNarrowLayout {
 pub struct Row {
     pub items: Vec<Button>,
     #[builder(default)]
-    pub density: RowDensity,
+    pub density: Density,
     #[builder(default)]
-    pub frame: RowFrame,
+    pub frame: Frame,
     #[builder(default)]
-    pub narrow_layout: RowNarrowLayout,
+    pub narrow_layout: NarrowLayout,
 }
 
 impl Render for Row {
@@ -89,9 +89,9 @@ mod tests {
     #[test]
     fn renders_density_and_narrow_layout_contract() {
         let markup = Row::builder()
-            .density(RowDensity::Compact)
-            .frame(RowFrame::Contained)
-            .narrow_layout(RowNarrowLayout::Stack)
+            .density(Density::Compact)
+            .frame(Frame::Contained)
+            .narrow_layout(NarrowLayout::Stack)
             .items(vec![Button::builder().label(Text::from("Inspect")).build()])
             .build()
             .render()

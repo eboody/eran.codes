@@ -15,7 +15,7 @@ use post_flow::IncomingFlow as ChatPostIncomingFlow;
 
 #[derive(Deserialize)]
 #[serde(rename_all = "camelCase")]
-pub struct ChatSignals {
+pub struct Signals {
     #[serde(rename = "chatDraftBody")]
     pub draft_body: Text,
     pub sse_tab_id: Option<SseTabId>,
@@ -78,7 +78,7 @@ pub async fn moderate_message(
 pub async fn post_chat_message(
     Extension(state): Extension<crate::State>,
     auth_session: crate::auth::Session,
-    ReadSignals(signals): ReadSignals<ChatSignals>,
+    ReadSignals(signals): ReadSignals<Signals>,
 ) -> Result<Response, crate::Error> {
     if let Some(tab_id) = signals.sse_tab_id.clone() {
         request::set_sse_tab_id(tab_id);

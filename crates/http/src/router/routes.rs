@@ -5,7 +5,7 @@ use statum::{machine, state, transition};
 use tower_http::services::ServeDir;
 
 #[state]
-pub enum RoutesFlow {
+pub enum Flow {
     Incoming,
     BaseRoutesAdded,
     PageRoutesAdded,
@@ -13,7 +13,7 @@ pub enum RoutesFlow {
 }
 
 #[machine]
-pub struct Routes<RoutesFlow> {
+pub struct Routes<Flow> {
     router: Router,
 }
 

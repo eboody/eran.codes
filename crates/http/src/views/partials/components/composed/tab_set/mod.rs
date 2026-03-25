@@ -545,7 +545,7 @@ pub(crate) struct ContentProps<'a> {
     pub id: &'a str,
     pub class: &'a str,
     pub aria_label: Text,
-    pub content: &'a content::TabSetContent,
+    pub content: &'a content::TabSet,
     pub active_tab_id: Option<Text>,
     pub palette: Option<&'static Palette>,
 }
@@ -601,7 +601,7 @@ fn tabs_from_content(
     root_id: &str,
     palette: &'static Palette,
     active_tab_id: &Text,
-    content: &content::TabSetContent,
+    content: &content::TabSet,
 ) -> Vec<Tab> {
     content
         .tabs
@@ -624,7 +624,7 @@ fn tabs_from_content(
 
 fn panes_from_content(
     active_tab_id: &Text,
-    content: &content::TabSetContent,
+    content: &content::TabSet,
     tabs: &[Tab],
 ) -> Vec<pane::Item> {
     content
@@ -662,7 +662,7 @@ mod tests {
 
     #[test]
     fn from_content_defaults_to_first_tab() {
-        let content = content::TabSetContent {
+        let content = content::TabSet {
             tabs: vec![content::Tab {
                 id: Text::from("policy"),
                 label: content::Label {

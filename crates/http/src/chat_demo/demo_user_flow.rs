@@ -118,7 +118,9 @@ impl DemoUserEnsureFlow<Missing> {
         result: app::user::Result<domain::user::Id>,
     ) -> crate::Result<DemoUserEnsureFlow<RegistrationAccepted>> {
         match result {
-            Ok(_) | Err(app::user::Error::EmailTaken) => Ok(self.accept_registration()),
+            Ok(_) | Err(app::user::failure::Error::EmailTaken) => {
+                Ok(self.accept_registration())
+            }
             Err(error) => Err(error.into()),
         }
     }

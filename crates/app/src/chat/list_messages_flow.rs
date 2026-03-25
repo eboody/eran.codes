@@ -1,6 +1,6 @@
 use statum::{machine, state, transition};
 
-use super::{Error, ListMessages};
+use super::{ListMessages, failure};
 use domain::chat;
 
 #[derive(Clone, Debug, PartialEq)]
@@ -40,7 +40,7 @@ impl ListMessagesFlow<Incoming> {
     pub(super) async fn list(
         self,
         service: &super::Service,
-    ) -> Result<ListMessagesFlow<Loaded>, Error> {
+    ) -> Result<ListMessagesFlow<Loaded>, failure::Error> {
         let room_verified = self.verify_room(service).await?;
         let membership_verified = room_verified.verify_membership(service).await?;
 
@@ -50,7 +50,7 @@ impl ListMessagesFlow<Incoming> {
     async fn verify_room(
         self,
         service: &super::Service,
-    ) -> Result<ListMessagesFlow<RoomVerified>, Error> {
+    ) -> Result<ListMessagesFlow<RoomVerified>, failure::Error> {
         let room_exists = service.repo.find_room(self.room_id()).await?.is_some();
         self.classify_room_lookup(room_exists).require_room()
     }
@@ -106,7 +106,7 @@ impl ListMessagesFlow<RoomVerified> {
     async fn verify_membership(
         self,
         service: &super::Service,
-    ) -> Result<ListMessagesFlow<MembershipVerified>, Error> {
+    ) -> Result<ListMessagesFlow<MembershipVerified>, failure::Error> {
         let is_member = service
             .repo
             .is_member(self.room_id(), self.user_id())
@@ -135,7 +135,7 @@ impl ListMessagesFlow<MembershipVerified> {
     async fn load_messages(
         self,
         service: &super::Service,
-    ) -> Result<ListMessagesFlow<Loaded>, Error> {
+    ) -> Result<ListMessagesFlow<Loaded>, failure::Error> {
         let messages = service
             .repo
             .list_messages(self.room_id(), self.limit())
@@ -150,10 +150,12 @@ pub(super) enum RoomLookupOutcome {
 }
 
 impl RoomLookupOutcome {
-    pub(super) fn require_room(self) -> Result<ListMessagesFlow<RoomVerified>, Error> {
+    pub(super) fn require_room(
+        self,
+    ) -> Result<ListMessagesFlow<RoomVerified>, failure::Error> {
         match self {
             Self::Found(found) => Ok(found),
-            Self::Missing => Err(Error::RoomNotFound),
+            Self::Missing => Err(failure::Error::RoomNotFound),
         }
     }
 }
@@ -166,10 +168,10 @@ pub(super) enum MembershipOutcome {
 impl MembershipOutcome {
     pub(super) fn require_member(
         self,
-    ) -> Result<ListMessagesFlow<MembershipVerified>, Error> {
+    ) -> Result<ListMessagesFlow<MembershipVerified>, failure::Error> {
         match self {
             Self::Member(member) => Ok(member),
-            Self::NotMember => Err(Error::NotMember),
+            Self::NotMember => Err(failure::Error::NotMember),
         }
     }
 }
@@ -204,7 +206,7 @@ mod tests {
     fn classify_room_lookup_rejects_missing_room() {
         let incoming = ListMessagesFlow::<Incoming>::from_command(command());
         let result = incoming.classify_room_lookup(false).require_room();
-        assert!(matches!(result, Err(Error::RoomNotFound)));
+        assert!(matches!(result, Err(failure::Error::RoomNotFound)));
     }
 
     #[test]
@@ -215,7 +217,7 @@ mod tests {
             .require_room()
             .expect("room verified");
         let result = room_verified.classify_membership(false).require_member();
-        assert!(matches!(result, Err(Error::NotMember)));
+        assert!(matches!(result, Err(failure::Error::NotMember)));
     }
 
     #[test]

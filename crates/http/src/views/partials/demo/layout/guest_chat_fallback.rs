@@ -3,7 +3,7 @@ use maud::Render;
 
 use crate::views::partials;
 
-use super::{SurfaceSection, SurfaceSectionAttr};
+use super::{Attr, SurfaceSection};
 
 #[derive(Clone, Debug, Builder)]
 pub struct GuestChatFallback {}
@@ -26,7 +26,7 @@ impl Render for GuestChatFallback {
             .title(content.guest_chat.title.clone())
             .subtitle(content.guest_chat.summary.clone())
             .maybe_action(action)
-            .attrs(vec![SurfaceSectionAttr::value(
+            .attrs(vec![Attr::value(
                 "data-chat-surface-variant",
                 "lab",
             )])

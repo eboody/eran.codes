@@ -474,22 +474,22 @@ me .ui-log-flow-event-summary-inline {
 );
 
 #[derive(Clone, Copy, Debug, Default)]
-pub enum SurfaceLayout {
+pub enum Layout {
     #[default]
     Stack,
     Panels,
 }
 
-impl SurfaceLayout {
+impl Layout {
     fn class_name(self) -> &'static str {
         match self {
-            SurfaceLayout::Stack => "ui-log-surface",
-            SurfaceLayout::Panels => "ui-log-surface ui-log-panels",
+            Layout::Stack => "ui-log-surface",
+            Layout::Panels => "ui-log-surface ui-log-panels",
         }
     }
 
     fn is_panels(self) -> bool {
-        matches!(self, SurfaceLayout::Panels)
+        matches!(self, Layout::Panels)
     }
 }
 
@@ -498,7 +498,7 @@ impl SurfaceLayout {
 pub struct Surface {
     pub target_id: Option<Text>,
     #[builder(default)]
-    pub layout: SurfaceLayout,
+    pub layout: Layout,
     #[builder(default)]
     pub classes: Vec<Text>,
     pub children: Vec<logs::primitives::Panel>,

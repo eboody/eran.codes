@@ -13,11 +13,11 @@ pub(crate) struct Tab {
     pub icon: Option<Icon>,
     pub primary_text: Text,
     pub secondary_text: Option<Text>,
-    pub interaction: TabInteraction,
+    pub interaction: Interaction,
 }
 
 #[derive(Clone, Debug)]
-pub(crate) enum TabInteraction {
+pub(crate) enum Interaction {
     LocalTabs { value: Text },
 }
 
@@ -28,7 +28,7 @@ impl Render for Tab {
         let style = format!("--tab-accent: {};", self.palette.main.as_ref());
 
         match &self.interaction {
-            TabInteraction::LocalTabs { value } => {
+            Interaction::LocalTabs { value } => {
                 maud::html! {
                     button.tab-set__tab.is-selected[self.is_selected]
                         type="button"
@@ -80,7 +80,7 @@ mod tests {
             icon: None,
             primary_text: Text::from("Example"),
             secondary_text: None,
-            interaction: TabInteraction::LocalTabs {
+            interaction: Interaction::LocalTabs {
                 value: Text::from("sso'and\"quotes"),
             },
         }

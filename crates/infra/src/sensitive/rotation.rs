@@ -22,7 +22,7 @@ impl Repository {
                 .rows_failed(0)
                 .detail(
                     sensitive_domain::DetailText::try_new(detail)
-                        .map_err(sensitive::Error::decode_detail_text)?,
+                        .map_err(sensitive::failure::Error::decode_detail_text)?,
                 )
                 .build());
         }
@@ -39,7 +39,7 @@ impl Repository {
         .fetch_optional(&self.pg)
         .await
         .map_err(|source| {
-            sensitive::Error::query_repository(
+            sensitive::failure::Error::query_repository(
                 RepositoryOperation::RotateCiphertext,
                 source,
             )
@@ -78,7 +78,7 @@ impl Repository {
                         .execute(&self.pg)
                         .await
                         .map_err(|source| {
-                            sensitive::Error::query_repository(
+                            sensitive::failure::Error::query_repository(
                                 RepositoryOperation::RotateCiphertext,
                                 source,
                             )
@@ -115,7 +115,7 @@ impl Repository {
             .fetch_all(&self.pg)
             .await
             .map_err(|source| {
-                sensitive::Error::query_repository(
+                sensitive::failure::Error::query_repository(
                     RepositoryOperation::RotateCiphertext,
                     source,
                 )
@@ -158,7 +158,7 @@ impl Repository {
                         .execute(&self.pg)
                         .await
                         .map_err(|source| {
-                            sensitive::Error::query_repository(
+                            sensitive::failure::Error::query_repository(
                                 RepositoryOperation::RotateCiphertext,
                                 source,
                             )
@@ -189,7 +189,7 @@ impl Repository {
                 sensitive_domain::DetailText::try_new(
                     detail.chars().take(120).collect::<String>(),
                 )
-                .map_err(sensitive::Error::decode_detail_text)?,
+                .map_err(sensitive::failure::Error::decode_detail_text)?,
             )
             .build())
     }
@@ -226,7 +226,7 @@ impl Repository {
         .execute(&self.pg)
         .await
         .map_err(|source| {
-            sensitive::Error::query_repository(
+            sensitive::failure::Error::query_repository(
                 RepositoryOperation::RecordKeyRotationRun,
                 source,
             )

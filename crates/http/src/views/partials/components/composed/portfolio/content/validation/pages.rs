@@ -359,7 +359,7 @@ pub(super) fn validate_crate_gallery(content: &CrateGalleryContent, path: &str) 
 }
 
 pub(super) fn validate_gallery_preview(
-    content: &CrateGalleryPreviewContent,
+    content: &PreviewContent,
     path: &str,
 ) {
     assert_min_len(&format!("{path}.code_examples"), &content.code_examples, 1);

@@ -5,7 +5,7 @@ use maud::Render;
 use statum::{machine, state, transition};
 
 use super::post_input::{ChatSender, PostInput};
-use super::{ChatSignals, DemoChatSignals};
+use super::{DemoChatSignals, Signals};
 use crate::trace_log::log::{message, target};
 use crate::types::{LogFieldKey, Text, UserIdText};
 use crate::views::partials;
@@ -46,7 +46,7 @@ pub(super) struct ChatPostFlow<ChatPostState> {
 impl ChatPostFlow<Incoming> {
     pub(super) fn from_authenticated_signals(
         state: &crate::State,
-        signals: ChatSignals,
+        signals: Signals,
         user: &crate::auth::User,
     ) -> crate::Result<Self> {
         let input = PostInput::from_authenticated_signals(state, signals, user)?;

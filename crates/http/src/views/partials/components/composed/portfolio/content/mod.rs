@@ -1,14 +1,16 @@
 mod crate_gallery;
 mod fixture_loader;
-mod types;
+#[path = "types.rs"]
+pub(super) mod model;
 mod validation;
 
-pub(crate) use crate_gallery::CrateGalleryContent;
+pub(crate) use crate_gallery::Content as CrateGalleryContent;
 pub use fixture_loader::{
     lab_page_content, open_source_index_content, portfolio_home_content, portfolio_nav_links,
     resume_text, supporting_archive_cases, work_case_content, work_index_content,
 };
-pub use types::{
+pub(super) use model as types;
+pub use model::{
     ArchiveDetailsContent, ArchivedWorkCaseContent, ClosingContent, CmsActionLink,
     CrateCardContent, CrateSectionContent, CtaKind,
     ExperienceRoleContent, ExperienceSectionContent, OpenSourceIndexContent, PortfolioHeroContent,

@@ -10,14 +10,16 @@ pub mod sse;
 mod state;
 mod trace;
 pub mod trace_log;
-mod types;
+#[path = "types.rs"]
+mod value;
 mod views;
 
 pub use error::{Error, Result};
 pub use paths::Route;
 pub use router::router;
 pub use state::State;
-pub use types::*;
+pub(crate) use value as types;
+pub use value::*;
 
 #[doc(hidden)]
 pub mod __typestate {

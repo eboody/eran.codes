@@ -2,12 +2,12 @@ use super::*;
 
 pub(super) fn parse_key_id(value: String) -> sensitive::Result<sensitive_domain::KeyId> {
     sensitive_domain::KeyId::try_new(value.clone())
-        .map_err(|_| sensitive::Error::InvalidStoredKeyId { key_id: value })
+        .map_err(|_| sensitive::failure::Error::InvalidStoredKeyId { key_id: value })
 }
 
 pub(super) fn parse_u32_count(value: i64, field: &'static str) -> sensitive::Result<u32> {
     u32::try_from(value)
-        .map_err(|_| sensitive::Error::InvalidStoredRotationCount { field, value })
+        .map_err(|_| sensitive::failure::Error::InvalidStoredRotationCount { field, value })
 }
 
 pub(super) fn ciphertext_evidence(
@@ -44,7 +44,7 @@ pub(super) fn access_grant_from_row(
     Ok(sensitive_domain::AccessGrant::builder()
         .user_id(user_domain::Id::from(row.get::<uuid::Uuid, _>("user_id")))
         .capability(row.get::<String, _>("capability").parse().map_err(|_| {
-            sensitive::Error::InvalidStoredAccessCapability {
+            sensitive::failure::Error::InvalidStoredAccessCapability {
                 capability: row.get("capability"),
             }
         })?)
@@ -63,7 +63,7 @@ pub(super) fn access_event_from_row(
                 .map(user_domain::Id::from),
         )
         .capability(capability_raw.parse().map_err(|_| {
-            sensitive::Error::InvalidStoredAccessCapability {
+            sensitive::failure::Error::InvalidStoredAccessCapability {
                 capability: capability_raw.clone(),
             }
         })?)
@@ -72,13 +72,13 @@ pub(super) fn access_event_from_row(
                 .map(sensitive_domain::Id::from),
         )
         .outcome(outcome_raw.parse().map_err(|_| {
-            sensitive::Error::InvalidStoredAccessOutcome {
+            sensitive::failure::Error::InvalidStoredAccessOutcome {
                 outcome: outcome_raw.clone(),
             }
         })?)
         .detail(
             sensitive_domain::DetailText::try_new(row.get::<String, _>("detail"))
-                .map_err(sensitive::Error::decode_detail_text)?,
+                .map_err(sensitive::failure::Error::decode_detail_text)?,
         )
         .occurred_at(from_offset_datetime(row.get("occurred_at")))
         .build())
@@ -91,11 +91,11 @@ pub(super) fn record_proof_from_row(
         .id(sensitive_domain::Id::from(row.get::<uuid::Uuid, _>("id")))
         .label(
             sensitive_domain::Label::try_new(row.get::<String, _>("redacted_label"))
-                .map_err(sensitive::Error::decode_label)?,
+                .map_err(sensitive::failure::Error::decode_label)?,
         )
         .last4(
             sensitive_domain::Last4::try_new(row.get::<String, _>("redacted_last4"))
-                .map_err(sensitive::Error::decode_last4)?,
+                .map_err(sensitive::failure::Error::decode_last4)?,
         )
         .synced_at(from_offset_datetime(row.get("synced_at")))
         .ciphertext(ciphertext_evidence(
@@ -114,12 +114,12 @@ pub(super) fn sync_run_from_row(
     let records_upserted = row.get::<i32, _>("records_upserted");
     Ok(sensitive_domain::SyncRun::builder()
         .provider(provider_raw.parse().map_err(|_| {
-            sensitive::Error::InvalidStoredProvider {
+            sensitive::failure::Error::InvalidStoredProvider {
                 provider: provider_raw.clone(),
             }
         })?)
         .outcome(outcome_raw.parse().map_err(|_| {
-            sensitive::Error::InvalidStoredSyncOutcome {
+            sensitive::failure::Error::InvalidStoredSyncOutcome {
                 outcome: outcome_raw.clone(),
             }
         })?)
@@ -130,7 +130,7 @@ pub(super) fn sync_run_from_row(
         )?)
         .detail(
             sensitive_domain::DetailText::try_new(row.get::<String, _>("detail"))
-                .map_err(sensitive::Error::decode_detail_text)?,
+                .map_err(sensitive::failure::Error::decode_detail_text)?,
         )
         .started_at(from_offset_datetime(row.get("started_at")))
         .finished_at(from_offset_datetime(row.get("finished_at")))
@@ -149,7 +149,7 @@ pub(super) fn rotation_run_from_row(
     Ok(sensitive_domain::KeyRotationRun::builder()
         .active_key_id(active_key_id)
         .outcome(outcome_raw.parse().map_err(|_| {
-            sensitive::Error::InvalidStoredRotationOutcome {
+            sensitive::failure::Error::InvalidStoredRotationOutcome {
                 outcome: outcome_raw.clone(),
             }
         })?)
@@ -162,7 +162,7 @@ pub(super) fn rotation_run_from_row(
         .rows_failed(parse_u32_count(rows_failed.into(), "rows_failed")?)
         .detail(
             sensitive_domain::DetailText::try_new(row.get::<String, _>("detail"))
-                .map_err(sensitive::Error::decode_detail_text)?,
+                .map_err(sensitive::failure::Error::decode_detail_text)?,
         )
         .started_at(from_offset_datetime(row.get("started_at")))
         .finished_at(from_offset_datetime(row.get("finished_at")))
@@ -185,24 +185,24 @@ pub(super) fn integration_state_from_row(
 
     Ok(sensitive_domain::IntegrationState::builder()
         .provider(provider_raw.parse().map_err(|_| {
-            sensitive::Error::InvalidStoredProvider {
+            sensitive::failure::Error::InvalidStoredProvider {
                 provider: provider_raw.clone(),
             }
         })?)
         .mode(mode_raw.parse().map_err(|_| {
-            sensitive::Error::InvalidStoredProviderMode {
+            sensitive::failure::Error::InvalidStoredProviderMode {
                 mode: mode_raw.clone(),
             }
         })?)
         .endpoint(
             sensitive_domain::DetailText::try_new(row.get::<String, _>("endpoint"))
-                .map_err(sensitive::Error::decode_detail_text)?,
+                .map_err(sensitive::failure::Error::decode_detail_text)?,
         )
         .maybe_auth_mode(
             auth_mode_raw
                 .map(|mode| {
                     mode.parse().map_err(|_| {
-                        sensitive::Error::InvalidStoredProviderAuthMode {
+                        sensitive::failure::Error::InvalidStoredProviderAuthMode {
                             mode: mode.clone(),
                         }
                     })
@@ -212,20 +212,21 @@ pub(super) fn integration_state_from_row(
         .maybe_cursor(
             cursor_raw
                 .map(|cursor| {
-                    sensitive_domain::SyncCursor::try_new(cursor.clone())
-                        .map_err(|_| sensitive::Error::InvalidStoredSyncCursor { cursor })
+                    sensitive_domain::SyncCursor::try_new(cursor.clone()).map_err(|_| {
+                        sensitive::failure::Error::InvalidStoredSyncCursor { cursor }
+                    })
                 })
                 .transpose()?,
         )
         .last_fetch_outcome(row.get::<String, _>("last_fetch_outcome").parse().map_err(
-            |_| sensitive::Error::InvalidStoredFetchOutcome {
+            |_| sensitive::failure::Error::InvalidStoredFetchOutcome {
                 outcome: row.get("last_fetch_outcome"),
             },
         )?)
         .token_strategy(
             row.get::<String, _>("token_strategy")
                 .parse()
-                .map_err(|_| sensitive::Error::InvalidStoredTokenStrategy {
+                .map_err(|_| sensitive::failure::Error::InvalidStoredTokenStrategy {
                     strategy: row.get("token_strategy"),
                 })?,
         )
@@ -233,7 +234,7 @@ pub(super) fn integration_state_from_row(
             last_error_category_raw
                 .map(|category| {
                     category.parse().map_err(|_| {
-                        sensitive::Error::InvalidStoredRemoteErrorCategory {
+                        sensitive::failure::Error::InvalidStoredRemoteErrorCategory {
                             category: category.clone(),
                         }
                     })
@@ -244,7 +245,7 @@ pub(super) fn integration_state_from_row(
             last_auth_outcome_raw
                 .map(|outcome| {
                     outcome.parse().map_err(|_| {
-                        sensitive::Error::InvalidStoredFetchOutcome {
+                        sensitive::failure::Error::InvalidStoredFetchOutcome {
                             outcome: outcome.clone(),
                         }
                     })
@@ -255,7 +256,9 @@ pub(super) fn integration_state_from_row(
             last_remote_status_code
                 .map(|status_code| {
                     u16::try_from(status_code).map_err(|_| {
-                        sensitive::Error::InvalidStoredRemoteStatusCode { status_code }
+                        sensitive::failure::Error::InvalidStoredRemoteStatusCode {
+                            status_code,
+                        }
                     })
                 })
                 .transpose()?,
@@ -264,7 +267,7 @@ pub(super) fn integration_state_from_row(
             retry_backoff_secs
                 .map(|backoff| {
                     u32::try_from(backoff).map_err(|_| {
-                        sensitive::Error::InvalidStoredFailureCount {
+                        sensitive::failure::Error::InvalidStoredFailureCount {
                             failure_count: backoff,
                         }
                     })
@@ -274,10 +277,11 @@ pub(super) fn integration_state_from_row(
         .maybe_last_successful_mode(
             last_successful_mode_raw
                 .map(|mode| {
-                    mode.parse()
-                        .map_err(|_| sensitive::Error::InvalidStoredProviderMode {
+                    mode.parse().map_err(|_| {
+                        sensitive::failure::Error::InvalidStoredProviderMode {
                             mode: mode.clone(),
-                        })
+                        }
+                    })
                 })
                 .transpose()?,
         )
@@ -286,11 +290,9 @@ pub(super) fn integration_state_from_row(
                 .map(from_offset_datetime),
         )
         .last_attempted_fetch_at(from_offset_datetime(row.get("last_attempted_fetch_at")))
-        .failure_count(
-            u32::try_from(failure_count).map_err(|_| {
-                sensitive::Error::InvalidStoredFailureCount { failure_count }
-            })?,
-        )
+        .failure_count(u32::try_from(failure_count).map_err(|_| {
+            sensitive::failure::Error::InvalidStoredFailureCount { failure_count }
+        })?)
         .build())
 }
 

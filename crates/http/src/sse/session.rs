@@ -30,7 +30,10 @@ impl Handle {
 
     pub fn with_tab(session_id: SessionId, tab_id: Option<SseTabId>) -> Self {
         Self {
-            key: StreamKey::new(session_id, tab_id),
+            key: match tab_id {
+                Some(tab_id) => StreamKey::with_tab(session_id, tab_id),
+                None => StreamKey::new(session_id),
+            },
         }
     }
 

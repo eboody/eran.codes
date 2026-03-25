@@ -4,7 +4,7 @@ use aes_gcm::aead::{Aead, KeyInit};
 use aes_gcm::{Aes256Gcm, Nonce};
 use domain::sensitive;
 use rand_core::{OsRng, RngCore};
-use snafu::prelude::*;
+use snafu::Snafu;
 
 pub type Result<T> = core::result::Result<T, Error>;
 

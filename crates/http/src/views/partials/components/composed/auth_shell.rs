@@ -106,13 +106,13 @@ me [data-account-actions] > * {
 );
 
 #[derive(Clone, Copy, Debug, Default)]
-pub enum AuthShellVariant {
+pub enum Variant {
     #[default]
     Standard,
     Account,
 }
 
-impl AuthShellVariant {
+impl Variant {
     fn attr_value(self) -> &'static str {
         match self {
             Self::Standard => "standard",
@@ -130,7 +130,7 @@ pub struct AuthShell {
     pub body: Markup,
     pub footer: Option<Markup>,
     #[builder(default)]
-    pub variant: AuthShellVariant,
+    pub variant: Variant,
 }
 
 impl Render for AuthShell {

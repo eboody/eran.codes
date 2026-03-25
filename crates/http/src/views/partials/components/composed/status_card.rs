@@ -10,17 +10,17 @@ use super::ResultCard;
 // ci: style-system-component
 pub struct StatusCard {
     pub title: Text,
-    pub items: Vec<StatusCardItem>,
+    pub items: Vec<Item>,
 }
 
 #[derive(Clone, Debug, PartialEq, Eq)]
 // ci: partials-render-exempt
-pub struct StatusCardItem {
+pub struct Item {
     pub label: Text,
     pub value: Text,
 }
 
-impl StatusCardItem {
+impl Item {
     pub fn text(label: impl Into<Text>, value: impl Into<Text>) -> Self {
         Self {
             label: label.into(),
@@ -63,8 +63,8 @@ mod tests {
     #[test]
     fn optional_item_defaults_to_none() {
         assert_eq!(
-            StatusCardItem::optional("user_id", None),
-            StatusCardItem {
+            Item::optional("user_id", None),
+            Item {
                 label: Text::from("user_id"),
                 value: Text::from("none"),
             }

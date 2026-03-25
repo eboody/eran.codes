@@ -78,7 +78,7 @@ impl Service {
             sensitive::TokenStrategy,
             sensitive::FetchOutcome,
         ),
-        SyncAttemptFailure,
+        AttemptFailure,
     > {
         let current_token = self.load_refreshable_token().await.map_err(|error| {
             sync_attempt_failure(
@@ -171,7 +171,7 @@ impl Service {
         cursor: Option<&sensitive::SyncCursor>,
         now: SystemTime,
         token_strategy: sensitive::TokenStrategy,
-    ) -> core::result::Result<(ProviderRecords, sensitive::TokenStrategy), SyncAttemptFailure>
+    ) -> core::result::Result<(ProviderRecords, sensitive::TokenStrategy), AttemptFailure>
     {
         match self
             .provider
@@ -220,12 +220,12 @@ impl Service {
         started_at: SystemTime,
         boundary_meta: &ProviderBoundaryMeta,
         previous_state: Option<&sensitive::IntegrationState>,
-    ) -> core::result::Result<SyncSuccess, SyncFailure> {
+    ) -> core::result::Result<Success, Failure> {
         let previous_cursor = previous_state.and_then(|state| state.cursor.clone());
         let (token, token_strategy, auth_outcome) = self
             .ensure_fresh_token(started_at)
             .await
-            .map_err(|failure| SyncFailure {
+            .map_err(|failure| Failure {
                 integration_state: failed_integration_state(
                     boundary_meta,
                     previous_state,
@@ -246,7 +246,7 @@ impl Service {
                 token_strategy,
             )
             .await
-            .map_err(|failure| SyncFailure {
+            .map_err(|failure| Failure {
                 integration_state: failed_integration_state(
                     boundary_meta,
                     previous_state,
@@ -264,7 +264,7 @@ impl Service {
             .repo
             .upsert_records(&provider_records.records, started_at)
             .await
-            .map_err(|error| SyncFailure {
+            .map_err(|error| Failure {
                 integration_state: failed_integration_state(
                     boundary_meta,
                     previous_state,
@@ -299,25 +299,25 @@ impl Service {
             .finished_at(finished_at)
             .build();
 
-        Ok(SyncSuccess {
+        Ok(Success {
             run,
             integration_state,
         })
     }
 }
 
-struct SyncSuccess {
+struct Success {
     run: sensitive::SyncRun,
     integration_state: sensitive::IntegrationState,
 }
 
-struct SyncFailure {
-    error: Error,
+struct Failure {
+    error: failure::Error,
     integration_state: sensitive::IntegrationState,
 }
 
-struct SyncAttemptFailure {
-    error: Error,
+struct AttemptFailure {
+    error: failure::Error,
     token_strategy: sensitive::TokenStrategy,
     error_category: Option<sensitive::RemoteErrorCategory>,
     status_code: Option<u16>,
@@ -325,13 +325,13 @@ struct SyncAttemptFailure {
 }
 
 fn sync_attempt_failure(
-    error: Error,
+    error: failure::Error,
     token_strategy: sensitive::TokenStrategy,
     auth_outcome: Option<sensitive::FetchOutcome>,
-) -> SyncAttemptFailure {
+) -> AttemptFailure {
     let error_category = provider_error_category(&error);
     let status_code = provider_error_status_code(&error);
-    SyncAttemptFailure {
+    AttemptFailure {
         error,
         token_strategy,
         error_category,
@@ -347,38 +347,42 @@ fn token_is_stale(token: &ProviderToken, now: SystemTime) -> bool {
     token.status.expires_at <= refresh_cutoff
 }
 
-fn stored_token_requires_refresh(error: &Error) -> bool {
+fn stored_token_requires_refresh(error: &failure::Error) -> bool {
     matches!(
         error,
-        Error::Repository {
-            source: error::RepositoryError::DecryptToken { .. },
+        failure::Error::Repository {
+            source: failure::Repository::DecryptToken { .. },
         }
     )
 }
 
-fn provider_error_category(error: &Error) -> Option<sensitive::RemoteErrorCategory> {
+fn provider_error_category(
+    error: &failure::Error,
+) -> Option<sensitive::RemoteErrorCategory> {
     match error {
-        Error::Provider { kind, .. } => Some(match kind {
-            error::ProviderFailureKind::Configuration => {
+        failure::Error::Provider { kind, .. } => Some(match kind {
+            failure::ProviderFailureKind::Configuration => {
                 sensitive::RemoteErrorCategory::Configuration
             }
-            error::ProviderFailureKind::Unauthorized => {
+            failure::ProviderFailureKind::Unauthorized => {
                 sensitive::RemoteErrorCategory::Unauthorized
             }
-            error::ProviderFailureKind::Forbidden => {
+            failure::ProviderFailureKind::Forbidden => {
                 sensitive::RemoteErrorCategory::Forbidden
             }
-            error::ProviderFailureKind::RateLimited => {
+            failure::ProviderFailureKind::RateLimited => {
                 sensitive::RemoteErrorCategory::RateLimited
             }
-            error::ProviderFailureKind::MalformedPayload => {
+            failure::ProviderFailureKind::MalformedPayload => {
                 sensitive::RemoteErrorCategory::MalformedPayload
             }
-            error::ProviderFailureKind::Timeout => sensitive::RemoteErrorCategory::Timeout,
-            error::ProviderFailureKind::ServerError => {
+            failure::ProviderFailureKind::Timeout => {
+                sensitive::RemoteErrorCategory::Timeout
+            }
+            failure::ProviderFailureKind::ServerError => {
                 sensitive::RemoteErrorCategory::ServerError
             }
-            error::ProviderFailureKind::Transport => {
+            failure::ProviderFailureKind::Transport => {
                 sensitive::RemoteErrorCategory::Transport
             }
         }),
@@ -386,9 +390,9 @@ fn provider_error_category(error: &Error) -> Option<sensitive::RemoteErrorCatego
     }
 }
 
-fn provider_error_status_code(error: &Error) -> Option<u16> {
+fn provider_error_status_code(error: &failure::Error) -> Option<u16> {
     match error {
-        Error::Provider { status_code, .. } => *status_code,
+        failure::Error::Provider { status_code, .. } => *status_code,
         _ => None,
     }
 }
@@ -409,11 +413,11 @@ fn successful_integration_state(
         .last_fetch_outcome(sensitive::FetchOutcome::Success)
         .token_strategy(token_strategy)
         .maybe_last_error_category(None)
-        .maybe_last_auth_outcome(Some(auth_outcome))
+        .last_auth_outcome(auth_outcome)
         .maybe_last_remote_status_code(None)
         .maybe_retry_backoff_secs(None)
-        .maybe_last_successful_mode(Some(boundary_meta.mode))
-        .maybe_last_successful_fetch_at(Some(finished_at))
+        .last_successful_mode(boundary_meta.mode)
+        .last_successful_fetch_at(finished_at)
         .last_attempted_fetch_at(finished_at)
         .failure_count(0)
         .build()

@@ -24,7 +24,7 @@ impl Render for TabSetShowcase {
     }
 }
 
-fn load_content() -> tab_set::content::TabSetContent {
+fn load_content() -> tab_set::content::TabSet {
     let raw = include_str!(concat!(
         env!("CARGO_MANIFEST_DIR"),
         "/src/views/partials/demo/layout/content/tab_set_showcase.json"

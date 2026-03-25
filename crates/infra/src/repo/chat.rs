@@ -3,17 +3,17 @@ use app::chat::{
 };
 use async_trait::async_trait;
 use domain::chat;
-use snafu::prelude::*;
+use snafu::{ResultExt, Snafu};
 use sqlx::types::time;
 use sqlx::{PgPool, Row, postgres::PgRow};
 
 const RATE_LIMIT_WINDOW_SECS: i64 = 10;
 const RATE_LIMIT_MAX: i64 = 5;
 
-type PersistenceResult<T> = std::result::Result<T, ChatPersistenceError>;
+type PersistenceResult<T> = std::result::Result<T, PersistenceError>;
 
 #[derive(Debug, Snafu)]
-enum ChatPersistenceError {
+enum PersistenceError {
     #[snafu(display("chat persistence query failed while {operation}"))]
     Query {
         operation: RepositoryOperation,
@@ -43,38 +43,38 @@ enum ChatPersistenceError {
     },
 }
 
-impl From<ChatPersistenceError> for app::chat::Error {
-    fn from(error: ChatPersistenceError) -> Self {
+impl From<PersistenceError> for app::chat::failure::Error {
+    fn from(error: PersistenceError) -> Self {
         match error {
-            ChatPersistenceError::Query { operation, source } => {
-                app::chat::Error::query_repository(operation, source)
+            PersistenceError::Query { operation, source } => {
+                app::chat::failure::Error::query_repository(operation, source)
             }
-            ChatPersistenceError::DecodeRoomName { source } => {
-                app::chat::Error::decode_room_name(source)
+            PersistenceError::DecodeRoomName { source } => {
+                app::chat::failure::Error::decode_room_name(source)
             }
-            ChatPersistenceError::DecodeClientId { source } => {
-                app::chat::Error::decode_client_id(source)
+            PersistenceError::DecodeClientId { source } => {
+                app::chat::failure::Error::decode_client_id(source)
             }
-            ChatPersistenceError::DecodeMessageBody { source } => {
-                app::chat::Error::decode_message_body(source)
+            PersistenceError::DecodeMessageBody { source } => {
+                app::chat::failure::Error::decode_message_body(source)
             }
-            ChatPersistenceError::InvalidStoredMessageStatus { status } => {
-                app::chat::Error::invalid_stored_message_status(status)
+            PersistenceError::InvalidStoredMessageStatus { status } => {
+                app::chat::failure::Error::invalid_stored_message_status(status)
             }
-            ChatPersistenceError::DecodeModerationRoomName { source } => {
-                app::chat::Error::decode_moderation_room_name(source)
+            PersistenceError::DecodeModerationRoomName { source } => {
+                app::chat::failure::Error::decode_moderation_room_name(source)
             }
-            ChatPersistenceError::DecodeModerationMessageBody { source } => {
-                app::chat::Error::decode_moderation_message_body(source)
+            PersistenceError::DecodeModerationMessageBody { source } => {
+                app::chat::failure::Error::decode_moderation_message_body(source)
             }
-            ChatPersistenceError::InvalidStoredModerationStatus { status } => {
-                app::chat::Error::invalid_stored_moderation_status(status)
+            PersistenceError::InvalidStoredModerationStatus { status } => {
+                app::chat::failure::Error::invalid_stored_moderation_status(status)
             }
-            ChatPersistenceError::DecodeModerationReason { source } => {
-                app::chat::Error::decode_moderation_reason(source)
+            PersistenceError::DecodeModerationReason { source } => {
+                app::chat::failure::Error::decode_moderation_reason(source)
             }
-            ChatPersistenceError::DecodeModerationTimestamp { source } => {
-                app::chat::Error::decode_moderation_timestamp(source)
+            PersistenceError::DecodeModerationTimestamp { source } => {
+                app::chat::failure::Error::decode_moderation_timestamp(source)
             }
         }
     }
@@ -91,7 +91,7 @@ impl Repository {
 
     fn status_from_db(value: &str) -> PersistenceResult<chat::message::Status> {
         value.parse::<chat::message::Status>().map_err(|_| {
-            ChatPersistenceError::InvalidStoredMessageStatus {
+            PersistenceError::InvalidStoredMessageStatus {
                 status: value.to_owned(),
             }
         })
@@ -116,13 +116,9 @@ impl Repository {
         })
     }
 
-    fn client_id_from_db(
-        value: Option<String>,
-    ) -> PersistenceResult<Option<chat::client::Id>> {
+    fn client_id_from_db(value: Option<String>) -> PersistenceResult<Option<chat::Client>> {
         value
-            .map(|client_id| {
-                chat::client::Id::try_new(client_id).context(DecodeClientIdSnafu)
-            })
+            .map(|client_id| chat::Client::try_new(client_id).context(DecodeClientIdSnafu))
             .transpose()
     }
 
@@ -502,7 +498,7 @@ impl app::chat::moderation::Queue for ModerationQueue {
             let queue_status =
                 queue_status
                     .parse::<moderation::QueueStatus>()
-                    .map_err(|_| ChatPersistenceError::InvalidStoredModerationStatus {
+                    .map_err(|_| PersistenceError::InvalidStoredModerationStatus {
                         status: queue_status.clone(),
                     })?;
             let reason = moderation::Reason::try_new(row.get::<String, _>("reason"))
@@ -649,7 +645,7 @@ impl app::chat::RateLimiter for RateLimiter {
         if allowed {
             Ok(())
         } else {
-            Err(app::chat::Error::RateLimited)
+            Err(app::chat::failure::Error::RateLimited)
         }
     }
 }

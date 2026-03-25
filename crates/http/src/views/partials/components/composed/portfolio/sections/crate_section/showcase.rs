@@ -1,14 +1,14 @@
 use maud::{Markup, Render};
 
-use super::links::CrateLinks;
+use super::links::Crate as Links;
 use crate::views::partials::components::portfolio::content::{CrateCardContent, CrateGalleryContent};
 use crate::views::partials::components::tab_set;
 
-pub(super) struct CrateShowcase<'a> {
+pub(super) struct Crate<'a> {
     pub card: &'a CrateCardContent,
 }
 
-impl Render for CrateShowcase<'_> {
+impl Render for Crate<'_> {
     fn render(&self) -> maud::Markup {
         let gallery = self.card.gallery.as_ref().map(render_gallery);
 
@@ -19,7 +19,7 @@ impl Render for CrateShowcase<'_> {
                         h3 { (&self.card.name) }
                         p class="ui-portfolio-card-summary" { (&self.card.summary) }
                     }
-                    (CrateLinks { card: self.card })
+                    (Links { card: self.card })
                 }
                 @if let Some(gallery) = gallery {
                     (gallery)

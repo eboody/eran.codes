@@ -8,22 +8,22 @@ use crate::views::partials::components::portfolio::content::{
 };
 
 #[derive(Clone, Copy, Debug, Default)]
-pub enum WorkSectionVariant {
+pub enum SectionVariant {
     #[default]
     Standard,
     CurrentProof,
 }
 
-pub struct WorkSection<'a> {
+pub struct Section<'a> {
     pub content: &'a WorkSectionContent,
-    pub variant: WorkSectionVariant,
+    pub variant: SectionVariant,
 }
 
-impl Render for WorkSection<'_> {
+impl Render for Section<'_> {
     fn render(&self) -> maud::Markup {
         let extra_class = match self.variant {
-            WorkSectionVariant::Standard => "ui-portfolio-work-section",
-            WorkSectionVariant::CurrentProof => {
+            SectionVariant::Standard => "ui-portfolio-work-section",
+            SectionVariant::CurrentProof => {
                 "ui-portfolio-work-section ui-portfolio-work-section--current-proof"
             }
         };
@@ -34,7 +34,7 @@ impl Render for WorkSection<'_> {
                     title: &self.content.title,
                     subtitle: &self.content.subtitle,
                 })
-                (WorkCards { cards: &self.content.cards })
+                (Cards { cards: &self.content.cards })
                 @if !self.content.actions.is_empty() {
                     (SectionActions {
                         actions: &self.content.actions,
@@ -45,11 +45,11 @@ impl Render for WorkSection<'_> {
     }
 }
 
-pub struct WorkIndexSection<'a> {
+pub struct IndexSection<'a> {
     pub content: &'a WorkIndexContent,
 }
 
-impl Render for WorkIndexSection<'_> {
+impl Render for IndexSection<'_> {
     fn render(&self) -> maud::Markup {
         maud::html! {
             div class="ui-portfolio-work-index" {
@@ -60,14 +60,14 @@ impl Render for WorkIndexSection<'_> {
                         summary: &self.content.summary,
                     })
                 }).extra_class("ui-portfolio-lead-surface ui-portfolio-lead-surface--compact"))
-                (WorkSection {
+                (Section {
                     content: &self.content.current_proof_section,
-                    variant: WorkSectionVariant::CurrentProof,
+                    variant: SectionVariant::CurrentProof,
                 })
                 div data-work-supporting-proof {
-                    (WorkSection {
+                    (Section {
                         content: &self.content.supporting_cases_section,
-                        variant: WorkSectionVariant::Standard,
+                        variant: SectionVariant::Standard,
                     })
                 }
             }
@@ -93,27 +93,27 @@ impl Render for SupportingTeaserSection<'_> {
     }
 }
 
-struct WorkCards<'a> {
+struct Cards<'a> {
     cards: &'a [WorkCardContent],
 }
 
-impl Render for WorkCards<'_> {
+impl Render for Cards<'_> {
     fn render(&self) -> maud::Markup {
         maud::html! {
             (CardGrid::new(maud::html! {
                 @for card in self.cards {
-                    (WorkCard { content: card })
+                    (Card { content: card })
                 }
             }))
         }
     }
 }
 
-struct WorkCard<'a> {
+struct Card<'a> {
     content: &'a WorkCardContent,
 }
 
-impl Render for WorkCard<'_> {
+impl Render for Card<'_> {
     fn render(&self) -> maud::Markup {
         maud::html! {
             (InsetCard::new(maud::html! {

@@ -1,6 +1,6 @@
 use statum::{machine, state, transition};
 
-use super::{Error, JoinRoom, RoomRole, audit};
+use super::{JoinRoom, RoomRole, audit, failure};
 use domain::chat;
 
 #[state]
@@ -35,7 +35,7 @@ impl JoinRoomFlow<Incoming> {
     pub(super) async fn join(
         self,
         service: &super::Service,
-    ) -> Result<JoinRoomFlow<Audited>, Error> {
+    ) -> Result<JoinRoomFlow<Audited>, failure::Error> {
         let room_exists = service.repo.find_room(&self.room_id()).await?.is_some();
         let room_verified = self.classify_room_lookup(room_exists).require_room()?;
 
@@ -102,7 +102,7 @@ impl JoinRoomFlow<MembershipAdded> {
     async fn record_audit(
         self,
         service: &super::Service,
-    ) -> Result<JoinRoomFlow<Audited>, Error> {
+    ) -> Result<JoinRoomFlow<Audited>, failure::Error> {
         service
             .audit
             .record(service.audit_entry(
@@ -122,10 +122,10 @@ pub(super) enum RoomLookupOutcome {
 }
 
 impl RoomLookupOutcome {
-    pub(super) fn require_room(self) -> Result<JoinRoomFlow<RoomVerified>, Error> {
+    pub(super) fn require_room(self) -> Result<JoinRoomFlow<RoomVerified>, failure::Error> {
         match self {
             Self::Found(found) => Ok(found),
-            Self::Missing => Err(Error::RoomNotFound),
+            Self::Missing => Err(failure::Error::RoomNotFound),
         }
     }
 }
@@ -148,7 +148,7 @@ mod tests {
     fn classify_room_lookup_rejects_missing_room() {
         let incoming = JoinRoomFlow::<Incoming>::from_command(command());
         let result = incoming.classify_room_lookup(false).require_room();
-        assert!(matches!(result, Err(Error::RoomNotFound)));
+        assert!(matches!(result, Err(failure::Error::RoomNotFound)));
     }
 
     #[test]

@@ -1,7 +1,7 @@
 use infra::crypto::KeyMaterial;
 use nutype::nutype;
 use serde::Deserialize;
-use snafu::prelude::*;
+use snafu::{ResultExt, Snafu};
 
 const SESSION_CLEANUP_INTERVAL_SECS_DEFAULT: u64 = 3600;
 const INTEGRATION_TOKEN_REFRESH_INTERVAL_SECS_DEFAULT: u64 = 900;
@@ -32,12 +32,12 @@ pub(crate) enum Error {
 #[derive(Clone, Debug)]
 pub(crate) struct Config {
     pub infra: infra::config::Infra,
-    pub http: HttpConfig,
-    pub sensitive: SensitiveConfig,
+    pub http: Http,
+    pub sensitive: Sensitive,
 }
 
 #[derive(Clone, Debug)]
-pub struct HttpConfig {
+pub struct Http {
     pub host: HostName,
     pub port: u16,
     pub session_secret: Vec<u8>,
@@ -45,7 +45,7 @@ pub struct HttpConfig {
 }
 
 #[derive(Clone, Debug)]
-pub struct SensitiveConfig {
+pub struct Sensitive {
     pub data_encryption_keys: Vec<KeyMaterial>,
     pub active_data_key_id: domain::sensitive::KeyId,
     pub disabled_data_key_ids: Vec<domain::sensitive::KeyId>,
@@ -58,11 +58,11 @@ pub struct SensitiveConfig {
     pub operator_emails: Vec<domain::user::Email>,
     pub provider_stub_port: u16,
     pub provider_stub_failure_mode: SensitiveProviderStubFailureMode,
-    pub sandbox: SensitiveSandboxConfig,
+    pub sandbox: SensitiveSandbox,
 }
 
 #[derive(Clone, Debug)]
-pub struct SensitiveSandboxConfig {
+pub struct SensitiveSandbox {
     pub base_url: Option<String>,
     pub client_id: Option<String>,
     pub client_secret: Option<String>,
@@ -70,7 +70,7 @@ pub struct SensitiveSandboxConfig {
     pub retry_backoff_secs: u64,
 }
 
-impl HttpConfig {
+impl Http {
     pub fn from_env() -> Result<Self> {
         let host = required_env("HOST")?;
         let port = parse_port(&required_env("PORT")?)?;
@@ -86,7 +86,7 @@ impl HttpConfig {
     }
 }
 
-impl SensitiveConfig {
+impl Sensitive {
     pub fn from_env(http_port: u16) -> Result<Self> {
         let (data_encryption_keys, active_data_key_id) = data_encryption_config_from_env()?;
         let disabled_data_key_ids = key_id_list_from_env("DISABLED_DATA_KEY_IDS")?;
@@ -111,7 +111,7 @@ impl SensitiveConfig {
         let operator_emails = email_list_from_env("SENSITIVE_OPERATOR_EMAILS")?;
         let provider_stub_port = provider_stub_port_from_env(http_port)?;
         let provider_stub_failure_mode = provider_stub_failure_mode_from_env()?;
-        let sandbox = SensitiveSandboxConfig {
+        let sandbox = SensitiveSandbox {
             base_url: optional_env("SENSITIVE_PROVIDER_BASE_URL")?,
             client_id: optional_env("SENSITIVE_SANDBOX_CLIENT_ID")?,
             client_secret: optional_env("SENSITIVE_SANDBOX_CLIENT_SECRET")?,
@@ -488,8 +488,8 @@ pub struct HostName(String);
 impl Config {
     pub fn load() -> Result<Self> {
         let infra = infra::config::Infra::from_env().context(LoadInfraConfigSnafu)?;
-        let http = HttpConfig::from_env()?;
-        let sensitive = SensitiveConfig::from_env(http.port)?;
+        let http = Http::from_env()?;
+        let sensitive = Sensitive::from_env(http.port)?;
 
         Ok(Self {
             infra,

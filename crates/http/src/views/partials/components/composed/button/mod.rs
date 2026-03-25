@@ -95,8 +95,10 @@ pub(crate) fn head_styles() -> maud::Markup {
     crate::views::scoped::style(STYLES)
 }
 
-pub use attr::DataAttr;
+pub use attr::Data as DataAttr;
 pub use component::Button;
 pub use role::Role;
-pub use row::{Row, RowDensity, RowFrame, RowNarrowLayout};
+pub use row::{
+    Density as RowDensity, Frame as RowFrame, NarrowLayout as RowNarrowLayout, Row,
+};
 pub use variant::Variant;

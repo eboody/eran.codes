@@ -313,7 +313,7 @@ impl BadgeKind {
 }
 
 #[derive(Clone, Copy, Debug, Default)]
-pub enum PillVariant {
+pub enum Variant {
     #[default]
     Plain,
     Method(MethodKind),
@@ -325,7 +325,7 @@ pub enum PillVariant {
     Badge(BadgeKind),
 }
 
-impl PillVariant {
+impl Variant {
     fn classes(self) -> Vec<&'static str> {
         match self {
             Self::Plain => Vec::new(),
@@ -344,7 +344,7 @@ impl PillVariant {
 pub struct Pill {
     pub text: Text,
     #[builder(default)]
-    pub variant: PillVariant,
+    pub variant: Variant,
 }
 
 impl Pill {
@@ -353,7 +353,7 @@ impl Pill {
         let kind = LevelKind::try_from(&text).unwrap_or(LevelKind::Info);
         Self {
             text,
-            variant: PillVariant::Level(kind),
+            variant: Variant::Level(kind),
         }
     }
 
@@ -362,7 +362,7 @@ impl Pill {
         let kind = MethodKind::try_from(&text).unwrap_or(MethodKind::Other);
         Self {
             text,
-            variant: PillVariant::Method(kind),
+            variant: Variant::Method(kind),
         }
     }
 
@@ -371,7 +371,7 @@ impl Pill {
         let kind = StatusKind::from(&text);
         Self {
             text,
-            variant: PillVariant::Status(kind),
+            variant: Variant::Status(kind),
         }
     }
 
@@ -379,7 +379,7 @@ impl Pill {
         let text = text.into();
         Self {
             text,
-            variant: PillVariant::Path,
+            variant: Variant::Path,
         }
     }
 
@@ -387,7 +387,7 @@ impl Pill {
         let text = text.into();
         Self {
             text,
-            variant: PillVariant::Target,
+            variant: Variant::Target,
         }
     }
 
@@ -395,7 +395,7 @@ impl Pill {
         let text = text.into();
         Self {
             text,
-            variant: PillVariant::Fields,
+            variant: Variant::Fields,
         }
     }
 
@@ -403,7 +403,7 @@ impl Pill {
         let text = text.into();
         Self {
             text,
-            variant: PillVariant::Badge(kind),
+            variant: Variant::Badge(kind),
         }
     }
 }

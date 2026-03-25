@@ -121,7 +121,7 @@ impl Render for Layout<'_> {
         let nav_bar = nav::bar(self.nav_mode, self.current_route, self.user.as_ref());
         let body_content = maud::html! {
             (nav_bar)
-            (crate::views::partials::Error)
+            (crate::views::partials::transport_error::Error)
             (self.content.clone())
         };
         maud::html! {

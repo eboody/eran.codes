@@ -1,6 +1,7 @@
 mod bootstrap;
 mod disabled;
-mod error;
+#[path = "error.rs"]
+pub mod failure;
 mod rotation;
 mod snapshot;
 mod sync;
@@ -12,15 +13,12 @@ use std::sync::Arc;
 use std::time::{Duration, SystemTime, UNIX_EPOCH};
 
 use async_trait::async_trait;
-use bon::Builder;
+use bon::{Builder, bon};
 use secrecy::SecretString;
 use strum_macros::{AsRefStr, Display};
 
-use disabled::{DisabledClock, DisabledProvider, DisabledRepository};
 use domain::{sensitive, user};
-pub use error::{
-    Error, ProviderFailureKind, ProviderOperation, RepositoryOperation, Result,
-};
+pub use failure::{ProviderFailureKind, ProviderOperation, RepositoryOperation, Result};
 
 const PROVIDER: sensitive::Provider = sensitive::Provider::SyntheticSecureFeed;
 const TOKEN_REFRESH_SKEW: Duration = Duration::from_secs(30);
@@ -250,7 +248,7 @@ pub struct Service {
 }
 
 impl Service {
-    pub fn new(
+    fn new(
         repo: Arc<dyn Repository>,
         provider: Arc<dyn ProviderClient>,
         clock: Arc<dyn Clock>,
@@ -274,14 +272,26 @@ impl Service {
 
     pub fn disabled() -> Self {
         Self::new(
-            Arc::new(DisabledRepository),
-            Arc::new(DisabledProvider),
-            Arc::new(DisabledClock),
+            Arc::new(disabled::Repository),
+            Arc::new(disabled::Provider),
+            Arc::new(disabled::Clock),
         )
     }
 
     pub fn bootstrap_grants(&self) -> &BootstrapGrants {
         &self.bootstrap
+    }
+}
+
+#[bon]
+impl Service {
+    #[builder]
+    pub fn builder(
+        #[builder(setters(name = with_repo))] repo: Arc<dyn Repository>,
+        #[builder(setters(name = with_provider))] provider: Arc<dyn ProviderClient>,
+        #[builder(setters(name = with_clock))] clock: Arc<dyn Clock>,
+    ) -> Self {
+        Self::new(repo, provider, clock)
     }
 }
 

@@ -9,5 +9,5 @@ pub use operations_surface::OperationsSurface;
 pub use request_burst_demo::RequestBurstDemo;
 pub use section_header::SectionHeader;
 pub use sensitive_proof_panel::SensitiveProofPanel;
-pub(crate) use surface_section::{SurfaceSection, SurfaceSectionAttr};
+pub(crate) use surface_section::{Attr, SurfaceSection};
 pub use tab_set_showcase::TabSetShowcase;

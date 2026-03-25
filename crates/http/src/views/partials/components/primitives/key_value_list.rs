@@ -114,7 +114,7 @@ me[data-key-value-layout='metrics-grid'] dd {
 pub struct KeyValueList {
     pub items: Vec<KeyValueItem>,
     #[builder(default)]
-    pub layout: KeyValueListLayout,
+    pub layout: Layout,
 }
 
 #[derive(Clone, Debug, Builder)]
@@ -153,7 +153,7 @@ impl KeyValueValueAttr {
 }
 
 #[derive(Clone, Copy, Debug, Default, PartialEq, Eq)]
-pub enum KeyValueListLayout {
+pub enum Layout {
     #[default]
     Stacked,
     MetricsGrid,
@@ -165,8 +165,8 @@ impl Render for KeyValueList {
             dl
                 data-key-value-list
                 data-key-value-layout=(match self.layout {
-                    KeyValueListLayout::Stacked => "stacked",
-                    KeyValueListLayout::MetricsGrid => "metrics-grid",
+                    Layout::Stacked => "stacked",
+                    Layout::MetricsGrid => "metrics-grid",
                 })
             {
                 (css())
@@ -248,7 +248,7 @@ mod tests {
     fn renders_metrics_grid_layout_flag() {
         let markup = KeyValueList::builder()
             .items(vec![KeyValueItem::text("workers", "24")])
-            .layout(KeyValueListLayout::MetricsGrid)
+            .layout(Layout::MetricsGrid)
             .build()
             .render()
             .into_string();

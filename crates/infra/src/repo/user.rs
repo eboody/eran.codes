@@ -4,17 +4,17 @@ use app::auth;
 use app::user::Repository as AppUserRepository;
 use async_trait::async_trait;
 use domain::user;
-use snafu::prelude::*;
+use snafu::{ResultExt, Snafu};
 use sqlx::{Row, postgres::PgRow};
 
 pub struct SqlxUserRepository {
     pg: sqlx::PgPool,
 }
 
-type RepositoryResult<T> = std::result::Result<T, UserRepositoryError>;
+type RepositoryResult<T> = std::result::Result<T, RepositoryError>;
 
 #[derive(Debug, Snafu)]
-enum UserRepositoryError {
+enum RepositoryError {
     #[snafu(display("could not find user by email"))]
     FindByEmail { source: sqlx::Error },
     #[snafu(display("could not begin create-user transaction"))]
@@ -41,45 +41,47 @@ fn is_email_taken(error: &sqlx::Error) -> bool {
     }
 }
 
-fn map_repository_error(error: UserRepositoryError) -> app::user::Error {
+fn map_repository_error(error: RepositoryError) -> app::user::failure::Error {
     match error {
-        UserRepositoryError::FindByEmail { source } => app::user::Error::query_repository(
-            app::user::RepositoryOperation::FindByEmail,
-            source,
-        ),
-        UserRepositoryError::BeginCreateWithCredentials { source } => {
-            app::user::Error::query_repository(
+        RepositoryError::FindByEmail { source } => {
+            app::user::failure::Error::query_repository(
+                app::user::RepositoryOperation::FindByEmail,
+                source,
+            )
+        }
+        RepositoryError::BeginCreateWithCredentials { source } => {
+            app::user::failure::Error::query_repository(
                 app::user::RepositoryOperation::BeginCreateWithCredentials,
                 source,
             )
         }
-        UserRepositoryError::InsertUser { source } => {
+        RepositoryError::InsertUser { source } => {
             if is_email_taken(&source) {
-                app::user::Error::EmailTaken
+                app::user::failure::Error::EmailTaken
             } else {
-                app::user::Error::query_repository(
+                app::user::failure::Error::query_repository(
                     app::user::RepositoryOperation::InsertUser,
                     source,
                 )
             }
         }
-        UserRepositoryError::InsertCredentials { source } => {
-            app::user::Error::query_repository(
+        RepositoryError::InsertCredentials { source } => {
+            app::user::failure::Error::query_repository(
                 app::user::RepositoryOperation::InsertCredentials,
                 source,
             )
         }
-        UserRepositoryError::CommitCreateWithCredentials { source } => {
-            app::user::Error::query_repository(
+        RepositoryError::CommitCreateWithCredentials { source } => {
+            app::user::failure::Error::query_repository(
                 app::user::RepositoryOperation::CommitCreateWithCredentials,
                 source,
             )
         }
-        UserRepositoryError::DecodeUsername { source } => {
-            app::user::Error::decode_username(source)
+        RepositoryError::DecodeUsername { source } => {
+            app::user::failure::Error::decode_username(source)
         }
-        UserRepositoryError::DecodeEmail { source } => {
-            app::user::Error::decode_email(source)
+        RepositoryError::DecodeEmail { source } => {
+            app::user::failure::Error::decode_email(source)
         }
     }
 }

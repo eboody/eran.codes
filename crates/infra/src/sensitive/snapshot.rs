@@ -35,7 +35,7 @@ impl Repository {
         .fetch_optional(&self.pg)
         .await
         .map_err(|source| {
-            sensitive::Error::query_repository(
+            sensitive::failure::Error::query_repository(
                 RepositoryOperation::LoadIntegrationState,
                 source,
             )
@@ -141,7 +141,7 @@ impl Repository {
         .execute(&self.pg)
         .await
         .map_err(|source| {
-            sensitive::Error::query_repository(
+            sensitive::failure::Error::query_repository(
                 RepositoryOperation::UpsertIntegrationState,
                 source,
             )
@@ -178,7 +178,10 @@ impl Repository {
         .execute(&self.pg)
         .await
         .map_err(|source| {
-            sensitive::Error::query_repository(RepositoryOperation::RecordSyncRun, source)
+            sensitive::failure::Error::query_repository(
+                RepositoryOperation::RecordSyncRun,
+                source,
+            )
         })?;
 
         Ok(())
@@ -196,7 +199,10 @@ impl Repository {
         .fetch_optional(&self.pg)
         .await
         .map_err(|source| {
-            sensitive::Error::query_repository(RepositoryOperation::LoadSnapshot, source)
+            sensitive::failure::Error::query_repository(
+                RepositoryOperation::LoadSnapshot,
+                source,
+            )
         })?;
 
         row.map(|row| {
@@ -204,7 +210,7 @@ impl Repository {
             let provider =
                 provider_raw
                     .parse::<sensitive_domain::Provider>()
-                    .map_err(|_| sensitive::Error::InvalidStoredProvider {
+                    .map_err(|_| sensitive::failure::Error::InvalidStoredProvider {
                         provider: provider_raw.clone(),
                     })?;
             Ok(sensitive::TokenProof::builder()
@@ -241,7 +247,7 @@ impl Repository {
         .bind(sensitive_domain::Provider::SyntheticSecureFeed.as_ref())
         .fetch_optional(&self.pg)
         .await
-        .map_err(|source| sensitive::Error::query_repository(
+        .map_err(|source| sensitive::failure::Error::query_repository(
             RepositoryOperation::LoadSnapshot,
             source,
         ))?;
@@ -266,7 +272,7 @@ impl Repository {
         .fetch_optional(&self.pg)
         .await
         .map_err(|source| {
-            sensitive::Error::query_repository(
+            sensitive::failure::Error::query_repository(
                 RepositoryOperation::LoadIntegrationState,
                 source,
             )
@@ -290,7 +296,10 @@ impl Repository {
         .fetch_optional(&self.pg)
         .await
         .map_err(|source| {
-            sensitive::Error::query_repository(RepositoryOperation::LoadKeyCustody, source)
+            sensitive::failure::Error::query_repository(
+                RepositoryOperation::LoadKeyCustody,
+                source,
+            )
         })?;
 
         row.map(mapping::rotation_run_from_row).transpose()
@@ -304,7 +313,9 @@ impl Repository {
         let rows = sqlx::query(query)
             .fetch_all(&self.pg)
             .await
-            .map_err(|source| sensitive::Error::query_repository(operation, source))?;
+            .map_err(|source| {
+                sensitive::failure::Error::query_repository(operation, source)
+            })?;
 
         rows.into_iter()
             .map(|row| {
@@ -359,7 +370,7 @@ impl Repository {
             .fetch_one(&self.pg)
             .await
             .map_err(|source| {
-                sensitive::Error::query_repository(
+                sensitive::failure::Error::query_repository(
                     RepositoryOperation::LoadKeyCustody,
                     source,
                 )
@@ -409,7 +420,7 @@ impl Repository {
         .fetch_all(&self.pg)
         .await
         .map_err(|source| {
-            sensitive::Error::query_repository(RepositoryOperation::LoadSnapshot, source)
+            sensitive::failure::Error::query_repository(RepositoryOperation::LoadSnapshot, source)
         })?;
 
         rows.into_iter()
