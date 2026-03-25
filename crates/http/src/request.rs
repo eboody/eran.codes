@@ -74,8 +74,13 @@ pub fn set_sse_tab_id(sse_tab_id: impl Into<SseTabId>) {
 fn context_from_request(req: &http::Request<Body>, key: &Key) -> Context {
     let cookies = req.extensions().get::<Cookies>();
     let session_id = cookies.map(|cookies| ensure_session_id(cookies, key));
+    let sse_tab_id = sse_tab_id_from_uri(req.uri());
 
-    crate::request_context_flow::IncomingFlow::new(req.headers().clone(), session_id)
+    crate::request_context_flow::IncomingFlow::new(
+        req.headers().clone(),
+        session_id,
+        sse_tab_id,
+    )
         .resolve_headers()
         .build_context()
         .into_context()
@@ -126,6 +131,23 @@ pub(crate) fn client_ip_from_headers(headers: &http::HeaderMap) -> Option<Client
     forwarded.or_else(|| {
         header_value(headers, http::header::HeaderName::from_static("x-real-ip"))
             .map(ClientIp::new)
+    })
+}
+
+fn sse_tab_id_from_uri(uri: &http::Uri) -> Option<SseTabId> {
+    uri.query().and_then(|query| {
+        query.split('&').find_map(|segment| {
+            let (name, value) = segment.split_once('=')?;
+            if !matches!(name, "sseTabId" | "sse_tab_id") {
+                return None;
+            }
+            let decoded = urlencoding::decode(value).ok()?;
+            let value = decoded.trim();
+            if value.is_empty() {
+                return None;
+            }
+            Some(SseTabId::new(value.to_string()))
+        })
     })
 }
 
@@ -242,6 +264,35 @@ mod tests {
         let context = context_from_request(&req, &key);
 
         assert_eq!(context.session_id.map(|value| value.to_string()), None);
+    }
+
+    #[test]
+    fn context_reads_sse_tab_id_from_query() {
+        let key = Key::generate();
+        let req = http::Request::builder()
+            .uri("/partials/sensitive-proof?sseTabId=tab-from-query")
+            .body(Body::empty())
+            .unwrap();
+
+        let context = context_from_request(&req, &key);
+
+        assert_eq!(
+            context.sse_tab_id.map(|value| value.to_string()).as_deref(),
+            Some("tab-from-query")
+        );
+    }
+
+    #[test]
+    fn context_ignores_empty_sse_tab_id_query() {
+        let key = Key::generate();
+        let req = http::Request::builder()
+            .uri("/partials/sensitive-proof?sseTabId=%20%20")
+            .body(Body::empty())
+            .unwrap();
+
+        let context = context_from_request(&req, &key);
+
+        assert_eq!(context.sse_tab_id.map(|value| value.to_string()), None);
     }
 
     #[tokio::test]

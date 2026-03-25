@@ -203,3 +203,37 @@ fn filters_request_flows_to_active_tab_id() {
     assert_eq!(flows.len(), 1);
     assert_eq!(flows[0].id.to_string(), "req-tab-a");
 }
+
+#[test]
+fn filters_request_start_only_flows_to_active_tab_id() {
+    let entries = vec![
+        entry(
+            "12:00:00",
+            "demo.request.diagnostic",
+            "request.start",
+            vec![
+                ("request_id", "req-tab-a"),
+                ("method", "GET"),
+                ("path", "/partials/sensitive-proof"),
+                ("sse_tab_id", "tab-a"),
+            ],
+        ),
+        entry(
+            "12:00:01",
+            "demo.request.diagnostic",
+            "request.start",
+            vec![
+                ("request_id", "req-tab-b"),
+                ("method", "GET"),
+                ("path", "/partials/sensitive-proof"),
+                ("sse_tab_id", "tab-b"),
+            ],
+        ),
+    ];
+
+    let flows = request_flows(&entries, 20, Some(&SseTabId::new("tab-a")));
+
+    assert_eq!(flows.len(), 1);
+    assert_eq!(flows[0].id.to_string(), "req-tab-a");
+    assert_eq!(flows[0].title.to_string(), "GET /partials/sensitive-proof");
+}

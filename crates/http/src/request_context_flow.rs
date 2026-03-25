@@ -3,7 +3,7 @@ use statum::{machine, state, transition};
 
 use crate::{
     request,
-    types::{ClientIp, RequestId, SessionId, UserAgent},
+    types::{ClientIp, RequestId, SessionId, SseTabId, UserAgent},
 };
 
 #[derive(Clone, Debug)]
@@ -22,6 +22,7 @@ pub enum RequestContextState {
 pub(crate) struct RequestContextFlow<RequestContextState> {
     headers: http::HeaderMap,
     session_id: Option<SessionId>,
+    sse_tab_id: Option<SseTabId>,
     request_id: Option<RequestId>,
     client_ip: Option<ClientIp>,
     user_agent: Option<UserAgent>,
@@ -29,10 +30,15 @@ pub(crate) struct RequestContextFlow<RequestContextState> {
 }
 
 impl RequestContextFlow<Incoming> {
-    pub(crate) fn new(headers: http::HeaderMap, session_id: Option<SessionId>) -> Self {
+    pub(crate) fn new(
+        headers: http::HeaderMap,
+        session_id: Option<SessionId>,
+        sse_tab_id: Option<SseTabId>,
+    ) -> Self {
         RequestContextFlow::<Incoming>::builder()
             .headers(headers)
             .session_id(session_id)
+            .sse_tab_id(sse_tab_id)
             .request_id(None)
             .client_ip(None)
             .user_agent(None)
@@ -57,13 +63,14 @@ impl RequestContextFlow<HeadersResolved> {
     pub(crate) fn build_context(self) -> RequestContextFlow<Built> {
         let request_id = self.request_id.clone();
         let session_id = self.session_id.clone();
+        let sse_tab_id = self.sse_tab_id.clone();
         let client_ip = self.client_ip.clone();
         let user_agent = self.user_agent.clone();
         let kind = self.kind;
         let context = crate::request::Context {
             request_id,
             session_id,
-            sse_tab_id: None,
+            sse_tab_id,
             user_id: None,
             client_ip,
             user_agent,
@@ -91,11 +98,28 @@ mod tests {
         let mut headers = http::HeaderMap::new();
         headers.insert("datastar-request", http::HeaderValue::from_static("1"));
 
-        let built = IncomingFlow::new(headers, None)
+        let built = IncomingFlow::new(headers, None, None)
             .resolve_headers()
             .build_context()
             .into_context();
 
         assert!(matches!(built.kind, crate::request::Kind::Datastar));
+    }
+
+    #[test]
+    fn build_context_preserves_prefilled_sse_tab_id() {
+        let built = IncomingFlow::new(
+            http::HeaderMap::new(),
+            None,
+            Some(crate::types::SseTabId::new("tab-prefilled")),
+        )
+        .resolve_headers()
+        .build_context()
+        .into_context();
+
+        assert_eq!(
+            built.sse_tab_id.map(|value| value.to_string()).as_deref(),
+            Some("tab-prefilled")
+        );
     }
 }
