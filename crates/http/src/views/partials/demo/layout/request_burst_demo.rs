@@ -59,6 +59,7 @@ me [data-burst-selected] strong {
 me [data-burst-actions] {
   align-items: center;
   gap: var(--space-2) var(--space-3);
+  min-width: 0;
 }
 
 me [data-burst-actions-note] {
@@ -221,7 +222,10 @@ impl Render for RequestBurstDemo {
                         strong data-burst-count-label { (self.default_requests) }
                         " requests"
                     }
-                    div class="ui-button-row" data-burst-actions {
+                    div
+                        class="ui-button-row"
+                        data-burst-actions
+                        data-button-row-frame="contained" {
                         (partials::button::Button::builder()
                             .label(Text::from("Send burst"))
                             .data_attrs(vec![partials::button::DataAttr::flag("data-burst-run")])
@@ -292,5 +296,6 @@ mod tests {
         assert!(markup.contains("/partials/request-burst-probe"));
         assert!(markup.contains("u-demo-result-card"));
         assert!(markup.contains("data-key-value-layout=\"metrics-grid\""));
+        assert!(markup.contains("data-button-row-frame=\"contained\""));
     }
 }
