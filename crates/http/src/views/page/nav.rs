@@ -17,7 +17,10 @@ pub(super) fn bar(
     current_route: Option<Route>,
     user: Option<&UserNav>,
 ) -> partials::components::NavBar {
-    let (primary_links, meta_links) = portfolio_links(current_route);
+    let (primary_links, meta_links) = match nav_mode {
+        NavMode::Auth => auth_links(),
+        NavMode::App | NavMode::Portfolio => portfolio_links(current_route),
+    };
 
     partials::components::NavBar::builder()
         .brand(brand())
@@ -101,20 +104,39 @@ fn portfolio_links(
     (primary_links, meta_links)
 }
 
+fn auth_links() -> (
+    partials::components::NavLinkList,
+    Option<partials::components::NavLinkList>,
+) {
+    (
+        partials::components::NavLinkList::builder()
+            .role(partials::components::NavLinkListRole::Primary)
+            .children(vec![])
+            .build(),
+        None,
+    )
+}
+
 fn is_primary_portfolio_nav_href(href: &str) -> bool {
     href == Route::Lab.as_str()
         || href == Route::WorkSensitiveSync.as_str()
+        || href == Route::Work.as_str()
         || href == Route::OpenSource.as_str()
 }
 
 fn auth(
-    _nav_mode: NavMode,
+    nav_mode: NavMode,
     current_route: Option<Route>,
     user: Option<&UserNav>,
 ) -> partials::components::NavAuth {
     match user {
         Some(user) => partials::components::NavAuth::SignedIn(signed_in(user)),
-        None => partials::components::NavAuth::Guest(guest_auth(current_route)),
+        None => match nav_mode {
+            NavMode::Auth => partials::components::NavAuth::Switch(auth_switch(current_route)),
+            NavMode::App | NavMode::Portfolio => {
+                partials::components::NavAuth::Guest(guest_auth(current_route))
+            }
+        },
     }
 }
 
@@ -138,6 +160,19 @@ fn guest_auth(current_route: Option<Route>) -> partials::components::NavGuestAut
         .build()
 }
 
+fn auth_switch(current_route: Option<Route>) -> partials::components::NavGuestSwitch {
+    let (label, href) = match current_route {
+        Some(Route::Login) => ("Create account", Route::Register.as_str()),
+        Some(Route::Register) => ("Sign in", Route::Login.as_str()),
+        _ => ("Sign in", Route::Login.as_str()),
+    };
+
+    partials::components::NavGuestSwitch::builder()
+        .label(Text::from(label))
+        .href(Text::from(href))
+        .build()
+}
+
 fn compact_label_for_href(href: &str) -> Option<Text> {
     match href {
         path if path == Route::Lab.as_str() => Some(Text::from("Live")),
@@ -145,11 +180,6 @@ fn compact_label_for_href(href: &str) -> Option<Text> {
         path if path == Route::Work.as_str() => Some(Text::from("Archive")),
         path if path == Route::OpenSource.as_str() => Some(Text::from("Code")),
         path if path == Route::ResumeText.as_str() => Some(Text::from("Resume")),
-        "https://github.com/eboody/eran.codes" => Some(Text::from("GitHub")),
-        "https://www.linkedin.com/search/results/all/?keywords=Eran%20Boodnero" => {
-            Some(Text::from("LinkedIn"))
-        }
-        "mailto:eboodnero@gmail.com" => Some(Text::from("Contact")),
         _ => None,
     }
 }
@@ -177,11 +207,11 @@ mod tests {
 
         assert_eq!(
             primary_labels,
-            vec!["Live Proof", "Current Proof", "Open Source"]
+            vec!["Live Proof", "Current Proof", "Archive", "Open Source"]
         );
         assert_eq!(
             meta_labels,
-            vec!["Supporting Proof", "Resume", "GitHub", "LinkedIn", "Contact"]
+            vec!["Resume"]
         );
     }
 
@@ -194,5 +224,22 @@ mod tests {
         assert!(markup.contains("class=\"button secondary\""));
         assert!(markup.contains("href=\"/login\""));
         assert!(markup.contains("href=\"/register\""));
+    }
+
+    #[test]
+    fn auth_mode_uses_single_contextual_switch_action() {
+        let login_markup = auth(NavMode::Auth, Some(Route::Login), None)
+            .render()
+            .into_string();
+        let register_markup = auth(NavMode::Auth, Some(Route::Register), None)
+            .render()
+            .into_string();
+
+        assert!(login_markup.contains("data-nav-auth-switch"));
+        assert!(login_markup.contains("href=\"/register\""));
+        assert!(!login_markup.contains("data-nav-auth-action"));
+        assert!(register_markup.contains("data-nav-auth-switch"));
+        assert!(register_markup.contains("href=\"/login\""));
+        assert!(!register_markup.contains("data-nav-auth-action"));
     }
 }

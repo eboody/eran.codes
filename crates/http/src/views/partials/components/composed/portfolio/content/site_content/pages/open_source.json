@@ -3,12 +3,12 @@
   "hero": {
     "eyebrow": "Open Source",
     "title": "Public Rust libraries that show how I model APIs and invariants.",
-    "summary": "Typestate, nested-enum ergonomics, and namespace linting turned into concrete Rust crates.",
+    "summary": "Published Rust crates that show how I shape APIs, invariants, and namespace discipline.",
     "badges": [],
     "action_refs": []
   },
   "crate_section": {
     "title": "Open-source crate deep dives",
-    "subtitle": "Select a crate to inspect the API and code behind the design decisions."
+    "subtitle": "Start with the lead crate, then scan the other published libraries."
   }
 }

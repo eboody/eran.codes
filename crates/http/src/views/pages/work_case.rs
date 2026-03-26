@@ -18,7 +18,9 @@ impl Render for WorkCase {
 
         let body = partials::components::portfolio::Page {
             content: maud::html! {
-                (partials::components::portfolio::WorkCaseDetail { content })
+                (partials::components::portfolio::WorkCaseDetail {
+                    content,
+                })
             },
         }
         .render();
@@ -28,5 +30,26 @@ impl Render for WorkCase {
             self.slug.route(),
             self.user.clone(),
         )
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn sensitive_sync_route_uses_current_proof_detail_layout() {
+        let markup = WorkCase::builder()
+            .slug(partials::components::portfolio::content::WorkCaseSlug::SensitiveSync)
+            .build()
+            .render()
+            .into_string();
+
+        assert!(markup.contains("ui-portfolio-work-case-flow"));
+        assert!(markup.contains("ui-portfolio-hero"));
+        assert!(markup.contains("ui-portfolio-current-proof-detail"));
+        assert!(markup.contains("ui-portfolio-current-proof-stack"));
+        assert!(markup.contains("Boundary and scope"));
+        assert!(!markup.contains("class=\"ui-portfolio-card-grid ui-portfolio-case-grid\""));
     }
 }

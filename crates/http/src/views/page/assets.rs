@@ -1,7 +1,7 @@
 use maud::Markup;
 
 const APP_CSS_ASSET_URL: &str = "/static/app.css?v=20260320-tabs";
-const LOCAL_TABS_ASSET_URL: &str = "/static/local-tabs.js?v=20260320-tabs";
+const LOCAL_TABS_ASSET_URL: &str = "/static/local-tabs.js?v=20260325-lab-tabs";
 
 pub(super) fn head(title: &str) -> Markup {
     maud::html! {

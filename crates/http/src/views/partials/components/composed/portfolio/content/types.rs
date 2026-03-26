@@ -43,6 +43,15 @@ impl WorkCaseSlug {
             Self::SensitiveSync => Route::WorkSensitiveSync.as_str(),
         }
     }
+
+    pub const fn detail_layout(self) -> WorkCaseDetailLayout {
+        match self {
+            Self::SensitiveSync => WorkCaseDetailLayout::CurrentProof,
+            Self::ChatRealtime | Self::CommandSse | Self::OperationalVisibility => {
+                WorkCaseDetailLayout::ArchiveGrid
+            }
+        }
+    }
 }
 
 #[derive(Clone, Copy, Debug, Default, PartialEq, Eq, Deserialize)]
@@ -278,9 +287,7 @@ pub struct PortfolioHomeContent {
 #[derive(Clone, Debug, Deserialize)]
 pub struct WorkIndexContent {
     pub page_title: Text,
-    pub eyebrow: Text,
-    pub title: Text,
-    pub summary: Text,
+    pub hero: PortfolioHeroContent,
     pub current_proof_section: WorkSectionContent,
     pub supporting_cases_section: WorkSectionContent,
     pub archive_details: ArchiveDetailsContent,
@@ -300,18 +307,22 @@ pub struct CaseListSection {
     pub items: Vec<Text>,
 }
 
+#[derive(Clone, Copy, Debug, PartialEq, Eq, Deserialize)]
+#[serde(rename_all = "snake_case")]
+pub enum WorkCaseDetailLayout {
+    ArchiveGrid,
+    CurrentProof,
+}
+
 #[derive(Clone, Debug, Deserialize)]
 pub struct WorkCaseContent {
     pub page_title: Text,
-    pub eyebrow: Text,
-    pub title: Text,
-    pub summary: Text,
+    pub hero: PortfolioHeroContent,
+    pub detail_layout: WorkCaseDetailLayout,
     pub challenge: CaseListSection,
     pub implementation: CaseListSection,
     pub outcomes: CaseListSection,
     pub stack: CaseListSection,
-    #[serde(default)]
-    pub actions: Vec<CmsActionLink>,
 }
 
 #[derive(Clone, Debug, Deserialize)]

@@ -1,10 +1,10 @@
 use maud::Render;
 
 use crate::views::partials::components::portfolio::content::{
-    ArchiveDetailsContent, ArchivedWorkCaseContent, WorkCaseContent,
+    ArchiveDetailsContent, ArchivedWorkCaseContent, WorkCaseContent, WorkCaseDetailLayout,
 };
 
-use super::{CardGrid, InsetCard, LeadCopy, SectionActions, SectionCopy, Surface};
+use super::{CardGrid, InsetCard, PortfolioHero, SectionActions, SectionCopy, Surface};
 
 pub struct Work<'a> {
     pub content: &'a WorkCaseContent,
@@ -13,20 +13,13 @@ pub struct Work<'a> {
 impl Render for Work<'_> {
     fn render(&self) -> maud::Markup {
         maud::html! {
-            (Surface::section(maud::html! {
-                (LeadCopy {
-                    eyebrow: &self.content.eyebrow,
-                    title: &self.content.title,
-                    summary: &self.content.summary,
+            section class="ui-portfolio-hero-flow ui-portfolio-work-case-flow" {
+                (PortfolioHero {
+                    content: &self.content.hero,
+                    aside: None,
                 })
-                @if !self.content.actions.is_empty() {
-                    (SectionActions {
-                        actions: &self.content.actions,
-                    })
-                }
-            }).extra_class("ui-portfolio-lead-surface ui-portfolio-lead-surface--compact"))
-
-            (case_sections(self.content))
+                (case_sections(self.content))
+            }
         }
     }
 }
@@ -77,12 +70,12 @@ impl Render for ArchivedWork<'_> {
                     (self.entry_label)
                 }
                 (Surface::section(maud::html! {
-                    p class="ui-portfolio-eyebrow" { (&self.content.eyebrow) }
-                    h3 { (&self.content.title) }
-                    p class="ui-portfolio-summary" { (&self.content.summary) }
-                    @if !self.content.actions.is_empty() {
+                    p class="ui-portfolio-eyebrow" { (&self.content.hero.eyebrow) }
+                    h3 { (&self.content.hero.title) }
+                    p class="ui-portfolio-summary" { (&self.content.hero.summary) }
+                    @if !self.content.hero.actions.is_empty() {
                         (SectionActions {
-                            actions: &self.content.actions,
+                            actions: &self.content.hero.actions,
                         })
                     }
                 }).extra_class("ui-portfolio-lead-surface ui-portfolio-lead-surface--compact"))
@@ -92,6 +85,13 @@ impl Render for ArchivedWork<'_> {
 }
 
 fn case_sections(content: &WorkCaseContent) -> maud::Markup {
+    match content.detail_layout {
+        WorkCaseDetailLayout::CurrentProof => current_proof_sections(content),
+        WorkCaseDetailLayout::ArchiveGrid => archive_grid_sections(content),
+    }
+}
+
+fn archive_grid_sections(content: &WorkCaseContent) -> maud::Markup {
     let sections = [
         (&content.challenge.title, &content.challenge.items),
         (&content.implementation.title, &content.implementation.items),
@@ -112,5 +112,48 @@ fn case_sections(content: &WorkCaseContent) -> maud::Markup {
                 }).extra_class("ui-portfolio-case-section"))
             }
         }).extra_class("ui-portfolio-case-grid"))
+    }
+}
+
+fn current_proof_sections(content: &WorkCaseContent) -> maud::Markup {
+    maud::html! {
+        section class="ui-portfolio-current-proof-detail" {
+            div class="ui-portfolio-current-proof-main" {
+                (InsetCard::new(maud::html! {
+                    h2 { (&content.outcomes.title) }
+                    ul class="ui-portfolio-list" {
+                        @for item in &content.outcomes.items {
+                            li { (item) }
+                        }
+                    }
+                }).extra_class("ui-portfolio-case-section ui-portfolio-case-section--lead"))
+                (InsetCard::new(maud::html! {
+                    h2 { (&content.implementation.title) }
+                    ul class="ui-portfolio-list" {
+                        @for item in &content.implementation.items {
+                            li { (item) }
+                        }
+                    }
+                }).extra_class("ui-portfolio-case-section"))
+            }
+            aside class="ui-portfolio-current-proof-rail" {
+                (InsetCard::new(maud::html! {
+                    h2 { "Boundary and scope" }
+                    ul class="ui-portfolio-list" {
+                        @for item in &content.challenge.items {
+                            li { (item) }
+                        }
+                    }
+                }).extra_class("ui-portfolio-case-section ui-portfolio-current-proof-rail-card"))
+                (InsetCard::new(maud::html! {
+                    h2 { (&content.stack.title) }
+                    ul class="ui-portfolio-badges ui-portfolio-current-proof-stack" {
+                        @for item in &content.stack.items {
+                            li { (item) }
+                        }
+                    }
+                }).extra_class("ui-portfolio-case-section ui-portfolio-current-proof-rail-card"))
+            }
+        }
     }
 }

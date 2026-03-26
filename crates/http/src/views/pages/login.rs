@@ -52,7 +52,9 @@ impl Render for Login<'_> {
         let content = maud::html! {
             (partials::AuthShell::builder()
                 .title(Text::from("Sign in"))
-                .summary(Text::from("Use your email address to continue."))
+                .summary(Text::from(
+                    "Use your email address to continue into the live app.",
+                ))
                 .maybe_message(self.message.map(Text::from))
                 .body(body)
                 .footer(footer)
@@ -63,6 +65,7 @@ impl Render for Login<'_> {
         page::Layout::builder()
             .title("Sign in")
             .content(content)
+            .nav_mode(page::NavMode::Auth)
             .current_route(Route::Login)
             .maybe_with_user(self.user.clone())
             .build()
@@ -77,10 +80,11 @@ mod tests {
     use super::*;
 
     #[test]
-    fn login_page_marks_sign_in_nav_action_as_primary() {
+    fn login_page_uses_compact_auth_nav_switch() {
         let markup = Login::builder().build().render().into_string();
 
-        assert!(markup.contains("<a class=\"button\" data-button href=\"/login\" data-nav-auth-action>Sign in</a>"));
-        assert!(markup.contains("<a class=\"button secondary\" data-button href=\"/register\" data-nav-auth-action>Create account</a>"));
+        assert!(markup.contains("data-nav-layout=\"split\""));
+        assert!(markup.contains("<a data-nav-link data-nav-auth-switch href=\"/register\">Create account</a>"));
+        assert!(!markup.contains("<a data-nav-link data-nav-auth-switch href=\"/login\">Sign in</a>"));
     }
 }

@@ -102,15 +102,9 @@ work_assertions=(
 open_source_assertions=(
   '[data-portfolio-page]'
   '[data-nav-link][href="/open-source"][aria-current="page"]'
-  '[data-portfolio-crate-switcher]'
-  '#portfolio-crate-panel-0 [data-code-block]'
-)
-
-open_source_modum_assertions=(
-  '[data-portfolio-page]'
-  '[data-portfolio-crate-switcher-nav] [data-tab-id="crate_2"][aria-selected="true"]'
-  '#portfolio-crate-panel-2'
-  '#portfolio-crate-panel-2 [data-code-block]'
+  '.ui-portfolio-crate-showcase'
+  '#crate-gallery-statum [data-code-block]'
+  '.ui-open-source-supporting-grid'
 )
 
 lab_assertions=(
@@ -136,10 +130,6 @@ case "$mode" in
     run_case "home-desktop-light" "/" "$desktop_width" "$desktop_height" light "" "" "${home_assertions[@]}"
     run_case "work-desktop-light" "/work" "$desktop_width" "$desktop_height" light "" "" "${work_assertions[@]}"
     run_case "open-source-desktop-light" "/open-source" "$desktop_width" "$desktop_height" light "" "" "${open_source_assertions[@]}"
-    run_case "open-source-modum-desktop-light" "/open-source" "$desktop_width" "$desktop_height" light \
-      '[data-portfolio-crate-switcher-nav] [data-tab-id="crate_2"]' \
-      "" \
-      "${open_source_modum_assertions[@]}"
     run_case "lab-desktop-light" "/lab" "$desktop_width" "$desktop_height" light "" "#operations-surface" "${lab_assertions[@]}"
     run_case "home-mobile-dark" "/" "$mobile_width" "$mobile_height" dark "" "" "${home_assertions[@]}"
     run_case "work-mobile-dark" "/work" "$mobile_width" "$mobile_height" dark "" "" "${work_assertions[@]}"
@@ -150,14 +140,6 @@ case "$mode" in
     run_theme_matrix "home" "/" home_assertions
     run_theme_matrix "work" "/work" work_assertions
     run_theme_matrix "open-source" "/open-source" open_source_assertions
-    run_case "open-source-modum-desktop-light" "/open-source" "$desktop_width" "$desktop_height" light \
-      '[data-portfolio-crate-switcher-nav] [data-tab-id="crate_2"]' \
-      "" \
-      "${open_source_modum_assertions[@]}"
-    run_case "open-source-modum-mobile-dark" "/open-source" "$mobile_width" "$mobile_height" dark \
-      '[data-portfolio-crate-switcher-nav] [data-tab-id="crate_2"]' \
-      "" \
-      "${open_source_modum_assertions[@]}"
     run_case "lab-desktop-light" "/lab" "$desktop_width" "$desktop_height" light "" "#operations-surface" "${lab_assertions[@]}"
     run_case "lab-desktop-dark" "/lab" "$desktop_width" "$desktop_height" dark "" "#operations-surface" "${lab_assertions[@]}"
     run_case "lab-mobile-light" "/lab" "$mobile_width" "$mobile_height" light "" "#operations-surface" "${lab_assertions[@]}"

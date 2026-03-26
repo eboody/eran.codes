@@ -1,10 +1,8 @@
 use maud::Render;
 
-use crate::views::partials::components::portfolio::content::{
-    ArchivedWorkCaseContent, WorkIndexContent,
-};
+use crate::views::partials::components::portfolio::content::{ArchivedWorkCaseContent, WorkIndexContent};
 
-use super::{ArchiveCaseDetailsSection, WorkIndexSection};
+use super::{ArchiveCaseDetailsSection, PortfolioHero, WorkIndexSection};
 
 pub struct WorkFlow<'a> {
     pub content: &'a WorkIndexContent,
@@ -14,13 +12,19 @@ pub struct WorkFlow<'a> {
 impl Render for WorkFlow<'_> {
     fn render(&self) -> maud::Markup {
         maud::html! {
-            (WorkIndexSection {
-                content: self.content,
-            })
-            (ArchiveCaseDetailsSection {
-                intro: &self.content.archive_details,
-                cases: self.archive_cases,
-            })
+            section class="ui-portfolio-hero-flow ui-portfolio-work-flow" {
+                (PortfolioHero {
+                    content: &self.content.hero,
+                    aside: None,
+                })
+                (WorkIndexSection {
+                    content: self.content,
+                })
+                (ArchiveCaseDetailsSection {
+                    intro: &self.content.archive_details,
+                    cases: self.archive_cases,
+                })
+            }
         }
     }
 }
@@ -43,6 +47,7 @@ mod tests {
         .render()
         .into_string();
 
+        assert!(markup.contains("ui-portfolio-work-flow"));
         assert!(markup.contains(content.current_proof_section.title.to_string().as_str()));
         assert!(markup.contains(content.archive_details.title.to_string().as_str()));
         assert!(!markup.contains(content.open_source_teaser.title.to_string().as_str()));

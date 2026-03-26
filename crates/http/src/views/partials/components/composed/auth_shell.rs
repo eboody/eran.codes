@@ -7,13 +7,14 @@ crate::views::scoped::inline_css!(
     r#"
 me {
   display: grid;
-  place-items: start center;
-  padding-top: clamp(0.8rem, 0.55rem + 1vw, 1.4rem);
+  place-items: center;
+  min-block-size: calc(100dvh - clamp(6rem, 5rem + 3vw, 8rem));
+  padding-block: clamp(1rem, 0.7rem + 1vw, 1.5rem) clamp(1.5rem, 1.15rem + 1.1vw, 2.1rem);
 }
 
 me > [data-auth-card] {
   inline-size: min(100%, 34rem);
-  margin-top: clamp(0.9rem, 0.6rem + 0.8vw, 1.35rem);
+  margin-top: 0;
   gap: var(--space-4);
   view-transition-name: auth-shell-card;
 }
@@ -92,6 +93,12 @@ me [data-account-actions] > * {
 }
 
 @media (max-width: 45rem) {
+  me {
+    min-block-size: auto;
+    place-items: start center;
+    padding-block: var(--space-4) var(--space-6);
+  }
+
   me > [data-auth-card] {
     inline-size: 100%;
   }

@@ -17,9 +17,9 @@ pub(crate) use composed::tab_set;
 pub use composed::button::Button;
 pub use composed::{
     AuthShell, AuthShellVariant, DemoResultPlaceholder, NavAuth, NavBar, NavBrand,
-    NavGuestAuth, NavLink, NavLinkList, NavLinkListRole, NavSignedIn, SectionHeader,
-    SectionHeaderDensity, SectionHeaderLevel, SectionHeaderMetaText, StatusCard,
-    StatusCardItem,
+    NavGuestAuth, NavGuestSwitch, NavLink, NavLinkList, NavLinkListRole, NavSignedIn,
+    SectionHeader, SectionHeaderDensity, SectionHeaderLevel, SectionHeaderMetaText,
+    StatusCard, StatusCardItem,
 };
 pub use logs::primitives::EmptyState;
 pub use primitives::{

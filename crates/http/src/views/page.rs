@@ -7,31 +7,6 @@ use maud::{Markup, Render};
 use crate::paths::Route;
 use crate::types::{SseTabId, Text};
 
-crate::views::scoped::inline_css!(
-    r#"
-me > [data-page-section] > :where(header, section, article, div) {
-  transition:
-    opacity var(--motion-standard),
-    transform var(--motion-standard),
-    border-color var(--motion-standard),
-    box-shadow var(--motion-standard);
-}
-
-@starting-style {
-  me > [data-page-section] > :where(header, section, article, div) {
-    opacity: 0;
-    transform: translateY(0.8rem);
-  }
-}
-
-@media (prefers-reduced-motion: reduce) {
-  me > [data-page-section] > :where(header, section, article, div) {
-    transition: none;
-  }
-}
-"#
-);
-
 #[derive(Clone, Debug, Builder)]
 pub struct UserNav {
     pub username: Text,
@@ -80,7 +55,6 @@ impl Render for Frame {
     fn render(&self) -> Markup {
         maud::html! {
             main class=(self.width.class_name()) data-page-frame {
-                (css())
                 (&self.content)
             }
         }
@@ -99,6 +73,7 @@ pub enum NavMode {
     #[default]
     App,
     Portfolio,
+    Auth,
 }
 
 #[derive(Builder)]
@@ -234,9 +209,12 @@ mod tests {
             .into_string();
 
         assert!(markup.contains("Current Proof"));
-        assert!(markup.contains("Supporting Proof"));
+        assert!(markup.contains("Archive"));
         assert!(markup.contains("Live Proof"));
         assert!(markup.contains("/resume.txt"));
+        assert!(!markup.contains("GitHub"));
+        assert!(!markup.contains("LinkedIn"));
+        assert!(!markup.contains("Contact"));
         assert!(!markup.contains(">Work<"));
         assert!(!markup.contains("Live Lab"));
     }
@@ -257,7 +235,28 @@ mod tests {
     }
 
     #[test]
-    fn current_proof_and_supporting_proof_nav_entries_activate_separately() {
+    fn auth_nav_mode_hides_portfolio_links() {
+        let markup = Layout::builder()
+            .title("Example")
+            .content(maud::html! { main {} })
+            .nav_mode(NavMode::Auth)
+            .current_route(Route::Login)
+            .build()
+            .render()
+            .into_string();
+
+        assert!(!markup.contains("Live Proof"));
+        assert!(!markup.contains("Current Proof"));
+        assert!(!markup.contains("/resume.txt"));
+        assert!(markup.contains("data-nav-layout=\"split\""));
+        assert!(markup.contains("data-nav-auth-switch"));
+        assert!(markup.contains("href=\"/register\""));
+        assert!(!markup.contains("<a class=\"button\" data-button href=\"/login\" data-nav-auth-action>Sign in</a>"));
+        assert!(!markup.contains("<a class=\"button\" data-button href=\"/register\" data-nav-auth-action>Create account</a>"));
+    }
+
+    #[test]
+    fn current_proof_and_archive_nav_entries_activate_separately() {
         let current_proof_markup = Layout::builder()
             .title("Example")
             .content(maud::html! { main {} })
@@ -274,7 +273,7 @@ mod tests {
             .into_string();
 
         assert!(current_proof_markup.contains("Current Proof"));
-        assert!(supporting_markup.contains("Supporting Proof"));
+        assert!(supporting_markup.contains("Archive"));
         assert!(portfolio_link_is_active(
             Some(Route::WorkSensitiveSync),
             Route::WorkSensitiveSync.as_str()

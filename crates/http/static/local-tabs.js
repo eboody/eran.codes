@@ -18,6 +18,27 @@
     return panel;
   };
 
+  const tabValueForHash = (root, tabs) => {
+    const hash = window.location.hash;
+    if (typeof hash !== 'string' || hash.length <= 1) return null;
+
+    let targetId = hash.slice(1);
+    try {
+      targetId = decodeURIComponent(targetId);
+    } catch {
+      return null;
+    }
+
+    const target = document.getElementById(targetId);
+    if (!(target instanceof HTMLElement) || !root.contains(target)) return null;
+
+    const panel = target.closest('[data-local-tab-panel]');
+    if (!(panel instanceof HTMLElement) || !root.contains(panel)) return null;
+
+    const matchingTab = tabs.find((tab) => panelForTab(root, tab) === panel);
+    return matchingTab?.dataset.localTabValue || null;
+  };
+
   const animatePanelEnter = (panel) => {
     if (!isPanel(panel)) return;
 
@@ -88,6 +109,11 @@
       select(selectedValue);
     }
 
+    const hashSelectedValue = tabValueForHash(root, tabs);
+    if (hashSelectedValue) {
+      select(hashSelectedValue);
+    }
+
     tabs.forEach((tab, index) => {
       tab.addEventListener('click', () => {
         const value = tab.dataset.localTabValue;
@@ -125,6 +151,13 @@
           select(nextValue, true, true);
         }
       });
+    });
+
+    window.addEventListener('hashchange', () => {
+      const nextValue = tabValueForHash(root, tabs);
+      if (nextValue) {
+        select(nextValue, false, true);
+      }
     });
   };
 

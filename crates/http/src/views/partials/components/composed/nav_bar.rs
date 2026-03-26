@@ -15,7 +15,7 @@ me {
   top: var(--nav-sticky-offset);
   z-index: 20;
   margin-top: var(--nav-sticky-offset);
-  margin-bottom: clamp(0.8rem, 0.55rem + 0.8vw, 1.25rem);
+  margin-bottom: clamp(0.45rem, 0.3rem + 0.55vw, 0.8rem);
   view-transition-name: app-nav;
 }
 
@@ -32,6 +32,12 @@ me > [data-nav] {
   background: var(--surface-fill-panel);
   box-shadow: var(--shadow-panel);
   overflow: visible;
+}
+
+me > [data-nav][data-nav-layout='split'] [data-nav-trailing] {
+  gap: 0;
+  padding-inline-start: 0;
+  border-inline-start: none;
 }
 
 me [data-nav-list] {
@@ -448,6 +454,27 @@ me [data-nav-list='auth'] [data-nav-link-cta='true'] {
 }
 
 @media (max-width: 26rem) {
+  me > [data-nav][data-nav-layout='split'] {
+    grid-template-columns: 1fr;
+  }
+
+  me > [data-nav][data-nav-layout='split'] [data-nav-trailing] {
+    display: flex;
+    padding-top: var(--space-1);
+    border-top: 1px solid color-mix(in srgb, var(--border-subtle) 82%, transparent);
+    justify-content: stretch;
+  }
+
+  me > [data-nav][data-nav-layout='split'] [data-nav-list='auth'] {
+    grid-template-columns: 1fr;
+    justify-items: stretch;
+  }
+
+  me > [data-nav][data-nav-layout='split'] [data-nav-auth-switch] {
+    width: 100%;
+    text-align: center;
+  }
+
   me [data-nav-list='primary'] {
     display: grid;
     grid-template-columns: repeat(3, minmax(0, 1fr));
@@ -486,7 +513,7 @@ me [data-nav-list='auth'] [data-nav-link-cta='true'] {
   }
 
   me [data-nav-guest-auth] .ui-button-row {
-    --button-row-grid-template: repeat(2, minmax(0, 1fr));
+    --button-row-grid-template: 1fr;
   }
 
   me [data-nav-list='auth'] [data-nav-link] {
@@ -585,8 +612,18 @@ pub struct NavLinkList {
     pub children: Vec<NavLink>,
 }
 
+impl NavLinkList {
+    fn is_empty(&self) -> bool {
+        self.children.is_empty()
+    }
+}
+
 impl Render for NavLinkList {
     fn render(&self) -> maud::Markup {
+        if self.is_empty() {
+            return maud::html! {};
+        }
+
         maud::html! {
             ul data-nav-list=(self.role.as_ref()) {
                 @for item in &self.children {
@@ -707,9 +744,26 @@ impl Render for NavGuestAuth {
     }
 }
 
+#[derive(Clone, Debug, Builder)]
+pub struct NavGuestSwitch {
+    pub label: Text,
+    pub href: Text,
+}
+
+impl Render for NavGuestSwitch {
+    fn render(&self) -> maud::Markup {
+        maud::html! {
+            div data-nav-guest-auth data-nav-guest-auth-variant="switch" {
+                a data-nav-link data-nav-auth-switch href=(&self.href) { (&self.label) }
+            }
+        }
+    }
+}
+
 #[derive(Clone, Debug)]
 pub enum NavAuth {
     Guest(NavGuestAuth),
+    Switch(NavGuestSwitch),
     SignedIn(NavSignedIn),
 }
 
@@ -717,6 +771,7 @@ impl Render for NavAuth {
     fn render(&self) -> maud::Markup {
         match self {
             Self::Guest(links) => links.render(),
+            Self::Switch(link) => link.render(),
             Self::SignedIn(signed_in) => signed_in.render(),
         }
     }
@@ -734,10 +789,16 @@ pub struct NavBar {
 
 impl Render for NavBar {
     fn render(&self) -> maud::Markup {
+        let nav_layout = if self.links.is_empty() && self.meta_links.is_none() {
+            "split"
+        } else {
+            "default"
+        };
+
         maud::html! {
             header class="u-container" data-nav-shell {
                 (css())
-                nav data-nav {
+                nav data-nav data-nav-layout=(nav_layout) {
                     (&self.brand)
                     (&self.links)
                     div data-nav-trailing {
@@ -849,6 +910,33 @@ mod tests {
         assert!(markup.contains("class=\"button secondary\""));
         assert!(markup.contains("href=\"/register\""));
         assert!(markup.contains(">Create account<"));
+    }
+
+    #[test]
+    fn compact_guest_switch_renders_single_nav_link() {
+        let markup = NavBar::builder()
+            .brand(
+                NavBrand::builder()
+                    .label(Text::from("eran.codes"))
+                    .href(Text::from("/"))
+                    .light_logo_src(Text::from("/static/eran.codes-light.svg"))
+                    .dark_logo_src(Text::from("/static/eran.codes-dark.svg"))
+                    .build(),
+            )
+            .links(NavLinkList::builder().children(vec![]).build())
+            .auth(NavAuth::Switch(
+                NavGuestSwitch::builder()
+                    .label(Text::from("Create account"))
+                    .href(Text::from("/register"))
+                    .build(),
+            ))
+            .build()
+            .render()
+            .into_string();
+
+        assert!(markup.contains("data-nav-layout=\"split\""));
+        assert!(markup.contains("<a data-nav-link data-nav-auth-switch href=\"/register\">Create account</a>"));
+        assert!(!markup.contains("class=\"button\""));
     }
 
     #[test]

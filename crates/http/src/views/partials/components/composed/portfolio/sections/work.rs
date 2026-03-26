@@ -1,6 +1,6 @@
 use maud::Render;
 
-use super::{CardFooter, CardGrid, InsetCard, LeadCopy, SectionActions, SectionCopy, Surface};
+use super::{CardFooter, CardGrid, InsetCard, SectionActions, SectionCopy, Surface};
 use crate::types::Text;
 use crate::views::partials;
 use crate::views::partials::components::portfolio::content::{
@@ -28,17 +28,42 @@ impl Render for Section<'_> {
             }
         };
 
+        let section_copy = maud::html! {
+            (SectionCopy {
+                title: &self.content.title,
+                subtitle: &self.content.subtitle,
+            })
+        };
+        let section_actions = (!self.content.actions.is_empty()).then(|| {
+            maud::html! {
+                (SectionActions {
+                    actions: &self.content.actions,
+                })
+            }
+        });
+        let cards = maud::html! {
+            (Cards { cards: &self.content.cards })
+        };
+
         maud::html! {
             (Surface::section(maud::html! {
-                (SectionCopy {
-                    title: &self.content.title,
-                    subtitle: &self.content.subtitle,
-                })
-                (Cards { cards: &self.content.cards })
-                @if !self.content.actions.is_empty() {
-                    (SectionActions {
-                        actions: &self.content.actions,
-                    })
+                @match self.variant {
+                    SectionVariant::Standard => {
+                        (section_copy)
+                        (cards)
+                        @if let Some(section_actions) = section_actions {
+                            (section_actions)
+                        }
+                    }
+                    SectionVariant::CurrentProof => {
+                        div class="ui-portfolio-work-section-rail" {
+                            (section_copy)
+                            @if let Some(section_actions) = section_actions {
+                                (section_actions)
+                            }
+                        }
+                        (cards)
+                    }
                 }
             }).extra_class(extra_class))
         }
@@ -53,13 +78,6 @@ impl Render for IndexSection<'_> {
     fn render(&self) -> maud::Markup {
         maud::html! {
             div class="ui-portfolio-work-index" {
-                (Surface::section(maud::html! {
-                    (LeadCopy {
-                        eyebrow: &self.content.eyebrow,
-                        title: &self.content.title,
-                        summary: &self.content.summary,
-                    })
-                }).extra_class("ui-portfolio-lead-surface ui-portfolio-lead-surface--compact"))
                 (Section {
                     content: &self.content.current_proof_section,
                     variant: SectionVariant::CurrentProof,

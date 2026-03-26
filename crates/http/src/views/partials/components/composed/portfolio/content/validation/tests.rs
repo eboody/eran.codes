@@ -171,3 +171,13 @@ fn lab_page_requires_engineering_quality_points() {
 
     validate_lab_page(&content);
 }
+
+#[test]
+#[should_panic(expected = "work_case.detail_layout must match slug SensitiveSync")]
+fn work_case_requires_layout_to_match_slug() {
+    let mut content = super::super::fixture_loader::work_case_content(WorkCaseSlug::SensitiveSync)
+        .clone();
+    content.detail_layout = super::super::types::WorkCaseDetailLayout::ArchiveGrid;
+
+    validate_work_case(&content, WorkCaseSlug::SensitiveSync);
+}

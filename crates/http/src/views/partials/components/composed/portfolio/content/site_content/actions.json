@@ -14,7 +14,7 @@
     },
     {
       "id": "nav_supporting_proof",
-      "label": "Supporting Proof",
+      "label": "Archive",
       "href": "/work",
       "tone": "secondary"
     },
@@ -44,7 +44,7 @@
     },
     {
       "id": "browse_supporting_proof",
-      "label": "Browse supporting proof archive",
+      "label": "Browse archive",
       "href": "/work",
       "tone": "secondary"
     },
@@ -74,7 +74,7 @@
     },
     {
       "id": "back_to_supporting_proof",
-      "label": "Back to supporting proof archive",
+      "label": "Back to archive",
       "href": "/work",
       "tone": "secondary"
     },

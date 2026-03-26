@@ -13,9 +13,7 @@ pub(in super::super) fn validate_portfolio_home(content: &PortfolioHomeContent) 
 
 pub(in super::super) fn validate_work_index(content: &WorkIndexContent) {
     assert_non_empty("work.page_title", &content.page_title);
-    assert_non_empty("work.eyebrow", &content.eyebrow);
-    assert_non_empty("work.title", &content.title);
-    assert_non_empty("work.summary", &content.summary);
+    validate_optional_portfolio_hero(&content.hero, "work.hero");
     validate_work_section(&content.current_proof_section, "work.current_proof_section");
     validate_work_section(
         &content.supporting_cases_section,
@@ -35,7 +33,7 @@ pub(in super::super) fn validate_work_index(content: &WorkIndexContent) {
 
 pub(in super::super) fn validate_open_source_index(content: &OpenSourceIndexContent) {
     assert_non_empty("open_source.page_title", &content.page_title);
-    validate_open_source_hero(&content.hero, "open_source.hero");
+    validate_optional_portfolio_hero(&content.hero, "open_source.hero");
     validate_crate_section(&content.crate_section, "open_source.crate_section");
 }
 
@@ -51,21 +49,22 @@ pub(in super::super) fn validate_lab_page(content: &LabPageContent) {
 
 pub(in super::super) fn validate_work_case(content: &WorkCaseContent, slug: WorkCaseSlug) {
     assert_non_empty("work_case.page_title", &content.page_title);
-    assert_non_empty("work_case.eyebrow", &content.eyebrow);
-    assert_non_empty("work_case.title", &content.title);
-    assert_non_empty("work_case.summary", &content.summary);
+    validate_optional_portfolio_hero(&content.hero, "work_case.hero");
+    assert_eq!(
+        content.detail_layout,
+        slug.detail_layout(),
+        "work_case.detail_layout must match slug {:?}",
+        slug,
+    );
     validate_case_list(&content.challenge, "work_case.challenge");
     validate_case_list(&content.implementation, "work_case.implementation");
     validate_case_list(&content.outcomes, "work_case.outcomes");
     validate_case_list(&content.stack, "work_case.stack");
 
-    for action in &content.actions {
-        validate_action(action, "work_case.actions[]");
-    }
-
     let case_route = slug.route();
     assert!(
         content
+            .hero
             .actions
             .iter()
             .any(|action| super::usage::action_targets_proof_path(action, case_route)),
@@ -134,7 +133,7 @@ pub(super) fn validate_portfolio_hero(content: &PortfolioHeroContent, path: &str
     }
 }
 
-pub(super) fn validate_open_source_hero(content: &PortfolioHeroContent, path: &str) {
+pub(super) fn validate_optional_portfolio_hero(content: &PortfolioHeroContent, path: &str) {
     assert_non_empty(&format!("{path}.eyebrow"), &content.eyebrow);
     assert_non_empty(&format!("{path}.title"), &content.title);
     assert_non_empty(&format!("{path}.summary"), &content.summary);

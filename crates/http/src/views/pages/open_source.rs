@@ -42,10 +42,11 @@ mod tests {
 
         assert!(markup.contains(hero_title.as_str()));
         assert!(markup.contains("Library proof"));
-        assert!(markup.contains("Three crates. One invariants-first through-line."));
-        assert!(markup.contains("What to inspect"));
-        assert!(markup.contains("ui-open-source-hero-item-tag"));
-        assert!(markup.contains("data-portfolio-crate-switcher"));
+        assert!(markup.contains("Start with one crate."));
+        assert!(markup.contains("Reading order"));
+        assert!(!markup.contains("ui-open-source-hero-item-tag"));
+        assert!(markup.contains("ui-open-source-supporting-grid"));
+        assert!(!markup.contains("data-portfolio-crate-switcher"));
         assert!(markup.contains("data-code-block"));
         assert!(markup.contains("ui-portfolio-hero-aside"));
         assert!(markup.contains("u-container--wide"));

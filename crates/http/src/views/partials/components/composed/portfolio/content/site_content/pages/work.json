@@ -1,7 +1,7 @@
 {
-  "page_title": "Supporting Proof | Eran Boodnero",
-  "eyebrow": "Supporting proof archive",
-  "title": "Current proof first. Supporting archive below.",
+  "page_title": "Archive | Eran Boodnero",
+  "eyebrow": "Selected archive",
+  "title": "Current proof first. Archive below.",
   "summary": "Use the secure-data runtime slice as the main evidence. The archived cases below are compact support for delivery under load, integration pressure, and operational constraints.",
   "current_proof": {
     "title": "Current flagship proof",
@@ -17,7 +17,7 @@
     ]
   },
   "supporting_cases": {
-    "title": "Supporting proof archive",
+    "title": "Selected archive",
     "subtitle": "These archived cases stay brief on the index. They support the current proof with examples of delivery under load, live integrations, and automation constraints.",
     "project_slugs": [
       "chat_realtime",
@@ -28,7 +28,7 @@
   "archive_details": {
     "title": "Archived case notes",
     "subtitle": "Each archived entry stays anchored here as a short summary. The dedicated current-proof route remains `/work/sensitive-sync`, and the live runtime proof remains `/lab`.",
-    "entry_label": "Archived supporting proof"
+    "entry_label": "Archived work"
   },
   "open_source_teaser": {
     "title": "Need the code-level proof too?",

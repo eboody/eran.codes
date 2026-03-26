@@ -14,8 +14,8 @@ pub use model::{
     ArchiveDetailsContent, ArchivedWorkCaseContent, CmsActionLink, CrateCardContent,
     CrateSectionContent, CtaKind,
     ExperienceRoleContent, ExperienceSectionContent, OpenSourceIndexContent, PortfolioHeroContent,
-    PortfolioHomeContent, WorkCardContent, WorkCaseContent, WorkCaseSlug, WorkIndexContent,
-    WorkSectionContent,
+    PortfolioHomeContent, WorkCardContent, WorkCaseContent, WorkCaseDetailLayout, WorkCaseSlug,
+    WorkIndexContent, WorkSectionContent,
 };
 
 #[cfg(test)]
@@ -59,6 +59,7 @@ mod tests {
     fn work_index_fixture_loads() {
         let content = work_index_content();
 
+        assert!(!content.hero.title.to_string().is_empty());
         assert!(!content.current_proof_section.cards.is_empty());
         assert!(!content.supporting_cases_section.cards.is_empty());
         assert!(!content.current_proof_section.title.to_string().is_empty());
@@ -257,7 +258,9 @@ mod tests {
             WorkCaseSlug::SensitiveSync,
         ] {
             let content = work_case_content(slug);
+            assert!(!content.hero.title.to_string().is_empty());
             assert!(!content.outcomes.items.is_empty());
+            assert_eq!(content.detail_layout, slug.detail_layout());
         }
     }
 
@@ -297,6 +300,7 @@ mod tests {
             .map(|action| action.label.to_string())
             .collect::<Vec<_>>();
         let archived_labels = archived
+            .hero
             .actions
             .iter()
             .map(|action| action.label.to_string())
@@ -310,7 +314,7 @@ mod tests {
         assert_eq!(lab_labels, home_labels);
         assert_eq!(
             archived_labels,
-            vec!["Review current proof case", "Back to supporting proof archive"],
+            vec!["Review current proof case", "Back to archive"],
         );
     }
 

@@ -3,13 +3,11 @@
   "hero": {
     "eyebrow": "Live Proof Surface",
     "title": "Secure Backend Systems, Shown Running",
-    "summary": "This lab lets reviewers inspect durable sessions, typed boundaries, and live runtime behavior in one Rust app. It is the current proof surface for the repo's secure-systems thesis.",
+    "summary": "Use the secure-data runtime slice as the main proof: encrypted records, capability-backed reads, key-custody evidence, and live inspection in one Rust app.",
     "badges": [
-      "auth + sessions",
-      "typed boundaries",
-      "sqlx + postgres",
-      "datastar + sse",
-      "argon2"
+      "encrypted storage",
+      "key custody",
+      "runtime inspection"
     ],
     "action_refs": [
       {
@@ -36,7 +34,7 @@
   },
   "guest_chat": {
     "title": "Live chat room",
-    "summary": "Sign in to send messages and see the chat room.",
+    "summary": "Sign in to send messages and inspect live fanout.",
     "action_refs": [
       {
         "source": "action",
@@ -45,14 +43,14 @@
     ]
   },
   "operations_surface": {
-    "title": "Runtime Inspection Surface",
-    "subtitle": "Run a demo interaction, then inspect request, backend, and SSE behavior as supporting proof for session posture and boundary discipline.",
-    "empty_message": "No timeline events yet. Trigger a demo action to populate the current proof surface."
+    "title": "Runtime inspection",
+    "subtitle": "Trigger the proof or a supporting demo, then inspect request, backend, and SSE behavior without leaving the page.",
+    "empty_message": "No timeline events yet. Trigger the proof or a supporting demo to populate the log."
   },
   "sensitive_proof": {
     "title": "Sensitive record proof",
-    "subtitle": "Inspect encrypted-at-rest storage, key-custody state, stub-vs-sandbox boundary mode, capability-backed authorized reads, operator-only token visibility, denied-read evidence, and recent access audit state.",
-    "empty_message": "No sensitive-data snapshot loaded yet. Refresh the panel to inspect the current proof surface.",
+    "subtitle": "Inspect encrypted storage, key custody, boundary mode, authorized reads, denied-read evidence, and recent access-audit state.",
+    "empty_message": "No sensitive-data snapshot loaded yet. Refresh the panel to inspect the current proof.",
     "action_label": "Refresh proof"
   },
   "engineering_quality": {

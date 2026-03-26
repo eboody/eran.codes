@@ -3,34 +3,34 @@
     "slug": "sensitive_sync",
     "page_title": "Current Proof | Encrypted Sensitive Record Sync",
     "eyebrow": "Current Proof · Secure Systems Runtime",
-    "title": "Encrypted sensitive records, provider-token lifecycle, and bounded background sync",
-    "summary": "This repo now ships a narrow runtime proof slice for secure backend work: provider tokens and authorized payloads are stored encrypted with explicit key IDs, stub mode syncs deterministically by default, sandbox mode can run real outbound HTTPS when configured, and the live lab shows persisted sensitive-access grants, key-custody evidence, denied reads, and audited authorized access.",
+    "title": "Encrypted records, token lifecycle, and bounded background sync",
+    "summary": "A narrow secure-systems runtime slice: encrypted provider tokens and authorized payloads, deterministic stub sync by default, opt-in sandbox HTTPS, and a live lab that shows grants, denied reads, and audited access.",
     "challenge": {
       "title": "Challenge",
       "items": [
-        "The proof pivot needed visible evidence for encrypted-at-rest storage, token lifecycle handling, and integration-boundary discipline instead of only architectural groundwork.",
-        "The repo needed a bounded implementation slice that stayed honest about scope and avoided claiming real healthcare or real-provider integrations.",
-        "The public proof surface had to show guest-safe redaction, denied signed-in reads without grants, and audited authorized reads from the same stored records."
+        "The proof needed visible evidence for encrypted-at-rest storage, token handling, and explicit integration boundaries instead of only architecture notes.",
+        "The implementation had to stay bounded and honest about scope, without implying real healthcare or production provider operations.",
+        "The public surface needed one stored-record path that could show guest-safe redaction, denied reads, and audited authorized access."
       ]
     },
     "implementation": {
       "title": "Implementation",
       "items": [
-        "Added a new sensitive-data bounded context across domain, app, infra, and HTTP without splitting the repo into new crates.",
-        "Stored provider tokens and authorized record payloads with AES-256-GCM encryption, while keeping only redacted labels and last-four evidence queryable in cleartext.",
-        "Wired a two-mode provider boundary: deterministic local stub by default, plus an opt-in sandbox HTTP adapter with credential exchange, bounded retry/backoff state, cursor-based record sync, key-versioned ciphertext storage, persisted sensitive-access grants, and a live lab panel that exposes denied-vs-allowed reads with recent audit evidence."
+        "Added one sensitive-data bounded context across domain, app, infra, and HTTP without breaking the repo into extra crates.",
+        "Stored provider tokens and authorized record payloads with AES-256-GCM, while keeping only redacted labels and last-four evidence queryable in cleartext.",
+        "Built a two-mode provider boundary: deterministic local stub by default, plus an opt-in sandbox HTTP adapter with credential exchange, bounded retry/backoff, cursor-based sync, key-versioned ciphertext storage, persisted grants, and a live lab panel for denied-versus-allowed reads."
       ]
     },
     "outcomes": {
       "title": "Outcomes",
       "items": [
-        "The repo now backs secure-systems claims with a running encrypted-storage, key-rotation, and background-sync slice instead of only narrative direction.",
-        "Reviewers can inspect operator-only token status, last sync state, redacted records, ciphertext evidence, key-custody state, denied reads, and audited authorized-read boundaries in the live app.",
-        "The implementation stays sanitized and bounded: deterministic stub mode for repeatable proof runs, an opt-in sandbox mode for real outbound HTTPS, explicit trust boundaries, and no overclaim about PHI or production vendor operations."
+        "The repo now backs secure-systems claims with a running encrypted-storage and background-sync slice instead of only narrative direction.",
+        "Reviewers can inspect token status, last sync state, redacted records, ciphertext evidence, denied reads, and audited authorized access in the live app.",
+        "The proof stays sanitized and bounded: deterministic stub mode for repeatable review, opt-in sandbox mode for real outbound HTTPS, and explicit trust boundaries."
       ]
     },
     "stack": {
-      "title": "Stack and ownership",
+      "title": "Stack",
       "items": [
         "Rust",
         "Axum",
@@ -53,10 +53,10 @@
   },
   {
     "slug": "chat_realtime",
-    "page_title": "Supporting Proof | Automation at Fundraising Scale",
-    "eyebrow": "Supporting Proof Archive · Automation & Operations",
+    "page_title": "Archive | Automation at Fundraising Scale",
+    "eyebrow": "Archive · Automation & Operations",
     "title": "Automated fundraiser acknowledgments to remove high-volume backlog",
-    "summary": "This archived GoodUnited case study is supporting proof of execution under operational pressure. It covers replacing a manual thank-you workflow with browser automation that increased throughput and consistency.",
+    "summary": "This archived GoodUnited case study covers replacing a manual thank-you workflow with browser automation that increased throughput and consistency under operational pressure.",
     "challenge": {
       "title": "Challenge",
       "items": [
@@ -100,10 +100,10 @@
   },
   {
     "slug": "command_sse",
-    "page_title": "Supporting Proof | Realtime Fundraiser Data Pipeline",
-    "eyebrow": "Supporting Proof Archive · Realtime Product Systems",
+    "page_title": "Archive | Realtime Fundraiser Data Pipeline",
+    "eyebrow": "Archive · Realtime Product Systems",
     "title": "Replaced delayed CSV workflows with realtime fundraiser + donation visibility",
-    "summary": "This archived fundraiser pipeline is supporting proof of building under live integration pressure. It moved operations from delayed CSV snapshots to realtime creation and donation signals integrated with Meta APIs.",
+    "summary": "This archived fundraiser pipeline moved operations from delayed CSV snapshots to realtime creation and donation signals integrated with Meta APIs.",
     "challenge": {
       "title": "Challenge",
       "items": [
@@ -147,10 +147,10 @@
   },
   {
     "slug": "operational_visibility",
-    "page_title": "Supporting Proof | Custom Substack Publishing Platform",
-    "eyebrow": "Supporting Proof Archive · Platform Architecture",
+    "page_title": "Archive | Custom Substack Publishing Platform",
+    "eyebrow": "Archive · Platform Architecture",
     "title": "Built a custom Substack publishing platform around a CMS event pipeline",
-    "summary": "This archived Rust publishing platform is supporting proof of systems design under integration constraints. It ingests Directus CMS events, processes them through queued workers, and executes automated publishing flows through a custom Substack integration.",
+    "summary": "This archived Rust publishing platform ingests Directus CMS events, processes them through queued workers, and executes automated publishing flows through a custom Substack integration.",
     "challenge": {
       "title": "Challenge",
       "items": [

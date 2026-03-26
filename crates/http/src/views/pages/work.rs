@@ -42,7 +42,7 @@ mod tests {
     fn renders_current_proof_and_compact_archive() {
         let content = partials::components::portfolio::content::work_index_content();
         let markup = Work::default().render().into_string();
-        let lead_title = content.title.to_string();
+        let lead_title = content.hero.title.to_string();
         let current_title = content.current_proof_section.title.to_string();
         let supporting_subtitle = content.supporting_cases_section.subtitle.to_string();
         let archive_title = content.archive_details.title.to_string();
@@ -55,6 +55,8 @@ mod tests {
         assert!(!markup.contains("data-portfolio-crate-switcher"));
         assert!(!markup.contains("images/work/chat-realtime"));
         assert!(!markup.contains("Automation at scale case preview"));
+        assert!(markup.contains("ui-portfolio-work-flow"));
+        assert!(markup.contains("ui-portfolio-hero"));
         assert!(
             markup.find(lead_title.as_str()).unwrap()
                 < markup.find(current_title.as_str()).unwrap()
@@ -67,14 +69,14 @@ mod tests {
             markup.find(supporting_subtitle.as_str()).unwrap()
                 < markup.find(archive_title.as_str()).unwrap()
         );
-        assert!(markup.contains("Current proof first. Supporting archive below."));
+        assert!(markup.contains("Current proof first. Archive below."));
         assert!(markup.contains("Encrypted Sensitive Record Sync in Rust"));
         assert!(
             markup.find("Encrypted Sensitive Record Sync in Rust").unwrap()
                 < markup.find("Automated Fundraiser Acknowledgment at Scale").unwrap()
         );
-        assert!(markup.contains("Supporting proof archive"));
-        assert!(markup.contains("Archived supporting proof"));
+        assert!(markup.contains("Selected archive"));
+        assert!(markup.contains("Archived work"));
         assert!(markup.contains("id=\"chat-realtime\""));
         assert!(markup.contains("id=\"command-sse\""));
         assert!(markup.contains("id=\"operational-visibility\""));
@@ -94,8 +96,8 @@ mod tests {
                 .expect("archived work case should expose an anchor id");
 
             assert!(markup.contains(&format!("id=\"{anchor_id}\"")));
-            assert!(markup.contains(case.content.title.to_string().as_str()));
-            assert!(markup.contains(case.content.summary.to_string().as_str()));
+            assert!(markup.contains(case.content.hero.title.to_string().as_str()));
+            assert!(markup.contains(case.content.hero.summary.to_string().as_str()));
             assert!(!markup.contains(case.content.implementation.items[0].to_string().as_str()));
         }
     }

@@ -309,6 +309,8 @@ async fn lab_page_includes_demo_sections() {
     }
 
     assert!(!body.contains("Production Rust Systems, Demonstrated Live"));
+    assert!(!body.contains("Engineering Quality"));
+    assert!(!body.contains("Anchor target:"));
 }
 
 #[derive(Clone, Copy, Debug)]
@@ -317,9 +319,11 @@ enum LabContract {
     ProofHeadline,
     LiveProofNav,
     CurrentProofNav,
+    ArchiveNav,
+    OpenSourceNav,
+    SupportingProofTitle,
     RuntimeInspectionTitle,
     SensitiveProofTitle,
-    GuardrailsCard,
     OperationsSurface,
     NetworkLogTarget,
     RequestBurstEndpoint,
@@ -330,9 +334,6 @@ enum LabContract {
     TabRole,
     TabpanelRole,
     ResumeLink,
-    GithubLink,
-    LinkedInLink,
-    ContactLink,
     SignIn,
     RegisterPath,
     LoginPath,
@@ -345,9 +346,11 @@ impl LabContract {
             LabContract::ProofHeadline,
             LabContract::LiveProofNav,
             LabContract::CurrentProofNav,
+            LabContract::ArchiveNav,
+            LabContract::OpenSourceNav,
+            LabContract::SupportingProofTitle,
             LabContract::RuntimeInspectionTitle,
             LabContract::SensitiveProofTitle,
-            LabContract::GuardrailsCard,
             LabContract::OperationsSurface,
             LabContract::NetworkLogTarget,
             LabContract::RequestBurstEndpoint,
@@ -358,9 +361,6 @@ impl LabContract {
             LabContract::TabRole,
             LabContract::TabpanelRole,
             LabContract::ResumeLink,
-            LabContract::GithubLink,
-            LabContract::LinkedInLink,
-            LabContract::ContactLink,
             LabContract::SignIn,
             LabContract::RegisterPath,
             LabContract::LoginPath,
@@ -373,9 +373,13 @@ impl LabContract {
             LabContract::ProofHeadline => "Secure Backend Systems, Shown Running",
             LabContract::LiveProofNav => "Live Proof",
             LabContract::CurrentProofNav => "Current Proof",
-            LabContract::RuntimeInspectionTitle => "Runtime Inspection Surface",
+            LabContract::ArchiveNav => "Archive",
+            LabContract::OpenSourceNav => "Open Source",
+            LabContract::SupportingProofTitle => {
+                "Validate the main proof from other angles"
+            }
+            LabContract::RuntimeInspectionTitle => "Runtime inspection",
             LabContract::SensitiveProofTitle => "Sensitive record proof",
-            LabContract::GuardrailsCard => "Guardrails catch drift early",
             LabContract::OperationsSurface => "id=\"operations-surface\"",
             LabContract::NetworkLogTarget => "id=\"network-log-target\"",
             LabContract::RequestBurstEndpoint => "/partials/request-burst-probe",
@@ -386,11 +390,6 @@ impl LabContract {
             LabContract::TabRole => "role=\"tab\"",
             LabContract::TabpanelRole => "role=\"tabpanel\"",
             LabContract::ResumeLink => "/resume.txt",
-            LabContract::GithubLink => "https://github.com/eboody/eran.codes",
-            LabContract::LinkedInLink => {
-                "https://www.linkedin.com/search/results/all/?keywords=Eran%20Boodnero"
-            }
-            LabContract::ContactLink => "mailto:eboodnero@gmail.com",
             LabContract::SignIn => "Sign in",
             LabContract::RegisterPath => "/register",
             LabContract::LoginPath => "/login",
@@ -458,8 +457,8 @@ enum PortfolioHomeContract {
     ExperienceTitle,
     CurrentProofTitle,
     CurrentProofNav,
+    ArchiveNav,
     CurrentProofRoute,
-    SupportingProofNav,
     WorkRoute,
     OpenSourceRoute,
     LabRoute,
@@ -482,8 +481,8 @@ impl PortfolioHomeContract {
             PortfolioHomeContract::ExperienceTitle,
             PortfolioHomeContract::CurrentProofTitle,
             PortfolioHomeContract::CurrentProofNav,
+            PortfolioHomeContract::ArchiveNav,
             PortfolioHomeContract::CurrentProofRoute,
-            PortfolioHomeContract::SupportingProofNav,
             PortfolioHomeContract::WorkRoute,
             PortfolioHomeContract::OpenSourceRoute,
             PortfolioHomeContract::LabRoute,
@@ -508,8 +507,8 @@ impl PortfolioHomeContract {
             PortfolioHomeContract::ExperienceTitle => "Most relevant experience",
             PortfolioHomeContract::CurrentProofTitle => "Current secure-data proof",
             PortfolioHomeContract::CurrentProofNav => "Current Proof",
+            PortfolioHomeContract::ArchiveNav => "Archive",
             PortfolioHomeContract::CurrentProofRoute => "href=\"/work/sensitive-sync\"",
-            PortfolioHomeContract::SupportingProofNav => "Supporting Proof",
             PortfolioHomeContract::WorkRoute => "href=\"/work\"",
             PortfolioHomeContract::OpenSourceRoute => "href=\"/open-source\"",
             PortfolioHomeContract::LabRoute => "href=\"/lab\"",
@@ -629,19 +628,19 @@ async fn work_archive_renders_legacy_case_details() {
         (
             "chat-realtime",
             "Automated fundraiser acknowledgments to remove high-volume backlog",
-            "This archived GoodUnited case study is supporting proof of execution under operational pressure.",
+            "This archived GoodUnited case study covers replacing a manual thank-you workflow with browser automation that increased throughput and consistency under operational pressure.",
             "Built a Playwright + TypeScript automation worker to emulate the existing browser workflow end to end.",
         ),
         (
             "command-sse",
             "Replaced delayed CSV workflows with realtime fundraiser + donation visibility",
-            "This archived fundraiser pipeline is supporting proof of building under live integration pressure.",
+            "This archived fundraiser pipeline moved operations from delayed CSV snapshots to realtime creation and donation signals integrated with Meta APIs.",
             "Built an Express + Svelte + MongoDB app for event participants to create fundraisers in one click.",
         ),
         (
             "operational-visibility",
             "Built a custom Substack publishing platform around a CMS event pipeline",
-            "This archived Rust publishing platform is supporting proof of systems design under integration constraints.",
+            "This archived Rust publishing platform ingests Directus CMS events, processes them through queued workers, and executes automated publishing flows through a custom Substack integration.",
             "Built a custom Substack client/integration layer for publish-oriented automation paths.",
         ),
     ] {
@@ -650,7 +649,7 @@ async fn work_archive_renders_legacy_case_details() {
         assert!(body.contains(summary));
         assert!(!body.contains(implementation_marker));
     }
-    assert!(body.contains("Back to supporting proof archive"));
+    assert!(body.contains("Back to archive"));
     assert!(body.contains("Review current proof case"));
 }
 

@@ -7,7 +7,7 @@ me {
   grid-template-columns: minmax(0, 1fr);
   gap: clamp(1.7rem, 1.2rem + 1.55vw, 2.85rem);
   min-width: 0;
-  margin-top: clamp(1.45rem, 1rem + 1.35vw, 2.35rem);
+  margin-top: clamp(0.55rem, 0.3rem + 0.7vw, 1rem);
   padding-bottom: var(--space-8);
 }
 
@@ -24,10 +24,11 @@ me .ui-portfolio-hero {
   border-radius: var(--radius-5);
   background:
     linear-gradient(
-      140deg,
-      color-mix(in srgb, var(--portfolio-accent-a) 30%, transparent),
-      transparent 60%
+      145deg,
+      color-mix(in srgb, var(--portfolio-accent-a) 18%, transparent),
+      transparent 68%
     ),
+    linear-gradient(180deg, color-mix(in srgb, white 10%, transparent), transparent 24%),
     var(--portfolio-surface);
   view-transition-name: portfolio-hero;
 }
@@ -36,6 +37,28 @@ me .ui-portfolio-hero-grid {
   display: grid;
   gap: clamp(1.2rem, 1rem + 0.85vw, 1.9rem);
   align-items: start;
+}
+
+me .ui-portfolio-hero-flow {
+  display: grid;
+  gap: clamp(1.35rem, 1.05rem + 0.9vw, 2.1rem);
+}
+
+me .ui-portfolio-hero-flow > .ui-portfolio-surface {
+  margin-top: 0;
+}
+
+me .ui-portfolio-hero-flow > .ui-portfolio-hero {
+  max-inline-size: 92rem;
+  padding: 0;
+  border: none;
+  border-radius: 0;
+  background: none;
+  box-shadow: none;
+}
+
+me .ui-portfolio-hero-flow .ui-portfolio-lead-surface {
+  gap: var(--space-3);
 }
 
 me .ui-portfolio-hero-main {
@@ -82,14 +105,14 @@ me .ui-portfolio-badges {
   list-style: none;
   display: flex;
   flex-wrap: wrap;
-  gap: var(--space-2);
+  gap: var(--space-1);
 }
 
 me .ui-portfolio-badges li {
-  border: var(--border-size-1) solid var(--ui-border-soft);
+  border: var(--border-size-1) solid color-mix(in srgb, var(--ui-border-soft) 72%, transparent);
   border-radius: var(--radius-pill);
-  padding: var(--space-1) var(--space-2);
-  background: var(--ui-surface-soft);
+  padding: 0.3rem 0.7rem;
+  background: color-mix(in srgb, var(--surface-fill-panel) 94%, transparent);
   font-size: var(--text-size-meta-xs);
   color: var(--ui-text-muted);
 }
@@ -101,13 +124,11 @@ me .ui-portfolio-proof-strip {
 
 me .ui-portfolio-proof-item {
   --inset-card-padding: var(--space-3);
-  --inset-card-border: var(--ui-border-soft);
-  --inset-card-bg: var(--ui-surface-soft);
+  --inset-card-border: color-mix(in srgb, var(--ui-border-soft) 82%, transparent);
+  --inset-card-bg: color-mix(in srgb, var(--surface-fill-panel) 92%, transparent);
   transition:
     border-color var(--motion-fast),
-    background-color var(--motion-fast),
-    box-shadow var(--motion-fast),
-    transform var(--motion-fast);
+    background-color var(--motion-fast);
 }
 
 me .ui-portfolio-proof-item h3 {
@@ -120,11 +141,11 @@ me .ui-portfolio-proof-item p {
 }
 
 me .ui-portfolio-proof-item[data-proof-kind="architecture"] {
-  border-color: color-mix(in srgb, var(--portfolio-accent-a) 42%, transparent);
+  border-color: color-mix(in srgb, var(--portfolio-accent-a) 24%, var(--ui-border-soft));
 }
 
 me .ui-portfolio-proof-item[data-proof-kind="reliability"] {
-  border-color: color-mix(in srgb, var(--portfolio-accent-b) 42%, transparent);
+  border-color: color-mix(in srgb, var(--portfolio-accent-b) 24%, var(--ui-border-soft));
 }
 
 me .ui-portfolio-card-grid {
@@ -140,8 +161,8 @@ me .ui-portfolio-showcase-stack {
 
 me .ui-portfolio-card {
   --inset-card-padding: var(--space-4);
-  --inset-card-border: var(--ui-border-soft);
-  --inset-card-bg: var(--ui-surface-soft);
+  --inset-card-border: color-mix(in srgb, var(--ui-border-soft) 84%, transparent);
+  --inset-card-bg: color-mix(in srgb, var(--surface-fill-panel) 92%, transparent);
 
   display: grid;
   gap: var(--space-2);
@@ -149,9 +170,7 @@ me .ui-portfolio-card {
   overflow: visible;
   transition:
     border-color var(--motion-fast),
-    background-color var(--motion-fast),
-    box-shadow var(--motion-fast),
-    transform var(--motion-fast);
+    background-color var(--motion-fast);
 }
 
 me .ui-portfolio-card > * {
@@ -221,18 +240,13 @@ me .ui-portfolio-card-outcome {
   margin: 0;
   display: grid;
   gap: var(--space-1);
-  padding: var(--space-3);
+  padding: var(--space-2);
   border-radius: var(--ui-radius-md-inset);
   border: var(--border-size-1) solid
-    color-mix(in srgb, var(--portfolio-accent-a) 48%, transparent);
+    color-mix(in srgb, var(--portfolio-accent-a) 32%, var(--ui-border-soft));
   background:
-    linear-gradient(
-      180deg,
-      color-mix(in srgb, var(--portfolio-accent-a) 15%, transparent),
-      transparent 100%
-    ),
-    color-mix(in srgb, var(--portfolio-accent-a) 14%, transparent);
-  box-shadow: inset 0 1px 0 color-mix(in srgb, white 28%, transparent);
+    linear-gradient(180deg, color-mix(in srgb, var(--portfolio-accent-a) 8%, transparent), transparent 100%),
+    color-mix(in srgb, var(--surface-fill-panel) 92%, transparent);
   font-size: var(--text-size-body-md);
   line-height: var(--text-line-body);
 }
@@ -290,36 +304,34 @@ me .ui-portfolio-card-footer .ui-portfolio-badges {
 @media (hover: hover) {
   me .ui-portfolio-card:hover,
   me .ui-portfolio-proof-item:hover {
-    transform: var(--motion-lift-subtle);
-    box-shadow: var(--shadow-panel-hover);
+    background: color-mix(in srgb, var(--surface-fill-panel) 96%, transparent);
   }
 
   me .ui-portfolio-crate-showcase:hover {
-    border-color: color-mix(in srgb, var(--portfolio-accent-a) 30%, var(--ui-border-soft));
-  }
-
-  me .ui-portfolio-card:hover {
-    border-color: color-mix(in srgb, var(--portfolio-accent-a) 22%, var(--ui-border-soft));
-  }
-
-  me .ui-portfolio-proof-item:hover {
     border-color: color-mix(in srgb, var(--portfolio-accent-a) 20%, var(--ui-border-soft));
   }
 
+  me .ui-portfolio-card:hover {
+    border-color: color-mix(in srgb, var(--portfolio-accent-a) 16%, var(--ui-border-soft));
+  }
+
+  me .ui-portfolio-proof-item:hover {
+    border-color: color-mix(in srgb, var(--portfolio-accent-a) 16%, var(--ui-border-soft));
+  }
+
   me .ui-portfolio-proof-item[data-proof-kind="reliability"]:hover {
-    border-color: color-mix(in srgb, var(--portfolio-accent-b) 26%, var(--ui-border-soft));
+    border-color: color-mix(in srgb, var(--portfolio-accent-b) 18%, var(--ui-border-soft));
   }
 }
 
 me .ui-portfolio-card:focus-within {
-  transform: var(--motion-lift-subtle);
-  border-color: color-mix(in srgb, var(--portfolio-accent-a) 24%, var(--ui-border-soft));
-  box-shadow: var(--shadow-panel-hover);
+  border-color: color-mix(in srgb, var(--portfolio-accent-a) 20%, var(--ui-border-soft));
+  box-shadow: 0 0 0 0.22rem color-mix(in srgb, var(--portfolio-accent-a) 10%, transparent);
 }
 
 me .ui-portfolio-crate-showcase:focus-within,
 me .ui-portfolio-crate-gallery:focus-within {
-  border-color: color-mix(in srgb, var(--portfolio-accent-a) 34%, var(--ui-border-soft));
+  border-color: color-mix(in srgb, var(--portfolio-accent-a) 24%, var(--ui-border-soft));
 }
 
 me .ui-portfolio-crate-showcase {
@@ -328,26 +340,18 @@ me .ui-portfolio-crate-showcase {
   padding: clamp(1.35rem, 1.1rem + 0.9vw, 2rem);
   border-radius: var(--ui-radius-md-inset);
   border: var(--border-size-1) solid
-    color-mix(in srgb, var(--portfolio-accent-a) 24%, var(--ui-border-soft));
+    color-mix(in srgb, var(--portfolio-accent-a) 18%, var(--ui-border-soft));
   background:
     linear-gradient(
       140deg,
-      color-mix(in srgb, var(--portfolio-accent-a) 10%, transparent),
-      transparent 38%
+      color-mix(in srgb, var(--portfolio-accent-a) 6%, transparent),
+      transparent 42%
     ),
-    linear-gradient(
-      180deg,
-      color-mix(in srgb, white 18%, transparent),
-      transparent 20%
-    ),
-    var(--ui-surface-soft);
-  box-shadow:
-    inset 0 1px 0 color-mix(in srgb, white 38%, transparent),
-    0 18px 40px -34px color-mix(in srgb, var(--portfolio-accent-a) 34%, transparent);
+    color-mix(in srgb, var(--surface-fill-panel) 94%, transparent);
+  box-shadow: inset 0 1px 0 color-mix(in srgb, white 24%, transparent);
   transition:
     border-color var(--motion-fast),
-    background-color var(--motion-fast),
-    box-shadow var(--motion-fast);
+    background-color var(--motion-fast);
 }
 
 me .ui-portfolio-crate-showcase-header,
@@ -393,27 +397,15 @@ me .ui-portfolio-crate-gallery {
   margin-top: 0;
   padding: clamp(0.9rem, 0.8rem + 0.55vw, 1.3rem);
   border: var(--border-size-1) solid
-    color-mix(in srgb, var(--portfolio-accent-a) 28%, var(--ui-border-soft));
+    color-mix(in srgb, var(--portfolio-accent-a) 18%, var(--ui-border-soft));
   border-radius: var(--ui-radius-md);
   background:
-    linear-gradient(
-      180deg,
-      color-mix(in srgb, var(--portfolio-accent-a) 14%, transparent),
-      transparent 40%
-    ),
-    linear-gradient(
-      160deg,
-      color-mix(in srgb, white 14%, transparent),
-      transparent 28%
-    ),
-    color-mix(in srgb, var(--ui-surface-card) 90%, transparent);
-  box-shadow:
-    inset 0 1px 0 color-mix(in srgb, white 30%, transparent),
-    inset 0 0 0 1px color-mix(in srgb, black 2%, transparent);
+    linear-gradient(180deg, color-mix(in srgb, var(--portfolio-accent-a) 8%, transparent), transparent 42%),
+    color-mix(in srgb, var(--ui-surface-card) 92%, transparent);
+  box-shadow: inset 0 1px 0 color-mix(in srgb, white 22%, transparent);
   transition:
     border-color var(--motion-fast),
-    background-color var(--motion-fast),
-    box-shadow var(--motion-fast);
+    background-color var(--motion-fast);
 }
 
 @media (prefers-color-scheme: dark) {
@@ -451,14 +443,10 @@ me .ui-portfolio-lead-surface .ui-button-row {
 
 me .ui-portfolio-hero-aside {
   --inset-card-padding: clamp(1rem, 0.88rem + 0.55vw, 1.35rem);
-  --inset-card-border: color-mix(in srgb, var(--portfolio-accent-a) 32%, var(--ui-border-soft));
+  --inset-card-border: color-mix(in srgb, var(--portfolio-accent-a) 22%, var(--ui-border-soft));
   --inset-card-bg:
-    linear-gradient(
-      180deg,
-      color-mix(in srgb, var(--portfolio-accent-a) 10%, transparent),
-      transparent 30%
-    ),
-    color-mix(in srgb, var(--ui-surface-soft) 92%, transparent);
+    linear-gradient(180deg, color-mix(in srgb, var(--portfolio-accent-a) 6%, transparent), transparent 30%),
+    color-mix(in srgb, var(--surface-fill-panel) 94%, transparent);
 
   display: grid;
   gap: var(--space-3);
@@ -473,7 +461,7 @@ me .ui-portfolio-hero-aside-kicker {
   font-weight: 700;
   letter-spacing: var(--text-track-caps-sm);
   text-transform: uppercase;
-  color: color-mix(in srgb, var(--accent-signal) 58%, var(--ui-text-muted));
+  color: color-mix(in srgb, var(--accent-signal) 44%, var(--ui-text-muted));
 }
 
 me .ui-portfolio-hero-aside h2 {
@@ -494,8 +482,8 @@ me .ui-portfolio-hero-aside-outcome {
   gap: var(--space-1);
   padding: var(--space-2) var(--space-3);
   border-radius: var(--ui-radius-md-inset);
-  border: var(--border-size-1) solid color-mix(in srgb, var(--portfolio-accent-a) 42%, transparent);
-  background: color-mix(in srgb, var(--portfolio-accent-a) 12%, transparent);
+  border: var(--border-size-1) solid color-mix(in srgb, var(--portfolio-accent-a) 28%, var(--ui-border-soft));
+  background: color-mix(in srgb, var(--surface-fill-panel) 94%, transparent);
 }
 
 me .ui-portfolio-hero-aside-outcome-label {
@@ -521,14 +509,10 @@ me .ui-portfolio-closing {
 }
 
 me .ui-portfolio-supporting-teaser {
-  --surface-card-border: color-mix(in srgb, var(--ui-border-soft) 84%, transparent);
+  --surface-card-border: color-mix(in srgb, var(--ui-border-soft) 80%, transparent);
   --surface-card-bg-image:
-    linear-gradient(
-      180deg,
-      color-mix(in srgb, var(--portfolio-accent-b) 4%, transparent),
-      transparent 18%
-    ),
-    color-mix(in srgb, var(--surface-fill-panel) 90%, transparent);
+    linear-gradient(180deg, color-mix(in srgb, var(--portfolio-accent-b) 2%, transparent), transparent 18%),
+    color-mix(in srgb, var(--surface-fill-panel) 94%, transparent);
 
   justify-items: start;
   gap: var(--space-3);
@@ -546,6 +530,17 @@ me .ui-portfolio-work-section--current-proof {
   margin-top: 0;
 }
 
+me .ui-portfolio-work-index {
+  display: grid;
+  gap: clamp(1rem, 0.82rem + 0.75vw, 1.65rem);
+}
+
+me .ui-portfolio-work-section-rail {
+  display: grid;
+  gap: var(--space-3);
+  align-content: start;
+}
+
 me .ui-portfolio-case-grid {
   display: grid;
   gap: var(--space-3);
@@ -555,13 +550,13 @@ me .ui-portfolio-case-grid {
 me .ui-portfolio-case-section {
   --surface-card-border: color-mix(
     in srgb,
-    var(--portfolio-accent-a) 26%,
+    var(--portfolio-accent-a) 18%,
     var(--portfolio-surface-border)
   );
   --surface-card-bg-image:
     linear-gradient(
       180deg,
-      color-mix(in srgb, var(--portfolio-accent-a) 8%, transparent),
+      color-mix(in srgb, var(--portfolio-accent-a) 5%, transparent),
       transparent 22%
     ),
     var(--surface-fill-panel);
@@ -576,15 +571,49 @@ me .ui-portfolio-case-section .ui-portfolio-section-copy {
   --section-copy-max-inline: 56ch;
 }
 
-me .ui-portfolio-crate-section {
-  --surface-card-border: color-mix(in srgb, var(--ui-border-soft) 88%, transparent);
+me .ui-portfolio-case-section--lead {
+  --surface-card-border: color-mix(
+    in srgb,
+    var(--portfolio-accent-a) 24%,
+    var(--portfolio-surface-border)
+  );
   --surface-card-bg-image:
     linear-gradient(
       180deg,
-      color-mix(in srgb, var(--portfolio-accent-b) 5%, transparent),
+      color-mix(in srgb, var(--portfolio-accent-a) 7%, transparent),
+      transparent 18%
+    ),
+    var(--surface-fill-panel);
+}
+
+me .ui-portfolio-current-proof-detail {
+  display: grid;
+  gap: var(--space-3);
+}
+
+me .ui-portfolio-current-proof-main,
+me .ui-portfolio-current-proof-rail {
+  display: grid;
+  gap: var(--space-3);
+}
+
+me .ui-portfolio-current-proof-rail-card {
+  gap: var(--space-2);
+}
+
+me .ui-portfolio-current-proof-stack {
+  gap: calc(var(--space-1) * 0.85);
+}
+
+me .ui-portfolio-crate-section {
+  --surface-card-border: color-mix(in srgb, var(--ui-border-soft) 80%, transparent);
+  --surface-card-bg-image:
+    linear-gradient(
+      180deg,
+      color-mix(in srgb, var(--portfolio-accent-b) 3%, transparent),
       transparent 20%
     ),
-    color-mix(in srgb, var(--surface-fill-panel) 92%, transparent);
+    color-mix(in srgb, var(--surface-fill-panel) 95%, transparent);
 }
 
 me .ui-portfolio-crate-section--standalone {
@@ -635,6 +664,14 @@ me .ui-portfolio-crate-section--standalone .ui-portfolio-inline-links {
     padding-bottom: var(--space-6);
   }
 
+  me .ui-portfolio-hero-flow {
+    gap: var(--space-4);
+  }
+
+  me .ui-portfolio-hero-flow > .ui-portfolio-hero {
+    max-inline-size: none;
+  }
+
   me .ui-portfolio-surface {
     --surface-card-gap: var(--space-3);
   }
@@ -652,6 +689,10 @@ me .ui-portfolio-crate-section--standalone .ui-portfolio-inline-links {
   }
 
   me .ui-portfolio-work-index .ui-portfolio-lead-surface {
+    gap: var(--space-3);
+  }
+
+  me .ui-portfolio-work-index {
     gap: var(--space-3);
   }
 
@@ -708,6 +749,10 @@ me .ui-portfolio-crate-section--standalone .ui-portfolio-inline-links {
 
   me .ui-portfolio-work-section--current-proof {
     --surface-card-padding: var(--space-4);
+  }
+
+  me .ui-portfolio-work-section-rail {
+    gap: var(--space-2);
   }
 
   me .ui-portfolio-work-section--current-proof .u-section-copy {
@@ -811,8 +856,9 @@ me .ui-portfolio-crate-section--standalone .ui-portfolio-inline-links {
     gap: clamp(1.45rem, 1.15rem + 0.95vw, 2.35rem);
   }
 
-  me .ui-portfolio-work-section--current-proof > .ui-portfolio-section-copy,
-  me .ui-portfolio-experience-section--feature > .ui-portfolio-section-copy {
+  me .ui-portfolio-work-section--current-proof > .ui-portfolio-work-section-rail,
+  me .ui-portfolio-experience-section--feature > .ui-portfolio-section-copy,
+  me .ui-portfolio-experience-section--feature > .ui-portfolio-section-actions {
     grid-column: 1;
     align-self: start;
   }
@@ -821,11 +867,11 @@ me .ui-portfolio-crate-section--standalone .ui-portfolio-inline-links {
   me .ui-portfolio-experience-section--feature > .ui-portfolio-card-grid {
     grid-column: 2;
     grid-template-columns: 1fr;
+    grid-row: 1;
   }
 
-  me .ui-portfolio-work-section--current-proof > .ui-portfolio-section-actions {
-    grid-column: 1;
-    align-self: start;
+  me .ui-portfolio-work-section--current-proof > .ui-portfolio-work-section-rail {
+    gap: clamp(0.9rem, 0.78rem + 0.4vw, 1.25rem);
   }
 
   me .ui-portfolio-work-section--current-proof .ui-portfolio-card,
@@ -844,6 +890,11 @@ me .ui-portfolio-crate-section--standalone .ui-portfolio-inline-links {
 
   me .ui-portfolio-case-grid {
     grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  me .ui-portfolio-current-proof-detail {
+    grid-template-columns: minmax(0, 1.22fr) minmax(16rem, 0.78fr);
+    align-items: start;
   }
 
 }
@@ -865,6 +916,16 @@ me .ui-portfolio-crate-section--standalone .ui-portfolio-inline-links {
 @media (max-width: 26rem) {
   me .ui-portfolio-surface {
     --surface-card-padding: var(--space-3);
+  }
+
+  me .ui-portfolio-hero-flow .ui-portfolio-lead-surface h1 {
+    max-width: 13.2ch;
+    font-size: clamp(2rem, 1.72rem + 0.95vw, 2.3rem);
+  }
+
+  me .ui-portfolio-hero-flow .ui-portfolio-summary {
+    font-size: var(--text-size-body-md);
+    line-height: 1.52;
   }
 
   me .ui-portfolio-section-copy {

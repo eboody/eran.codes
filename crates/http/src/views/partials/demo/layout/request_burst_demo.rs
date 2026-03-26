@@ -192,9 +192,9 @@ impl Render for RequestBurstDemo {
     fn render(&self) -> maud::Markup {
         SurfaceSection::builder()
             .id(Text::from("request-burst-demo"))
-            .title(Text::from("High-Volume Request Burst"))
+            .title(Text::from("Load harness"))
             .subtitle(Text::from(
-                "Use the slider to send a large burst of requests from this browser and watch live request logs and SSE updates in real time.",
+                "Send a controlled burst from this browser and compare throughput, failures, and latency without leaving the page.",
             ))
             .attrs(vec![
                 Attr::flag("data-request-burst-root"),
@@ -287,6 +287,7 @@ mod tests {
             .render()
             .into_string();
 
+        assert!(markup.contains("Load harness"));
         assert!(markup.contains("Latency p95"));
         assert!(markup.contains("data-burst-endpoint"));
         assert!(markup.contains("data-burst-delta"));

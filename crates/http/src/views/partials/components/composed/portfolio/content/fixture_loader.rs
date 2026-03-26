@@ -137,9 +137,13 @@ pub fn work_index_content() -> &'static WorkIndexContent {
         let work = &site.ui_copy.work;
         let content = WorkIndexContent {
             page_title: work.page_title.clone(),
-            eyebrow: work.eyebrow.clone(),
-            title: work.title.clone(),
-            summary: work.summary.clone(),
+            hero: PortfolioHeroContent {
+                eyebrow: work.eyebrow.clone(),
+                title: work.title.clone(),
+                summary: work.summary.clone(),
+                badges: vec![],
+                actions: vec![],
+            },
             current_proof_section: WorkSectionContent {
                 title: work.current_proof.title.clone(),
                 subtitle: work.current_proof.subtitle.clone(),
@@ -235,14 +239,18 @@ fn load_work_case(slug: WorkCaseSlug) -> WorkCaseContent {
     let site = site_content();
     let content = WorkCaseContent {
         page_title: content.page_title,
-        eyebrow: content.eyebrow,
-        title: content.title,
-        summary: content.summary,
+        hero: PortfolioHeroContent {
+            eyebrow: content.eyebrow,
+            title: content.title,
+            summary: content.summary,
+            badges: vec![],
+            actions: resolve_link_refs(site, &content.action_refs),
+        },
+        detail_layout: slug.detail_layout(),
         challenge: content.challenge,
         implementation: content.implementation,
         outcomes: content.outcomes,
         stack: content.stack,
-        actions: resolve_link_refs(site, &content.action_refs),
     };
     validate_work_case(&content, slug);
     content

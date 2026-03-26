@@ -1,13 +1,10 @@
 use bon::Builder;
 use maud::Render;
 
-use crate::paths::Route;
-use crate::types::Text;
 use crate::views::{page, partials};
 
 use super::{
-    EngineeringQuality, GuestChatFallback, HomeHero, OperationsSurface, RequestBurstDemo,
-    SensitiveProofPanel, TabSetShowcase,
+    HomeHero, SensitiveProofPanel, SupportingProofTabs,
 };
 
 #[derive(Builder)]
@@ -21,18 +18,10 @@ impl Render for LabFlow {
         maud::html! {
             div class="u-page-stack u-page-stack--spacious" data-lab-page data-page-section {
                 (HomeHero::builder().maybe_user(self.user.clone()).build())
-                (TabSetShowcase::builder().build())
-                (RequestBurstDemo::builder()
-                    .endpoint(Text::from(Route::PartialRequestBurstProbe.as_str()))
-                    .build())
                 (SensitiveProofPanel::builder().build())
-                @if let Some(chat_demo) = &self.chat_demo {
-                    (chat_demo.render())
-                } @else {
-                    (GuestChatFallback::builder().build())
-                }
-                (OperationsSurface::builder().build())
-                (EngineeringQuality::builder().build())
+                (SupportingProofTabs::builder()
+                    .maybe_chat_demo(self.chat_demo.clone())
+                    .build())
             }
         }
     }
@@ -48,7 +37,8 @@ mod tests {
 
         assert!(markup.contains("class=\"u-page-stack u-page-stack--spacious\""));
         assert!(markup.contains("data-lab-page"));
-        assert!(markup.contains("High-Volume Request Burst"));
         assert!(markup.contains("Sensitive record proof"));
+        assert!(markup.contains("Validate the main proof from other angles"));
+        assert!(!markup.contains("Engineering Quality"));
     }
 }

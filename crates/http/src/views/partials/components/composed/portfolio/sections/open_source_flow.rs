@@ -15,29 +15,8 @@ me {
   margin-inline: auto;
 }
 
-me > .ui-portfolio-surface {
-  margin-top: 0;
-}
-
-me .ui-portfolio-hero {
-  max-inline-size: 92rem;
-  padding: 0;
-  border: none;
-  border-radius: 0;
-  background: none;
-  box-shadow: none;
-}
-
-me .ui-portfolio-lead-surface {
-  gap: var(--space-3);
-}
-
-me .ui-portfolio-lead-surface h1 {
-  max-width: 18ch;
-}
-
 me .ui-open-source-hero-aside {
-  gap: var(--space-3);
+  gap: var(--space-2);
 }
 
 me .ui-open-source-hero-intro {
@@ -49,53 +28,40 @@ me .ui-open-source-hero-intro p {
   margin: 0;
 }
 
-me .ui-open-source-hero-list {
-  margin: 0;
-  padding: 0;
-  list-style: none;
-  display: grid;
-  gap: var(--space-2);
-}
-
-me .ui-open-source-hero-item {
-  display: grid;
-  gap: 0.35rem;
-  padding-top: var(--space-2);
-  border-top: 1px solid color-mix(in srgb, var(--ui-border-soft) 78%, transparent);
-}
-
-me .ui-open-source-hero-item strong,
 me .ui-open-source-hero-footnote strong {
   font-size: var(--text-size-label-sm);
   letter-spacing: var(--text-track-ui);
 }
 
-me .ui-open-source-hero-item p,
 me .ui-open-source-hero-footnote {
   margin: 0;
   color: var(--ui-text-muted);
 }
 
-me .ui-open-source-hero-item-tags {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 0.35rem;
+me .ui-open-source-hero-footnote {
+  padding-top: var(--space-1);
+  border-top: 1px solid color-mix(in srgb, var(--ui-border-soft) 78%, transparent);
 }
 
-me .ui-open-source-hero-item-tag {
-  padding: 0.18rem 0.48rem;
-  border-radius: var(--radius-pill);
-  border: 1px solid color-mix(in srgb, var(--ui-border-soft) 76%, transparent);
-  background: color-mix(in srgb, var(--ui-surface-soft) 92%, transparent);
-  font-size: var(--text-size-label-2xs);
-  letter-spacing: var(--text-track-caps-md);
+me .ui-open-source-supporting-libraries {
+  display: grid;
+  gap: var(--space-2);
+}
+
+me .ui-open-source-supporting-label {
+  margin: 0;
+  font-size: var(--text-size-meta-xs);
+  letter-spacing: var(--text-track-caps-sm);
   text-transform: uppercase;
   color: var(--ui-text-muted);
 }
 
-me .ui-open-source-hero-footnote {
-  padding-top: var(--space-2);
-  border-top: 1px solid color-mix(in srgb, var(--ui-border-soft) 78%, transparent);
+me .ui-open-source-supporting-grid {
+  gap: var(--space-2);
+}
+
+me .ui-open-source-supporting-card {
+  gap: var(--space-2);
 }
 
 me .ui-open-source-mobile-intro {
@@ -162,10 +128,6 @@ me .ui-portfolio-crate-section--standalone .ui-code-block {
     margin-top: var(--space-4);
   }
 
-  me .ui-portfolio-hero {
-    max-inline-size: none;
-  }
-
   me .ui-open-source-hero-aside {
     display: none;
   }
@@ -220,16 +182,6 @@ me .ui-portfolio-crate-section--standalone .ui-code-block {
 }
 
 @media (max-width: 26rem) {
-  me .ui-portfolio-lead-surface h1 {
-    max-width: 13.2ch;
-    font-size: clamp(2rem, 1.72rem + 0.95vw, 2.3rem);
-  }
-
-  me .ui-portfolio-summary {
-    font-size: var(--text-size-body-md);
-    line-height: 1.52;
-  }
-
   me .ui-open-source-mobile-intro {
     gap: calc(var(--space-1) * 0.75);
     margin-top: calc(var(--space-1) * 0.75);
@@ -256,7 +208,7 @@ pub struct OpenSourceFlow<'a> {
 impl Render for OpenSourceFlow<'_> {
     fn render(&self) -> maud::Markup {
         maud::html! {
-            section class="ui-portfolio-open-source-flow" {
+            section class="ui-portfolio-hero-flow ui-portfolio-open-source-flow" {
                 (css())
                 (PortfolioHero {
                     content: &self.content.hero,
@@ -291,6 +243,7 @@ mod tests {
         assert!(markup.contains("ui-portfolio-open-source-flow"));
         assert!(markup.contains("ui-open-source-hero-aside"));
         assert!(markup.contains("ui-open-source-mobile-intro"));
-        assert!(markup.contains("data-portfolio-crate-switcher"));
+        assert!(markup.contains("ui-open-source-supporting-grid"));
+        assert!(!markup.contains("data-portfolio-crate-switcher"));
     }
 }

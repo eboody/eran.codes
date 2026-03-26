@@ -31,3 +31,20 @@ impl Render for Crate<'_> {
         }
     }
 }
+
+pub(super) struct SupportingCrate<'a> {
+    pub card: &'a CrateCardContent,
+}
+
+impl Render for SupportingCrate<'_> {
+    fn render(&self) -> maud::Markup {
+        maud::html! {
+            (InsetCard::new(maud::html! {
+                h3 { (&self.card.name) }
+                p class="ui-portfolio-card-summary" { (&self.card.summary) }
+                (Links { card: self.card })
+            })
+            .extra_class("ui-open-source-supporting-card"))
+        }
+    }
+}

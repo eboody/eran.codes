@@ -2,18 +2,14 @@ use maud::{Markup, Render};
 
 use crate::types::Text;
 
-pub(crate) enum Surface<'a> {
-    Standard { id: &'a str, class: &'a str },
-    PortfolioCrateSwitcher,
+pub(crate) struct Surface<'a> {
+    id: &'a str,
+    class: &'a str,
 }
 
 impl<'a> Surface<'a> {
     pub(crate) fn standard(id: &'a str, class: &'a str) -> Self {
-        Self::Standard { id, class }
-    }
-
-    pub(crate) fn portfolio_crate_switcher() -> Self {
-        Self::PortfolioCrateSwitcher
+        Self { id, class }
     }
 }
 
@@ -25,24 +21,14 @@ pub(crate) struct LocalTabRoot<'a> {
 
 impl Render for LocalTabRoot<'_> {
     fn render(&self) -> Markup {
-        match &self.surface {
-            Surface::Standard { id, class } => maud::html! {
-                section
-                    id=(id)
-                    class=(class)
-                    data-local-tabs-root
-                    data-local-tabs-active=(&self.active_tab_id) {
-                    (&self.content)
-                }
-            },
-            Surface::PortfolioCrateSwitcher => maud::html! {
-                section
-                    data-portfolio-crate-switcher
-                    data-local-tabs-root
-                    data-local-tabs-active=(&self.active_tab_id) {
-                    (&self.content)
-                }
-            },
+        maud::html! {
+            section
+                id=(self.surface.id)
+                class=(self.surface.class)
+                data-local-tabs-root
+                data-local-tabs-active=(&self.active_tab_id) {
+                (&self.content)
+            }
         }
     }
 }
@@ -67,21 +53,5 @@ mod tests {
         assert!(markup.contains("class=\"root-class\""));
         assert!(markup.contains("data-local-tabs-root"));
         assert!(markup.contains("data-local-tabs-active=\"alpha\""));
-    }
-
-    #[test]
-    fn renders_portfolio_switcher_marker_when_requested() {
-        let markup = LocalTabRoot {
-            surface: Surface::portfolio_crate_switcher(),
-            active_tab_id: Text::from("crate_0"),
-            content: maud::html! {
-                p { "Example" }
-            },
-        }
-        .render()
-        .into_string();
-
-        assert!(markup.contains("data-portfolio-crate-switcher"));
-        assert!(markup.contains("data-local-tabs-root"));
     }
 }

@@ -8,30 +8,27 @@ pub struct OpenSourceHeroAside<'a> {
 
 impl Render for OpenSourceHeroAside<'_> {
     fn render(&self) -> maud::Markup {
+        let crate_names = self
+            .crate_section
+            .cards
+            .iter()
+            .take(3)
+            .map(|card| card.name.to_string())
+            .collect::<Vec<_>>()
+            .join(", ");
+
         maud::html! {
             div class="ui-open-source-hero-aside" {
                 div class="ui-open-source-hero-intro" {
                     p class="ui-portfolio-hero-aside-kicker" { "Library proof" }
-                    h2 { "Three crates. One invariants-first through-line." }
+                    h2 { "Start with one crate." }
                     p class="ui-portfolio-card-summary" {
-                        "Typestate, nested-enum ergonomics, and namespace discipline packaged as reusable Rust APIs."
-                    }
-                }
-                ul class="ui-open-source-hero-list" {
-                    @for card in self.crate_section.cards.iter().take(3) {
-                        li class="ui-open-source-hero-item" {
-                            strong { (&card.name) }
-                            div class="ui-open-source-hero-item-tags" {
-                                @for tag in card.tags.iter().take(2) {
-                                    span class="ui-open-source-hero-item-tag" { (tag) }
-                                }
-                            }
-                        }
+                        "Pick " (crate_names) " and compare the published API surface to the implementation."
                     }
                 }
                 p class="ui-open-source-hero-footnote" {
-                    strong { "What to inspect" }
-                    " Read the API, then check the code and docs against the same published surface."
+                    strong { "Reading order" }
+                    " API first. Code and docs second."
                 }
             }
         }
@@ -76,8 +73,8 @@ mod tests {
         .into_string();
 
         assert!(aside_markup.contains("ui-open-source-hero-aside"));
-        assert!(aside_markup.contains("Three crates. One invariants-first through-line."));
-        assert!(aside_markup.contains("ui-open-source-hero-item-tag"));
+        assert!(aside_markup.contains("Start with one crate."));
+        assert!(!aside_markup.contains("ui-open-source-hero-item-tag"));
         assert!(mobile_markup.contains("ui-open-source-mobile-intro"));
         assert!(mobile_markup.contains(content.crate_section.subtitle.to_string().as_str()));
     }
