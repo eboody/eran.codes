@@ -353,21 +353,21 @@ me [data-nav-list='auth'] [data-nav-link-cta='true'] {
 
 @media (max-width: 48rem) {
   me {
-    --_nav-shell-padding: 0.58rem 0.72rem;
+    --_nav-shell-padding: 0.5rem 0.65rem;
     --_nav-brand-wrap-size: 2.25rem;
     --_nav-brand-mark-size: 1.85rem;
     position: static;
     top: auto;
     --_nav-link-font-size: var(--text-size-meta-xs);
-    margin-top: var(--space-2);
-    margin-bottom: var(--space-2);
+    margin-top: var(--space-1);
+    margin-bottom: var(--space-1);
   }
 
   me > [data-nav] {
     grid-template-columns: 1fr;
     padding: var(--_nav-shell-padding);
     border-radius: var(--ui-radius-md-inset);
-    gap: var(--space-2);
+    gap: var(--space-1);
   }
 
   me [data-nav-brand] {
@@ -379,7 +379,7 @@ me [data-nav-list='auth'] [data-nav-link-cta='true'] {
     flex-wrap: wrap;
     grid-column: auto;
     justify-content: flex-start;
-    row-gap: 0.3rem;
+    row-gap: 0.2rem;
   }
 
   me [data-nav-trailing] {
@@ -436,16 +436,16 @@ me [data-nav-list='auth'] [data-nav-link-cta='true'] {
   me [data-nav-list='auth'] {
     align-items: center;
     gap: var(--space-1);
-    padding-top: var(--space-1);
+    padding-top: 0;
     justify-self: start;
-    justify-content: flex-end;
-    border-top: 1px solid color-mix(in srgb, var(--border-subtle) 82%, transparent);
+    justify-content: flex-start;
+    border-top: none;
   }
 
   me [data-nav-auth-text] {
-    flex-basis: 100%;
-    max-inline-size: none;
-    justify-content: flex-end;
+    flex-basis: auto;
+    max-inline-size: min(44vw, 10rem);
+    justify-content: flex-start;
   }
 
   me [data-nav-guest-auth] .ui-button-row {
@@ -477,8 +477,18 @@ me [data-nav-list='auth'] [data-nav-link-cta='true'] {
 
   me [data-nav-list='primary'] {
     display: grid;
-    grid-template-columns: repeat(3, minmax(0, 1fr));
+    grid-template-columns: repeat(2, minmax(0, 1fr));
     width: 100%;
+    column-gap: var(--space-1);
+    row-gap: 0.2rem;
+  }
+
+  me [data-nav-list='primary'] [data-nav-link-label='full'] {
+    display: inline;
+  }
+
+  me [data-nav-list='primary'] [data-nav-link-label='compact'] {
+    display: none;
   }
 
   me [data-nav-list='primary'] li {
@@ -494,8 +504,8 @@ me [data-nav-list='auth'] [data-nav-link-cta='true'] {
 
   me [data-nav-list='auth'] {
     display: grid;
-    grid-template-columns: repeat(2, minmax(0, 1fr));
-    width: 100%;
+    grid-template-columns: auto auto;
+    width: auto;
     gap: var(--space-1);
   }
 
@@ -508,11 +518,13 @@ me [data-nav-list='auth'] [data-nav-link-cta='true'] {
   }
 
   me [data-nav-auth-text] {
-    grid-column: 1 / -1;
+    grid-column: auto;
     justify-content: flex-start;
+    max-inline-size: min(48vw, 9rem);
   }
 
   me [data-nav-guest-auth] .ui-button-row {
+    width: auto;
     --button-row-grid-template: 1fr;
   }
 
@@ -522,6 +534,16 @@ me [data-nav-list='auth'] [data-nav-link-cta='true'] {
 
   me [data-nav-auth-action] {
     --_button-padding-inline: calc(var(--control-padding-inline-compact) - 0.1rem);
+  }
+
+  me [data-nav-auth-prefix],
+  me [data-nav-create-account-action],
+  me [data-nav-account-link] {
+    display: none;
+  }
+
+  me [data-nav-guest-auth] {
+    width: auto;
   }
 }
 
@@ -688,7 +710,7 @@ impl Render for NavSignedIn {
                     }
                 }
                 li {
-                    a data-nav-link href=(&self.account_href) { "Account" }
+                    a data-nav-link data-nav-account-link href=(&self.account_href) { "Account" }
                 }
                 li {
                     form method="post" action=(&self.logout_action) {
@@ -725,13 +747,19 @@ impl Render for NavGuestAuth {
                     .label(Text::from("Sign in"))
                     .variant(self.sign_in_variant.clone())
                     .role(button::Role::link(self.sign_in_href.clone()))
-                    .data_attrs(vec![button::DataAttr::flag("data-nav-auth-action")])
+                    .data_attrs(vec![
+                        button::DataAttr::flag("data-nav-auth-action"),
+                        button::DataAttr::flag("data-nav-sign-in-action"),
+                    ])
                     .build(),
                 button::Button::builder()
                     .label(Text::from("Create account"))
                     .variant(self.create_account_variant.clone())
                     .role(button::Role::link(self.create_account_href.clone()))
-                    .data_attrs(vec![button::DataAttr::flag("data-nav-auth-action")])
+                    .data_attrs(vec![
+                        button::DataAttr::flag("data-nav-auth-action"),
+                        button::DataAttr::flag("data-nav-create-account-action"),
+                    ])
                     .build(),
             ])
             .build();
@@ -870,8 +898,10 @@ mod tests {
         assert!(markup.contains("white-space: nowrap;"));
         assert!(markup.contains("flex-wrap: wrap;"));
         assert!(!markup.contains("overscroll-behavior-x: contain;"));
-        assert!(markup.contains("grid-template-columns: repeat(3, minmax(0, 1fr));"));
         assert!(markup.contains("grid-template-columns: repeat(2, minmax(0, 1fr));"));
+        assert!(markup.contains("[data-nav-link-label='full'] {\n    display: inline;"));
+        assert!(markup.contains("[data-nav-link-label='compact'] {\n    display: none;"));
+        assert!(markup.contains("grid-template-columns: auto auto;"));
         assert!(markup.contains("data-nav-list=\"meta\""));
         assert!(markup.contains("data-nav-link-label=\"compact\""));
         assert!(markup.contains("data-nav-guest-auth"));
@@ -910,6 +940,8 @@ mod tests {
         assert!(markup.contains("class=\"button secondary\""));
         assert!(markup.contains("href=\"/register\""));
         assert!(markup.contains(">Create account<"));
+        assert!(markup.contains("data-nav-sign-in-action"));
+        assert!(markup.contains("data-nav-create-account-action"));
     }
 
     #[test]
@@ -951,6 +983,7 @@ mod tests {
 
         assert!(markup.contains("data-nav-auth-prefix"));
         assert!(markup.contains("data-nav-auth-name"));
+        assert!(markup.contains("data-nav-account-link"));
         assert!(markup.contains("aria-label=\"Signed in as responsiveaudit\""));
     }
 }
