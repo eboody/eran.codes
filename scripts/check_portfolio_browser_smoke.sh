@@ -88,7 +88,8 @@ run_case() {
 home_assertions=(
   '[data-portfolio-page]'
   '.ui-portfolio-hero'
-  '.ui-portfolio-proof-strip'
+  '.ui-portfolio-work-section--current-proof'
+  '.ui-portfolio-experience-section'
   '[data-nav-brand-mark-wrap]'
 )
 

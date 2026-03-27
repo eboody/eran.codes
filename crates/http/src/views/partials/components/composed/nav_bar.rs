@@ -504,9 +504,11 @@ me [data-nav-list='auth'] [data-nav-link-cta='true'] {
 
   me [data-nav-list='auth'] {
     display: grid;
-    grid-template-columns: auto auto;
-    width: auto;
+    grid-template-columns: minmax(0, 1fr) auto;
+    width: 100%;
     gap: var(--space-1);
+    justify-self: stretch;
+    align-items: center;
   }
 
   me [data-nav-list='auth'] li,
@@ -520,7 +522,7 @@ me [data-nav-list='auth'] [data-nav-link-cta='true'] {
   me [data-nav-auth-text] {
     grid-column: auto;
     justify-content: flex-start;
-    max-inline-size: min(48vw, 9rem);
+    max-inline-size: none;
   }
 
   me [data-nav-guest-auth] .ui-button-row {
@@ -538,7 +540,7 @@ me [data-nav-list='auth'] [data-nav-link-cta='true'] {
 
   me [data-nav-auth-prefix],
   me [data-nav-create-account-action],
-  me [data-nav-account-link] {
+  me [data-nav-account-item] {
     display: none;
   }
 
@@ -709,7 +711,7 @@ impl Render for NavSignedIn {
                         span data-nav-auth-name title=(&self.username) { (&self.username) }
                     }
                 }
-                li {
+                li data-nav-account-item {
                     a data-nav-link data-nav-account-link href=(&self.account_href) { "Account" }
                 }
                 li {
@@ -901,7 +903,7 @@ mod tests {
         assert!(markup.contains("grid-template-columns: repeat(2, minmax(0, 1fr));"));
         assert!(markup.contains("[data-nav-link-label='full'] {\n    display: inline;"));
         assert!(markup.contains("[data-nav-link-label='compact'] {\n    display: none;"));
-        assert!(markup.contains("grid-template-columns: auto auto;"));
+        assert!(markup.contains("grid-template-columns: minmax(0, 1fr) auto;"));
         assert!(markup.contains("data-nav-list=\"meta\""));
         assert!(markup.contains("data-nav-link-label=\"compact\""));
         assert!(markup.contains("data-nav-guest-auth"));
@@ -983,6 +985,7 @@ mod tests {
 
         assert!(markup.contains("data-nav-auth-prefix"));
         assert!(markup.contains("data-nav-auth-name"));
+        assert!(markup.contains("data-nav-account-item"));
         assert!(markup.contains("data-nav-account-link"));
         assert!(markup.contains("aria-label=\"Signed in as responsiveaudit\""));
     }
