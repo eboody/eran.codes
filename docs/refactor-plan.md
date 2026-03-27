@@ -4,7 +4,7 @@ As of March 23, 2026, the resume-first content unification, the IA-hardening pas
 
 This file is no longer the active forward plan for the site.
 
-Use [Presentation Tightening Plan](./presentation-tightening-plan.md) for the current execution plan.
+Use [Presentation Verification Plan](./presentation-tightening-plan.md) for the current execution plan.
 
 This file remains as the historical status note for the packaging phases that followed the secure-data proof slice.
 

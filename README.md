@@ -205,7 +205,7 @@ Then open `http://127.0.0.1:3000/` or `http://127.0.0.1:3000/lab`.
 - **Why it is structured this way**
   - [Professionalism In Practice](./docs/professionalism-breakdown.md)
   - [Project Audit](./docs/project-audit.md)
-  - [Presentation Tightening Plan](./docs/presentation-tightening-plan.md)
+  - [Presentation Verification Plan](./docs/presentation-tightening-plan.md)
 
 - **What the current proof surface actually shows**
   - [Auth + Sessions](./docs/auth-sessions.md)

@@ -4,7 +4,7 @@ Use [Portfolio Demo Concepts](./portfolio-demos.md) for the current shipped demo
 
 This file tracks follow-on demo ideas.
 
-Use [Presentation Tightening Plan](./presentation-tightening-plan.md) for the current execution plan.
+Use [Presentation Verification Plan](./presentation-tightening-plan.md) for the current execution plan.
 
 The current site plan lives elsewhere. Keep this note for post-shipped demo work after the secure-data slice.
 

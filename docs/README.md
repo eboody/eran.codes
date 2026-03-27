@@ -7,7 +7,7 @@ This repo has two documentation layers:
 ## Start Here
 
 - [Root README](../README.md) for the current thesis, proof surfaces, and quick evaluation path
-- [Presentation Tightening Plan](./presentation-tightening-plan.md) for the active work to reduce noise and tighten the reviewer path
+- [Presentation Verification Plan](./presentation-tightening-plan.md) for the active work to protect guest and signed-in visual quality
 - [Resume Realignment Status](./resume-realignment.md) for what the original proof pivot identified and what has now shipped
 - [Resume Alignment Packaging Status](./refactor-plan.md) for the historical shared-content, IA-hardening, supporting-proof route-policy, and archive-collapse passes
 - [Site Content Authoring Guide](./site-content-authoring.md) for what belongs in `site_content/` versus runtime-owned code
@@ -17,7 +17,7 @@ This repo has two documentation layers:
 
 ## Architecture And Boundaries
 
-- [Presentation Tightening Plan](./presentation-tightening-plan.md)
+- [Presentation Verification Plan](./presentation-tightening-plan.md)
 - [Sensitive Sync Architecture](./sensitive-sync-architecture.md)
 - [Professionalism In Practice](./professionalism-breakdown.md)
 - [Project Audit](./project-audit.md)
@@ -70,11 +70,15 @@ This repo has two documentation layers:
 - Before downstream publish or accept steps, run `bash scripts/check_publish_dry_run.sh`.
 - That gate includes local workspace tests, a Docker runtime build-and-boot smoke check that hits `/health` and then renders the live portfolio routes, and a local `act -j repo-checks` run against the repo CI workflow.
 - The portfolio browser smoke now compares the stable portfolio routes against committed baselines by default under `artifacts/visual/baseline/portfolio-smoke`, so visual regressions fail the local publish gate instead of staying advisory.
+- The default browser-smoke gate remains guest-first. Signed-in visual coverage is now repo-owned too, but it stays opt-in while the route set stabilizes.
 - `/lab` stays in the smoke path for live route/assertion coverage, but its operations timeline is still treated as a volatile surface rather than a pixel-locked baseline.
 - `repo-checks` also verifies the Docker runtime image keeps the expected `/health` probe and includes both `curl` and `wget` for host-platform healthchecks.
 - This repo also ships a `.githooks/pre-push` hook for the same gate; enable it locally with `git config core.hooksPath .githooks`.
 - To refresh the default baselines intentionally, run `PORTFOLIO_SMOKE_UPDATE_BASELINE=1 bash scripts/check_portfolio_browser_smoke.sh`.
-- For a heavier visual pass, run `PORTFOLIO_SMOKE_MODE=matrix bash scripts/check_portfolio_browser_smoke.sh`, and add `PORTFOLIO_SMOKE_UPDATE_BASELINE=1` when you intentionally refresh the wider matrix under `artifacts/visual/baseline/portfolio-smoke`.
+- To refresh the signed-in baselines intentionally, run `PORTFOLIO_SMOKE_SESSION_MODE=signed-in PORTFOLIO_SMOKE_UPDATE_BASELINE=1 bash scripts/check_portfolio_browser_smoke.sh`.
+- For a heavier guest visual pass, run `PORTFOLIO_SMOKE_MODE=matrix bash scripts/check_portfolio_browser_smoke.sh`, and add `PORTFOLIO_SMOKE_UPDATE_BASELINE=1` when you intentionally refresh the wider matrix under `artifacts/visual/baseline/portfolio-smoke`.
+- For the heavier signed-in pass, add `PORTFOLIO_SMOKE_SESSION_MODE=signed-in` to the same matrix command.
+- To exercise the signed-in browser smoke through the Docker runtime and publish path without making it the default gate, run `DOCKER_SMOKE_INCLUDE_SIGNED_IN=1 bash scripts/check_publish_dry_run.sh`.
 
 ## Suggested Reading Paths
 

@@ -16,7 +16,9 @@ postgres_container="${project}_postgres"
 app_container="${project}_app"
 browser_smoke_mode="${DOCKER_SMOKE_BROWSER_MODE:-smoke}"
 skip_browser_smoke="${DOCKER_SMOKE_SKIP_BROWSER_SMOKE:-0}"
+include_signed_in_browser_smoke="${DOCKER_SMOKE_INCLUDE_SIGNED_IN:-0}"
 session_secret="${DOCKER_SMOKE_SESSION_SECRET:-BwcHBwcHBwcHBwcHBwcHBwcHBwcHBwcHBwcHBwcHBwcHBwcHBwcHBwcHBwcHBwcHBwcHBwcHBwcHBwcHBwcHBw}"
+data_encryption_key="${DOCKER_SMOKE_DATA_ENCRYPTION_KEY:-QUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUE}"
 database_url="postgresql://app:app@postgres:5432/app"
 
 cleanup() {
@@ -63,14 +65,23 @@ docker run -d \
   -e PORT=3000 \
   -e DATABASE_URL="$database_url" \
   -e SESSION_SECRET="$session_secret" \
+  -e DATA_ENCRYPTION_KEY="$data_encryption_key" \
   -p 127.0.0.1::3000 \
   "$image_tag" >/dev/null
 
-host_port="$(
-  docker port "$app_container" 3000/tcp \
-    | sed -n 's/^127\.0\.0\.1:\([0-9]\+\)$/\1/p' \
-    | head -n 1
-)"
+host_port=""
+
+for _attempt in $(seq 1 30); do
+  host_port="$(
+    { docker port "$app_container" 3000/tcp 2>/dev/null || true; } \
+      | sed -n 's/^127\.0\.0\.1:\([0-9]\+\)$/\1/p' \
+      | head -n 1
+  )"
+  if [[ -n "$host_port" ]]; then
+    break
+  fi
+  sleep 1
+done
 
 if [[ -z "$host_port" ]]; then
   echo "error: failed to resolve published host port for Docker smoke check" >&2
@@ -107,10 +118,26 @@ fi
 
 curl --fail --silent --show-error "http://127.0.0.1:${host_port}/health" >/dev/null
 
-if [[ "$skip_browser_smoke" != "1" ]]; then
-  echo "Running portfolio browser smoke against runtime image..."
+run_browser_smoke() {
+  local session_mode="$1"
+  local current_dir="${PORTFOLIO_SMOKE_CURRENT_DIR:-artifacts/visual/current/docker-smoke}"
+
+  if [[ "$include_signed_in_browser_smoke" == "1" ]]; then
+    current_dir="${current_dir}/${session_mode}"
+  fi
+
+  echo "Running portfolio browser smoke against runtime image (${session_mode})..."
   PORTFOLIO_SMOKE_BASE_URL="http://127.0.0.1:${host_port}" \
   PORTFOLIO_SMOKE_MODE="$browser_smoke_mode" \
-  PORTFOLIO_SMOKE_CURRENT_DIR="${PORTFOLIO_SMOKE_CURRENT_DIR:-artifacts/visual/current/docker-smoke}" \
+  PORTFOLIO_SMOKE_SESSION_MODE="$session_mode" \
+  PORTFOLIO_SMOKE_CURRENT_DIR="$current_dir" \
   bash scripts/check_portfolio_browser_smoke.sh
+}
+
+if [[ "$skip_browser_smoke" != "1" ]]; then
+  run_browser_smoke guest
+
+  if [[ "$include_signed_in_browser_smoke" == "1" ]]; then
+    run_browser_smoke signed-in
+  fi
 fi

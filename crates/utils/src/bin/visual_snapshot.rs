@@ -3,6 +3,7 @@ use std::io;
 use std::path::PathBuf;
 use std::time::Duration;
 use std::time::Instant;
+use std::time::{SystemTime, UNIX_EPOCH};
 
 use clap::{Parser, ValueEnum};
 use image::{ImageFormat, load_from_memory_with_format};
@@ -56,6 +57,18 @@ struct Args {
     demo_message: Option<String>,
     #[arg(long, default_value_t = 1200)]
     post_wait_ms: u64,
+    #[arg(long, value_enum)]
+    auth_flow: Option<SnapshotAuthFlow>,
+    #[arg(long)]
+    auth_username: Option<String>,
+    #[arg(long)]
+    auth_email: Option<String>,
+    #[arg(long)]
+    auth_password: Option<String>,
+    #[arg(long, default_value_t = 1200)]
+    auth_wait_ms: u64,
+    #[arg(long)]
+    auth_ready_selector: Vec<String>,
 }
 
 const PIXEL_DIFF_TOLERANCE_ABSOLUTE: u64 = 16;
@@ -100,8 +113,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
     }
     install_data_init_strip_script(&page, &args.remove_data_init_selector).await?;
     install_text_normalizer_script(&page, &args.normalize_text_selector).await?;
-    page.goto_builder(args.url.as_ref()).goto().await?;
-    poll_page_events(&mut events, args.wait_ms, args.debug_events).await;
+    open_snapshot_target(&page, &mut events, &args).await?;
 
     if let Some(selector) = &args.click_selector {
         if args.debug_events {
@@ -189,11 +201,10 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
         let comparison = compare_png_pixels(&baseline_bytes, &screenshot)?;
         if !comparison.within_tolerance() {
             eprintln!(
-                "visual snapshot mismatch: current={} baseline={} differing_pixels={} allowed_pixels={}",
+                "visual snapshot mismatch: current={} baseline={} {}",
                 args.output.display(),
                 baseline.display(),
-                comparison.differing_pixels,
-                comparison.allowed_pixels
+                comparison.describe_mismatch()
             );
             std::process::exit(2);
         }
@@ -212,6 +223,19 @@ enum SnapshotColorScheme {
     NoPreference,
 }
 
+#[derive(Clone, Copy, Debug, Eq, PartialEq, ValueEnum)]
+enum SnapshotAuthFlow {
+    Register,
+    Login,
+}
+
+#[derive(Clone, Debug, PartialEq, Eq)]
+struct SnapshotAuthUser {
+    username: Option<String>,
+    email: String,
+    password: String,
+}
+
 impl From<SnapshotColorScheme> for ColorScheme {
     fn from(value: SnapshotColorScheme) -> Self {
         match value {
@@ -219,6 +243,193 @@ impl From<SnapshotColorScheme> for ColorScheme {
             SnapshotColorScheme::Dark => Self::Dark,
             SnapshotColorScheme::NoPreference => Self::NoPreference,
         }
+    }
+}
+
+async fn open_snapshot_target<S>(
+    page: &playwright::api::Page,
+    events: &mut S,
+    args: &Args,
+) -> Result<(), Box<dyn std::error::Error>>
+where
+    S: tokio_stream::Stream<Item = Result<page::Event, BroadcastStreamRecvError>> + Unpin,
+{
+    match args.auth_flow {
+        Some(flow) => open_signed_in_target(page, events, args, flow).await,
+        None => {
+            page.goto_builder(args.url.as_ref()).goto().await?;
+            poll_page_events(events, args.wait_ms, args.debug_events).await;
+            Ok(())
+        }
+    }
+}
+
+async fn open_signed_in_target<S>(
+    page: &playwright::api::Page,
+    events: &mut S,
+    args: &Args,
+    flow: SnapshotAuthFlow,
+) -> Result<(), Box<dyn std::error::Error>>
+where
+    S: tokio_stream::Stream<Item = Result<page::Event, BroadcastStreamRecvError>> + Unpin,
+{
+    let target_path = snapshot_target_path(&args.url);
+    let auth_url = auth_entry_url(&args.url, flow, &target_path)?;
+    let auth_user = resolve_auth_user(args, flow, &target_path)?;
+
+    if args.debug_events {
+        eprintln!(
+            "[browser:auth] flow={flow:?} auth_url={} target={}",
+            auth_url, args.url
+        );
+    }
+
+    page.goto_builder(auth_url.as_ref()).goto().await?;
+    poll_page_events(events, args.wait_ms, args.debug_events).await;
+
+    if let Some(username) = &auth_user.username {
+        page.fill_builder("input[name='username']", username)
+            .fill()
+            .await?;
+    }
+    page.fill_builder("input[name='email']", &auth_user.email)
+        .fill()
+        .await?;
+    page.fill_builder("input[name='password']", &auth_user.password)
+        .fill()
+        .await?;
+    page.click_builder("[data-auth-submit]").click().await?;
+
+    let ready_selectors = auth_ready_selectors(args);
+    assert_selectors_present(
+        page,
+        &ready_selectors,
+        args.assert_timeout_ms,
+        args.debug_events,
+    )
+    .await?;
+    poll_page_events(events, args.auth_wait_ms, args.debug_events).await;
+
+    page.goto_builder(args.url.as_ref()).goto().await?;
+    poll_page_events(events, args.wait_ms, args.debug_events).await;
+
+    Ok(())
+}
+
+fn auth_entry_url(
+    target_url: &Url,
+    flow: SnapshotAuthFlow,
+    next_path: &str,
+) -> Result<Url, Box<dyn std::error::Error>> {
+    let mut auth_url = target_url.clone();
+    auth_url.set_path(match flow {
+        SnapshotAuthFlow::Register => "/register",
+        SnapshotAuthFlow::Login => "/login",
+    });
+    let mut serializer = url::form_urlencoded::Serializer::new(String::new());
+    serializer.append_pair("next", next_path);
+    auth_url.set_query(Some(&serializer.finish()));
+    auth_url.set_fragment(None);
+    Ok(auth_url)
+}
+
+fn snapshot_target_path(url: &Url) -> String {
+    let mut target = url.path().to_owned();
+    if let Some(query) = url.query() {
+        target.push('?');
+        target.push_str(query);
+    }
+    if target.is_empty() { "/".to_owned() } else { target }
+}
+
+fn auth_ready_selectors(args: &Args) -> Vec<String> {
+    if args.auth_ready_selector.is_empty() {
+        vec!["[data-nav-auth-text]".to_owned()]
+    } else {
+        args.auth_ready_selector.clone()
+    }
+}
+
+fn resolve_auth_user(
+    args: &Args,
+    flow: SnapshotAuthFlow,
+    target_path: &str,
+) -> Result<SnapshotAuthUser, Box<dyn std::error::Error>> {
+    match flow {
+        SnapshotAuthFlow::Register => Ok(generated_register_user(
+            args.auth_username.as_deref(),
+            args.auth_email.as_deref(),
+            args.auth_password.as_deref(),
+            target_path,
+        )),
+        SnapshotAuthFlow::Login => {
+            let email = args.auth_email.clone().ok_or_else(|| {
+                io::Error::new(
+                    io::ErrorKind::InvalidInput,
+                    "--auth-email is required with --auth-flow login",
+                )
+            })?;
+            let password = args.auth_password.clone().ok_or_else(|| {
+                io::Error::new(
+                    io::ErrorKind::InvalidInput,
+                    "--auth-password is required with --auth-flow login",
+                )
+            })?;
+            Ok(SnapshotAuthUser {
+                username: None,
+                email,
+                password,
+            })
+        }
+    }
+}
+
+fn generated_register_user(
+    username: Option<&str>,
+    email: Option<&str>,
+    password: Option<&str>,
+    target_path: &str,
+) -> SnapshotAuthUser {
+    let slug = target_path
+        .chars()
+        .map(|ch| match ch {
+            'a'..='z' | '0'..='9' => ch,
+            'A'..='Z' => ch.to_ascii_lowercase(),
+            _ => '-',
+        })
+        .collect::<String>()
+        .trim_matches('-')
+        .to_owned();
+    let stamp = SystemTime::now()
+        .duration_since(UNIX_EPOCH)
+        .unwrap_or_default()
+        .as_millis();
+    let slug_fragment = if slug.is_empty() {
+        "user".to_owned()
+    } else {
+        slug.chars().take(6).collect::<String>()
+    };
+    let stamp_fragment = format!("{stamp:x}")
+        .chars()
+        .rev()
+        .take(6)
+        .collect::<Vec<_>>()
+        .into_iter()
+        .rev()
+        .collect::<String>();
+    let fallback_username = format!("snap-{slug_fragment}-{stamp_fragment}");
+    let resolved_username = username.map(ToOwned::to_owned).unwrap_or(fallback_username);
+    let resolved_email = email
+        .map(ToOwned::to_owned)
+        .unwrap_or_else(|| format!("{resolved_username}@example.com"));
+    let resolved_password = password
+        .map(ToOwned::to_owned)
+        .unwrap_or_else(|| "snapshot-password".to_owned());
+
+    SnapshotAuthUser {
+        username: Some(resolved_username),
+        email: resolved_email,
+        password: resolved_password,
     }
 }
 
@@ -370,6 +581,44 @@ html {
         None,
     )
     .await?;
+    // Wait for fonts, images, and a couple of animation frames so full-page
+    // height is measured after the browser has settled its final layout.
+    let _: bool = page
+        .eval(
+            r#"async () => {
+  if (document.fonts?.ready) {
+    try {
+      await document.fonts.ready;
+    } catch (_) {}
+  }
+
+  const images = Array.from(document.images ?? []);
+  await Promise.all(
+    images.map(async (image) => {
+      if (!image.complete) {
+        await new Promise((resolve) => {
+          const finish = () => resolve();
+          image.addEventListener('load', finish, { once: true });
+          image.addEventListener('error', finish, { once: true });
+        });
+      }
+
+      if (typeof image.decode === 'function') {
+        try {
+          await image.decode();
+        } catch (_) {}
+      }
+    })
+  );
+
+  await new Promise((resolve) =>
+    requestAnimationFrame(() => requestAnimationFrame(resolve))
+  );
+
+  return true;
+}"#,
+        )
+        .await?;
     Ok(())
 }
 
@@ -401,14 +650,47 @@ async fn assert_selectors_present(
 }
 
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
-struct PixelComparison {
-    differing_pixels: u64,
-    allowed_pixels: u64,
+enum PixelComparison {
+    Raster {
+        differing_pixels: u64,
+        allowed_pixels: u64,
+    },
+    DimensionMismatch {
+        baseline_dimensions: (u32, u32),
+        current_dimensions: (u32, u32),
+    },
 }
 
 impl PixelComparison {
     fn within_tolerance(self) -> bool {
-        self.differing_pixels <= self.allowed_pixels
+        match self {
+            Self::Raster {
+                differing_pixels,
+                allowed_pixels,
+            } => differing_pixels <= allowed_pixels,
+            Self::DimensionMismatch { .. } => false,
+        }
+    }
+
+    fn describe_mismatch(self) -> String {
+        match self {
+            Self::Raster {
+                differing_pixels,
+                allowed_pixels,
+            } => format!(
+                "differing_pixels={differing_pixels} allowed_pixels={allowed_pixels}"
+            ),
+            Self::DimensionMismatch {
+                baseline_dimensions,
+                current_dimensions,
+            } => format!(
+                "baseline_dimensions={}x{} current_dimensions={}x{}",
+                baseline_dimensions.0,
+                baseline_dimensions.1,
+                current_dimensions.0,
+                current_dimensions.1
+            ),
+        }
     }
 }
 
@@ -421,9 +703,9 @@ fn compare_png_pixels(
     let current = load_from_memory_with_format(current_bytes, ImageFormat::Png)?.to_rgba8();
 
     if baseline.dimensions() != current.dimensions() {
-        return Ok(PixelComparison {
-            differing_pixels: u64::MAX,
-            allowed_pixels: 0,
+        return Ok(PixelComparison::DimensionMismatch {
+            baseline_dimensions: baseline.dimensions(),
+            current_dimensions: current.dimensions(),
         });
     }
 
@@ -436,7 +718,7 @@ fn compare_png_pixels(
     let allowed_pixels = PIXEL_DIFF_TOLERANCE_ABSOLUTE
         .max((total_pixels as f64 * PIXEL_DIFF_TOLERANCE_RATIO).ceil() as u64);
 
-    Ok(PixelComparison {
+    Ok(PixelComparison::Raster {
         differing_pixels,
         allowed_pixels,
     })
@@ -541,7 +823,13 @@ mod tests {
 
         let comparison = compare_png_pixels(&baseline, &current).expect("decode png");
         assert!(comparison.within_tolerance());
-        assert_eq!(comparison.differing_pixels, 0);
+        assert_eq!(
+            comparison,
+            PixelComparison::Raster {
+                differing_pixels: 0,
+                allowed_pixels: PIXEL_DIFF_TOLERANCE_ABSOLUTE,
+            }
+        );
     }
 
     #[test]
@@ -569,7 +857,13 @@ mod tests {
             compare_png_pixels(&baseline_png, &current_png).expect("decode png");
 
         assert!(comparison.within_tolerance());
-        assert_eq!(comparison.differing_pixels, 1);
+        assert_eq!(
+            comparison,
+            PixelComparison::Raster {
+                differing_pixels: 1,
+                allowed_pixels: PIXEL_DIFF_TOLERANCE_ABSOLUTE,
+            }
+        );
     }
 
     #[test]
@@ -595,6 +889,49 @@ mod tests {
             compare_png_pixels(&baseline_png, &current_png).expect("decode png");
 
         assert!(!comparison.within_tolerance());
+        assert_eq!(
+            comparison,
+            PixelComparison::Raster {
+                differing_pixels: 100,
+                allowed_pixels: PIXEL_DIFF_TOLERANCE_ABSOLUTE,
+            }
+        );
+    }
+
+    #[test]
+    fn png_pixel_match_reports_dimension_mismatch_explicitly() {
+        let baseline = image::RgbaImage::from_pixel(10, 10, image::Rgba([1, 2, 3, 255]));
+        let current = image::RgbaImage::from_pixel(10, 12, image::Rgba([1, 2, 3, 255]));
+        let mut baseline_png = Vec::new();
+        let mut current_png = Vec::new();
+        baseline
+            .write_to(
+                &mut std::io::Cursor::new(&mut baseline_png),
+                image::ImageFormat::Png,
+            )
+            .expect("baseline png");
+        current
+            .write_to(
+                &mut std::io::Cursor::new(&mut current_png),
+                image::ImageFormat::Png,
+            )
+            .expect("current png");
+
+        let comparison =
+            compare_png_pixels(&baseline_png, &current_png).expect("decode png");
+
+        assert_eq!(
+            comparison,
+            PixelComparison::DimensionMismatch {
+                baseline_dimensions: (10, 10),
+                current_dimensions: (10, 12),
+            }
+        );
+        assert!(!comparison.within_tolerance());
+        assert_eq!(
+            comparison.describe_mismatch(),
+            "baseline_dimensions=10x10 current_dimensions=10x12"
+        );
     }
 
     #[test]
@@ -605,5 +942,55 @@ mod tests {
             .expect_err("invalid mapping");
 
         assert_eq!(error.to_string(), "missing mapping");
+    }
+
+    #[test]
+    fn snapshot_target_path_keeps_route_query_and_drops_fragment() {
+        let url = Url::parse("http://127.0.0.1:3000/work/sensitive-sync?view=full#details")
+            .expect("url");
+
+        assert_eq!(snapshot_target_path(&url), "/work/sensitive-sync?view=full");
+    }
+
+    #[test]
+    fn generated_register_user_uses_overrides_when_provided() {
+        let user = generated_register_user(
+            Some("reviewer"),
+            Some("reviewer@example.com"),
+            Some("secret"),
+            "/work",
+        );
+
+        assert_eq!(
+            user,
+            SnapshotAuthUser {
+                username: Some("reviewer".to_owned()),
+                email: "reviewer@example.com".to_owned(),
+                password: "secret".to_owned(),
+            }
+        );
+    }
+
+    #[test]
+    fn generated_register_user_keeps_fallback_username_within_app_limit() {
+        let user = generated_register_user(None, None, None, "/work/sensitive-sync");
+
+        assert!(user.username.expect("username").chars().count() <= 20);
+    }
+
+    #[test]
+    fn auth_ready_selectors_default_to_signed_in_nav() {
+        let args = Args::parse_from([
+            "visual_snapshot",
+            "--url",
+            "http://127.0.0.1:3000/work",
+            "--output",
+            "artifacts/visual/current/test.png",
+        ]);
+
+        assert_eq!(
+            auth_ready_selectors(&args),
+            vec!["[data-nav-auth-text]".to_owned()]
+        );
     }
 }

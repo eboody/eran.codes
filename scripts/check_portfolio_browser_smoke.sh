@@ -8,6 +8,7 @@ base_url="${PORTFOLIO_SMOKE_BASE_URL:-http://127.0.0.1:3000}"
 current_dir="${PORTFOLIO_SMOKE_CURRENT_DIR:-artifacts/visual/current/portfolio-smoke}"
 baseline_dir="${PORTFOLIO_SMOKE_BASELINE_DIR:-artifacts/visual/baseline/portfolio-smoke}"
 mode="${PORTFOLIO_SMOKE_MODE:-smoke}"
+session_mode="${PORTFOLIO_SMOKE_SESSION_MODE:-guest}"
 wait_ms="${PORTFOLIO_SMOKE_WAIT_MS:-1400}"
 click_wait_ms="${PORTFOLIO_SMOKE_CLICK_WAIT_MS:-900}"
 assert_timeout_ms="${PORTFOLIO_SMOKE_ASSERT_TIMEOUT_MS:-6000}"
@@ -26,6 +27,15 @@ if [[ "$prune_current" == "1" ]]; then
   find "$current_dir" -maxdepth 1 -type f \( -name '*.png' -o -name '*.html' \) -delete
 fi
 
+case "$session_mode" in
+  guest|signed-in)
+    ;;
+  *)
+    echo "error: unsupported PORTFOLIO_SMOKE_SESSION_MODE=${session_mode}; expected guest or signed-in" >&2
+    exit 1
+    ;;
+esac
+
 run_case() {
   local name="$1"
   local path="$2"
@@ -36,8 +46,13 @@ run_case() {
   local element_selector="${7:-}"
   shift 7
 
-  local output="$current_dir/${name}.png"
-  local html="$current_dir/${name}.html"
+  local snapshot_name="$name"
+  if [[ "$session_mode" == "signed-in" ]]; then
+    snapshot_name="${snapshot_name}-signed-in"
+  fi
+
+  local output="$current_dir/${snapshot_name}.png"
+  local html="$current_dir/${snapshot_name}.html"
   local url="${base_url%/}${path}"
   local args=(
     run -p utils --features visual-snapshot --bin visual_snapshot --
@@ -69,19 +84,26 @@ run_case() {
     )
   fi
 
+  if [[ "$session_mode" == "signed-in" ]]; then
+    args+=(
+      --auth-flow register
+      --normalize-text-selector '[data-nav-auth-name]=>reviewer'
+    )
+  fi
+
   while [[ $# -gt 0 ]]; do
     args+=(--assert-selector "$1")
     shift
   done
 
   if [[ "$use_baselines" == "1" && "$path" != "/lab" ]]; then
-    args+=(--baseline "$baseline_dir/${name}.png")
+    args+=(--baseline "$baseline_dir/${snapshot_name}.png")
     if [[ "$update_baselines" == "1" ]]; then
       args+=(--update-baseline)
     fi
   fi
 
-  echo "portfolio-browser-smoke: capturing ${name}"
+  echo "portfolio-browser-smoke: capturing ${snapshot_name}"
   RUSTC_WRAPPER= cargo "${args[@]}"
 }
 
@@ -98,6 +120,14 @@ work_assertions=(
   '[data-nav-link][href="/work"][aria-current="page"]'
   '.ui-portfolio-work-card'
   'a[href="/open-source"]'
+)
+
+work_current_assertions=(
+  '[data-portfolio-page]'
+  '[data-nav-link][href="/work/sensitive-sync"][aria-current="page"]'
+  '.ui-portfolio-current-proof-detail'
+  '[data-nav-auth-text]'
+  '[data-nav-auth-action]'
 )
 
 open_source_assertions=(
@@ -128,23 +158,38 @@ run_theme_matrix() {
 
 case "$mode" in
   smoke)
-    run_case "home-desktop-light" "/" "$desktop_width" "$desktop_height" light "" "" "${home_assertions[@]}"
-    run_case "work-desktop-light" "/work" "$desktop_width" "$desktop_height" light "" "" "${work_assertions[@]}"
-    run_case "open-source-desktop-light" "/open-source" "$desktop_width" "$desktop_height" light "" "" "${open_source_assertions[@]}"
-    run_case "lab-desktop-light" "/lab" "$desktop_width" "$desktop_height" light "" "#operations-surface" "${lab_assertions[@]}"
-    run_case "home-mobile-dark" "/" "$mobile_width" "$mobile_height" dark "" "" "${home_assertions[@]}"
-    run_case "work-mobile-dark" "/work" "$mobile_width" "$mobile_height" dark "" "" "${work_assertions[@]}"
-    run_case "open-source-mobile-dark" "/open-source" "$mobile_width" "$mobile_height" dark "" "" "${open_source_assertions[@]}"
-    run_case "lab-mobile-dark" "/lab" "$mobile_width" "$mobile_height" dark "" "#operations-surface" "${lab_assertions[@]}"
+    if [[ "$session_mode" == "guest" ]]; then
+      run_case "home-desktop-light" "/" "$desktop_width" "$desktop_height" light "" "" "${home_assertions[@]}"
+      run_case "work-desktop-light" "/work" "$desktop_width" "$desktop_height" light "" "" "${work_assertions[@]}"
+      run_case "open-source-desktop-light" "/open-source" "$desktop_width" "$desktop_height" light "" "" "${open_source_assertions[@]}"
+      run_case "lab-desktop-light" "/lab" "$desktop_width" "$desktop_height" light "" "#operations-surface" "${lab_assertions[@]}"
+      run_case "home-mobile-dark" "/" "$mobile_width" "$mobile_height" dark "" "" "${home_assertions[@]}"
+      run_case "work-mobile-dark" "/work" "$mobile_width" "$mobile_height" dark "" "" "${work_assertions[@]}"
+      run_case "open-source-mobile-dark" "/open-source" "$mobile_width" "$mobile_height" dark "" "" "${open_source_assertions[@]}"
+      run_case "lab-mobile-dark" "/lab" "$mobile_width" "$mobile_height" dark "" "#operations-surface" "${lab_assertions[@]}"
+    else
+      run_case "work-desktop-light" "/work" "$desktop_width" "$desktop_height" light "" "" "${work_assertions[@]}" '[data-nav-auth-text]' '[data-nav-auth-action]'
+      run_case "work-current-desktop-light" "/work/sensitive-sync" "$desktop_width" "$desktop_height" light "" "" "${work_current_assertions[@]}"
+      run_case "open-source-desktop-light" "/open-source" "$desktop_width" "$desktop_height" light "" "" "${open_source_assertions[@]}" '[data-nav-auth-text]' '[data-nav-auth-action]'
+      run_case "work-mobile-dark" "/work" "$mobile_width" "$mobile_height" dark "" "" "${work_assertions[@]}" '[data-nav-auth-text]' '[data-nav-auth-action]'
+      run_case "work-current-mobile-dark" "/work/sensitive-sync" "$mobile_width" "$mobile_height" dark "" "" "${work_current_assertions[@]}"
+      run_case "open-source-mobile-dark" "/open-source" "$mobile_width" "$mobile_height" dark "" "" "${open_source_assertions[@]}" '[data-nav-auth-text]' '[data-nav-auth-action]'
+    fi
     ;;
   matrix)
-    run_theme_matrix "home" "/" home_assertions
-    run_theme_matrix "work" "/work" work_assertions
-    run_theme_matrix "open-source" "/open-source" open_source_assertions
-    run_case "lab-desktop-light" "/lab" "$desktop_width" "$desktop_height" light "" "#operations-surface" "${lab_assertions[@]}"
-    run_case "lab-desktop-dark" "/lab" "$desktop_width" "$desktop_height" dark "" "#operations-surface" "${lab_assertions[@]}"
-    run_case "lab-mobile-light" "/lab" "$mobile_width" "$mobile_height" light "" "#operations-surface" "${lab_assertions[@]}"
-    run_case "lab-mobile-dark" "/lab" "$mobile_width" "$mobile_height" dark "" "#operations-surface" "${lab_assertions[@]}"
+    if [[ "$session_mode" == "guest" ]]; then
+      run_theme_matrix "home" "/" home_assertions
+      run_theme_matrix "work" "/work" work_assertions
+      run_theme_matrix "open-source" "/open-source" open_source_assertions
+      run_case "lab-desktop-light" "/lab" "$desktop_width" "$desktop_height" light "" "#operations-surface" "${lab_assertions[@]}"
+      run_case "lab-desktop-dark" "/lab" "$desktop_width" "$desktop_height" dark "" "#operations-surface" "${lab_assertions[@]}"
+      run_case "lab-mobile-light" "/lab" "$mobile_width" "$mobile_height" light "" "#operations-surface" "${lab_assertions[@]}"
+      run_case "lab-mobile-dark" "/lab" "$mobile_width" "$mobile_height" dark "" "#operations-surface" "${lab_assertions[@]}"
+    else
+      run_theme_matrix "work" "/work" work_assertions
+      run_theme_matrix "work-current" "/work/sensitive-sync" work_current_assertions
+      run_theme_matrix "open-source" "/open-source" open_source_assertions
+    fi
     ;;
   *)
     echo "error: unsupported PORTFOLIO_SMOKE_MODE=${mode}; expected smoke or matrix" >&2

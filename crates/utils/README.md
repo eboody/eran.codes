@@ -5,7 +5,7 @@
 ## What it owns
 - cross-cutting helpers with no domain/app/http/infra allegiance
 - environment and encoding utilities
-- developer tooling binaries such as visual snapshot capture
+- developer tooling binaries such as visual snapshot capture for guest and signed-in proof routes
 
 ## Read it like this
 - [src/lib.rs](./src/lib.rs)

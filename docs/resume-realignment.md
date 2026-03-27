@@ -59,4 +59,4 @@ The packaging branch is now shipped. The next move should be a focused choice, n
 - incremental content-root ergonomics cleanup if editing pain shows up
 - a separate stronger runtime-proof branch if the resume needs deeper authorization, production vendor evidence, or external key-management proof
 
-Use [Resume Alignment Packaging Status](./refactor-plan.md) for the historical post-refactor packaging state, [Presentation Tightening Plan](./presentation-tightening-plan.md) for the current execution plan, and [Site Content Authoring Guide](./site-content-authoring.md) for the rules around the shared content root.
+Use [Resume Alignment Packaging Status](./refactor-plan.md) for the historical post-refactor packaging state, [Presentation Verification Plan](./presentation-tightening-plan.md) for the current execution plan, and [Site Content Authoring Guide](./site-content-authoring.md) for the rules around the shared content root.
