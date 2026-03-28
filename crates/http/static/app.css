@@ -75,6 +75,7 @@
   --text-line-summary: 1.35;
   --text-line-body: 1.45;
   --text-line-reading: 1.58;
+  --text-line-reading-loose: 1.62;
   --text-line-body-loose: 1.5;
   --text-line-code: 1.65;
 
@@ -156,6 +157,13 @@
   --portfolio-shadow: var(--shadow-shell);
   --portfolio-surface: var(--surface-shell);
   --portfolio-surface-border: var(--border-default);
+  --portfolio-summary-line-height: var(--text-line-reading-loose);
+  --portfolio-summary-line-height-compact: 1.6;
+  --portfolio-feature-summary-line-height: 1.55;
+  --portfolio-mobile-hero-title-size: clamp(2rem, 1.72rem + 0.95vw, 2.3rem);
+  --portfolio-mobile-summary-line-height: 1.52;
+  --portfolio-badge-padding: 0.3rem 0.7rem;
+  --portfolio-badge-padding-compact: 0.28rem 0.55rem;
 
   /* Derived component-package aliases */
   --ui-border-soft: var(--border-subtle);

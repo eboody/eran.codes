@@ -95,7 +95,7 @@ me .ui-portfolio-eyebrow {
 me .ui-portfolio-summary {
   margin: 0;
   max-width: 60ch;
-  line-height: 1.62;
+  line-height: var(--portfolio-summary-line-height);
   color: color-mix(in srgb, var(--ui-text) 90%, var(--ui-text-muted) 10%);
 }
 
@@ -111,7 +111,7 @@ me .ui-portfolio-badges {
 me .ui-portfolio-badges li {
   border: var(--border-size-1) solid color-mix(in srgb, var(--ui-border-soft) 72%, transparent);
   border-radius: var(--radius-pill);
-  padding: 0.3rem 0.7rem;
+  padding: var(--portfolio-badge-padding);
   background: color-mix(in srgb, var(--surface-fill-panel) 94%, transparent);
   font-size: var(--text-size-meta-xs);
   color: var(--ui-text-muted);
@@ -714,7 +714,7 @@ me .ui-portfolio-crate-section--standalone .ui-portfolio-inline-links {
 
   me .ui-portfolio-summary {
     font-size: var(--text-size-body-lg);
-    line-height: 1.6;
+    line-height: var(--portfolio-summary-line-height-compact);
   }
 
   me .ui-portfolio-work-index .ui-portfolio-summary {
@@ -745,7 +745,7 @@ me .ui-portfolio-crate-section--standalone .ui-portfolio-inline-links {
 
   me .ui-portfolio-experience-card--feature .ui-portfolio-card-summary {
     font-size: var(--text-size-body-md);
-    line-height: 1.55;
+    line-height: var(--portfolio-feature-summary-line-height);
   }
 
   me .ui-portfolio-experience-card--feature .ui-portfolio-list {
@@ -956,12 +956,12 @@ me .ui-portfolio-crate-section--standalone .ui-portfolio-inline-links {
 
   me .ui-portfolio-hero-flow .ui-portfolio-lead-surface h1 {
     max-width: 13.2ch;
-    font-size: clamp(2rem, 1.72rem + 0.95vw, 2.3rem);
+    font-size: var(--portfolio-mobile-hero-title-size);
   }
 
   me .ui-portfolio-hero-flow .ui-portfolio-summary {
     font-size: var(--text-size-body-md);
-    line-height: 1.52;
+    line-height: var(--portfolio-mobile-summary-line-height);
   }
 
   me .ui-portfolio-section-copy {
@@ -978,7 +978,7 @@ me .ui-portfolio-crate-section--standalone .ui-portfolio-inline-links {
 
   me .ui-portfolio-work-section--current-proof .ui-portfolio-card-summary {
     font-size: var(--text-size-body-md);
-    line-height: 1.5;
+    line-height: var(--text-line-body-loose);
   }
 
   me .ui-portfolio-work-section--current-proof .ui-portfolio-card-footer {
@@ -1010,9 +1010,7 @@ me .ui-portfolio-crate-section--standalone .ui-portfolio-inline-links {
 pub mod content;
 mod sections;
 
-pub use sections::{
-    HomeFlow, OpenSourceFlow, WorkCaseDetail, WorkFlow,
-};
+pub use sections::{HomeFlow, OpenSourceFlow, WorkCaseDetail, WorkFlow};
 
 pub struct Page {
     pub content: Markup,

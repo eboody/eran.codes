@@ -12,6 +12,7 @@ me {
   --_home-hero-title-size: clamp(2.05rem, 1.45rem + 2.2vw, 3.15rem);
   --_home-hero-title-measure: 12.9ch;
   --_home-hero-title-line-height: 0.95;
+  --_home-hero-secondary-focus-offset: 0.2rem;
 
   display: grid;
   grid-template-columns: minmax(0, 1fr);
@@ -57,7 +58,7 @@ me [data-home-hero-summary] {
   margin: 0;
   max-width: 58ch;
   font-size: var(--text-size-lead);
-  line-height: 1.62;
+  line-height: var(--text-line-reading-loose);
   color: color-mix(in srgb, var(--text-body) 90%, var(--text-muted) 10%);
 }
 
@@ -186,7 +187,7 @@ me [data-home-hero-card-secondary-copy] {
 
 me [data-home-hero-card-secondary-link]:focus-visible {
   outline: 2px solid color-mix(in srgb, var(--accent-signal) 58%, transparent);
-  outline-offset: 0.2rem;
+  outline-offset: var(--_home-hero-secondary-focus-offset);
   border-radius: calc(var(--radius-control) - 3px);
 }
 

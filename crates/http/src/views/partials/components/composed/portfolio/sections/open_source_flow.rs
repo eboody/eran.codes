@@ -6,8 +6,6 @@ crate::views::scoped::inline_css!(
     r#"
 me {
   --open-source-max-inline-size: min(104rem, calc(100vw - (var(--shell-gutter) * 2)));
-  --_open-source-mobile-summary-line-height: 1.55;
-  --_open-source-mobile-badge-padding: 0.28rem 0.55rem;
 
   display: grid;
   gap: clamp(1.35rem, 1.05rem + 0.9vw, 2.1rem);
@@ -106,7 +104,7 @@ me .ui-open-source-mobile-intro {
 
   me .ui-open-source-mobile-intro .ui-portfolio-summary {
     font-size: var(--text-size-body-md);
-    line-height: var(--_open-source-mobile-summary-line-height);
+    line-height: var(--portfolio-feature-summary-line-height);
   }
 }
 
@@ -122,7 +120,7 @@ me .ui-open-source-mobile-intro {
   }
 
   me .ui-portfolio-badges li {
-    padding: var(--_open-source-mobile-badge-padding);
+    padding: var(--portfolio-badge-padding-compact);
   }
 }
 "#

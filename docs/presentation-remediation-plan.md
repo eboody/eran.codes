@@ -303,9 +303,9 @@ boundaries. Visual signoff comes after both.
 - [x] Fix the `KeyValueItem` public/render contract mismatch.
 - [x] Keep `scripts/ci/partials-render.sh` green.
 - [x] Replace raw shared primitive colors in `Pill` with semantic token usage.
-- [ ] Add any missing shared semantic aliases in `app.css`.
-- [ ] Collapse repeated local alias farms in chat and portfolio surfaces.
-- [ ] Promote repeated typography/rhythm values into shared tokens where they
+- [x] Add any missing shared semantic aliases in `app.css`.
+- [x] Collapse repeated local alias farms in chat and portfolio surfaces.
+- [x] Promote repeated typography/rhythm values into shared tokens where they
   represent the same meaning across components.
 - [ ] Inventory all remaining local scripts and state their owner.
 - [ ] Move inline JS into clearer repo-owned surfaces when that improves

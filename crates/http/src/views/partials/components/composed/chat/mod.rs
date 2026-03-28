@@ -24,25 +24,11 @@ pub(crate) use window::Window;
 crate::views::scoped::inline_css!(
     r#"
 me {
-  --chat-space-1: var(--space-1);
-  --chat-space-2: var(--space-2);
-  --chat-gap-columns: var(--space-3);
   --chat-window-height: clamp(15.5rem, 38vh, 21.25rem);
 
   --chat-radius-window: calc(var(--radius-card) - 4px);
-  --chat-radius-compose: var(--radius-control);
   --chat-send-min-width: 7.25rem;
   --chat-readonly-pad-inline: 0.8rem;
-
-  --chat-font-label: var(--text-size-label-sm);
-  --chat-font-micro: var(--text-size-label-2xs);
-  --chat-font-status: var(--text-size-label-2xs);
-  --chat-font-avatar: var(--text-size-label-2xs);
-  --chat-font-body: var(--text-size-body-md);
-  --chat-font-body-sm: var(--text-size-body-sm);
-  --chat-line-body: var(--text-line-summary);
-  --chat-track-label: var(--text-track-fixed-sm);
-  --chat-line-meta: var(--text-line-control);
 
   --chat-space-dot-gap: 0.22rem;
   --chat-live-dot-size: 0.45rem;
@@ -57,7 +43,6 @@ me {
   --chat-bubble-left-radius: 14px 14px 14px 5px;
   --chat-bubble-right-radius: 14px 14px 5px 14px;
 
-  --chat-shell-border: var(--border-default);
   --chat-shell-bg: var(--surface-fill-field);
   --chat-shell-shadow: inset 0 1px 0 var(--surface-edge-soft);
   --chat-shell-header-bg: color-mix(
@@ -65,36 +50,22 @@ me {
     var(--surface-raised) 94%,
     transparent
   );
-  --chat-shell-header-separator: var(--border-subtle);
-  --chat-shell-title: var(--text-strong);
-  --chat-shell-live: var(--status-success);
-  --chat-shell-live-dot: var(--status-success);
   --chat-shell-live-ring: color-mix(in srgb, var(--status-success) 20%, transparent);
-
-  --chat-compose-border: var(--border-default);
-  --chat-compose-surface: var(--surface-fill-field);
 
   --chat-avatar-border: color-mix(in srgb, var(--border-default) 92%, transparent);
   --chat-avatar-bg-left:
     color-mix(in srgb, var(--accent-warm-soft) 24%, var(--surface-raised));
-  --chat-avatar-fg-left: var(--text-strong);
   --chat-avatar-bg-right:
     color-mix(in srgb, var(--accent-signal-soft) 34%, var(--surface-raised));
   --chat-avatar-border-right:
     color-mix(in srgb, var(--accent-signal) 14%, var(--border-default));
-  --chat-avatar-fg-right: var(--text-strong);
   --chat-bubble-left-border: var(--border-subtle);
   --chat-bubble-left-bg:
     color-mix(in srgb, var(--surface-raised) 90%, var(--surface-field));
-  --chat-bubble-left-fg: var(--text-body);
   --chat-bubble-right-border:
     color-mix(in srgb, var(--accent-signal) 14%, var(--border-default));
   --chat-bubble-right-bg:
     color-mix(in srgb, var(--accent-signal-soft) 24%, var(--surface-panel));
-  --chat-bubble-right-fg: var(--text-body);
-  --chat-meta-fg-strong: var(--text-strong);
-  --chat-meta-fg-muted: var(--text-subtle);
-  --chat-body-fg: var(--text-body);
 
   margin-top: 0;
 }
@@ -129,26 +100,26 @@ me [data-chat-connection-state='disconnected'] {
 
 me > [data-chat-columns] {
   display: grid;
-  gap: var(--chat-gap-columns);
+  gap: var(--space-3);
   grid-template-columns: repeat(auto-fit, minmax(min(100%, 17.5rem), 1fr));
 }
 
 me > [data-chat-columns] > [data-chat-panel] {
   display: grid;
   grid-template-rows: minmax(0, 1fr) auto;
-  gap: var(--chat-space-2);
+  gap: var(--space-2);
   min-height: 0;
   min-width: 0;
 }
 
 me > [data-chat-columns] > [data-chat-panel] > [data-chat-compose] {
   display: grid;
-  gap: var(--chat-space-1);
-  border: 1px solid var(--chat-compose-border);
-  border-radius: var(--chat-radius-compose);
-  background: var(--chat-compose-surface);
+  gap: var(--space-1);
+  border: 1px solid var(--border-default);
+  border-radius: var(--radius-control);
+  background: var(--surface-fill-field);
   box-shadow: inset 0 1px 0 var(--surface-edge-soft);
-  padding: var(--chat-space-2);
+  padding: var(--space-2);
 }
 
 me > [data-chat-columns] > [data-chat-panel] > [data-chat-compose] > label {
@@ -158,9 +129,9 @@ me > [data-chat-columns] > [data-chat-panel] > [data-chat-compose] > label {
 me > [data-chat-columns] > [data-chat-panel] > [data-chat-compose] > label > [data-chat-compose-label] {
   display: block;
   margin: 0;
-  font-size: var(--chat-font-label);
+  font-size: var(--text-size-label-sm);
   font-weight: 700;
-  letter-spacing: var(--chat-track-label);
+  letter-spacing: var(--text-track-fixed-sm);
   text-transform: uppercase;
   color: color-mix(in srgb, var(--text-subtle) 92%, var(--text-body) 8%);
 }
@@ -168,7 +139,7 @@ me > [data-chat-columns] > [data-chat-panel] > [data-chat-compose] > label > [da
 me > [data-chat-columns] > [data-chat-panel] > [data-chat-compose] > [data-chat-compose-row] {
   display: grid;
   grid-template-columns: minmax(0, 1fr) auto;
-  gap: var(--chat-space-1);
+  gap: var(--space-1);
 }
 
 me > [data-chat-columns] > [data-chat-panel] > [data-chat-compose] > [data-chat-compose-row] > input[type="text"] {
@@ -183,16 +154,16 @@ me > [data-chat-columns] > [data-chat-panel] > [data-chat-compose] > [data-chat-
 
 me > [data-chat-columns] > [data-chat-panel] > [data-chat-readonly] {
   border: 1px dashed var(--border-subtle);
-  border-radius: var(--chat-radius-compose);
+  border-radius: var(--radius-control);
   background: var(--surface-fill-field);
   box-shadow: inset 0 1px 0 var(--surface-edge-soft);
-  padding: var(--chat-space-2) var(--chat-readonly-pad-inline);
-  font-size: var(--chat-font-body-sm);
+  padding: var(--space-2) var(--chat-readonly-pad-inline);
+  font-size: var(--text-size-body-sm);
   color: var(--text-muted);
 }
 
 me [data-chat-window] {
-  border: 1px solid var(--chat-shell-border);
+  border: 1px solid var(--border-default);
   border-radius: var(--chat-radius-window);
   background: var(--chat-shell-bg);
   box-shadow: var(--chat-shell-shadow);
@@ -207,31 +178,31 @@ me [data-chat-window] > header {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  gap: var(--chat-space-1);
+  gap: var(--space-1);
   margin: 0;
-  padding: var(--chat-space-1) var(--chat-space-2);
-  border-bottom: 1px solid var(--chat-shell-header-separator);
+  padding: var(--space-1) var(--space-2);
+  border-bottom: 1px solid var(--border-subtle);
   background: var(--chat-shell-header-bg);
   min-width: 0;
 }
 
 me [data-chat-window] > header > [data-chat-role] {
-  font-size: var(--chat-font-label);
+  font-size: var(--text-size-label-sm);
   font-weight: 700;
-  letter-spacing: var(--chat-track-label);
+  letter-spacing: var(--text-track-fixed-sm);
   text-transform: uppercase;
-  color: var(--chat-shell-title);
+  color: var(--text-strong);
 }
 
 me [data-chat-window] > header > [data-chat-room-state="live"] {
   display: inline-flex;
   align-items: center;
   gap: var(--chat-space-dot-gap);
-  font-size: var(--chat-font-micro);
+  font-size: var(--text-size-label-2xs);
   font-weight: 700;
-  letter-spacing: var(--chat-track-label);
+  letter-spacing: var(--text-track-fixed-sm);
   text-transform: uppercase;
-  color: var(--chat-shell-live);
+  color: var(--status-success);
 }
 
 me [data-chat-window] > header > [data-chat-room-state="live"]::before {
@@ -239,16 +210,16 @@ me [data-chat-window] > header > [data-chat-room-state="live"]::before {
   width: var(--chat-live-dot-size);
   height: var(--chat-live-dot-size);
   border-radius: var(--radius-pill);
-  background: var(--chat-shell-live-dot);
+  background: var(--status-success);
   box-shadow: 0 0 0 var(--chat-live-dot-ring-size) var(--chat-shell-live-ring);
 }
 
 me [data-chat-window] > header > [data-chat-room-state="offline"] {
-  font-size: var(--chat-font-micro);
+  font-size: var(--text-size-label-2xs);
   font-weight: 700;
-  letter-spacing: var(--chat-track-label);
+  letter-spacing: var(--text-track-fixed-sm);
   text-transform: uppercase;
-  color: color-mix(in srgb, var(--text-subtle) 90%, var(--chat-shell-title) 10%);
+  color: color-mix(in srgb, var(--text-subtle) 90%, var(--text-strong) 10%);
 }
 
 me [data-chat-feed] {
@@ -260,7 +231,7 @@ me [data-chat-feed] {
 me [data-chat-feed] > [data-chat-messages] {
   list-style: none;
   margin: 0;
-  padding: var(--chat-space-2);
+  padding: var(--space-2);
   display: flex;
   flex-direction: column;
   gap: var(--chat-message-gap);
@@ -288,26 +259,26 @@ me [data-chat-feed] > [data-chat-messages] > [data-chat-message] > [data-chat-av
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  font-size: var(--chat-font-avatar);
+  font-size: var(--text-size-label-2xs);
   font-weight: 700;
   border: 1px solid var(--chat-avatar-border);
   background: var(--chat-avatar-bg-left);
-  color: var(--chat-avatar-fg-left);
+  color: var(--text-strong);
 }
 
 me [data-chat-feed] > [data-chat-messages][data-chat-side="right"] > [data-chat-message] > [data-chat-avatar] {
   order: 2;
   background: var(--chat-avatar-bg-right);
   border-color: var(--chat-avatar-border-right);
-  color: var(--chat-avatar-fg-right);
+  color: var(--text-strong);
 }
 
 me [data-chat-feed] > [data-chat-messages] > [data-chat-message] > [data-chat-bubble] {
   border: 1px solid var(--chat-bubble-left-border);
   border-radius: var(--chat-bubble-left-radius);
   background: var(--chat-bubble-left-bg);
-  color: var(--chat-bubble-left-fg);
-  padding: var(--chat-space-1) var(--chat-space-2) var(--chat-space-2);
+  color: var(--text-body);
+  padding: var(--space-1) var(--space-2) var(--space-2);
   min-width: 0;
   max-width: var(--chat-bubble-max);
 }
@@ -317,7 +288,7 @@ me [data-chat-feed] > [data-chat-messages][data-chat-side="right"] > [data-chat-
   border-radius: var(--chat-bubble-right-radius);
   border-color: var(--chat-bubble-right-border);
   background: var(--chat-bubble-right-bg);
-  color: var(--chat-bubble-right-fg);
+  color: var(--text-body);
 }
 
 me [data-chat-feed] > [data-chat-messages] > [data-chat-message] > [data-chat-bubble] > [data-chat-meta] {
@@ -328,20 +299,20 @@ me [data-chat-feed] > [data-chat-messages] > [data-chat-message] > [data-chat-bu
 }
 
 me [data-chat-feed] > [data-chat-messages] > [data-chat-message] > [data-chat-bubble] > [data-chat-meta] > strong {
-  font-size: var(--chat-font-label);
+  font-size: var(--text-size-label-sm);
   font-weight: 700;
-  color: var(--chat-meta-fg-strong);
+  color: var(--text-strong);
 }
 
 me [data-chat-feed] > [data-chat-messages] > [data-chat-message] > [data-chat-bubble] > [data-chat-meta] > [data-chat-timestamp] {
-  font-size: var(--chat-font-micro);
-  line-height: var(--chat-line-meta);
-  color: var(--chat-meta-fg-muted);
+  font-size: var(--text-size-label-2xs);
+  line-height: var(--text-line-control);
+  color: var(--text-subtle);
 }
 
 me [data-chat-feed] > [data-chat-messages] > [data-chat-message] > [data-chat-bubble] > [data-chat-meta] > [data-chat-status] {
-  font-size: var(--chat-font-status);
-  line-height: var(--chat-line-meta);
+  font-size: var(--text-size-label-2xs);
+  line-height: var(--text-line-control);
   padding: 0 var(--space-1);
   border-radius: var(--radius-pill);
   border: 1px solid color-mix(in srgb, var(--border-default) 92%, transparent);
@@ -365,10 +336,10 @@ me [data-chat-feed] > [data-chat-messages] > [data-chat-message] > [data-chat-bu
 
 me [data-chat-feed] > [data-chat-messages] > [data-chat-message] > [data-chat-bubble] > [data-chat-body] {
   margin: var(--chat-message-body-top) 0 0;
-  font-size: var(--chat-font-body);
-  line-height: var(--chat-line-body);
+  font-size: var(--text-size-body-md);
+  line-height: var(--text-line-summary);
   overflow-wrap: anywhere;
-  color: var(--chat-body-fg);
+  color: var(--text-body);
 }
 
 @media (max-width: 960px) {
@@ -410,7 +381,7 @@ me [data-chat-feed] > [data-chat-messages] > [data-chat-message] > [data-chat-bu
   }
 
   me [data-chat-feed] > [data-chat-messages] {
-    padding: var(--chat-space-1);
+    padding: var(--space-1);
   }
 }
 "#
