@@ -173,7 +173,7 @@ Where inline CSS/JS is appropriate:
 - prefer `crate::inline_css!` and `inline_js!` so style/script code lives outside template bodies and is inserted with `(css())` / `(js())`,
 - reserve direct `css!` / `js!` usage in templates for very small one-off blocks,
 - scope styles with `css-scope-inline`,
-- use `surreal.js` helpers where they reduce DOM boilerplate and improve clarity.
+- keep local scripts framework-free unless the component contract clearly needs Datastar.
 
 ### Component-local styling first
 

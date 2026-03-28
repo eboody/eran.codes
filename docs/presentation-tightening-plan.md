@@ -1,5 +1,15 @@
 # Presentation Verification Plan
 
+Status: historical.
+
+Superseded as the active presentation branch by
+[Presentation Remediation Plan](./presentation-remediation-plan.md) on March 28,
+2026.
+
+This document still matters as the signed-in smoke and visual-regression
+hardening plan that followed the larger IA and presentation cleanup pass. It is
+no longer the full active presentation roadmap.
+
 Last updated: March 27, 2026.
 
 The presentation-cleanup phase is effectively shipped.

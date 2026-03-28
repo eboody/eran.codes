@@ -92,14 +92,6 @@ fn base_routes() -> Router {
             get(crate::handlers::demo::partials::sensitive_proof_partial),
         )
         .route(
-            Route::PartialSurrealGuarded.as_str(),
-            get(crate::handlers::sse::surreal_message_guarded),
-        )
-        .route(
-            Route::PartialSurrealCancel.as_str(),
-            get(crate::handlers::sse::surreal_message_cancel),
-        )
-        .route(
             Route::ErrorTest.as_str(),
             get(crate::handlers::pages::error_test),
         )

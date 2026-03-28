@@ -4,9 +4,7 @@ use maud::Render;
 use crate::paths::Route;
 use crate::types::Text;
 use crate::views::partials;
-use crate::views::partials::components::{
-    LocalTabPanel, LocalTabRoot, LocalTabRootSurface, Tab, TabInteraction, tab_set,
-};
+use crate::views::partials::components;
 use crate::views::proper_theme::THEME;
 
 use super::{GuestChatFallback, OperationsSurface, RequestBurstDemo};
@@ -42,54 +40,6 @@ me [data-supporting-proof-summary] {
   color: color-mix(in srgb, var(--text-body) 88%, var(--text-muted) 12%);
 }
 
-me .tab-set__tabs {
-  display: flex;
-  flex-wrap: wrap;
-  gap: var(--space-2);
-  align-items: center;
-}
-
-me .tab-set__tab {
-  width: fit-content;
-  justify-content: center;
-  padding:
-    calc(var(--control-padding-block-compact) + var(--space-1) * 0.25)
-    calc(var(--control-padding-inline-compact) + var(--space-1) * 0.5);
-  border-radius: var(--radius-pill);
-  border: var(--control-border-width) solid var(--border-default);
-  background: color-mix(in srgb, var(--surface-field) 84%, var(--surface-panel));
-  box-shadow: inset 0 1px 0 var(--surface-edge-soft);
-  color: var(--text-muted);
-  font-size: var(--text-size-body-xs);
-}
-
-me .tab-set__tab-line {
-  font-weight: 600;
-}
-
-me .tab-set__tab.is-selected {
-  color: var(--text-body);
-  border-color: color-mix(in srgb, var(--accent-signal) 34%, var(--border-default));
-  background:
-    linear-gradient(
-      180deg,
-      color-mix(in srgb, var(--accent-signal-soft) 18%, transparent),
-      transparent 70%
-    ),
-    color-mix(in srgb, var(--surface-panel) 92%, var(--accent-signal-soft));
-  box-shadow:
-    inset 0 1px 0 var(--surface-edge-default),
-    0 0 0 1px color-mix(in srgb, var(--accent-signal) 10%, transparent);
-}
-
-me .tab-set__tab:focus-visible {
-  outline: none;
-  border-color: color-mix(in srgb, var(--accent-signal) 54%, var(--border-default));
-  box-shadow:
-    0 0 0 0.22rem color-mix(in srgb, var(--accent-signal) 18%, transparent),
-    inset 0 1px 0 var(--surface-edge-default);
-}
-
 me [data-supporting-proof-panel] {
   display: grid;
 }
@@ -110,37 +60,9 @@ me [data-supporting-proof-panel][data-local-tab-entering='1'] {
   }
 }
 
-@media (prefers-color-scheme: dark) {
-  me .tab-set__tab {
-    background: color-mix(in srgb, var(--surface-field) 92%, black 8%);
-    border-color: color-mix(in srgb, var(--border-default) 90%, transparent);
-  }
-
-  me .tab-set__tab.is-selected {
-    background:
-      linear-gradient(180deg, var(--surface-wash-top-soft), transparent 44%),
-      color-mix(in srgb, var(--accent-signal) 14%, var(--surface-raised));
-    border-color: color-mix(in srgb, var(--accent-signal) 40%, var(--border-default));
-  }
-}
-
-@media (hover: hover) {
-  me .tab-set__tab:hover {
-    transform: translateY(-1px);
-  }
-}
-
 @media (max-width: 48rem) {
   me {
     gap: var(--space-3);
-  }
-
-  me .tab-set__tabs {
-    gap: var(--space-1);
-  }
-
-  me .tab-set__tab {
-    padding: var(--control-padding-block-compact) var(--control-padding-inline-compact);
   }
 }
 "#
@@ -155,7 +77,7 @@ impl Render for SupportingProofTabs {
     fn render(&self) -> maud::Markup {
         let tabs = SupportingProofTab::ALL
             .into_iter()
-            .map(|tab| Tab {
+            .map(|tab| components::Tab {
                 id: tab.dom_id(),
                 controls: tab.panel_dom_id(),
                 palette: &THEME.gray,
@@ -163,14 +85,14 @@ impl Render for SupportingProofTabs {
                 icon: None,
                 primary_text: Text::from(tab.primary_label()),
                 secondary_text: tab.secondary_label().map(Text::from),
-                interaction: TabInteraction::LocalTabs {
+                interaction: components::TabInteraction::LocalTabs {
                     value: tab.value(),
                 },
             })
             .collect();
 
-        LocalTabRoot {
-            surface: LocalTabRootSurface::standard(
+        components::LocalTabRoot {
+            surface: components::LocalTabRootSurface::standard(
                 "supporting-proof-tabs",
                 "ui-lab-supporting-tabs",
             ),
@@ -184,12 +106,13 @@ impl Render for SupportingProofTabs {
                         "The secure-data panel is the main event. Use runtime logs, the load harness, or chat only when you want supporting evidence."
                     }
                 }
-                (tab_set::tab::Set {
+                (components::tab_set::tab::Set {
                     aria_label: Text::from("Supporting views"),
-                    tabs: tab_set::tab::List { children: tabs },
+                    style: components::tab_set::tab::Style::PillCluster,
+                    tabs: components::tab_set::tab::List { children: tabs },
                 })
                 @for tab in SupportingProofTab::ALL {
-                    (LocalTabPanel {
+                    (components::LocalTabPanel {
                         id: tab.panel_dom_id(),
                         labelled_by: tab.dom_id(),
                         class: "ui-lab-supporting-panel",

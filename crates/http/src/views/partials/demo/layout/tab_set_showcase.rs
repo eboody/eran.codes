@@ -15,7 +15,7 @@ impl Render for TabSetShowcase {
             (tab_set::Component::from_content(
                 tab_set::ContentProps::builder()
                     .id("tab-set-showcase")
-                    .class("u-surface-card tab-set-showcase")
+                    .class("u-surface-card")
                     .aria_label(Text::from("Solutions"))
                     .content(&content)
                     .build(),

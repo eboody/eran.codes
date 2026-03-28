@@ -1,6 +1,7 @@
 # Surreal Docs (Workspace Mirror)
 
 This directory mirrors Surreal documentation from the upstream repository.
+The current app does not ship `surreal.js`; keep this directory as background reference only.
 
 - Upstream: https://github.com/gnat/surreal
 - Snapshot source: `/tmp/surreal-src/README.md`

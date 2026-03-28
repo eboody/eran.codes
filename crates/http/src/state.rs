@@ -1,4 +1,4 @@
-use std::sync::atomic::{AtomicI64, AtomicU64};
+use std::sync::atomic::AtomicI64;
 
 use bon::bon;
 use tower_cookies::Key;
@@ -17,7 +17,6 @@ pub struct State {
 
 #[derive(Clone)]
 pub struct DemoState {
-    pub surreal: SurrealState,
     pub counter: CounterState,
     pub chat_room_bindings: crate::chat_demo::room::Bindings,
 }
@@ -31,7 +30,6 @@ impl DemoState {
 impl Default for DemoState {
     fn default() -> Self {
         Self {
-            surreal: SurrealState::new(),
             counter: CounterState::new(),
             chat_room_bindings: crate::chat_demo::room::Bindings::new(),
         }
@@ -53,33 +51,6 @@ impl Default for CounterState {
     fn default() -> Self {
         Self {
             server_count: std::sync::Arc::new(AtomicI64::new(0)),
-        }
-    }
-}
-
-#[derive(Clone)]
-pub struct SurrealState {
-    pub guard: std::sync::Arc<
-        dashmap::DashMap<crate::sse::StreamKey, std::sync::Arc<tokio::sync::Mutex<()>>>,
-    >,
-    pub cancel: std::sync::Arc<
-        dashmap::DashMap<crate::sse::StreamKey, tokio_util::sync::CancellationToken>,
-    >,
-    pub seq: std::sync::Arc<AtomicU64>,
-}
-
-impl SurrealState {
-    pub fn new() -> Self {
-        Self::default()
-    }
-}
-
-impl Default for SurrealState {
-    fn default() -> Self {
-        Self {
-            guard: std::sync::Arc::new(dashmap::DashMap::new()),
-            cancel: std::sync::Arc::new(dashmap::DashMap::new()),
-            seq: std::sync::Arc::new(AtomicU64::new(0)),
         }
     }
 }

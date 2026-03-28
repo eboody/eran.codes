@@ -10,19 +10,24 @@ const STYLES: &str = r#"
 .ui-pill {
   --pill-padding-block: 0.18rem;
   --pill-padding-inline: 0.55rem;
+  --pill-padding-inline-narrow: 0.42rem;
+  --pill-tone: var(--ui-text-muted);
+  --pill-border: color-mix(in srgb, var(--pill-tone) 36%, transparent);
+  --pill-color: var(--pill-tone);
+  --pill-background: color-mix(in srgb, var(--surface-field) 88%, transparent);
   display: inline-flex;
   align-items: center;
   min-width: 0;
   max-inline-size: 100%;
   padding: var(--pill-padding-block) var(--pill-padding-inline);
   border-radius: var(--radius-pill);
-  border: 1px solid var(--pill-accent, var(--ui-border-muted));
-  background: color-mix(in srgb, var(--surface-field) 88%, transparent);
+  border: 1px solid var(--pill-border);
+  background: var(--pill-background);
   font-size: var(--text-size-label-xs);
   font-weight: 600;
   letter-spacing: var(--text-track-label);
   line-height: var(--text-line-control);
-  color: var(--pill-accent, var(--text-muted));
+  color: var(--pill-color);
 }
 
 .ui-pill--method {
@@ -36,29 +41,24 @@ const STYLES: &str = r#"
 }
 
 .ui-pill--method-get {
-  border-color: rgba(120, 190, 255, 0.6);
-  color: rgba(140, 210, 255, 0.95);
+  --pill-tone: color-mix(in srgb, var(--accent-signal) 90%, var(--text-body));
 }
 
 .ui-pill--method-post {
-  border-color: rgba(140, 210, 140, 0.7);
-  color: rgba(160, 220, 160, 0.95);
+  --pill-tone: color-mix(in srgb, var(--status-success) 92%, var(--text-body));
 }
 
 .ui-pill--method-put,
 .ui-pill--method-patch {
-  border-color: rgba(255, 196, 80, 0.7);
-  color: rgba(255, 196, 80, 0.95);
+  --pill-tone: color-mix(in srgb, var(--status-warn) 92%, var(--text-body));
 }
 
 .ui-pill--method-delete {
-  border-color: rgba(255, 120, 120, 0.75);
-  color: rgba(255, 140, 140, 0.95);
+  --pill-tone: color-mix(in srgb, var(--status-danger) 92%, var(--text-body));
 }
 
 .ui-pill--method-other {
-  border-color: rgba(180, 180, 200, 0.6);
-  color: rgba(200, 200, 220, 0.9);
+  --pill-tone: color-mix(in srgb, var(--text-muted) 88%, var(--text-strong));
 }
 
 .ui-pill--status {
@@ -66,86 +66,76 @@ const STYLES: &str = r#"
 }
 
 .ui-pill--status-2xx {
-  border-color: rgba(120, 210, 140, 0.7);
-  color: rgba(150, 220, 160, 0.95);
+  --pill-tone: color-mix(in srgb, var(--status-success) 90%, var(--text-body));
 }
 
 .ui-pill--status-3xx {
-  border-color: rgba(120, 190, 255, 0.6);
-  color: rgba(140, 210, 255, 0.95);
+  --pill-tone: color-mix(in srgb, var(--accent-signal) 90%, var(--text-body));
 }
 
 .ui-pill--status-4xx {
-  border-color: rgba(255, 196, 80, 0.7);
-  color: rgba(255, 196, 80, 0.95);
+  --pill-tone: color-mix(in srgb, var(--status-warn) 92%, var(--text-body));
 }
 
 .ui-pill--status-5xx {
-  border-color: rgba(255, 120, 120, 0.75);
-  color: rgba(255, 140, 140, 0.95);
+  --pill-tone: color-mix(in srgb, var(--status-danger) 92%, var(--text-body));
 }
 
 .ui-pill--status-unknown {
-  border-color: rgba(180, 180, 200, 0.6);
-  color: rgba(200, 200, 220, 0.9);
+  --pill-tone: color-mix(in srgb, var(--text-muted) 88%, var(--text-strong));
 }
 
 .ui-pill--log-level-info {
-  border-color: rgba(80, 160, 255, 0.6);
-  color: rgba(120, 190, 255, 0.9);
+  --pill-tone: color-mix(in srgb, var(--accent-signal) 84%, var(--text-body));
 }
 
 .ui-pill--log-level-warn {
-  border-color: rgba(255, 196, 80, 0.7);
-  color: rgba(255, 196, 80, 0.95);
+  --pill-tone: color-mix(in srgb, var(--status-warn) 92%, var(--text-body));
 }
 
 .ui-pill--log-level-error {
-  border-color: rgba(255, 96, 96, 0.7);
-  color: rgba(255, 128, 128, 0.95);
+  --pill-tone: color-mix(in srgb, var(--status-danger) 92%, var(--text-body));
 }
 
 .ui-pill--log-level-debug {
-  border-color: rgba(140, 210, 140, 0.65);
-  color: rgba(160, 220, 160, 0.9);
+  --pill-tone: color-mix(in srgb, var(--status-success) 88%, var(--text-body));
 }
 
 .ui-pill--log-level-trace {
-  border-color: rgba(160, 160, 180, 0.6);
-  color: rgba(180, 180, 200, 0.85);
+  --pill-tone: color-mix(in srgb, var(--text-subtle) 88%, var(--text-strong));
 }
 
 .ui-pill--log-target {
-  background: color-mix(
+  --pill-background: color-mix(
     in srgb,
     var(--ui-surface-card) 86%,
     var(--ui-text-muted) 14%
   );
-  border-color: color-mix(in srgb, var(--ui-text-muted) 30%, transparent);
-  color: var(--ui-text-muted);
+  --pill-border: color-mix(in srgb, var(--ui-text-muted) 30%, transparent);
+  --pill-color: var(--ui-text-muted);
 }
 
 .ui-pill--log-fields {
-  color: var(--text-subtle);
-  border-color: var(--border-default);
+  --pill-color: var(--text-subtle);
+  --pill-border: var(--border-default);
 }
 
 .ui-pill--badge-secondary {
-  background: transparent;
-  color: var(--ui-text);
-  border: 1px solid var(--ui-border-muted);
+  --pill-background: transparent;
+  --pill-color: var(--ui-text);
+  --pill-border: var(--ui-border-muted);
 }
 
 .ui-pill--badge-you {
-  background: #0f766e;
-  color: #f8fafc;
-  border-color: #0f766e;
+  --pill-background: color-mix(in srgb, var(--ui-accent-primary) 90%, var(--surface-field));
+  --pill-color: var(--ui-text-on-accent);
+  --pill-border: color-mix(in srgb, var(--ui-accent-primary) 82%, transparent);
 }
 
 .ui-pill--badge-demo {
-  background: #f59e0b;
-  color: #1f2937;
-  border-color: #f59e0b;
+  --pill-background: color-mix(in srgb, var(--status-warn) 86%, var(--surface-field));
+  --pill-color: color-mix(in srgb, var(--text-strong) 94%, black);
+  --pill-border: color-mix(in srgb, var(--status-warn) 80%, transparent);
 }
 
 @media (max-width: 768px) {
@@ -161,7 +151,7 @@ const STYLES: &str = r#"
   .ui-pill--path {
     max-inline-size: 100%;
     align-items: flex-start;
-    padding-inline: 0.42rem;
+    padding-inline: var(--pill-padding-inline-narrow);
     font-size: var(--text-size-label-2xs);
     line-height: var(--text-line-reading);
     text-align: left;

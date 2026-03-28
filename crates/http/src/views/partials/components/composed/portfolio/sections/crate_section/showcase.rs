@@ -36,8 +36,9 @@ fn render_gallery(content: &CrateGalleryContent) -> Markup {
     tab_set::Component::from_content(
         tab_set::ContentProps::builder()
             .id(gallery_id.as_str())
-            .class("tab-set-showcase ui-portfolio-crate-gallery ui-portfolio-crate-gallery--flat")
+            .class("ui-portfolio-crate-gallery")
             .aria_label(content.aria_label.clone())
+            .variant(tab_set::Variant::FlatGallery)
             .content(&gallery_content)
             .build(),
     )

@@ -40,7 +40,6 @@ pub(super) fn head(title: &str) -> Markup {
             script type="module" src="/static/datastar.js" {}
             script src=(LOCAL_TABS_ASSET_URL) {}
             script type="module" src="/static/transport-errors.js" {}
-            script src="/static/surreal.js" {}
         }
     }
 }

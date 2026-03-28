@@ -20,6 +20,7 @@ If a requested fact is not present in local sources, explicitly say it is not fo
 ## Task Routing
 
 ### Architecture and Boundaries
+- `docs/presentation-remediation-plan.md`
 - `docs/presentation-tightening-plan.md`
 - `docs/resume-realignment.md`
 - `docs/sensitive-sync-architecture.md`
@@ -43,7 +44,9 @@ If a requested fact is not present in local sources, explicitly say it is not fo
 - `docs/datastar/guide.md`
 - `docs/datastar/reference.md`
 
-### Surreal and Interaction Scripting
+### Interaction Scripting Background
+- `docs/writing-style.md`
+- `docs/surreal/index.md` (upstream mirror, not the shipped app runtime)
 - `docs/surreal/05-usage.md`
 - `docs/surreal/08-no-surreal-needed.md`
 - `docs/surreal/07-reference.md`
@@ -67,14 +70,13 @@ If a requested fact is not present in local sources, explicitly say it is not fo
 - `docs/maud/elements-attributes.md`
 
 ### Visual UX/UI and Showcase Direction
+- `docs/presentation-remediation-plan.md`
 - `docs/presentation-tightening-plan.md`
 - `docs/portfolio-demos.md`
 - `docs/professionalism-breakdown.md`
-- `artifacts/visual/audits/latest/ux-signoff.md`
-- `artifacts/visual/audits/latest/ui-signoff.md`
-- `artifacts/visual/audits/latest/fullstack-rust-hiring-manager-signoff.md`
-- `artifacts/visual/audits/latest/rust-systems-hiring-manager-signoff.md`
-- `artifacts/visual/audits/latest/signoff.env`
+- `docs/visual-signoff/latest/ux-signoff.md`
+- `docs/visual-signoff/latest/ui-signoff.md`
+- `docs/visual-signoff/latest/signoff.env`
 
 ### Axum HTTP Patterns
 - `docs/axum/index.md`

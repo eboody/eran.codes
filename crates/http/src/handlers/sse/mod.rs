@@ -1,6 +1,3 @@
-// ci: descriptive-module-import crate::handlers::sse
-mod surreal;
-
 use async_stream::stream;
 use axum::{
     extract::Extension,
@@ -16,15 +13,6 @@ use tokio::time::Duration;
 use tower_cookies::Cookies;
 
 use crate::types::{SessionId, SseTabId, Text};
-
-#[derive(Debug, Deserialize)]
-#[serde(rename_all = "camelCase")]
-pub(crate) struct SurrealSignals {
-    pub(crate) surreal_message: Option<Text>,
-    pub(crate) original_surreal_message: Option<Text>,
-    pub(crate) sse_tab_id: Option<SseTabId>,
-    pub(crate) _surreal_status: Option<Text>,
-}
 
 #[derive(Debug, Deserialize, Default)]
 #[serde(rename_all = "camelCase")]
@@ -105,8 +93,6 @@ impl EventsConnectionFlow<FilterApplied> {
         let cleanup_guard = ConnectionCleanupGuard::new(
             stream_key,
             self.state.sse.clone(),
-            self.state.demo.surreal.guard.clone(),
-            self.state.demo.surreal.cancel.clone(),
             self.state.demo.chat_room_bindings.clone(),
             self.state.trace_log.clone(),
         );
@@ -181,57 +167,6 @@ impl EventsConnectionFlow<Ready> {
     }
 }
 
-fn surreal_payload(message: &Text, status: &Text) -> crate::sse::Event {
-    crate::sse::Event::patch_signals(serde_json::json!({
-        "surrealMessage": message.to_string(),
-        "surrealStatus": status.to_string(),
-    }))
-}
-
-pub(super) fn surreal_send(
-    state: &crate::State,
-    session: &crate::sse::Handle,
-    message: Text,
-    status: Text,
-) -> bool {
-    match state.sse.send(session, surreal_payload(&message, &status)) {
-        Ok(()) => true,
-        Err(err) => {
-            tracing::debug!(?err, "sse session missing for surreal update");
-            false
-        }
-    }
-}
-
-pub(super) fn surreal_original(signals: SurrealSignals) -> Text {
-    signals
-        .original_surreal_message
-        .or(signals.surreal_message)
-        .unwrap_or_else(|| Text::from("Ready."))
-}
-
-pub async fn surreal_message_guarded(
-    Extension(state): Extension<crate::State>,
-    Extension(cookies): Extension<Cookies>,
-    ReadSignals(signals): ReadSignals<SurrealSignals>,
-) -> impl axum::response::IntoResponse {
-    surreal::guarded_flow::IncomingFlow::from_request(state, cookies, signals)
-        .prepare_lock()
-        .spawn()
-        .status_code()
-}
-
-pub async fn surreal_message_cancel(
-    Extension(state): Extension<crate::State>,
-    Extension(cookies): Extension<Cookies>,
-    ReadSignals(signals): ReadSignals<SurrealSignals>,
-) -> impl axum::response::IntoResponse {
-    surreal::cancel_flow::IncomingFlow::from_request(state, cookies, signals)
-        .prepare_token()
-        .spawn()
-        .status_code()
-}
-
 pub async fn events(
     Extension(state): Extension<crate::State>,
     Extension(cookies): Extension<Cookies>,
@@ -246,12 +181,6 @@ pub async fn events(
 struct ConnectionCleanupGuard {
     stream_key: crate::sse::StreamKey,
     sse: crate::sse::Registry,
-    surreal_guard: std::sync::Arc<
-        dashmap::DashMap<crate::sse::StreamKey, std::sync::Arc<tokio::sync::Mutex<()>>>,
-    >,
-    surreal_cancel: std::sync::Arc<
-        dashmap::DashMap<crate::sse::StreamKey, tokio_util::sync::CancellationToken>,
-    >,
     chat_room_bindings: crate::chat_demo::room::Bindings,
     trace_log: crate::trace_log::Store,
 }
@@ -260,20 +189,12 @@ impl ConnectionCleanupGuard {
     fn new(
         stream_key: crate::sse::StreamKey,
         sse: crate::sse::Registry,
-        surreal_guard: std::sync::Arc<
-            dashmap::DashMap<crate::sse::StreamKey, std::sync::Arc<tokio::sync::Mutex<()>>>,
-        >,
-        surreal_cancel: std::sync::Arc<
-            dashmap::DashMap<crate::sse::StreamKey, tokio_util::sync::CancellationToken>,
-        >,
         chat_room_bindings: crate::chat_demo::room::Bindings,
         trace_log: crate::trace_log::Store,
     ) -> Self {
         Self {
             stream_key,
             sse,
-            surreal_guard,
-            surreal_cancel,
             chat_room_bindings,
             trace_log,
         }
@@ -285,10 +206,6 @@ impl Drop for ConnectionCleanupGuard {
         if self.sse.has_stream_key(&self.stream_key) {
             return;
         }
-        if let Some((_, token)) = self.surreal_cancel.remove(&self.stream_key) {
-            token.cancel();
-        }
-        self.surreal_guard.remove(&self.stream_key);
         self.chat_room_bindings.remove(&self.stream_key);
         self.trace_log.clear_stream_flow_filter(&self.stream_key);
     }
@@ -301,7 +218,6 @@ mod tests {
     use crate::types::{
         LogLevelText, LogMessageText, LogTargetText, RequestId, SessionId, TimestampText,
     };
-    use dashmap::DashMap;
 
     fn trace_entry(message: &str) -> TraceEntry {
         TraceEntry::builder()
@@ -328,45 +244,22 @@ mod tests {
         let (_rx_a, guard_a) = registry.subscribe(&tab_a);
         let (_rx_b, guard_b) = registry.subscribe(&tab_b);
 
-        let surreal_guard = std::sync::Arc::new(DashMap::<
-            crate::sse::StreamKey,
-            std::sync::Arc<tokio::sync::Mutex<()>>,
-        >::new());
-        let surreal_cancel = std::sync::Arc::new(DashMap::<
-            crate::sse::StreamKey,
-            tokio_util::sync::CancellationToken,
-        >::new());
-        surreal_guard.insert(
-            tab_a.stream_key().clone(),
-            std::sync::Arc::new(tokio::sync::Mutex::new(())),
-        );
-        surreal_guard.insert(
-            tab_b.stream_key().clone(),
-            std::sync::Arc::new(tokio::sync::Mutex::new(())),
-        );
-        surreal_cancel.insert(
-            tab_a.stream_key().clone(),
-            tokio_util::sync::CancellationToken::new(),
-        );
-        surreal_cancel.insert(
-            tab_b.stream_key().clone(),
-            tokio_util::sync::CancellationToken::new(),
-        );
+        let room_bindings = crate::chat_demo::room::Bindings::new();
+        let room_a = domain::chat::room::Id::new_v4();
+        let room_b = domain::chat::room::Id::new_v4();
+        room_bindings.bind(&tab_a, room_a);
+        room_bindings.bind(&tab_b, room_b);
 
         let cleanup_a = ConnectionCleanupGuard::new(
             tab_a.stream_key().clone(),
             registry.clone(),
-            surreal_guard.clone(),
-            surreal_cancel.clone(),
-            crate::chat_demo::room::Bindings::new(),
+            room_bindings.clone(),
             trace_log.clone(),
         );
         let cleanup_b = ConnectionCleanupGuard::new(
             tab_b.stream_key().clone(),
             registry.clone(),
-            surreal_guard.clone(),
-            surreal_cancel.clone(),
-            crate::chat_demo::room::Bindings::new(),
+            room_bindings.clone(),
             trace_log.clone(),
         );
 
@@ -380,15 +273,13 @@ mod tests {
         drop(guard_a);
         drop(cleanup_a);
         assert!(!trace_log.snapshot_session(&session_id).is_empty());
-        assert!(surreal_guard.get(tab_a.stream_key()).is_none());
-        assert!(surreal_cancel.get(tab_a.stream_key()).is_none());
-        assert!(surreal_guard.get(tab_b.stream_key()).is_some());
+        assert_eq!(room_bindings.room_id_for(&tab_a), None);
+        assert_eq!(room_bindings.room_id_for(&tab_b), Some(room_b));
 
         drop(guard_b);
         drop(cleanup_b);
         assert!(!trace_log.snapshot_session(&session_id).is_empty());
-        assert!(surreal_guard.get(tab_b.stream_key()).is_none());
-        assert!(surreal_cancel.get(tab_b.stream_key()).is_none());
+        assert_eq!(room_bindings.room_id_for(&tab_b), None);
     }
 
     #[test]
@@ -406,22 +297,6 @@ mod tests {
         let (_rx_a, guard_a) = registry.subscribe(&handle);
         let (_rx_b, guard_b) = registry.subscribe(&handle);
 
-        let surreal_guard = std::sync::Arc::new(DashMap::<
-            crate::sse::StreamKey,
-            std::sync::Arc<tokio::sync::Mutex<()>>,
-        >::new());
-        let surreal_cancel = std::sync::Arc::new(DashMap::<
-            crate::sse::StreamKey,
-            tokio_util::sync::CancellationToken,
-        >::new());
-        surreal_guard.insert(
-            handle.stream_key().clone(),
-            std::sync::Arc::new(tokio::sync::Mutex::new(())),
-        );
-        surreal_cancel.insert(
-            handle.stream_key().clone(),
-            tokio_util::sync::CancellationToken::new(),
-        );
         let room_bindings = crate::chat_demo::room::Bindings::new();
         let room_id = domain::chat::room::Id::new_v4();
         room_bindings.bind(&handle, room_id);
@@ -430,16 +305,12 @@ mod tests {
         let cleanup_a = ConnectionCleanupGuard::new(
             handle.stream_key().clone(),
             registry.clone(),
-            surreal_guard.clone(),
-            surreal_cancel.clone(),
             room_bindings.clone(),
             trace_log.clone(),
         );
         let cleanup_b = ConnectionCleanupGuard::new(
             handle.stream_key().clone(),
             registry.clone(),
-            surreal_guard.clone(),
-            surreal_cancel.clone(),
             room_bindings.clone(),
             trace_log.clone(),
         );
@@ -449,8 +320,6 @@ mod tests {
 
         assert!(registry.has_stream_key(handle.stream_key()));
         assert!(trace_log.has_stream_flow_filter(handle.stream_key()));
-        assert!(surreal_guard.get(handle.stream_key()).is_some());
-        assert!(surreal_cancel.get(handle.stream_key()).is_some());
         assert_eq!(room_bindings.room_id_for(&handle), Some(room_id));
 
         drop(guard_b);
@@ -458,8 +327,6 @@ mod tests {
 
         assert!(!registry.has_stream_key(handle.stream_key()));
         assert!(!trace_log.has_stream_flow_filter(handle.stream_key()));
-        assert!(surreal_guard.get(handle.stream_key()).is_none());
-        assert!(surreal_cancel.get(handle.stream_key()).is_none());
         assert_eq!(room_bindings.room_id_for(&handle), None);
     }
 }

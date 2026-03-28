@@ -171,15 +171,23 @@ impl Render for KeyValueList {
             {
                 (css())
                 @for item in &self.items {
-                    div data-key-value-item {
-                        dt { (&item.label) }
-                        (KeyValueValue {
-                            value: &item.value,
-                            attrs: &item.value_attrs,
-                        })
-                    }
+                    (item)
                 }
-            } 
+            }
+        }
+    }
+}
+
+impl Render for KeyValueItem {
+    fn render(&self) -> maud::Markup {
+        maud::html! {
+            div data-key-value-item {
+                dt { (&self.label) }
+                (KeyValueValue {
+                    value: &self.value,
+                    attrs: &self.value_attrs,
+                })
+            }
         }
     }
 }
@@ -242,6 +250,15 @@ mod tests {
             .into_string();
 
         assert!(markup.contains("<dd data-endpoint-value>/events</dd>"));
+    }
+
+    #[test]
+    fn key_value_item_renders_directly() {
+        let markup = KeyValueItem::text("workers", "24").render().into_string();
+
+        assert!(markup.contains("data-key-value-item"));
+        assert!(markup.contains("<dt>workers</dt>"));
+        assert!(markup.contains("<dd>24</dd>"));
     }
 
     #[test]

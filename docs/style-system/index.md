@@ -12,7 +12,7 @@ This directory is the repo-local source of truth for styling decisions in the Ma
 - Treat raw design values as token-source material, not declaration-site defaults. Shared scales belong in `app.css`; component-specific numbers belong behind a small number of local aliases only when they earn their keep.
 - Avoid alias farms and one-off selectors. Add a local alias only when it clarifies repeated meaning, powers a real override, or defines a component-owned metric, and prefer existing `u-*`/`ui-*` packages or local `data-*` hooks over inventing throwaway classes.
 - Prefer modern native CSS features where they improve clarity and are reasonable for the task's browser targets.
-- Use Surreal for DOM-local presentation behavior and Datastar only when the interaction belongs in the component contract.
+- Use small local controllers for DOM-local presentation behavior and Datastar only when the interaction belongs in the component contract.
 
 ## Workflow
 

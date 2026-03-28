@@ -57,10 +57,6 @@ pub enum Route {
     PartialSensitiveProof,
     #[strum(serialize = "/partials/ping")]
     PartialPing,
-    #[strum(serialize = "/partials/surreal-message-guarded")]
-    PartialSurrealGuarded,
-    #[strum(serialize = "/partials/surreal-message-cancel")]
-    PartialSurrealCancel,
 }
 
 impl Route {
@@ -93,8 +89,6 @@ impl Route {
             Route::PartialRequestBurstProbe => "/partials/request-burst-probe",
             Route::PartialSensitiveProof => "/partials/sensitive-proof",
             Route::PartialPing => "/partials/ping",
-            Route::PartialSurrealGuarded => "/partials/surreal-message-guarded",
-            Route::PartialSurrealCancel => "/partials/surreal-message-cancel",
         }
     }
 

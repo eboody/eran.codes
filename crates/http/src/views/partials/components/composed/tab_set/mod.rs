@@ -15,6 +15,8 @@ me.tab-set-showcase {
   --_tab-set-shell-padding: clamp(0.95rem, 0.82rem + 0.55vw, 1.3rem);
   --_tab-set-code-stack-gap: clamp(0.8rem, 0.72rem + 0.35vw, 1.05rem);
   --_tab-set-badge-padding: 0.35rem 0.65rem;
+  --_tab-set-feature-item-padding: 0.7rem 0.85rem;
+  --_tab-set-mobile-subtitle-line-height: 1.55;
 
   background:
     linear-gradient(
@@ -40,6 +42,17 @@ me .tab-set__tabs {
   scrollbar-width: thin;
   scroll-snap-type: x proximity;
   overflow-y: visible;
+}
+
+me .tab-set__tabs[data-tab-set-tabs-style='pill-cluster'] {
+  flex-wrap: wrap;
+  gap: var(--space-2);
+  align-items: center;
+  padding: 0;
+  margin: 0;
+  overflow: visible;
+  border-bottom: none;
+  scroll-snap-type: none;
 }
 
 me .tab-set__tab {
@@ -91,6 +104,60 @@ me .tab-set__tab.is-selected {
 
 me .tab-set__tab:focus-visible {
   outline: none;
+  border-color: color-mix(
+    in srgb,
+    var(--tab-accent, var(--accent-signal)) 54%,
+    var(--border-default)
+  );
+  box-shadow:
+    0 0 0 0.22rem color-mix(
+      in srgb,
+      var(--tab-accent, var(--accent-signal)) 18%,
+      transparent
+    ),
+    inset 0 1px 0 var(--surface-edge-default);
+}
+
+me .tab-set__tabs[data-tab-set-tabs-style='pill-cluster'] .tab-set__tab {
+  width: fit-content;
+  justify-content: center;
+  padding:
+    calc(var(--control-padding-block-compact) + var(--space-1) * 0.25)
+    calc(var(--control-padding-inline-compact) + var(--space-1) * 0.5);
+  border-radius: var(--radius-pill);
+  background: color-mix(in srgb, var(--surface-field) 84%, var(--surface-panel));
+  box-shadow: inset 0 1px 0 var(--surface-edge-soft);
+  color: var(--text-muted);
+  font-size: var(--text-size-body-xs);
+}
+
+me .tab-set__tabs[data-tab-set-tabs-style='pill-cluster'] .tab-set__tab.is-selected {
+  border-color: color-mix(
+    in srgb,
+    var(--tab-accent, var(--accent-signal)) 34%,
+    var(--border-default)
+  );
+  background:
+    linear-gradient(
+      180deg,
+      color-mix(in srgb, var(--tab-accent, var(--accent-signal)) 18%, transparent),
+      transparent 70%
+    ),
+    color-mix(
+      in srgb,
+      var(--surface-panel) 92%,
+      color-mix(in srgb, var(--tab-accent, var(--accent-signal)) 14%, transparent)
+    );
+  box-shadow:
+    inset 0 1px 0 var(--surface-edge-default),
+    0 0 0 1px color-mix(
+      in srgb,
+      var(--tab-accent, var(--accent-signal)) 10%,
+      transparent
+    );
+}
+
+me .tab-set__tabs[data-tab-set-tabs-style='pill-cluster'] .tab-set__tab:focus-visible {
   border-color: color-mix(
     in srgb,
     var(--tab-accent, var(--accent-signal)) 54%,
@@ -181,11 +248,11 @@ me .tab-set__preview-frame[data-preview-kind="code"] {
   box-shadow: inset 0 1px 0 var(--surface-edge-soft);
 }
 
-me.ui-portfolio-crate-gallery--flat {
+me.tab-set-showcase--flat-gallery {
   background: transparent;
 }
 
-me.ui-portfolio-crate-gallery--flat .tab-set__tabs {
+me.tab-set-showcase--flat-gallery .tab-set__tabs {
   gap: var(--space-2);
   padding-block-end: calc(var(--space-2) + var(--interactive-bleed));
   padding-inline: 0;
@@ -193,23 +260,24 @@ me.ui-portfolio-crate-gallery--flat .tab-set__tabs {
   border-bottom-color: color-mix(in srgb, var(--border-default) 48%, transparent);
 }
 
-me.ui-portfolio-crate-gallery--flat .tab-set__panel {
+me.tab-set-showcase--flat-gallery .tab-set__panel {
   gap: clamp(1.35rem, 1.12rem + 0.85vw, 2rem);
   grid-template-columns: minmax(0, 1.28fr) minmax(22rem, 0.72fr);
 }
 
-me.ui-portfolio-crate-gallery--flat .tab-set__copy {
+me.tab-set-showcase--flat-gallery .tab-set__copy {
   gap: var(--space-4);
   align-content: start;
   max-inline-size: 31rem;
 }
 
-me.ui-portfolio-crate-gallery--flat .tab-set__copy h2 {
+me.tab-set-showcase--flat-gallery .tab-set__copy h2 {
   font-size: var(--text-size-title-md);
   line-height: var(--text-line-heading);
 }
 
-me.ui-portfolio-crate-gallery--flat .tab-set__preview-frame[data-preview-kind="code"] {
+me.tab-set-showcase--flat-gallery .tab-set__preview-frame[data-preview-kind="code"] {
+  min-height: 0;
   padding: clamp(1.2rem, 1.02rem + 0.7vw, 1.6rem);
   border: var(--control-border-width) solid
     color-mix(in srgb, var(--accent-signal-soft) 18%, var(--border-default));
@@ -224,11 +292,20 @@ me.ui-portfolio-crate-gallery--flat .tab-set__preview-frame[data-preview-kind="c
   box-shadow: inset 0 1px 0 var(--surface-edge-soft);
 }
 
-me.ui-portfolio-crate-gallery--flat .tab-set__preview-meta {
+me.tab-set-showcase--flat-gallery .tab-set__preview-meta {
   gap: var(--space-2);
 }
 
-me.ui-portfolio-crate-gallery--flat .tab-set__tab {
+me.tab-set-showcase--flat-gallery .tab-set__preview-code-stack {
+  gap: var(--space-4);
+}
+
+me.tab-set-showcase--flat-gallery .ui-code-block {
+  --_code-block-font-size: var(--text-size-body-md);
+  --_code-block-padding: clamp(1rem, 0.9rem + 0.4vw, 1.35rem);
+}
+
+me.tab-set-showcase--flat-gallery .tab-set__tab {
   padding-block: var(--space-2);
   padding-inline: var(--space-2);
   border-width: 0 0 var(--control-border-width);
@@ -240,7 +317,7 @@ me.ui-portfolio-crate-gallery--flat .tab-set__tab {
   font-size: var(--text-size-body-xs);
 }
 
-me.ui-portfolio-crate-gallery--flat .tab-set__tab.is-selected {
+me.tab-set-showcase--flat-gallery .tab-set__tab.is-selected {
   border-bottom-color: color-mix(
     in srgb,
     var(--tab-accent, var(--accent-signal)) 52%,
@@ -250,7 +327,7 @@ me.ui-portfolio-crate-gallery--flat .tab-set__tab.is-selected {
   box-shadow: none;
 }
 
-me.ui-portfolio-crate-gallery--flat .tab-set__tab:focus-visible {
+me.tab-set-showcase--flat-gallery .tab-set__tab:focus-visible {
   border-bottom-color: color-mix(
     in srgb,
     var(--tab-accent, var(--accent-signal)) 58%,
@@ -263,7 +340,7 @@ me.ui-portfolio-crate-gallery--flat .tab-set__tab:focus-visible {
   );
 }
 
-me.ui-portfolio-crate-gallery--flat .tab-set__features {
+me.tab-set-showcase--flat-gallery .tab-set__features {
   margin-block: var(--space-1) 0;
   padding: 0;
   list-style: none;
@@ -272,8 +349,8 @@ me.ui-portfolio-crate-gallery--flat .tab-set__features {
   border-top: none;
 }
 
-me.ui-portfolio-crate-gallery--flat .tab-set__features li {
-  padding: 0.7rem 0.85rem;
+me.tab-set-showcase--flat-gallery .tab-set__features li {
+  padding: var(--_tab-set-feature-item-padding);
   border: var(--control-border-width) solid
     color-mix(in srgb, var(--accent-signal-soft) 18%, var(--border-default));
   border-radius: var(--ui-radius-md-inset);
@@ -388,6 +465,26 @@ me .tab-set__subtitle {
     border-color: color-mix(in srgb, var(--accent-signal) 24%, var(--border-default));
   }
 
+  me .tab-set__tabs[data-tab-set-tabs-style='pill-cluster'] .tab-set__tab {
+    background: color-mix(in srgb, var(--surface-field) 92%, black 8%);
+    border-color: color-mix(in srgb, var(--border-default) 90%, transparent);
+  }
+
+  me .tab-set__tabs[data-tab-set-tabs-style='pill-cluster'] .tab-set__tab.is-selected {
+    background:
+      linear-gradient(180deg, var(--surface-wash-top-soft), transparent 44%),
+      color-mix(
+        in srgb,
+        var(--tab-accent, var(--accent-signal)) 14%,
+        var(--surface-raised)
+      );
+    border-color: color-mix(
+      in srgb,
+      var(--tab-accent, var(--accent-signal)) 40%,
+      var(--border-default)
+    );
+  }
+
   me .tab-set__badge {
     background: color-mix(in srgb, var(--surface-field) 94%, black 6%);
   }
@@ -399,7 +496,11 @@ me .tab-set__subtitle {
     z-index: 1;
   }
 
-  me.ui-portfolio-crate-gallery--flat .tab-set__tab:hover {
+  me .tab-set__tabs[data-tab-set-tabs-style='pill-cluster'] .tab-set__tab:hover {
+    transform: translateY(-1px);
+  }
+
+  me.tab-set-showcase--flat-gallery .tab-set__tab:hover {
     transform: none;
     color: var(--text-body);
   }
@@ -430,10 +531,19 @@ me .tab-set__subtitle {
     scroll-snap-type: none;
   }
 
+  me .tab-set__tabs[data-tab-set-tabs-style='pill-cluster'] {
+    gap: var(--space-1);
+  }
+
   me .tab-set__tab {
     font-size: var(--text-size-meta-xs);
     min-width: 0;
     flex: 1 1 10rem;
+  }
+
+  me .tab-set__tabs[data-tab-set-tabs-style='pill-cluster'] .tab-set__tab {
+    padding: var(--control-padding-block-compact) var(--control-padding-inline-compact);
+    flex: 0 1 auto;
   }
 
   me .tab-set__panel {
@@ -441,7 +551,7 @@ me .tab-set__subtitle {
     padding-top: 0;
   }
 
-  me.ui-portfolio-crate-gallery--flat .tab-set__tabs {
+  me.tab-set-showcase--flat-gallery .tab-set__tabs {
     gap: var(--space-1);
     padding-block-end: calc(var(--space-1) + var(--interactive-bleed));
     display: grid;
@@ -449,24 +559,28 @@ me .tab-set__subtitle {
     align-items: stretch;
   }
 
-  me.ui-portfolio-crate-gallery--flat .tab-set__tab {
+  me.tab-set-showcase--flat-gallery .tab-set__tab {
     padding-block: var(--space-1);
     padding-inline: calc(var(--space-1) * 0.75);
     justify-content: center;
     text-align: center;
   }
 
-  me.ui-portfolio-crate-gallery--flat .tab-set__panel {
+  me.tab-set-showcase--flat-gallery .ui-code-block {
+    --_code-block-font-size: var(--text-size-meta-xs);
+  }
+
+  me.tab-set-showcase--flat-gallery .tab-set__panel {
     gap: var(--space-2);
     grid-template-columns: 1fr;
   }
 
-  me.ui-portfolio-crate-gallery--flat .tab-set__copy {
+  me.tab-set-showcase--flat-gallery .tab-set__copy {
     order: -1;
     max-inline-size: none;
   }
 
-  me.ui-portfolio-crate-gallery--flat .tab-set__copy h2 {
+  me.tab-set-showcase--flat-gallery .tab-set__copy h2 {
     font-size: var(--text-size-title-sm);
   }
 
@@ -489,7 +603,7 @@ me .tab-set__subtitle {
 
   me .tab-set__subtitle {
     font-size: var(--text-size-body-md);
-    line-height: 1.55;
+    line-height: var(--_tab-set-mobile-subtitle-line-height);
   }
 
   me .tab-set__preview-meta {
@@ -514,7 +628,7 @@ me .tab-set__subtitle {
 }
 
 @media (max-width: 23rem) {
-  me.ui-portfolio-crate-gallery--flat .tab-set__tabs {
+  me.tab-set-showcase--flat-gallery .tab-set__tabs {
     grid-template-columns: 1fr;
   }
 
@@ -530,11 +644,29 @@ pub(crate) mod content;
 pub(crate) mod pane;
 pub(crate) mod tab;
 
+#[derive(Clone, Copy, Debug, Default, PartialEq, Eq)]
+pub(crate) enum Variant {
+    #[default]
+    Standard,
+    FlatGallery,
+}
+
+impl Variant {
+    fn class_name(self) -> Option<&'static str> {
+        match self {
+            Self::Standard => None,
+            Self::FlatGallery => Some("tab-set-showcase--flat-gallery"),
+        }
+    }
+}
+
 // ci: descriptive-module-import crate::views::partials::components::tab_set
 #[derive(Clone, Debug, Builder)]
 pub(crate) struct Component<'a> {
     pub id: &'a str,
     pub class: &'a str,
+    #[builder(default)]
+    pub variant: Variant,
     pub active_tab_id: Text,
     pub tabs: tab::Set,
     pub panes: pane::List,
@@ -546,6 +678,8 @@ pub(crate) struct ContentProps<'a> {
     pub class: &'a str,
     pub aria_label: Text,
     pub content: &'a content::TabSet,
+    #[builder(default)]
+    pub variant: Variant,
     pub active_tab_id: Option<Text>,
     pub palette: Option<&'static Palette>,
 }
@@ -572,20 +706,35 @@ impl<'a> Component<'a> {
         Self {
             id: props.id,
             class: props.class,
+            variant: props.variant,
             active_tab_id,
             tabs: tab::Set {
                 aria_label: props.aria_label,
+                style: tab::Style::Standard,
                 tabs: tab::List { children: tabs },
             },
             panes: pane::List { children: panes },
         }
     }
+
+    fn root_class_names(&self) -> String {
+        let mut classes = vec!["tab-set-showcase"];
+        if !self.class.is_empty() {
+            classes.push(self.class);
+        }
+        if let Some(class_name) = self.variant.class_name() {
+            classes.push(class_name);
+        }
+        classes.join(" ")
+    }
 }
 
 impl Render for Component<'_> {
     fn render(&self) -> maud::Markup {
+        let class_names = self.root_class_names();
+
         LocalTabRoot {
-            surface: LocalTabRootSurface::standard(self.id, self.class),
+            surface: LocalTabRootSurface::standard(self.id, class_names.as_str()),
             active_tab_id: self.active_tab_id.clone(),
             content: maud::html! {
                 (css())
@@ -645,10 +794,12 @@ mod tests {
     fn component_renders_local_tabs_root_and_active_tab() {
         let markup = Component {
             id: "tab-set",
-            class: "tab-set-showcase",
+            class: "extra-root-class",
+            variant: Variant::Standard,
             active_tab_id: Text::from("alpha'\"beta"),
             tabs: tab::Set {
                 aria_label: Text::from("Example tabs"),
+                style: tab::Style::Standard,
                 tabs: tab::List { children: vec![] },
             },
             panes: pane::List { children: vec![] },
@@ -658,6 +809,7 @@ mod tests {
 
         assert!(markup.contains("data-local-tabs-root"));
         assert!(markup.contains("data-local-tabs-active=\"alpha'&quot;beta\""));
+        assert!(markup.contains("class=\"tab-set-showcase extra-root-class\""));
     }
 
     #[test]
@@ -686,7 +838,7 @@ mod tests {
         let component = Component::from_content(
             ContentProps::builder()
                 .id("tab-set")
-                .class("tab-set-showcase")
+                .class("extra-root-class")
                 .aria_label(Text::from("Solutions"))
                 .content(&content)
                 .build(),

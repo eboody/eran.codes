@@ -632,25 +632,36 @@ me .ui-portfolio-crate-section--standalone {
 
   max-inline-size: 72rem;
   margin-inline: auto;
+  inline-size: 100%;
+  gap: var(--space-4);
+  padding: 0;
+  border: none;
+  background: none;
+  box-shadow: none;
+}
+
+me .ui-portfolio-crate-section--standalone .ui-portfolio-crate-panel {
+  min-block-size: 47rem;
+}
+
+me .ui-portfolio-crate-section--standalone .ui-portfolio-crate-showcase {
+  align-content: start;
+  min-block-size: 100%;
+  padding: clamp(1.45rem, 1.18rem + 0.95vw, 2.2rem);
+  gap: clamp(1.25rem, 1.02rem + 0.8vw, 1.9rem);
 }
 
 me .ui-portfolio-crate-section--standalone .ui-portfolio-crate-gallery {
-  padding: var(--space-2);
-  border: var(--border-size-1) solid
-    color-mix(in srgb, var(--portfolio-accent-a) 20%, var(--ui-border-soft));
-  border-radius: var(--ui-radius-md-inset);
-  background:
-    linear-gradient(
-      180deg,
-      color-mix(in srgb, var(--portfolio-accent-a) 7%, transparent),
-      transparent 30%
-    ),
-    color-mix(in srgb, var(--surface-fill-panel) 88%, transparent);
-  box-shadow: inset 0 1px 0 var(--surface-edge-soft);
+  padding: 0;
+  border: none;
+  background: transparent;
+  box-shadow: none;
+  margin-top: 0;
 }
 
-me .ui-portfolio-crate-section--standalone .tab-set-showcase {
-  background: transparent;
+me .ui-portfolio-crate-section--standalone .ui-portfolio-crate-showcase-copy,
+me .ui-portfolio-crate-section--standalone .ui-portfolio-crate-showcase-header {
+  gap: var(--space-3);
 }
 
 me .ui-portfolio-crate-section--standalone .ui-portfolio-inline-links {
@@ -818,6 +829,25 @@ me .ui-portfolio-crate-section--standalone .ui-portfolio-inline-links {
     gap: var(--space-2);
   }
 
+  me .ui-portfolio-crate-section--standalone .ui-portfolio-crate-gallery {
+    margin-top: var(--space-2);
+    padding-top: var(--space-2);
+    border-top: 1px solid color-mix(in srgb, var(--ui-border-soft) 72%, transparent);
+  }
+
+  me .ui-portfolio-crate-section--standalone .ui-portfolio-crate-showcase-copy,
+  me .ui-portfolio-crate-section--standalone .ui-portfolio-crate-showcase-header {
+    gap: var(--space-1);
+  }
+
+  me .ui-portfolio-crate-section--standalone .ui-portfolio-inline-links {
+    gap: calc(var(--space-1) * 0.75);
+  }
+
+  me .ui-portfolio-crate-section--standalone .ui-portfolio-inline-link {
+    font-size: var(--text-size-meta-xs);
+  }
+
   me .ui-portfolio-closing,
   me .ui-portfolio-supporting-teaser {
     gap: var(--space-2);
@@ -837,6 +867,12 @@ me .ui-portfolio-crate-section--standalone .ui-portfolio-inline-links {
 
   me .ui-portfolio-hero-aside {
     inline-size: min(100%, 20rem);
+  }
+}
+
+@media (max-width: 64rem) {
+  me .ui-portfolio-crate-section--standalone .ui-portfolio-crate-panel {
+    min-block-size: auto;
   }
 }
 
