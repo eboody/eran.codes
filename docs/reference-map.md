@@ -76,7 +76,7 @@ If a requested fact is not present in local sources, explicitly say it is not fo
 - `docs/professionalism-breakdown.md`
 - `docs/visual-signoff/latest/ux-signoff.md`
 - `docs/visual-signoff/latest/ui-signoff.md`
-- `docs/visual-signoff/latest/signoff.env`
+- `docs/visual-signoff/latest/signoff.env` (docs-side route-matrix status summary)
 
 ### Axum HTTP Patterns
 - `docs/axum/index.md`

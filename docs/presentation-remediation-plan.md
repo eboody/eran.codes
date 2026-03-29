@@ -307,17 +307,40 @@ boundaries. Visual signoff comes after both.
 - [x] Collapse repeated local alias farms in chat and portfolio surfaces.
 - [x] Promote repeated typography/rhythm values into shared tokens where they
   represent the same meaning across components.
-- [ ] Inventory all remaining local scripts and state their owner.
-- [ ] Move inline JS into clearer repo-owned surfaces when that improves
+- [x] Inventory all remaining local scripts and state their owner.
+- [x] Move inline JS into clearer repo-owned surfaces when that improves
   maintainability.
-- [ ] Preserve Datastar for backend-coupled state and local JS for DOM-local
+- [x] Preserve Datastar for backend-coupled state and local JS for DOM-local
   behavior.
-- [ ] Re-run route-level visual verification at guest and signed-in states.
-- [ ] Refresh visual signoff docs with truthful scope notes.
-- [ ] Update the docs hub and reference map to the new active plan.
-- [ ] Mark historical presentation docs as superseded.
-- [ ] Remove or rewrite stale docs that still imply broader signoff than the
+- [x] Re-run route-level visual verification at guest and signed-in states.
+- [x] Refresh visual signoff docs with truthful scope notes.
+- [x] Update the docs hub and reference map to the new active plan.
+- [x] Mark historical presentation docs as superseded.
+- [x] Remove or rewrite stale docs that still imply broader signoff than the
   repo actually has.
+
+## Current Verification Status
+
+Fresh route captures were taken on March 28, 2026 for:
+
+- guest matrix: `/`, `/lab`, `/work`, `/open-source` at desktop/mobile and
+  light/dark
+- signed-in matrix: `/work`, `/work/sensitive-sync`, `/open-source` at
+  desktop/mobile and light/dark
+- extra route captures: `/login`, `/register`, `/lab` signed-in, and `/`
+  signed-in
+
+Current baseline status after the latest pass:
+
+- `/` guest smoke matches
+- `/work` guest smoke matches
+- `/work` signed-in smoke matches
+- `/work/sensitive-sync` signed-in smoke matches
+- `/open-source` guest smoke still mismatches baseline
+- `/open-source` signed-in smoke still mismatches baseline
+
+This means route-level verification has been rerun, but full-site visual
+signoff is still blocked by the open-source page drift.
 
 ## Done Criteria
 

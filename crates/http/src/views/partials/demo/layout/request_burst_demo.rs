@@ -1,15 +1,12 @@
 use bon::Builder;
-use maud::{PreEscaped, Render};
+use maud::Render;
 
 use crate::types::Text;
 use crate::views::partials::{self, components};
 
 use super::{Attr, SurfaceSection};
-
-const REQUEST_BURST_SCRIPT: &str = include_str!(concat!(
-    env!("CARGO_MANIFEST_DIR"),
-    "/static/request-burst.js"
-));
+const REQUEST_BURST_ASSET_URL: &str =
+    "/static/request-burst.js?v=20260328-runtime-ownership";
 
 crate::views::scoped::inline_css!(
     r#"
@@ -256,7 +253,7 @@ impl Render for RequestBurstDemo {
                         })
                         .build())
                 }
-                script { (PreEscaped(REQUEST_BURST_SCRIPT)) }
+                script src=(REQUEST_BURST_ASSET_URL) {}
             })
             .build()
             .render()
@@ -295,5 +292,6 @@ mod tests {
         assert!(markup.contains("u-demo-result-card"));
         assert!(markup.contains("data-key-value-layout=\"metrics-grid\""));
         assert!(markup.contains("data-button-row-frame=\"contained\""));
+        assert!(markup.contains("/static/request-burst.js"));
     }
 }

@@ -1,5 +1,5 @@
 use bon::Builder;
-use maud::{PreEscaped, Render};
+use maud::Render;
 
 use crate::types::Text;
 use crate::views::partials;
@@ -56,6 +56,9 @@ me [data-op-filter-meta] {
 "#
 );
 
+const OPERATIONAL_TIMELINE_SCROLL_ASSET_URL: &str =
+    "/static/operational-timeline-scroll.js?v=20260328-runtime-ownership";
+
 #[derive(Clone, Debug, Builder)]
 pub struct OperationalRequestFilter {
     pub target_id: &'static str,
@@ -66,8 +69,7 @@ impl Render for OperationalRequestFilter {
         let request_action = request_action();
         let request_and_scroll =
             format!("{request_action}; window.scrollOperationalTimelineTop()");
-        let clear_action =
-            format!("$operations_filter_query = ''; {request_and_scroll}");
+        let clear_action = format!("$operations_filter_query = ''; {request_and_scroll}");
 
         maud::html! {
             section
@@ -102,26 +104,7 @@ impl Render for OperationalRequestFilter {
                     "Debounced command updates server-side request flow filtering."
                 }
             }
-            script {
-                (PreEscaped(
-                    r#"
-(() => {
-  if (typeof window.scrollOperationalTimelineTop === 'function') return;
-  window.scrollOperationalTimelineTop = () => {
-    const target = document.getElementById('network-log-target');
-    if (!target) return;
-    const flowList = target.querySelector('[data-log-flow-list]');
-    if (flowList instanceof HTMLElement) {
-      flowList.scrollTop = 0;
-      flowList.scrollIntoView({ behavior: 'smooth', block: 'start' });
-      return;
-    }
-    target.scrollIntoView({ behavior: 'smooth', block: 'start' });
-  };
-})();
-"#,
-                ))
-            }
+            script src=(OPERATIONAL_TIMELINE_SCROLL_ASSET_URL) {}
         }
     }
 }
@@ -147,5 +130,6 @@ mod tests {
         assert!(markup.contains(request_action));
         assert!(markup.contains("$operations_filter_query = '';"));
         assert_eq!(markup.matches(request_action).count(), 3);
+        assert!(markup.contains("/static/operational-timeline-scroll.js"));
     }
 }

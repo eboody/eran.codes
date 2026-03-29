@@ -38,3 +38,34 @@ Use this as a concise reference when building Datastar-driven UI in this repo.
 - Use `data-show` with initial `style="display: none"` to avoid flash.
 - Keep signals narrow and intentional; avoid treating the page-global signal store as a generic local state bag.
 - Don’t manage browser history; use normal links and redirects.
+
+## Local Controller Ownership
+
+Use a local controller when the behavior is purely DOM-local and does not need
+to round-trip through the backend-owned signal model.
+
+- `crates/http/static/local-tabs.js`
+  Owner: `LocalTabRoot` and `LocalTabPanel`
+  Why local: tab selection, keyboard roving focus, and hash-to-panel reveal are
+  DOM-only behavior with no backend truth surface.
+- `crates/http/static/chat-demo.js`
+  Owner: `chat::Surface`
+  Why local: demo chat windows only need local autoscroll after message patches;
+  Datastar still owns the request-coupled message state.
+- `crates/http/static/request-burst.js`
+  Owner: `RequestBurstDemo`
+  Why local: the burst harness is browser-observed latency and throughput UI,
+  not backend-owned application state.
+- `crates/http/static/operational-timeline-scroll.js`
+  Owner: `OperationalRequestFilter`
+  Why local: the filter request is Datastar-owned, but the follow-up scroll
+  behavior is a view affordance scoped to the operations timeline.
+- `crates/http/static/log-auto-scroll.js`
+  Owner: `logs::primitives::AutoScroll`
+  Why local: each log panel emits its own root/selector pair, but the behavior
+  now runs through a repo-owned asset instead of per-instance inline JS.
+- `crates/http/static/transport-errors.js`
+  Owner: page transport shell in `crates/http/src/views/page.rs`
+  Why not local-only: it translates Datastar transport events into the shared
+  page error surface, so it belongs with the page-level request contract rather
+  than per-component local controllers.

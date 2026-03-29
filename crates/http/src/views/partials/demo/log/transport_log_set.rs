@@ -91,8 +91,8 @@ mod tests {
             .render()
             .into_string();
 
-        assert!(markup.contains("id=\"network-log-target\""));
-        assert_eq!(markup.matches("id=\"network-log-target\"").count(), 1);
+        assert!(markup.contains(" id=\"network-log-target\""));
+        assert_eq!(markup.matches(" id=\"network-log-target\"").count(), 1);
         assert!(markup.contains("Session flow timeline"));
         assert!(markup.contains("No request flows yet."));
     }
@@ -204,10 +204,7 @@ mod tests {
                 "12:00:02",
                 "app::chat::service",
                 "moderation check passed",
-                vec![
-                    ("request_id", "req-redact-111"),
-                    ("user_id", "user-1"),
-                ],
+                vec![("request_id", "req-redact-111"), ("user_id", "user-1")],
             ),
             entry(
                 "12:00:03",
