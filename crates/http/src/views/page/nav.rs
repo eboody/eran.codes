@@ -118,10 +118,9 @@ fn auth_links() -> (
 }
 
 fn is_primary_portfolio_nav_href(href: &str) -> bool {
-    href == Route::Lab.as_str()
-        || href == Route::WorkSensitiveSync.as_str()
-        || href == Route::Work.as_str()
+    href == Route::Home.as_str()
         || href == Route::OpenSource.as_str()
+        || href == Route::Lab.as_str()
 }
 
 fn auth(
@@ -175,10 +174,9 @@ fn auth_switch(current_route: Option<Route>) -> partials::components::NavGuestSw
 
 fn compact_label_for_href(href: &str) -> Option<Text> {
     match href {
-        path if path == Route::Lab.as_str() => Some(Text::from("Live")),
-        path if path == Route::WorkSensitiveSync.as_str() => Some(Text::from("Current")),
-        path if path == Route::Work.as_str() => Some(Text::from("Archive")),
-        path if path == Route::OpenSource.as_str() => Some(Text::from("Code")),
+        path if path == Route::Home.as_str() => Some(Text::from("Flagship")),
+        path if path == Route::OpenSource.as_str() => Some(Text::from("Crates")),
+        path if path == Route::Lab.as_str() => Some(Text::from("Lab")),
         path if path == Route::ResumeText.as_str() => Some(Text::from("Resume")),
         _ => None,
     }
@@ -207,7 +205,7 @@ mod tests {
 
         assert_eq!(
             primary_labels,
-            vec!["Live Proof", "Current Proof", "Archive", "Open Source"]
+            vec!["Flagship", "Crates", "Lab"]
         );
         assert_eq!(
             meta_labels,

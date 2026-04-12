@@ -3,6 +3,7 @@ use maud::Render;
 use super::{LeadCopy, Surface, render_actions};
 use crate::views::partials::components::portfolio::content::PortfolioHeroContent;
 
+// ci: markup-slot-exempt portfolio hero aside accepts page-specific support markup.
 pub struct Portfolio<'a> {
     pub content: &'a PortfolioHeroContent,
     pub aside: Option<maud::Markup>,

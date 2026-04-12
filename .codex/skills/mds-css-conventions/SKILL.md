@@ -16,7 +16,7 @@ Apply repo CSS conventions and css-scope-inline usage patterns to class design a
 
 ## Usage
 - Use before finalizing class names and style scoping assumptions.
-- Enforce local conventions from `/docs/css-scope-inline` and writing/style signoff docs.
+- Enforce local conventions from `crates/http/static/app.css`, current component code, and the live repo styling surface instead of the old mirrored `/docs` corpus.
 - Flag unresolved stylistic conflicts for explicit override review.
 - Run a styling-system review before marking component work complete.
 

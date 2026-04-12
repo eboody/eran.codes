@@ -11,11 +11,9 @@ scope: project
 Enforce repo-standard `bon` usage so builders stay readable and consistent with the Bon guide.
 
 ## Source Docs (Authoritative)
-- `/docs/bon/guide/basics.md`
-- `/docs/bon/guide/basics/optional-members.md`
-- `/docs/bon/guide/patterns/conditional-building.md`
-- `/docs/bon/reference/builder/member/default.md`
-- `/docs/bon/reference/builder/member/into.md`
+- This skill file is the repo-local Bon rule surface.
+- The repo no longer mirrors Bon docs under `/docs/bon`.
+- When deeper Bon reference is needed, use the installed `bon-workspace` skill or the upstream Bon docs rather than assuming repo-local mirrors exist.
 
 ## Required Setter Rules
 - For optional builder members, use the direct setter when value is known:

@@ -1,11 +1,11 @@
 # mds-axum-integration references
 
-Key `/docs` paths:
-- `/docs/axum/index.md`
-- `/docs/axum/routing/index.md`
-- `/docs/axum/routing/method_routing/index.md`
-- `/docs/axum/extract/index.md`
-- `/docs/axum/response/index.md`
-- `/docs/axum/response/sse/index.md`
-- `/docs/axum/json/struct.Json.md`
-- `/docs/axum/struct.Router.md`
+The repo no longer mirrors Axum docs under `/docs/axum`.
+
+Use these repo-local surfaces first:
+- `crates/http/src/router/routes.rs`
+- `crates/http/src/request.rs`
+- `crates/http/src/handlers/`
+- `crates/http/src/sse/`
+
+If framework semantics are still unclear, use official Axum docs rather than assuming a repo-local mirror exists.

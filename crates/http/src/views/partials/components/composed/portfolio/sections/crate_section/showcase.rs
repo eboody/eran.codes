@@ -1,7 +1,9 @@
 use maud::{Markup, Render};
 
 use super::links::Crate as Links;
-use crate::views::partials::components::portfolio::content::{CrateCardContent, CrateGalleryContent};
+use crate::views::partials::components::portfolio::content::{
+    CrateCardContent, CrateGalleryContent,
+};
 use crate::views::partials::components::tab_set;
 
 pub(super) struct Crate<'a> {

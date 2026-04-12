@@ -1,91 +1,89 @@
 ---
 name: mds-repo-docs-index
-version: 0.1.0
-description: Docs-first policy and curated lookup index for /docs, including allowlist/denylist and conflict resolution rules.
+version: 0.2.0
+description: Docs-first policy for the lean repo docs set, plus routing rules for when to leave the repo and use installed skills or upstream docs.
 scope: project
 ---
 
 # mds-repo-docs-index
 
 ## Purpose
-Define a single docs-first retrieval policy for the repo. Treat `/docs` as evergreen source of truth for Maud, Datastar, Axum, Bon usage, Statum workflow and API protocol design, CSS conventions, writing style, visual signoff, and code-audit practices.
+Define the current docs-first policy for `eran_codes` after the repo-doc cleanup.
+
+The repo no longer mirrors framework docs for Maud, Datastar, Axum, Bon, or Statum.
+This skill now governs:
+
+- which repo docs are actually authoritative
+- when repo docs stop and installed skills or upstream docs should take over
+- how to avoid treating deleted mirrors as if they still exist
 
 ## Source Of Truth
-- Primary corpus: `/docs` (read-only)
-- Conflict rule: `/docs` overrides agent priors and defaults.
-- Tie-breaker: when two docs conflict, use the most specific path for the current decision area; if still ambiguous, escalate to `mds-verifier` as a blocking warning.
+- Primary repo docs corpus:
+  - `/README.md`
+  - `/docs/README.md`
+  - `/docs/auth-sessions.md`
+  - `/docs/sensitive-sync-architecture.md`
+  - `/docs/portfolio-demos.md`
+  - crate READMEs under `/crates/*/README.md`
+- Conflict rule:
+  - for repo-specific portfolio/product claims, current repo docs beat agent memory
+  - for framework semantics, repo docs are no longer authoritative unless they describe repo-owned behavior
 
-## Authoritative Doc Roots (Allowlist)
-Only these roots are authoritative for the Maud + Datastar component system:
-- `/docs/maud/`
-- `/docs/datastar/`
-- `/docs/axum/`
-- `/docs/bon/`
-- `/docs/statum/`
-- `/docs/css-scope-inline/`
-- `/docs/code-audit/`
-- `/docs/visual-signoff/latest/`
-- `/docs/writing-style.md`
-- `/docs/reference-map.md`
+## Authoritative Repo Doc Roots
+- `/README.md`
+- `/docs/README.md`
+- `/docs/auth-sessions.md`
+- `/docs/sensitive-sync-architecture.md`
+- `/docs/portfolio-demos.md`
+- `/crates/domain/README.md`
+- `/crates/app/README.md`
+- `/crates/infra/README.md`
+- `/crates/http/README.md`
+- `/crates/utils/README.md`
 
-## Historical/Stale Docs (Denylist, Non-Authoritative)
-Do not use these files to drive `component_spec` or verification decisions:
-- `/docs/nestum/Agents.md` (legacy agent guidance for a different crate context)
-- `/docs/statum/AGENTS.md` (legacy repository guidelines for a different crate context)
+## Non-Authoritative Or Removed Surfaces
+- Any deleted mirror path under `/docs/axum`, `/docs/bon`, `/docs/datastar`, `/docs/maud`, `/docs/statum`, `/docs/css-scope-inline`, `/docs/tracing`, and similar trees
+- Any deleted plan/audit doc from the pre-cleanup repo
+- Any removed CI script under `/scripts/ci`
 
-If a path is in this denylist, treat it as informational history only, not as policy input.
-
-## Curated Map Of Doc Areas
-- `maud`
-  - `/docs/maud/index.md`
-  - `/docs/maud/elements-attributes.md`
-  - `/docs/maud/partials.md`
-  - `/docs/maud/web-frameworks.md`
-- `datastar`
-  - `/docs/datastar/index.md`
-  - `/docs/datastar/guide.md`
-  - `/docs/datastar/reference.md`
-  - `/docs/datastar/reference/attributes.md`
-  - `/docs/datastar/reference/sse_events.md`
-  - `/docs/datastar/route-map.md`
-- `axum`
-  - `/docs/axum/index.md`
-  - `/docs/axum/routing/index.md`
-  - `/docs/axum/response/sse/index.md`
-  - `/docs/axum/extract/index.md`
-- `bon`
-  - `/docs/bon/guide/basics.md`
-  - `/docs/bon/guide/basics/optional-members.md`
-  - `/docs/bon/guide/patterns/conditional-building.md`
-  - `/docs/bon/reference/builder/member/default.md`
-  - `/docs/bon/reference/builder/member/into.md`
-- `statum`
-  - `/docs/statum/README.md`
-  - `/docs/statum/docs/typestate-builder-design-playbook.md`
-  - `/docs/statum/docs/new-api.md`
-  - `/docs/statum/docs/migration.md`
-- `css-scope-inline`
-  - `/docs/css-scope-inline/index.md`
-  - `/docs/css-scope-inline/03-how-it-works.md`
-  - `/docs/css-scope-inline/06-workflow-tips.md`
-- `writing-style`
-  - `/docs/writing-style.md`
-- `visual-signoff`
-  - `/docs/visual-signoff/latest/ui-signoff.md`
-  - `/docs/visual-signoff/latest/ux-signoff.md`
-- `code-audit`
-  - `/docs/code-audit/README.md`
-  - `/docs/code-audit/01-architecture-map.md`
-  - `/docs/code-audit/02-request-and-data-flows.md`
+If a skill or note still points at one of those paths, treat that as stale guidance and fix or ignore it rather than pretending the path exists.
 
 ## Lookup Protocol
-1. Classify request into one or more areas (`maud`, `datastar`, `axum`, `bon`, `statum`, `css-scope-inline`, `writing-style`, `visual-signoff`, `code-audit`).
-2. Retrieve only mapped docs for those areas.
-3. Extract concrete constraints in normalized form: `rule_id`, `source_path`, `rule_text`.
-4. Attach resolved rules to working context before any design decision.
-5. If no applicable rule exists, explicitly record `rule_text: "no direct corpus rule found"`.
+1. Classify the question:
+   - `repo-story`
+   - `portfolio-surface`
+   - `auth`
+   - `sensitive-sync`
+   - `crate-boundary`
+   - `framework-semantics`
+2. For the first five classes, start in the authoritative repo docs listed above.
+3. For `framework-semantics`, don't search deleted repo mirrors.
+4. Route framework questions to the matching installed skill or official docs:
+   - Axum: `mds-axum-integration` plus official Axum docs
+   - Datastar: `mds-datastar-idiom-audit`, `mds-datastar-patterns`, and the installed `datastar` skill
+   - Maud: `mds-maud-patterns` plus official Maud docs
+   - Bon: `mds-bon-patterns` plus `bon-workspace` or official Bon docs
+   - Statum: `mds-statum-patterns` plus current crate usage or upstream docs
+5. If no repo doc exists for a repo-specific claim, say so explicitly instead of inventing one from memory.
 
-## Conflict Resolution Rule
-- If proposed output contradicts docs-backed rules, docs win.
-- Exception is allowed only with `component_spec.override` present and populated with a reason and approved-by identity.
-- `mds-verifier` must fail when contradiction exists without valid `override` metadata.
+## Curated Map
+- `repo-story`
+  - `/README.md`
+  - `/docs/README.md`
+- `auth`
+  - `/docs/auth-sessions.md`
+  - `/crates/http/README.md`
+- `sensitive-sync`
+  - `/docs/sensitive-sync-architecture.md`
+  - `/docs/portfolio-demos.md`
+- `crate-boundary`
+  - `/crates/domain/README.md`
+  - `/crates/app/README.md`
+  - `/crates/infra/README.md`
+  - `/crates/http/README.md`
+  - `/crates/utils/README.md`
+
+## Rule
+- Don't cite or rely on deleted repo mirrors.
+- Don't keep a repo skill pointing at removed docs after a repo cleanup.
+- When the repo intentionally becomes leaner, the skills must narrow with it.

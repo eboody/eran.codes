@@ -26,15 +26,6 @@ impl WorkCaseSlug {
         }
     }
 
-    pub const fn archive_anchor_id(self) -> Option<&'static str> {
-        match self {
-            Self::ChatRealtime => Some("chat-realtime"),
-            Self::CommandSse => Some("command-sse"),
-            Self::OperationalVisibility => Some("operational-visibility"),
-            Self::SensitiveSync => None,
-        }
-    }
-
     pub const fn public_href(self) -> &'static str {
         match self {
             Self::ChatRealtime => "/work#chat-realtime",
@@ -74,12 +65,6 @@ pub enum CtaKind {
     #[default]
     Primary,
     Secondary,
-}
-
-#[derive(Clone, Debug, Deserialize)]
-pub struct CmsImageAsset {
-    pub asset_ref: Text,
-    pub alt: Text,
 }
 
 #[derive(Clone, Debug, Deserialize)]
@@ -140,14 +125,6 @@ pub enum LinkReference {
 }
 
 #[derive(Clone, Debug, Deserialize)]
-pub struct ActionLibraryFragment {
-    #[serde(default)]
-    pub action_links: Vec<ActionLinkContent>,
-    #[serde(default)]
-    pub action_bundles: Vec<ActionBundleContent>,
-}
-
-#[derive(Clone, Debug, Deserialize)]
 pub struct PortfolioHeroContent {
     pub eyebrow: Text,
     pub title: Text,
@@ -176,11 +153,7 @@ pub struct WorkCardContent {
     pub title: Text,
     pub summary: Text,
     pub outcome: Option<Text>,
-    pub highlights: Vec<Text>,
-    #[serde(default)]
-    pub stack_tags: Vec<Text>,
     pub cta_label: Text,
-    pub preview: Option<CmsImageAsset>,
 }
 
 #[derive(Clone, Debug, Deserialize)]
@@ -235,17 +208,7 @@ pub struct ExperienceRoleContent {
     pub company: Text,
     pub title: Text,
     pub tenure: Text,
-    pub summary: Text,
     pub highlights: Vec<Text>,
-    #[serde(default)]
-    pub actions: Vec<CmsActionLink>,
-}
-
-#[derive(Clone, Debug, Deserialize)]
-pub struct ExperienceSectionContent {
-    pub title: Text,
-    pub subtitle: Text,
-    pub roles: Vec<ExperienceRoleContent>,
 }
 
 #[derive(Clone, Debug, Deserialize)]
@@ -253,13 +216,6 @@ pub struct SkillGroupContent {
     pub id: Text,
     pub title: Text,
     pub items: Vec<Text>,
-}
-
-#[derive(Clone, Debug, Deserialize)]
-pub struct SkillSectionContent {
-    pub title: Text,
-    pub subtitle: Text,
-    pub groups: Vec<SkillGroupContent>,
 }
 
 #[derive(Clone, Debug, Deserialize)]
@@ -276,22 +232,14 @@ pub struct ContactMethodContent {
 pub struct PortfolioHomeContent {
     pub page_title: Text,
     pub hero: PortfolioHeroContent,
-    pub experience_section: ExperienceSectionContent,
-    pub project_section: WorkSectionContent,
     pub current_proof_section: WorkSectionContent,
-    pub open_source_teaser: ClosingContent,
-    pub skill_section: SkillSectionContent,
-    pub contact_section: ClosingContent,
 }
 
 #[derive(Clone, Debug, Deserialize)]
 pub struct WorkIndexContent {
     pub page_title: Text,
     pub hero: PortfolioHeroContent,
-    pub current_proof_section: WorkSectionContent,
     pub supporting_cases_section: WorkSectionContent,
-    pub archive_details: ArchiveDetailsContent,
-    pub open_source_teaser: ClosingContent,
 }
 
 #[derive(Clone, Debug, Deserialize)]
@@ -339,20 +287,6 @@ pub struct SectionIntro {
 }
 
 #[derive(Clone, Debug, Deserialize)]
-pub struct ArchiveDetailsContent {
-    pub title: Text,
-    pub subtitle: Text,
-    pub entry_label: Text,
-}
-
-#[derive(Clone, Debug, Deserialize)]
-pub struct ExperienceSectionSelection {
-    pub title: Text,
-    pub subtitle: Text,
-    pub role_ids: Vec<Text>,
-}
-
-#[derive(Clone, Debug, Deserialize)]
 pub struct ProjectSectionSelection {
     pub title: Text,
     pub subtitle: Text,
@@ -362,30 +296,10 @@ pub struct ProjectSectionSelection {
 }
 
 #[derive(Clone, Debug, Deserialize)]
-pub struct SkillSectionSelection {
-    pub title: Text,
-    pub subtitle: Text,
-    pub skill_group_ids: Vec<Text>,
-}
-
-#[derive(Clone, Debug, Deserialize)]
-pub struct ContactSectionSelection {
-    pub title: Text,
-    pub summary: Text,
-    #[serde(default)]
-    pub action_refs: Vec<LinkReference>,
-}
-
-#[derive(Clone, Debug, Deserialize)]
 pub struct HomePageCopy {
     pub page_title: Text,
     pub hero: PortfolioHeroCopy,
-    pub experience: ExperienceSectionSelection,
-    pub selected_projects: ProjectSectionSelection,
     pub current_proof: ProjectSectionSelection,
-    pub open_source_teaser: ClosingCopy,
-    pub skills: SkillSectionSelection,
-    pub contact: ContactSectionSelection,
 }
 
 #[derive(Clone, Debug, Deserialize)]
@@ -394,16 +308,7 @@ pub struct WorkIndexCopy {
     pub eyebrow: Text,
     pub title: Text,
     pub summary: Text,
-    pub current_proof: ProjectSectionSelection,
     pub supporting_cases: ProjectSectionSelection,
-    pub archive_details: ArchiveDetailsContent,
-    pub open_source_teaser: ClosingCopy,
-}
-
-#[derive(Clone, Debug)]
-pub struct ArchivedWorkCaseContent {
-    pub slug: WorkCaseSlug,
-    pub content: WorkCaseContent,
 }
 
 #[derive(Clone, Debug, Deserialize)]

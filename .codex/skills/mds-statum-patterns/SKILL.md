@@ -20,10 +20,9 @@ Use `statum` when Rust workflows or API protocols have stable ordered phases and
 - Record the result in `component_spec.design.protocol_model`.
 
 ## Source Docs (Authoritative)
-- `/docs/statum/README.md`
-- `/docs/statum/docs/typestate-builder-design-playbook.md`
-- `/docs/statum/docs/new-api.md`
-- `/docs/statum/docs/migration.md`
+- This skill file is the repo-local Statum rule surface.
+- The repo no longer mirrors Statum docs under `/docs/statum`.
+- When deeper Statum reference is needed, inspect current `statum` usage in the repo and use the upstream crate docs instead of assuming repo-local mirrors exist.
 
 ## Fit Checklist
 Ask all six before choosing a runtime-only model:

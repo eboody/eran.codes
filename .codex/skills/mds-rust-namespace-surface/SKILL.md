@@ -17,7 +17,7 @@ Keep Rust APIs module-first: the module carries the namespace, generic companion
 ## Use
 - Use before changing Rust module layout, `mod.rs`, `use`, `pub use`, or public type surfaces.
 - Required for `mds-codegen` and any manual Rust edit that reshapes namespace roots.
-- Pair with `docs/writing-style.md` and `scripts/ci/descriptive-module-imports.sh`.
+- Pair with `rust-api-shape` and current repo call sites; the old repo-local writing doc and descriptive-import CI script are gone.
 
 ## Core Rules
 - If a module path is part of the intended API vocabulary, expose the module and qualify from it.

@@ -1,11 +1,10 @@
 # mds-css-conventions references
 
-Key `/docs` paths:
-- `/docs/css-scope-inline/index.md`
-- `/docs/css-scope-inline/00-intro.md`
-- `/docs/css-scope-inline/03-how-it-works.md`
-- `/docs/css-scope-inline/06-workflow-tips.md`
-- `/docs/css-scope-inline/08-technical-faq.md`
-- `/docs/writing-style.md`
-- `/docs/visual-signoff/latest/ui-signoff.md`
-- `/docs/visual-signoff/latest/ux-signoff.md`
+The repo no longer mirrors CSS/style-system docs under `/docs`.
+
+Use these repo-local surfaces instead:
+- `crates/http/static/app.css`
+- `crates/http/src/views/partials/components/`
+- `crates/http/src/views/partials/demo/`
+
+If framework-level style guidance is needed beyond the repo code, use the installed style-system skills or upstream docs rather than assuming local mirrors exist.

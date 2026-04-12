@@ -208,15 +208,14 @@ mod tests {
             .render()
             .into_string();
 
-        assert!(markup.contains("Current Proof"));
-        assert!(markup.contains("Archive"));
-        assert!(markup.contains("Live Proof"));
+        assert!(markup.contains("Flagship"));
+        assert!(markup.contains("Crates"));
+        assert!(markup.contains("Lab"));
         assert!(markup.contains("/resume.txt"));
         assert!(!markup.contains("GitHub"));
         assert!(!markup.contains("LinkedIn"));
         assert!(!markup.contains("Contact"));
         assert!(!markup.contains(">Work<"));
-        assert!(!markup.contains("Live Lab"));
     }
 
     #[test]
@@ -256,35 +255,35 @@ mod tests {
     }
 
     #[test]
-    fn current_proof_and_archive_nav_entries_activate_separately() {
-        let current_proof_markup = Layout::builder()
+    fn flagship_and_crate_nav_entries_activate_separately() {
+        let flagship_markup = Layout::builder()
             .title("Example")
             .content(maud::html! { main {} })
-            .current_route(Route::WorkSensitiveSync)
+            .current_route(Route::Home)
             .build()
             .render()
             .into_string();
-        let supporting_markup = Layout::builder()
+        let crate_markup = Layout::builder()
             .title("Example")
             .content(maud::html! { main {} })
-            .current_route(Route::WorkChatRealtime)
+            .current_route(Route::OpenSource)
             .build()
             .render()
             .into_string();
 
-        assert!(current_proof_markup.contains("Current Proof"));
-        assert!(supporting_markup.contains("Archive"));
+        assert!(flagship_markup.contains("Flagship"));
+        assert!(crate_markup.contains("Crates"));
         assert!(portfolio_link_is_active(
-            Some(Route::WorkSensitiveSync),
-            Route::WorkSensitiveSync.as_str()
+            Some(Route::Home),
+            Route::Home.as_str()
         ));
         assert!(portfolio_link_is_active(
-            Some(Route::WorkChatRealtime),
-            Route::Work.as_str()
+            Some(Route::OpenSource),
+            Route::OpenSource.as_str()
         ));
         assert!(!portfolio_link_is_active(
-            Some(Route::WorkChatRealtime),
-            Route::WorkSensitiveSync.as_str()
+            Some(Route::OpenSource),
+            Route::Home.as_str()
         ));
     }
 

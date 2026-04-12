@@ -95,17 +95,17 @@ Semantics:
 ## Variant Modeling Contract (Required)
 For component/view models generated from the spec:
 - Finite semantic sets must be typed enums/newtypes (for example `mode`, `variant`, `kind`, `role`, `type`, `scope`, `authority`).
-- Do not model finite variant fields as `Text`/`String` in render structs.
+- Don't model finite variant fields as `Text`/`String` in render structs.
 - Boundary strings may exist only at content/transport edges and should map into typed variants before rendering.
 
 ## Builder Contract (Required)
 Use `bon` for component construction APIs:
 - Prefer plain `bon` typestate-style builders when construction order for one value is part of correctness and there is no broader workflow to encode.
 - Prefer regular `#[derive(Builder)]` when staged named construction improves readability and typestate is unnecessary.
-- For optional members, use `.field(value)` when the value is known; do not use `.maybe_field(Some(value))`.
+- For optional members, use `.field(value)` when the value is known; don't use `.maybe_field(Some(value))`.
 - Use `.maybe_field(option_value)` only when the source is already `Option<T>` or when passing explicit `None` is semantically required.
 - Avoid ad-hoc manual builder patterns when `bon` can encode the same intent.
-- Use `statum` for stable multi-step workflow legality; do not simulate protocol stages with plain-Bon builder chains.
+- Use `statum` for stable multi-step workflow legality; don't simulate protocol stages with plain-Bon builder chains.
 - Statum-generated machine constructors remain Bon-backed; treat that as part of the Statum surface, not as a competing design choice.
 
 ## Protocol Model Contract (Required)
@@ -131,8 +131,8 @@ Semantics:
   - Keep volatile policy or user-authored branches in runtime validation.
 - `decision = runtime`
   - Use only when there is no meaningful stable workflow/API protocol to encode or when the surface is too dynamic for type-level encoding.
-  - `rationale` must explain why `statum` is not the right fit.
-  - Do not invent fake lifecycle phases just to satisfy the schema.
+  - `rationale` must explain why `statum` isn't the right fit.
+  - Don't invent fake lifecycle phases just to satisfy the schema.
 - `persistence_boundary = validators`
   - Rehydrate typed machines through `#[validators]` instead of trusting stored status flags directly.
   - Requires `decision = statum` or `decision = hybrid`.
@@ -172,7 +172,7 @@ Semantics:
 - `ui_transitions[]`: client-local reducers for UI-authority fields.
 - `app_mappings.backend_responses[]`: server response to app-state mapping.
 - `app_mappings.sse_events[]`: SSE event to app-state mapping.
-- `effects[]`: intents (for example, backend invocation). Intents do not directly mutate app state.
+- `effects[]`: intents (for example, backend invocation). Intents don't directly mutate app state.
 - Optional handler protocol metadata:
   - `protocol_mode`: `ui_local` | `command_sse`
   - `protocol_rationale`: non-empty rationale for selected protocol
@@ -211,7 +211,7 @@ This declares semantic dispatch style. Projects may still use local Datastar exp
 - `backend_contracts.actions[].input_type` and `output_type` must exist in `backend_contracts.types[].id`.
 - `design.protocol_model` must exist.
 - If `design.protocol_model.decision == "statum"` or `design.protocol_model.decision == "hybrid"`, `lifecycle`, `machine_type`, `state_enum`, `runtime_edges`, and at least one `stable_core_edge` must be present.
-- If `design.protocol_model.decision == "runtime"`, `rationale` must explain why typed workflow legality is not warranted.
+- If `design.protocol_model.decision == "runtime"`, `rationale` must explain why typed workflow legality isn't warranted.
 - If `design.protocol_model.persistence_boundary == "validators"`, the Rust workflow is expected to rehydrate through Statum validators and `decision` must not remain `runtime`.
 - `pipeline.execution_order` must include all required `mds-*` agents.
 - `pipeline.parallel_groups` must include `mds-cms-content-modeler` in the same group as other spec-design agents for component creation.
@@ -222,18 +222,19 @@ This declares semantic dispatch style. Projects may still use local Datastar exp
 - `design.render_contract.interaction_mode` must be non-empty.
 - `styling.mode` must be `hybrid`.
 - `styling.global_packages` must include at least one reusable package class.
-- Docs-backed rules from `/docs` must be honored unless `override` is present and valid.
+- Repo-backed rules from the current authoritative docs set must be honored unless `override` is present and valid.
 
 ## Docs Policy
-- `/docs` is evergreen source of truth.
-- Docs skills must be consulted for Datastar bindings, JS events, backend contracts, SSE, routing decisions, and Statum workflow legality/Bon-composition/rehydration decisions.
+- Start with `mds-repo-docs-index` for the current authoritative repo docs set.
+- Don't rely on deleted framework mirrors under `/docs`.
+- Consult installed framework skills or upstream docs for Datastar bindings, JS events, backend contracts, SSE, routing decisions, and Statum workflow legality or Bon composition details.
 - If output contradicts docs-backed rules and `override` is absent or invalid, verifier must fail.
 
 ## Verifier Failure Policy
 `mds-verifier` must fail the run if any schema, reference, authority, or docs contradiction invariant fails.
 
 ## Quality Closure Policy
-- Do not mark a component request as fully complete if known material gaps remain.
+- Don't mark a component request as fully complete if known material gaps remain.
 - If material gaps exist, response/handoff must:
   - list the gaps explicitly, and
   - request a focused next pass with concrete scope.
@@ -249,7 +250,7 @@ This declares semantic dispatch style. Projects may still use local Datastar exp
     "required_agents": ["mds-orchestrator", "mds-docs-librarian", "mds-ui-decomposer", "mds-cms-content-modeler", "mds-state-modeler", "mds-events-designer", "mds-backend-contracts", "mds-codegen", "mds-styling-system", "mds-verifier"],
     "parallel_groups": [["mds-ui-decomposer", "mds-cms-content-modeler", "mds-state-modeler", "mds-events-designer", "mds-backend-contracts"]]
   },
-  "content": {"source": "cms", "root_type": "ExampleContent", "fixture_path": "tests/fixtures/cms/example.json"},
+  "content": {"source": "cms", "root_type": "ExampleContent", "fixture_path": ".codex/skills/mds-component-spec/references/example-content.json"},
   "design": {
     "reuse_scan": {"checked_components": ["crates/http/src/views/partials/components/primitives/tab.rs"], "reused": ["tab"], "created": []},
     "render_contract": {"composable_render": true, "children_as_props": true, "primitive_reuse": ["tab"], "interaction_mode": "ui_local_controller"},

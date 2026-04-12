@@ -6,9 +6,8 @@ use crate::views::partials;
 use super::content::{CmsActionLink, CtaKind};
 
 mod case_detail;
+mod flagship_crate_aside;
 mod crate_section;
-mod current_proof_aside;
-mod experience;
 mod hero;
 mod home_flow;
 mod open_source_flow;
@@ -16,17 +15,14 @@ mod open_source_intro;
 mod work;
 mod work_flow;
 
-pub use case_detail::{ArchiveCaseDetailsSection, Work as WorkCaseDetail};
+pub use case_detail::Work as WorkCaseDetail;
 pub use crate_section::CrateSection;
-pub use current_proof_aside::CurrentProofHeroAside;
-pub use experience::Section as ExperienceSection;
+pub use flagship_crate_aside::FlagshipCrateHeroAside;
 pub use hero::Portfolio as PortfolioHero;
 pub use home_flow::HomeFlow;
 pub use open_source_flow::OpenSourceFlow;
 pub use open_source_intro::{OpenSourceHeroAside, OpenSourceMobileIntro};
-pub use work::{
-    IndexSection as WorkIndexSection, Section as WorkSection, SectionVariant as WorkSectionVariant,
-};
+pub use work::{Section as WorkSection, SectionVariant as WorkSectionVariant};
 pub use work_flow::WorkFlow;
 
 #[derive(Clone, Copy, Debug)]

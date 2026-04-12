@@ -34,24 +34,21 @@ mod tests {
     use super::*;
 
     #[test]
-    fn renders_resume_first_sections_in_order() {
+    fn renders_flagship_crate_before_applied_proof() {
         let content = partials::components::portfolio::content::portfolio_home_content();
         let markup = Home::default().render().into_string();
-        let experience_title = content.experience_section.title.to_string();
         let proof_title = content.current_proof_section.title.to_string();
+        let flagship_name = "statum";
 
         assert!(
-            markup.find(proof_title.as_str()).unwrap()
-                < markup.find(experience_title.as_str()).unwrap()
+            markup.find(flagship_name).unwrap() < markup.find(proof_title.as_str()).unwrap()
         );
-        assert!(markup.contains("I build secure backend systems with explicit trust boundaries."));
-        assert!(!markup.contains("I ship systems that remove operational bottlenecks and improve execution speed."));
-        assert!(markup.contains("Most relevant experience"));
-        assert!(markup.contains("Current secure-data proof"));
+        assert!(markup.contains("Published Rust crates with one live application proof behind them."));
+        assert!(markup.contains("Flagship crate"));
+        assert!(markup.contains("Current applied proof"));
         assert!(markup.contains("href=\"/resume.txt\""));
         assert!(markup.contains("ui-portfolio-hero-aside"));
-        assert!(!markup.contains(content.project_section.title.to_string().as_str()));
-        assert!(!markup.contains(content.open_source_teaser.title.to_string().as_str()));
-        assert!(!markup.contains(content.skill_section.title.to_string().as_str()));
+        assert!(markup.contains("ui-portfolio-crate-showcase"));
+        assert!(!markup.contains("Most relevant experience"));
     }
 }

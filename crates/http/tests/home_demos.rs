@@ -317,10 +317,9 @@ async fn lab_page_includes_demo_sections() {
 enum LabContract {
     ProofKicker,
     ProofHeadline,
-    LiveProofNav,
-    CurrentProofNav,
-    ArchiveNav,
-    OpenSourceNav,
+    FlagshipNav,
+    CratesNav,
+    LabNav,
     SupportingProofTitle,
     RuntimeInspectionTitle,
     SensitiveProofTitle,
@@ -344,10 +343,9 @@ impl LabContract {
         &[
             LabContract::ProofKicker,
             LabContract::ProofHeadline,
-            LabContract::LiveProofNav,
-            LabContract::CurrentProofNav,
-            LabContract::ArchiveNav,
-            LabContract::OpenSourceNav,
+            LabContract::FlagshipNav,
+            LabContract::CratesNav,
+            LabContract::LabNav,
             LabContract::SupportingProofTitle,
             LabContract::RuntimeInspectionTitle,
             LabContract::SensitiveProofTitle,
@@ -369,12 +367,13 @@ impl LabContract {
 
     fn as_str(self) -> &'static str {
         match self {
-            LabContract::ProofKicker => "Live Proof Surface",
-            LabContract::ProofHeadline => "Secure Backend Systems, Shown Running",
-            LabContract::LiveProofNav => "Live Proof",
-            LabContract::CurrentProofNav => "Current Proof",
-            LabContract::ArchiveNav => "Archive",
-            LabContract::OpenSourceNav => "Open Source",
+            LabContract::ProofKicker => "Applied proof",
+            LabContract::ProofHeadline => {
+                "A narrow live system that shows the crate work in motion."
+            }
+            LabContract::FlagshipNav => "Flagship",
+            LabContract::CratesNav => "Crates",
+            LabContract::LabNav => "Lab",
             LabContract::SupportingProofTitle => {
                 "Validate the main proof from other angles"
             }
@@ -421,6 +420,7 @@ async fn home_page_includes_portfolio_sections() {
     assert!(!body.contains("Selected projects"));
     assert!(!body.contains("Skills and technical focus"));
     assert!(!body.contains("Open-source systems design work"));
+    assert!(!body.contains("Most relevant experience"));
 }
 
 #[tokio::test]
@@ -454,12 +454,13 @@ enum PortfolioHomeContract {
     PortfolioMain,
     HeroSection,
     PivotHeadline,
-    ExperienceTitle,
+    FlagshipAside,
+    CrateShowcase,
     CurrentProofTitle,
-    CurrentProofNav,
-    ArchiveNav,
+    FlagshipNav,
+    CratesNav,
+    LabNav,
     CurrentProofRoute,
-    WorkRoute,
     OpenSourceRoute,
     LabRoute,
     ResumeRoute,
@@ -478,12 +479,13 @@ impl PortfolioHomeContract {
             PortfolioHomeContract::PortfolioMain,
             PortfolioHomeContract::HeroSection,
             PortfolioHomeContract::PivotHeadline,
-            PortfolioHomeContract::ExperienceTitle,
+            PortfolioHomeContract::FlagshipAside,
+            PortfolioHomeContract::CrateShowcase,
             PortfolioHomeContract::CurrentProofTitle,
-            PortfolioHomeContract::CurrentProofNav,
-            PortfolioHomeContract::ArchiveNav,
+            PortfolioHomeContract::FlagshipNav,
+            PortfolioHomeContract::CratesNav,
+            PortfolioHomeContract::LabNav,
             PortfolioHomeContract::CurrentProofRoute,
-            PortfolioHomeContract::WorkRoute,
             PortfolioHomeContract::OpenSourceRoute,
             PortfolioHomeContract::LabRoute,
             PortfolioHomeContract::ResumeRoute,
@@ -502,14 +504,15 @@ impl PortfolioHomeContract {
             PortfolioHomeContract::PortfolioMain => "data-portfolio-page",
             PortfolioHomeContract::HeroSection => "ui-portfolio-hero",
             PortfolioHomeContract::PivotHeadline => {
-                "I build secure backend systems with explicit trust boundaries."
+                "Published Rust crates with one live application proof behind them."
             }
-            PortfolioHomeContract::ExperienceTitle => "Most relevant experience",
-            PortfolioHomeContract::CurrentProofTitle => "Current secure-data proof",
-            PortfolioHomeContract::CurrentProofNav => "Current Proof",
-            PortfolioHomeContract::ArchiveNav => "Archive",
+            PortfolioHomeContract::FlagshipAside => "Flagship crate",
+            PortfolioHomeContract::CrateShowcase => "ui-portfolio-crate-showcase",
+            PortfolioHomeContract::CurrentProofTitle => "Current applied proof",
+            PortfolioHomeContract::FlagshipNav => "Flagship",
+            PortfolioHomeContract::CratesNav => "Crates",
+            PortfolioHomeContract::LabNav => "Lab",
             PortfolioHomeContract::CurrentProofRoute => "href=\"/work/sensitive-sync\"",
-            PortfolioHomeContract::WorkRoute => "href=\"/work\"",
             PortfolioHomeContract::OpenSourceRoute => "href=\"/open-source\"",
             PortfolioHomeContract::LabRoute => "href=\"/lab\"",
             PortfolioHomeContract::ResumeRoute => "href=\"/resume.txt\"",
@@ -581,7 +584,7 @@ async fn work_routes_render_successfully() {
 }
 
 #[tokio::test]
-async fn work_index_prioritizes_current_proof_before_supporting_archive() {
+async fn work_index_renders_compact_archive_cards() {
     let app = test_app();
     let response = app
         .oneshot(Request::get("/work").body(Body::empty()).unwrap())
@@ -592,27 +595,23 @@ async fn work_index_prioritizes_current_proof_before_supporting_archive() {
 
     let body = to_bytes(response.into_body(), usize::MAX).await.unwrap();
     let body = String::from_utf8_lossy(&body);
-    let current_title = "Current flagship proof";
-    let archive_subtitle = "These archived cases stay brief on the index.";
-    let current_case = "Encrypted Sensitive Record Sync in Rust";
-    let archive_case = "Automated Fundraiser Acknowledgment at Scale";
-
-    assert!(
-        body.find(current_title).unwrap() < body.find(archive_subtitle).unwrap(),
-        "current proof section should render before supporting archive",
-    );
-    assert!(
-        body.find(current_case).unwrap() < body.find(archive_case).unwrap(),
-        "current proof card should render before archived supporting cases",
-    );
-    assert!(body.contains("Archived case notes"));
-    assert!(body.contains("id=\"chat-realtime\""));
-    assert!(body.contains("id=\"command-sse\""));
-    assert!(body.contains("id=\"operational-visibility\""));
+    assert!(body.contains("Compact archive"));
+    assert!(body.contains("Older applied systems, kept short."));
+    assert!(body.contains(
+        "Each card is the short version: what shipped, what moved, and why it still matters."
+    ));
+    assert!(!body.contains("Current flagship proof"));
+    assert!(!body.contains("Encrypted Sensitive Record Sync in Rust"));
+    assert!(body.contains("Automated Fundraiser Acknowledgment at Scale"));
+    assert!(body.contains("Realtime Fundraiser Creation + Donation Signal Pipeline"));
+    assert!(body.contains("Custom Substack Publishing Pipeline in Rust"));
+    assert!(body.contains("href=\"/work#chat-realtime\""));
+    assert!(body.contains("href=\"/work#command-sse\""));
+    assert!(body.contains("href=\"/work#operational-visibility\""));
 }
 
 #[tokio::test]
-async fn work_archive_renders_legacy_case_details() {
+async fn work_archive_keeps_legacy_cases_short() {
     let app = test_app();
     let response = app
         .oneshot(Request::get("/work").body(Body::empty()).unwrap())
@@ -624,33 +623,33 @@ async fn work_archive_renders_legacy_case_details() {
     let body = to_bytes(response.into_body(), usize::MAX).await.unwrap();
     let body = String::from_utf8_lossy(&body);
 
-    for (anchor_id, title, summary, implementation_marker) in [
+    for (href, title, summary, detail_only_copy) in [
         (
-            "chat-realtime",
-            "Automated fundraiser acknowledgments to remove high-volume backlog",
+            "/work#chat-realtime",
+            "Automated Fundraiser Acknowledgment at Scale",
+            "Replaced a manual outsourced thank-you workflow with browser automation that could keep up with high-volume fundraiser traffic.",
             "This archived GoodUnited case study covers replacing a manual thank-you workflow with browser automation that increased throughput and consistency under operational pressure.",
-            "Built a Playwright + TypeScript automation worker to emulate the existing browser workflow end to end.",
         ),
         (
-            "command-sse",
-            "Replaced delayed CSV workflows with realtime fundraiser + donation visibility",
+            "/work#command-sse",
+            "Realtime Fundraiser Creation + Donation Signal Pipeline",
+            "Built a realtime fundraiser creation and donation pipeline so teams could act on live signals instead of waiting for delayed files.",
             "This archived fundraiser pipeline moved operations from delayed CSV snapshots to realtime creation and donation signals integrated with Meta APIs.",
-            "Built an Express + Svelte + MongoDB app for event participants to create fundraisers in one click.",
         ),
         (
-            "operational-visibility",
-            "Built a custom Substack publishing platform around a CMS event pipeline",
+            "/work#operational-visibility",
+            "Custom Substack Publishing Pipeline in Rust",
+            "Built a Rust monorepo that connected CMS events, queued workers, and publishing automation for Substack-oriented content operations.",
             "This archived Rust publishing platform ingests Directus CMS events, processes them through queued workers, and executes automated publishing flows through a custom Substack integration.",
-            "Built a custom Substack client/integration layer for publish-oriented automation paths.",
         ),
     ] {
-        assert!(body.contains(&format!("id=\"{anchor_id}\"")));
+        assert!(body.contains(&format!("href=\"{href}\"")));
         assert!(body.contains(title));
         assert!(body.contains(summary));
-        assert!(!body.contains(implementation_marker));
+        assert!(!body.contains(detail_only_copy));
     }
-    assert!(body.contains("Back to archive"));
-    assert!(body.contains("Review current proof case"));
+    assert!(!body.contains("Archived case notes"));
+    assert!(!body.contains("Back to archive"));
 }
 
 #[tokio::test]
@@ -670,7 +669,8 @@ async fn work_sensitive_sync_page_stays_live() {
     let body = to_bytes(response.into_body(), usize::MAX).await.unwrap();
     let body = String::from_utf8_lossy(&body);
     assert!(body.contains("Current Proof | Encrypted Sensitive Record Sync"));
-    assert!(body.contains("Inspect sensitive proof"));
+    assert!(body.contains("Inspect live lab"));
+    assert!(body.contains("Browse archive"));
 }
 
 #[tokio::test]

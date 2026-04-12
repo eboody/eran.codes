@@ -1,0 +1,1139 @@
+{
+  "identity": {
+    "name": "Eran Boodnero",
+    "location": "Los Angeles, CA",
+    "headline": "Backend / Systems Engineer · Rust"
+  },
+  "action_links": [
+    {
+      "id": "nav_flagship",
+      "label": "Flagship",
+      "href": "/",
+      "tone": "secondary"
+    },
+    {
+      "id": "nav_crates",
+      "label": "Crates",
+      "href": "/open-source",
+      "tone": "secondary"
+    },
+    {
+      "id": "nav_lab",
+      "label": "Lab",
+      "href": "/lab",
+      "tone": "secondary"
+    },
+    {
+      "id": "nav_resume",
+      "label": "Resume",
+      "href": "/resume.txt",
+      "tone": "secondary"
+    },
+    {
+      "id": "read_flagship_docs",
+      "label": "Read statum docs",
+      "href": "https://docs.rs/statum",
+      "kind": "external",
+      "tone": "primary"
+    },
+    {
+      "id": "view_flagship_source",
+      "label": "View statum source",
+      "href": "https://github.com/eboody/statum",
+      "kind": "external",
+      "tone": "secondary"
+    },
+    {
+      "id": "open_live_proof",
+      "label": "Inspect live lab",
+      "href": "/lab",
+      "tone": "secondary"
+    },
+    {
+      "id": "read_current_proof_case",
+      "label": "Read case study",
+      "href": "/work/sensitive-sync",
+      "tone": "secondary"
+    },
+    {
+      "id": "browse_supporting_proof",
+      "label": "Browse archive",
+      "href": "/work",
+      "tone": "secondary"
+    },
+    {
+      "id": "explore_open_source",
+      "label": "Compare all crates",
+      "href": "/open-source",
+      "tone": "secondary"
+    },
+    {
+      "id": "create_account",
+      "label": "Create account",
+      "href": "/register",
+      "tone": "primary"
+    },
+    {
+      "id": "sign_in",
+      "label": "Sign in",
+      "href": "/login",
+      "tone": "secondary"
+    },
+    {
+      "id": "back_to_supporting_proof",
+      "label": "Browse archive",
+      "href": "/work",
+      "tone": "secondary"
+    }
+  ],
+  "action_bundles": [
+    {
+      "id": "current_proof_actions",
+      "references": [
+        {
+          "source": "action",
+          "id": "open_live_proof"
+        },
+        {
+          "source": "action",
+          "id": "read_current_proof_case"
+        }
+      ]
+    }
+  ],
+  "nav_links": [
+    {
+      "source": "action",
+      "id": "nav_flagship"
+    },
+    {
+      "source": "action",
+      "id": "nav_crates"
+    },
+    {
+      "source": "action",
+      "id": "nav_lab"
+    },
+    {
+      "source": "action",
+      "id": "nav_resume"
+    }
+  ],
+  "contact_methods": [
+    {
+      "id": "email",
+      "label": "Email",
+      "value": "eboodnero@gmail.com",
+      "href": "mailto:eboodnero@gmail.com",
+      "kind": "external"
+    },
+    {
+      "id": "github",
+      "label": "GitHub",
+      "value": "https://github.com/eboody/eran.codes",
+      "href": "https://github.com/eboody/eran.codes",
+      "kind": "external"
+    },
+    {
+      "id": "linkedin",
+      "label": "LinkedIn",
+      "value": "https://www.linkedin.com/search/results/all/?keywords=Eran%20Boodnero",
+      "href": "https://www.linkedin.com/search/results/all/?keywords=Eran%20Boodnero",
+      "kind": "external"
+    }
+  ],
+  "experience_roles": [
+    {
+      "id": "goodunited",
+      "company": "GoodUnited",
+      "title": "Full-Stack Software Engineer",
+      "tenure": "Nonprofit fundraising product, automation, and publishing systems",
+      "summary": "Built production systems across browser automation, realtime fundraising data, and Rust publishing infrastructure for high-volume nonprofit workflows.",
+      "highlights": [
+        "Built browser automation that replaced outsourced acknowledgment workflows and cleared recurring backlog under sustained load.",
+        "Shipped realtime fundraiser-creation and donation-visibility systems integrated with Meta APIs for customer-facing operations teams.",
+        "Built a Rust publishing platform around Directus webhooks, queue-backed workers, and a custom Substack integration when official API coverage was limited.",
+        "Supported SOC 2 process and control work needed for enterprise nonprofit client relationships."
+      ]
+    }
+  ],
+  "projects": [
+    {
+      "slug": "sensitive_sync",
+      "category": "Current Proof",
+      "title": "Encrypted Sensitive Record Sync in Rust",
+      "summary": "This repo now persists encrypted sensitive records, stores provider tokens at rest with explicit key IDs, re-seals stale ciphertext in the background, and syncs a local HTTP-backed provider feed into Postgres.",
+      "outcome": "Shipped a bounded runtime proof surface for encrypted storage, application-level key rotation, persisted sensitive-access grants, background sync, and audited authorized-read decisions.",
+      "highlights": [
+        "AES-256-GCM protects provider tokens and authorized record payloads at rest, and key-versioned ciphertext keeps mixed-key reads explicit during rotation.",
+        "Background token refresh and sync runs keep the proof surface current without widening the public claim surface.",
+        "The live lab shows guest-safe redaction, denied signed-in reads without grants, and audited authorized detail reads from the same stored data."
+      ],
+      "stack_tags": [
+        "rust",
+        "axum",
+        "postgresql",
+        "aes-256-gcm",
+        "background sync"
+      ],
+      "cta_label": "Read case study"
+    },
+    {
+      "slug": "chat_realtime",
+      "category": "Ops Throughput",
+      "title": "Automated Fundraiser Acknowledgment at Scale",
+      "summary": "Replaced a manual outsourced thank-you workflow with browser automation that could keep up with high-volume fundraiser traffic.",
+      "outcome": "Roughly 12x per-operator throughput with 72 concurrent workers, clearing a persistent backlog.",
+      "highlights": [
+        "Worker-pool automation pushed browser acknowledgments to 72 concurrent jobs.",
+        "Template handling and operator-only steps moved out of the daily workflow.",
+        "Improved response speed enough to lift fundraiser chat engagement."
+      ],
+      "stack_tags": [
+        "playwright",
+        "typescript",
+        "node.js",
+        "automation"
+      ],
+      "cta_label": "Open archive note"
+    },
+    {
+      "slug": "command_sse",
+      "category": "Realtime Donations",
+      "title": "Realtime Fundraiser Creation + Donation Signal Pipeline",
+      "summary": "Built a realtime fundraiser creation and donation pipeline so teams could act on live signals instead of waiting for delayed files.",
+      "outcome": "Eliminated a 48-hour reporting lag and surfaced donation context in realtime for operations teams.",
+      "highlights": [
+        "Fundraiser creation and donation intake were wired into one live pipeline.",
+        "Operators saw donation context immediately instead of waiting for delayed exports.",
+        "Supported operations at millions-of-users scale."
+      ],
+      "stack_tags": [
+        "express",
+        "svelte",
+        "mongodb",
+        "meta api"
+      ],
+      "cta_label": "Open archive note"
+    },
+    {
+      "slug": "operational_visibility",
+      "category": "Publishing Pipeline",
+      "title": "Custom Substack Publishing Pipeline in Rust",
+      "summary": "Built a Rust monorepo that connected CMS events, queued workers, and publishing automation for Substack-oriented content operations.",
+      "outcome": "Delivered a deterministic pipeline from Directus webhooks through queued workers to publish actions.",
+      "highlights": [
+        "Directus webhooks fed typed event routing into queued Rust workers.",
+        "Publishing actions stayed deterministic from inbound event to Substack delivery.",
+        "Queue-backed publishing flow with custom Substack integration."
+      ],
+      "stack_tags": [
+        "rust",
+        "axum",
+        "directus",
+        "event queue",
+        "substack"
+      ],
+      "cta_label": "Open archive note"
+    }
+  ],
+  "open_source_entries": [
+    {
+      "name": "statum",
+      "summary": "Representational correctness for workflow and protocol state, with typed rehydration and projection helpers for stored or append-only data.",
+      "highlights": [
+        "Makes invalid, undesirable, or not-yet-validated states impossible to represent in ordinary code.",
+        "Uses #[state], #[machine], #[transition], and #[validators] to model legal phases and rebuild typed machines.",
+        "Exposes exact introspection, graph, and presentation surfaces for explainers, replay tooling, and generated docs."
+      ],
+      "gallery": {
+        "id": "crate-gallery-statum",
+        "aria_label": "statum feature gallery",
+        "tabs": [
+          {
+            "id": "transition_api",
+            "label": {
+              "primary": "Transition API"
+            },
+            "preview": {
+              "badge": {
+                "text": "Legal and illegal states stop looking different only in comments"
+              },
+              "code_examples": [
+                {
+                  "label": "Definitions",
+                  "code": "#[state]\nenum LightState {\n    Off,\n    On,\n}\n\n#[machine]\nstruct LightSwitch<LightState> {\n    name: String,\n}"
+                },
+                {
+                  "label": "Call site",
+                  "code": "let light = LightSwitch::<Off>::builder()\n    .name(\"desk lamp\".to_owned())\n    .build();\n\nlet light = light.switch_on();\nlet _light = light.switch_off();"
+                }
+              ]
+            },
+            "body": {
+              "title": "Legal edges become methods on the right machine type",
+              "features": [
+                {
+                  "text": "LightSwitch<Off> and LightSwitch<On> are different types with different method surfaces."
+                },
+                {
+                  "text": "The workflow shape moves into the type system instead of hiding in status enums, optional fields, and comments."
+                }
+              ]
+            }
+          },
+          {
+            "id": "state_data",
+            "label": {
+              "primary": "State Data"
+            },
+            "preview": {
+              "badge": {
+                "text": "State-specific data only exists when the machine is in that state"
+              },
+              "code_examples": [
+                {
+                  "label": "State enum",
+                  "code": "#[state]\nenum TaskState {\n    Draft,\n    InReview(ReviewData),\n    Published,\n}\n\nstruct ReviewData {\n    reviewer: String,\n}"
+                },
+                {
+                  "label": "Typed access",
+                  "code": "match machine {\n    task_machine::SomeState::InReview(task) => {\n        assert_eq!(task.state_data.reviewer.as_str(), \"reviewer-for-acme\");\n    }\n    _ => {}\n}"
+                }
+              ]
+            },
+            "body": {
+              "title": "Data-bearing states expose data only on the matching machine",
+              "features": [
+                {
+                  "text": "Unit states validate with statum::Result<()>; data-bearing states return statum::Result<StateData>."
+                },
+                {
+                  "text": "Review-only data stays off the draft and published machine types."
+                }
+              ]
+            }
+          },
+          {
+            "id": "rehydration",
+            "label": {
+              "primary": "Typed Rehydration"
+            },
+            "preview": {
+              "badge": {
+                "text": "Rows stay raw until validators prove a concrete state"
+              },
+              "code_examples": [
+                {
+                  "label": "Validator",
+                  "code": "struct TaskRow {\n    id: u64,\n    status: &'static str,\n    reviewer: Option<String>,\n}\n\n#[validators(Task)]\nimpl TaskRow {\n    fn is_in_review(&self) -> statum::Result<String> {\n        if self.status == \"in_review\" {\n            self.reviewer.clone().ok_or(statum::Error::InvalidState)\n        } else {\n            Err(statum::Error::InvalidState)\n        }\n    }\n}"
+                },
+                {
+                  "label": "Rebuild",
+                  "code": "let row_id = row.id;\nlet machine = row\n    .into_machine()\n    .id(row_id)\n    .build()?;"
+                }
+              ]
+            },
+            "body": {
+              "title": "Stored data rebuilds into typed machines",
+              "features": [
+                {
+                  "text": "Validator methods return Ok(()) or Ok(StateData) for the matching state, and InvalidState otherwise."
+                },
+                {
+                  "text": "Projection helpers can fold append-only event streams before validator rebuilds when your source of truth is an event log."
+                }
+              ]
+            }
+          }
+        ]
+      },
+      "repository_url": "https://github.com/eboody/statum",
+      "repository_label": "View repository",
+      "docs_url": "https://docs.rs/statum",
+      "docs_label": "Read docs",
+      "tags": [
+        "rust",
+        "typestate",
+        "macros"
+      ]
+    },
+    {
+      "name": "nestum",
+      "summary": "Proc-macro for nested enum paths that keeps the correct family boundary and removes constructor and match syntax tax.",
+      "highlights": [
+        "Keeps nested enums when they are already the honest model of the domain.",
+        "Uses Event::Document::Created and nested! without flattening the enum model.",
+        "Supports focused nested! rewrites, #[nestum_scope], named-field constructors, and cross-module nesting."
+      ],
+      "gallery": {
+        "id": "crate-gallery-nestum",
+        "aria_label": "nestum feature gallery",
+        "tabs": [
+          {
+            "id": "nested_paths",
+            "label": {
+              "primary": "Constructor Paths"
+            },
+            "preview": {
+              "badge": {
+                "text": "The outer enum stays a real envelope, but the surface reads like the tree"
+              },
+              "code_examples": [
+                {
+                  "label": "Definitions",
+                  "code": "#[nestum]\nenum DocumentEvent {\n    Created,\n    Deleted,\n}\n\n#[nestum]\nenum Event {\n    Document(DocumentEvent),\n}"
+                },
+                {
+                  "label": "Construction",
+                  "code": "let inner: DocumentEvent::Enum = DocumentEvent::Created;\nlet event: Event::Enum = Event::Document::Created;"
+                }
+              ]
+            },
+            "body": {
+              "title": "Nested constructor paths stay readable",
+              "features": [
+                {
+                  "text": "Event::Document is a namespace branch, not a completed Event value."
+                },
+                {
+                  "text": "The generated surface keeps the family boundary instead of flattening the model."
+                }
+              ]
+            }
+          },
+          {
+            "id": "match_rewrite",
+            "label": {
+              "primary": "Pattern Rewrite"
+            },
+            "preview": {
+              "badge": {
+                "text": "nested! rewrites patterns and named-field constructors where syntax gets noisy"
+              },
+              "code_examples": [
+                {
+                  "label": "Match",
+                  "code": "nested! {\n    match event {\n        Event::Document::Created => {}\n        Event::Document::Deleted => {}\n    }\n}"
+                },
+                {
+                  "label": "Named-field variant",
+                  "code": "nested! { Outer::Wrap::Struct { x: 5 } }"
+                }
+              ]
+            },
+            "body": {
+              "title": "Focused rewrites keep the nested vocabulary intact",
+              "features": [
+                {
+                  "text": "nested! handles constructor and pattern positions without changing the enum model."
+                },
+                {
+                  "text": "Named-field leaves still work without forcing a flatter API."
+                }
+              ]
+            }
+          },
+          {
+            "id": "scoped_rewrite",
+            "label": {
+              "primary": "Scoped Rewrite"
+            },
+            "preview": {
+              "badge": {
+                "text": "Rewrite a whole function or impl body instead of wrapping every match"
+              },
+              "code_examples": [
+                {
+                  "label": "Scope-level rewriting",
+                  "code": "#[nestum_scope]\nfn handle(event: Event::Enum) {\n    let renamed = Event::Document::Renamed { title: \"scope\" };\n\n    match event {\n        Event::Document::Created => {}\n        Event::Document::Renamed { title } => {\n            let _ = title;\n        }\n    }\n}"
+                },
+                {
+                  "label": "External nesting",
+                  "code": "#[nestum]\nenum Outer {\n    #[nestum(external = \"crate::inner::Inner\")]\n    Wrap(Inner),\n}\n\nlet _ = Outer::Wrap::A;"
+                }
+              ]
+            },
+            "body": {
+              "title": "Larger scopes and real projects stay coherent",
+              "features": [
+                {
+                  "text": "#[nestum_scope] rewrites a whole function, method, impl, or inline module body."
+                },
+                {
+                  "text": "The todo_api and ops_cli showcases keep Axum and Clap dispatch code aligned with the same nested command and event trees."
+                }
+              ]
+            }
+          }
+        ]
+      },
+      "repository_url": "https://github.com/eboody/nestum",
+      "repository_label": "View repository",
+      "docs_url": "https://docs.rs/nestum",
+      "docs_label": "Read docs",
+      "tags": [
+        "rust",
+        "enums",
+        "proc-macros"
+      ]
+    },
+    {
+      "name": "modum",
+      "summary": "Workspace lint tool for Rust naming, import style, and public API paths that reports diagnostics without rewriting code.",
+      "highlights": [
+        "Reports diagnostics instead of rewriting code, so teams can enforce policy without hidden edits.",
+        "Keeps namespace context visible at call sites instead of flattening it away.",
+        "Prefers strong semantic parents with short leaves like user::Repository over UserRepository.",
+        "Flags manual enum string helpers, ad hoc parse helpers, and other API-surface drift."
+      ],
+      "gallery": {
+        "id": "crate-gallery-modum",
+        "aria_label": "modum feature gallery",
+        "tabs": [
+          {
+            "id": "namespace_policy",
+            "label": {
+              "primary": "API Paths"
+            },
+            "preview": {
+              "badge": {
+                "text": "Readable public paths become enforceable lint policy"
+              },
+              "code_examples": [
+                {
+                  "label": "Noisy shape",
+                  "code": "pub fn handle(repo: UserRepository) -> Result<StatusCode, Error> {\n    todo!()\n}"
+                },
+                {
+                  "label": "Desired shape",
+                  "code": "pub fn handle(repo: user::Repository) -> Result<http::StatusCode, partials::Error> {\n    todo!()\n}"
+                }
+              ]
+            },
+            "body": {
+              "title": "A strong parent and short leaf become a linted standard",
+              "features": [
+                {
+                  "text": "The tool flags redundant leaf context like user::UserRepository when the module path already carries the domain."
+                },
+                {
+                  "text": "It keeps more descriptive leaves when the parent path is weak or technical."
+                }
+              ]
+            }
+          },
+          {
+            "id": "descriptive_imports",
+            "label": {
+              "primary": "Import Discipline"
+            },
+            "preview": {
+              "badge": {
+                "text": "Flattened imports that hide useful context become diagnostics"
+              },
+              "code_examples": [
+                {
+                  "label": "Flat imports",
+                  "code": "use storage::Repository;\nuse http::Client;"
+                },
+                {
+                  "label": "Namespace-visible usage",
+                  "code": "use components::tab_set;\n\nlet content = tab_set::ContentProps::builder();"
+                }
+              ]
+            },
+            "body": {
+              "title": "Imports can preserve context instead of erasing it",
+              "features": [
+                {
+                  "text": "Namespace-preserving modules can stay visible when the qualified call-site form adds net context."
+                },
+                {
+                  "text": "Canonical parent-surface re-exports like pub use error::{Error, Result}; remain allowed."
+                }
+              ]
+            }
+          },
+          {
+            "id": "workspace_check",
+            "label": {
+              "primary": "CI + Config"
+            },
+            "preview": {
+              "badge": {
+                "text": "Run it like clippy, then tune it with workspace metadata"
+              },
+              "code_examples": [
+                {
+                  "label": "CLI",
+                  "code": "cargo modum check --root .\ncargo modum check --root . --mode warn --format json"
+                },
+                {
+                  "label": "Metadata",
+                  "code": "[workspace.metadata.modum]\ngeneric_nouns = [\"Id\", \"Repository\", \"Service\", \"Error\", \"Command\", \"Request\", \"Response\", \"Outcome\"]\nnamespace_preserving_modules = [\"http\", \"partials\", \"components\", \"query\"]\norganizational_modules = [\"error\", \"request\", \"response\"]"
+                }
+              ]
+            },
+            "body": {
+              "title": "Workspace policy lives in tooling, not review folklore",
+              "features": [
+                {
+                  "text": "Use it in CI or editor integrations; the tool reports diagnostics but does not rewrite code."
+                },
+                {
+                  "text": "JSON output, Cargo metadata, and namespace-preserving module rules let one workspace carry a consistent namespace policy."
+                }
+              ]
+            }
+          }
+        ]
+      },
+      "repository_url": "https://github.com/eboody/modum",
+      "repository_label": "View repository",
+      "docs_url": "https://docs.rs/modum",
+      "docs_label": "Read docs",
+      "tags": [
+        "rust",
+        "linting",
+        "api-shape"
+      ]
+    }
+  ],
+  "skill_groups": [
+    {
+      "id": "languages",
+      "title": "Languages",
+      "items": [
+        "Rust",
+        "TypeScript",
+        "JavaScript",
+        "SQL"
+      ]
+    },
+    {
+      "id": "systems",
+      "title": "Systems focus",
+      "items": [
+        "auth and sessions",
+        "typed boundaries",
+        "background jobs",
+        "SSE and realtime transport",
+        "operational inspection"
+      ]
+    },
+    {
+      "id": "data",
+      "title": "Data and integrations",
+      "items": [
+        "PostgreSQL",
+        "MongoDB",
+        "Meta APIs",
+        "Directus webhooks",
+        "custom vendor integrations"
+      ]
+    },
+    {
+      "id": "tooling",
+      "title": "Tooling",
+      "items": [
+        "Axum",
+        "Datastar",
+        "Playwright",
+        "Cargo workspaces",
+        "CI-oriented validation"
+      ]
+    }
+  ],
+  "ui_copy": {
+    "home": {
+      "page_title": "Eran Boodnero | Rust Crates and Applied Systems",
+      "hero": {
+        "eyebrow": "Los Angeles · Rust · backend systems · API design",
+        "title": "Published Rust crates with one live application proof behind them.",
+        "summary": "Start with statum, then compare nestum and modum. The live lab and secure-data case show the same taste for explicit boundaries in a running system.",
+        "badges": [
+          "Rust",
+          "typestate",
+          "API shape"
+        ],
+        "action_refs": [
+          {
+            "source": "action",
+            "id": "read_flagship_docs"
+          },
+          {
+            "source": "action",
+            "id": "view_flagship_source"
+          },
+          {
+            "source": "action",
+            "id": "open_live_proof"
+          }
+        ]
+      },
+      "experience": {
+        "title": "Most relevant experience",
+        "subtitle": "The current repo proof is backed by shipped work across automation under load, realtime fundraising systems, and integration-heavy Rust infrastructure.",
+        "role_ids": [
+          "goodunited"
+        ]
+      },
+      "selected_projects": {
+        "title": "Selected projects",
+        "subtitle": "Historical shipped systems that still show execution under operational load, live integrations, and queue-backed automation constraints.",
+        "project_slugs": [
+          "chat_realtime",
+          "command_sse",
+          "operational_visibility"
+        ],
+        "action_refs": [
+          {
+            "source": "action",
+            "id": "browse_supporting_proof"
+          }
+        ]
+      },
+      "current_proof": {
+        "title": "Current applied proof",
+        "subtitle": "The application side stays narrow: one secure-data slice with encrypted storage, explicit key custody, bounded sync, and a live lab that lets a reviewer inspect the runtime directly.",
+        "project_slugs": [
+          "sensitive_sync"
+        ],
+        "action_refs": [
+          {
+            "source": "bundle",
+            "id": "current_proof_actions"
+          }
+        ]
+      },
+      "open_source_teaser": {
+        "title": "Open-source systems design work",
+        "summary": "The crate page keeps the longer API walkthrough, gallery examples, and comparison context in one place.",
+        "action_refs": [
+          {
+            "source": "action",
+            "id": "explore_open_source"
+          }
+        ]
+      },
+      "skills": {
+        "title": "Skills and technical focus",
+        "subtitle": "The public narrative now matches the repo: secure backend boundaries first, with runtime proof surfaces and supporting shipped systems behind it.",
+        "skill_group_ids": [
+          "languages",
+          "systems",
+          "data",
+          "tooling"
+        ]
+      },
+      "contact": {
+        "title": "Contact",
+        "summary": "Email is the fastest path. Public code and crate docs are both live if you want to inspect the work directly.",
+        "action_refs": [
+          {
+            "source": "contact_method",
+            "id": "email"
+          },
+          {
+            "source": "contact_method",
+            "id": "github"
+          },
+          {
+            "source": "contact_method",
+            "id": "linkedin"
+          }
+        ]
+      }
+    },
+    "work": {
+      "page_title": "Archive | Applied Systems",
+      "eyebrow": "Compact archive",
+      "title": "Older applied systems, kept short.",
+      "summary": "This page only keeps the older shipped work that still adds signal. The live lab and secure-sync case stay on their own routes.",
+      "current_proof": {
+        "title": "Current flagship proof",
+        "subtitle": "The secure-data slice is still the live application proof, but it no longer belongs on the archive page.",
+        "project_slugs": [
+          "sensitive_sync"
+        ],
+        "action_refs": [
+          {
+            "source": "action",
+            "id": "browse_supporting_proof"
+          }
+        ]
+      },
+      "supporting_cases": {
+        "title": "Archive",
+        "subtitle": "Each card is the short version: what shipped, what moved, and why it still matters.",
+        "project_slugs": [
+          "chat_realtime",
+          "command_sse",
+          "operational_visibility"
+        ]
+      },
+      "archive_details": {
+        "title": "Archived case notes",
+        "subtitle": "Each archived entry stays anchored here as a short summary. The dedicated current-proof route remains `/work/sensitive-sync`, and the live runtime proof remains `/lab`.",
+        "entry_label": "Archived work"
+      },
+      "open_source_teaser": {
+        "title": "Need the code-level proof too?",
+        "summary": "The open-source page shows invariant-oriented Rust API design, namespace discipline, and tooling surfaces that complement the application proof.",
+        "action_refs": [
+          {
+            "source": "action",
+            "id": "explore_open_source"
+          }
+        ]
+      }
+    },
+    "open_source": {
+      "page_title": "Open Source | Eran Boodnero",
+      "hero": {
+        "eyebrow": "Crates",
+        "title": "Rust crates that show how I shape APIs under pressure.",
+        "summary": "statum is the lead crate. nestum and modum support the same thesis from different angles: state truth, nested enum surfaces, and namespace discipline.",
+        "badges": [],
+        "action_refs": [
+          {
+            "source": "action",
+            "id": "read_flagship_docs"
+          },
+          {
+            "source": "action",
+            "id": "view_flagship_source"
+          }
+        ]
+      },
+      "crate_section": {
+        "title": "Published crate deep dives",
+        "subtitle": "Start with statum, then scan the supporting crates and compare where the ideas stay consistent."
+      }
+    },
+    "lab": {
+      "page_title": "Lab",
+      "hero": {
+        "eyebrow": "Applied proof",
+        "title": "A narrow live system that shows the crate work in motion.",
+        "summary": "The lab keeps one running proof: encrypted records, capability-backed reads, key custody, bounded sync, and enough runtime inspection to verify the behavior without guessing.",
+        "badges": [
+          "encrypted storage",
+          "key custody",
+          "runtime inspection"
+        ],
+        "action_refs": [
+          {
+            "source": "bundle",
+            "id": "current_proof_actions"
+          }
+        ]
+      },
+      "session_card": {
+        "title": "Session status",
+        "guest_status": "No active session.",
+        "guest_summary": "Create an account to inspect session-backed auth in the live app.",
+        "signed_in_action_label": "Open account",
+        "guest_action_refs": [
+          {
+            "source": "action",
+            "id": "create_account"
+          },
+          {
+            "source": "action",
+            "id": "sign_in"
+          }
+        ]
+      },
+      "guest_chat": {
+        "title": "Live chat room",
+        "summary": "Sign in to send messages and inspect live fanout.",
+        "action_refs": [
+          {
+            "source": "action",
+            "id": "sign_in"
+          }
+        ]
+      },
+      "operations_surface": {
+        "title": "Runtime inspection",
+        "subtitle": "Trigger the proof or a supporting demo, then inspect request, backend, and SSE behavior without leaving the page.",
+        "empty_message": "No timeline events yet. Trigger the proof or a supporting demo to populate the log."
+      },
+      "sensitive_proof": {
+        "title": "Sensitive record proof",
+        "subtitle": "Inspect encrypted storage, key custody, boundary mode, authorized reads, denied-read evidence, and recent access-audit state.",
+        "empty_message": "No sensitive-data snapshot loaded yet. Refresh the panel to inspect the current proof.",
+        "action_label": "Refresh proof"
+      },
+      "engineering_quality": {
+        "title": "Engineering Quality",
+        "subtitle": "Quality signals a reviewer can validate in the running app and the repo today.",
+        "cards": [
+          {
+            "title": "Trust boundaries stay explicit",
+            "summary": "Auth/session handling, transport code, app policy, and storage integration stay in their own lanes so security-sensitive behavior does not blur across layers.",
+            "points": [
+              "App services consume traits, not SQL primitives.",
+              "Domain types carry invariants at compile time.",
+              "HTTP handlers stay focused on protocol concerns."
+            ]
+          },
+          {
+            "title": "Runtime behavior is inspectable",
+            "summary": "The page exposes runtime surfaces that let a reviewer inspect backend behavior during normal interaction instead of relying on architecture claims alone.",
+            "points": [
+              "Live logs stream backend events without manual refresh.",
+              "Network traces show request shape and timing in context.",
+              "Interactive demos can be correlated against transport output."
+            ]
+          },
+          {
+            "title": "Guardrails catch drift early",
+            "summary": "The repo keeps only a few checks, but they stay attached to real behavior instead of style theater.",
+            "points": [
+              "Workspace tests stay green against the trimmed route set.",
+              "Browser smoke focuses on the retained public proof routes.",
+              "The Docker smoke still proves the app boots as shipped."
+            ]
+          }
+        ]
+      }
+    },
+    "resume": {
+      "summary_title": "Professional Summary",
+      "summary": "Backend and systems engineer specializing in Rust crates, public API shape, and applied systems with explicit boundaries. This repo leads with published libraries, then shows one narrow secure-data runtime slice in a live app.",
+      "experience_title": "Experience",
+      "projects_title": "Selected Projects",
+      "open_source_title": "Open Source",
+      "client_context_title": "Selected Client Context",
+      "client_context": [
+        "Meta fundraising platform partner workflows",
+        "St. Jude",
+        "Wounded Warrior Project",
+        "Alzheimer's Association",
+        "American Cancer Society",
+        "National Suicide Prevention Lifeline"
+      ],
+      "skills_title": "Core Technologies",
+      "experience_role_ids": [
+        "goodunited"
+      ],
+      "featured_project_slugs": [
+        "sensitive_sync",
+        "chat_realtime",
+        "command_sse",
+        "operational_visibility"
+      ],
+      "skill_group_ids": [
+        "languages",
+        "systems",
+        "data",
+        "tooling"
+      ],
+      "contact_method_ids": [
+        "email",
+        "github",
+        "linkedin"
+      ]
+    }
+  },
+  "work_cases": [
+    {
+      "slug": "sensitive_sync",
+      "page_title": "Current Proof | Encrypted Sensitive Record Sync",
+      "eyebrow": "Current Proof · Secure Systems Runtime",
+      "title": "Encrypted records, token lifecycle, and bounded background sync",
+      "summary": "A narrow secure-systems runtime slice: encrypted provider tokens and authorized payloads, deterministic stub sync by default, opt-in sandbox HTTPS, and a live lab that shows grants, denied reads, and audited access.",
+      "challenge": {
+        "title": "Challenge",
+        "items": [
+          "The proof needed visible evidence for encrypted-at-rest storage, token handling, and explicit integration boundaries instead of only architecture notes.",
+          "The implementation had to stay bounded and honest about scope, without implying real healthcare or production provider operations.",
+          "The public surface needed one stored-record path that could show guest-safe redaction, denied reads, and audited authorized access."
+        ]
+      },
+      "implementation": {
+        "title": "Implementation",
+        "items": [
+          "Added one sensitive-data bounded context across domain, app, infra, and HTTP without breaking the repo into extra crates.",
+          "Stored provider tokens and authorized record payloads with AES-256-GCM, while keeping only redacted labels and last-four evidence queryable in cleartext.",
+          "Built a two-mode provider boundary: deterministic local stub by default, plus an opt-in sandbox HTTP adapter with credential exchange, bounded retry/backoff, cursor-based sync, key-versioned ciphertext storage, persisted grants, and a live lab panel for denied-versus-allowed reads."
+        ]
+      },
+      "outcomes": {
+        "title": "Outcomes",
+        "items": [
+          "The repo now backs secure-systems claims with a running encrypted-storage and background-sync slice instead of only narrative direction.",
+          "Reviewers can inspect token status, last sync state, redacted records, ciphertext evidence, denied reads, and audited authorized access in the live app.",
+          "The proof stays sanitized and bounded: deterministic stub mode for repeatable review, opt-in sandbox mode for real outbound HTTPS, and explicit trust boundaries."
+        ]
+      },
+      "stack": {
+        "title": "Stack",
+        "items": [
+          "Rust",
+          "Axum",
+          "PostgreSQL",
+          "AES-256-GCM",
+          "Background jobs",
+          "Maud + Datastar proof surface"
+        ]
+      },
+      "action_refs": [
+        {
+          "source": "action",
+          "id": "open_live_proof"
+        },
+        {
+          "source": "action",
+          "id": "back_to_supporting_proof"
+        }
+      ]
+    },
+    {
+      "slug": "chat_realtime",
+      "page_title": "Archive | Automation at Fundraising Scale",
+      "eyebrow": "Archive · Automation & Operations",
+      "title": "Automated fundraiser acknowledgments to remove high-volume backlog",
+      "summary": "This archived GoodUnited case study covers replacing a manual thank-you workflow with browser automation that increased throughput and consistency under operational pressure.",
+      "challenge": {
+        "title": "Challenge",
+        "items": [
+          "Manual thank-you workflows were time-consuming, error-prone, and perpetually behind demand.",
+          "Teams depended on queue dashboards and manual triage but still accumulated backlog.",
+          "Large nonprofit clients generated very high monthly fundraiser volume, making manual scaling expensive."
+        ]
+      },
+      "implementation": {
+        "title": "Implementation",
+        "items": [
+          "Built a Playwright + TypeScript automation worker to emulate the existing browser workflow end to end.",
+          "Encoded template selection and variable substitution logic to reduce operator variance and mistakes.",
+          "Scaled execution to 72 concurrent instances to keep pace with continuously arriving fundraiser pages."
+        ]
+      },
+      "outcomes": {
+        "title": "Outcomes",
+        "items": [
+          "Delivered roughly 12x speed compared to a single manual operator for the same task shape.",
+          "Eliminated persistent backlog and reduced error rates in outbound fundraiser communication.",
+          "Faster response windows increased fundraiser engagement and improved downstream support effectiveness."
+        ]
+      },
+      "stack": {
+        "title": "Stack and ownership",
+        "items": [
+          "TypeScript",
+          "Node.js",
+          "Playwright",
+          "Browser workflow automation",
+          "Operational queue optimization"
+        ]
+      },
+      "action_refs": [
+        {
+          "source": "action",
+          "id": "back_to_supporting_proof"
+        }
+      ]
+    },
+    {
+      "slug": "command_sse",
+      "page_title": "Archive | Realtime Fundraiser Data Pipeline",
+      "eyebrow": "Archive · Realtime Product Systems",
+      "title": "Replaced delayed CSV workflows with realtime fundraiser + donation visibility",
+      "summary": "This archived fundraiser pipeline moved operations from delayed CSV snapshots to realtime creation and donation signals integrated with Meta APIs.",
+      "challenge": {
+        "title": "Challenge",
+        "items": [
+          "Prior workflow depended on manually downloaded CSV files that were at least 48 hours delayed.",
+          "Teams could only see fundraisers after donations appeared, missing newly created but not-yet-donated pages.",
+          "The lag degraded outreach speed and reduced the ability to guide fundraisers effectively."
+        ]
+      },
+      "implementation": {
+        "title": "Implementation",
+        "items": [
+          "Built an Express + Svelte + MongoDB app for event participants to create fundraisers in one click.",
+          "Integrated Meta APIs so fundraiser creation events were captured at source instead of inferred later.",
+          "Surfaced donation activity in realtime, enabling chat and success teams to operate with current context."
+        ]
+      },
+      "outcomes": {
+        "title": "Outcomes",
+        "items": [
+          "Eliminated 48-hour baseline delay in fundraiser discovery and donation context.",
+          "Enabled operations across millions of users and tens of millions of donation data points.",
+          "Improved decision quality across sales, customer success, and analytics functions."
+        ]
+      },
+      "stack": {
+        "title": "Stack and ownership",
+        "items": [
+          "TypeScript",
+          "Node.js + Express",
+          "Svelte",
+          "MongoDB",
+          "Meta platform/API integrations"
+        ]
+      },
+      "action_refs": [
+        {
+          "source": "action",
+          "id": "back_to_supporting_proof"
+        }
+      ]
+    },
+    {
+      "slug": "operational_visibility",
+      "page_title": "Archive | Custom Substack Publishing Platform",
+      "eyebrow": "Archive · Platform Architecture",
+      "title": "Built a custom Substack publishing platform around a CMS event pipeline",
+      "summary": "This archived Rust publishing platform ingests Directus CMS events, processes them through queued workers, and executes automated publishing flows through a custom Substack integration.",
+      "challenge": {
+        "title": "Challenge",
+        "items": [
+          "Editorial and publishing workflows needed reliable automation across CMS content lifecycle events.",
+          "Substack operations required custom integration logic because official API support was limited for needed flows.",
+          "The system had to preserve determinism and observability across asynchronous event processing."
+        ]
+      },
+      "implementation": {
+        "title": "Implementation",
+        "items": [
+          "Built a custom Substack client/integration layer for publish-oriented automation paths.",
+          "Typed Directus webhook events by collection/operation and routed them into queue-backed processing.",
+          "Structured a 13-crate Rust workspace across libs, services, and tools to keep boundaries explicit.",
+          "Used Axum services and worker processing to run end-to-end automation chains from trigger to publish."
+        ]
+      },
+      "outcomes": {
+        "title": "Outcomes",
+        "items": [
+          "Replaced manual handoff-heavy publishing work with deterministic event-driven automation.",
+          "Created a reusable platform foundation for additional CMS-triggered automation chains.",
+          "Established a clear hardening roadmap through architecture review of reliability and CI/security gaps."
+        ]
+      },
+      "stack": {
+        "title": "Stack and ownership",
+        "items": [
+          "Rust",
+          "Axum",
+          "Directus webhooks",
+          "Queue workers",
+          "Substack custom integration",
+          "Monorepo architecture"
+        ]
+      },
+      "action_refs": [
+        {
+          "source": "action",
+          "id": "back_to_supporting_proof"
+        }
+      ]
+    }
+  ]
+}

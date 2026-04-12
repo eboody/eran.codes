@@ -1,11 +1,10 @@
 # mds-maud-patterns references
 
-Key `/docs` paths:
-- `/docs/maud/index.md`
-- `/docs/maud/getting-started.md`
-- `/docs/maud/elements-attributes.md`
-- `/docs/maud/control-structures.md`
-- `/docs/maud/partials.md`
-- `/docs/maud/render-trait.md`
-- `/docs/maud/text-escaping.md`
-- `/docs/maud/web-frameworks.md`
+The repo no longer mirrors Maud docs under `/docs/maud`.
+
+Use these repo-local surfaces first:
+- `crates/http/src/views/page.rs`
+- `crates/http/src/views/pages/`
+- `crates/http/src/views/partials/`
+
+If Maud semantics are still unclear, use official Maud docs rather than assuming a repo-local mirror exists.

@@ -7,7 +7,9 @@ use maud::Render;
 use self::card::{Crate as Card, SupportingCrate};
 use self::showcase::Crate as Showcase;
 use super::{CardGrid, SectionCopy, Surface};
-use crate::views::partials::components::portfolio::content::{CrateCardContent, CrateSectionContent};
+use crate::views::partials::components::portfolio::content::{
+    CrateCardContent, CrateSectionContent,
+};
 
 pub struct CrateSection<'a> {
     pub content: &'a CrateSectionContent,

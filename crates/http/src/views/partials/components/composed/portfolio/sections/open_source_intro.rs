@@ -76,6 +76,8 @@ mod tests {
         assert!(aside_markup.contains("Start with one crate."));
         assert!(!aside_markup.contains("ui-open-source-hero-item-tag"));
         assert!(mobile_markup.contains("ui-open-source-mobile-intro"));
-        assert!(mobile_markup.contains(content.crate_section.subtitle.to_string().as_str()));
+        assert!(
+            mobile_markup.contains(content.crate_section.subtitle.to_string().as_str())
+        );
     }
 }

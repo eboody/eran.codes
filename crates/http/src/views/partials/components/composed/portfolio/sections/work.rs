@@ -4,7 +4,7 @@ use super::{CardFooter, CardGrid, InsetCard, SectionActions, SectionCopy, Surfac
 use crate::types::Text;
 use crate::views::partials;
 use crate::views::partials::components::portfolio::content::{
-    WorkCardContent, WorkIndexContent, WorkSectionContent,
+    WorkCardContent, WorkSectionContent,
 };
 
 #[derive(Clone, Copy, Debug, Default)]
@@ -66,29 +66,6 @@ impl Render for Section<'_> {
                     }
                 }
             }).extra_class(extra_class))
-        }
-    }
-}
-
-pub struct IndexSection<'a> {
-    pub content: &'a WorkIndexContent,
-}
-
-impl Render for IndexSection<'_> {
-    fn render(&self) -> maud::Markup {
-        maud::html! {
-            div class="ui-portfolio-work-index" {
-                (Section {
-                    content: &self.content.current_proof_section,
-                    variant: SectionVariant::CurrentProof,
-                })
-                div data-work-supporting-proof {
-                    (Section {
-                        content: &self.content.supporting_cases_section,
-                        variant: SectionVariant::Standard,
-                    })
-                }
-            }
         }
     }
 }

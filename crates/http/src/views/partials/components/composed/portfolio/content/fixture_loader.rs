@@ -1,52 +1,23 @@
+use std::collections::HashSet;
 use std::fmt::Write;
+use std::str::FromStr;
 use std::sync::OnceLock;
 
-use serde::de::DeserializeOwned;
+use crate::paths::Route;
 
 use super::types::{
-    ActionLibraryFragment, ArchivedWorkCaseContent, ClosingContent, CmsActionLink,
-    ContactMethodContent, CrateCardContent, CrateSectionContent, DirectLinkReference,
-    ExperienceRoleContent, ExperienceSectionContent, HomePageCopy, IdentityContent,
-    LabPageContent, LabPageCopy, LinkReference, OpenSourceIndexContent, OpenSourceIndexCopy,
-    PortfolioHeroContent, PortfolioHomeContent, ResumeDocumentContent, SessionCardContent,
-    SiteContent, SiteUiCopy, SkillGroupContent, SkillSectionContent, WorkCardContent,
-    WorkCaseContent, WorkCaseRecord, WorkCaseSlug, WorkIndexContent, WorkIndexCopy,
-    WorkSectionContent,
-};
-use super::validation::{
-    validate_action_library_fragment, validate_contact_fragment, validate_experience_fragment,
-    validate_home_page_fragment, validate_identity_fragment, validate_lab_page,
-    validate_lab_page_fragment, validate_nav_fragment, validate_open_source_entries_fragment,
-    validate_open_source_index, validate_open_source_page_fragment, validate_portfolio_home,
-    validate_projects_fragment, validate_resume_page_fragment, validate_site_content,
-    validate_skill_groups_fragment, validate_work_case, validate_work_cases_fragment,
-    validate_work_index, validate_work_page_fragment,
+    CmsActionLink, ContactMethodContent, CrateSectionContent, ExperienceRoleContent,
+    LabPageContent, LinkReference, OpenSourceIndexContent, PortfolioHeroContent,
+    PortfolioHomeContent, SessionCardContent, SiteContent, SkillGroupContent, WorkCaseContent,
+    WorkCaseSlug, WorkIndexContent, WorkSectionContent,
 };
 
 pub fn site_content() -> &'static SiteContent {
     static CONTENT: OnceLock<SiteContent> = OnceLock::new();
 
     CONTENT.get_or_init(|| {
-        let action_library = load_action_library_fragment();
-        let content = SiteContent {
-            identity: load_identity_fragment(),
-            action_links: action_library.action_links,
-            action_bundles: action_library.action_bundles,
-            nav_links: load_nav_fragment(),
-            contact_methods: load_contact_fragment(),
-            experience_roles: load_experience_fragment(),
-            projects: load_projects_fragment(),
-            open_source_entries: load_open_source_entries_fragment(),
-            skill_groups: load_skill_groups_fragment(),
-            ui_copy: SiteUiCopy {
-                home: load_home_page_fragment(),
-                work: load_work_page_fragment(),
-                open_source: load_open_source_page_fragment(),
-                lab: load_lab_page_fragment(),
-                resume: load_resume_page_fragment(),
-            },
-            work_cases: load_work_cases_fragment(),
-        };
+        let content: SiteContent = serde_json::from_str(include_str!("site_content/portfolio.json"))
+            .unwrap_or_else(|error| panic!("site_content/portfolio.json must be valid JSON: {error}"));
         validate_site_content(&content);
         content
     })
@@ -66,7 +37,8 @@ pub fn lab_page_content() -> &'static LabPageContent {
     CONTENT.get_or_init(|| {
         let site = site_content();
         let lab = &site.ui_copy.lab;
-        let content = LabPageContent {
+
+        LabPageContent {
             page_title: lab.page_title.clone(),
             hero: build_portfolio_hero(site, &lab.hero),
             session_card: SessionCardContent {
@@ -80,9 +52,7 @@ pub fn lab_page_content() -> &'static LabPageContent {
             operations_surface: lab.operations_surface.clone(),
             sensitive_proof: lab.sensitive_proof.clone(),
             engineering_quality: lab.engineering_quality.clone(),
-        };
-        validate_lab_page(&content);
-        content
+        }
     })
 }
 
@@ -92,40 +62,17 @@ pub fn portfolio_home_content() -> &'static PortfolioHomeContent {
     CONTENT.get_or_init(|| {
         let site = site_content();
         let home = &site.ui_copy.home;
-        let content = PortfolioHomeContent {
+
+        PortfolioHomeContent {
             page_title: home.page_title.clone(),
             hero: build_portfolio_hero(site, &home.hero),
-            experience_section: ExperienceSectionContent {
-                title: home.experience.title.clone(),
-                subtitle: home.experience.subtitle.clone(),
-                roles: experience_roles_for_ids(site, &home.experience.role_ids),
-            },
-            project_section: WorkSectionContent {
-                title: home.selected_projects.title.clone(),
-                subtitle: home.selected_projects.subtitle.clone(),
-                cards: project_cards_for_slugs(site, &home.selected_projects.project_slugs),
-                actions: resolve_link_refs(site, &home.selected_projects.action_refs),
-            },
             current_proof_section: WorkSectionContent {
                 title: home.current_proof.title.clone(),
                 subtitle: home.current_proof.subtitle.clone(),
                 cards: project_cards_for_slugs(site, &home.current_proof.project_slugs),
                 actions: resolve_link_refs(site, &home.current_proof.action_refs),
             },
-            open_source_teaser: build_closing(site, &home.open_source_teaser),
-            skill_section: SkillSectionContent {
-                title: home.skills.title.clone(),
-                subtitle: home.skills.subtitle.clone(),
-                groups: skill_groups_for_ids(site, &home.skills.skill_group_ids),
-            },
-            contact_section: ClosingContent {
-                title: home.contact.title.clone(),
-                summary: home.contact.summary.clone(),
-                actions: resolve_link_refs(site, &home.contact.action_refs),
-            },
-        };
-        validate_portfolio_home(&content);
-        content
+        }
     })
 }
 
@@ -135,7 +82,8 @@ pub fn work_index_content() -> &'static WorkIndexContent {
     CONTENT.get_or_init(|| {
         let site = site_content();
         let work = &site.ui_copy.work;
-        let content = WorkIndexContent {
+
+        WorkIndexContent {
             page_title: work.page_title.clone(),
             hero: PortfolioHeroContent {
                 eyebrow: work.eyebrow.clone(),
@@ -144,44 +92,14 @@ pub fn work_index_content() -> &'static WorkIndexContent {
                 badges: vec![],
                 actions: vec![],
             },
-            current_proof_section: WorkSectionContent {
-                title: work.current_proof.title.clone(),
-                subtitle: work.current_proof.subtitle.clone(),
-                cards: project_cards_for_slugs(site, &work.current_proof.project_slugs),
-                actions: resolve_link_refs(site, &work.current_proof.action_refs),
-            },
             supporting_cases_section: WorkSectionContent {
                 title: work.supporting_cases.title.clone(),
                 subtitle: work.supporting_cases.subtitle.clone(),
                 cards: project_cards_for_slugs(site, &work.supporting_cases.project_slugs),
                 actions: resolve_link_refs(site, &work.supporting_cases.action_refs),
             },
-            archive_details: work.archive_details.clone(),
-            open_source_teaser: build_closing(site, &work.open_source_teaser),
-        };
-        validate_work_index(&content);
-        content
+        }
     })
-}
-
-pub fn supporting_archive_cases() -> &'static [ArchivedWorkCaseContent] {
-    static CONTENT: OnceLock<Vec<ArchivedWorkCaseContent>> = OnceLock::new();
-
-    CONTENT
-        .get_or_init(|| {
-            site_content()
-                .ui_copy
-                .work
-                .supporting_cases
-                .project_slugs
-                .iter()
-                .map(|slug| ArchivedWorkCaseContent {
-                    slug: *slug,
-                    content: work_case_content(*slug).clone(),
-                })
-                .collect()
-        })
-        .as_slice()
 }
 
 pub fn open_source_index_content() -> &'static OpenSourceIndexContent {
@@ -190,7 +108,8 @@ pub fn open_source_index_content() -> &'static OpenSourceIndexContent {
     CONTENT.get_or_init(|| {
         let site = site_content();
         let open_source = &site.ui_copy.open_source;
-        let content = OpenSourceIndexContent {
+
+        OpenSourceIndexContent {
             page_title: open_source.page_title.clone(),
             hero: build_portfolio_hero(site, &open_source.hero),
             crate_section: CrateSectionContent {
@@ -198,9 +117,7 @@ pub fn open_source_index_content() -> &'static OpenSourceIndexContent {
                 subtitle: open_source.crate_section.subtitle.clone(),
                 cards: site.open_source_entries.clone(),
             },
-        };
-        validate_open_source_index(&content);
-        content
+        }
     })
 }
 
@@ -237,7 +154,8 @@ fn load_work_case(slug: WorkCaseSlug) -> WorkCaseContent {
         .content
         .clone();
     let site = site_content();
-    let content = WorkCaseContent {
+
+    WorkCaseContent {
         page_title: content.page_title,
         hero: PortfolioHeroContent {
             eyebrow: content.eyebrow,
@@ -251,9 +169,7 @@ fn load_work_case(slug: WorkCaseSlug) -> WorkCaseContent {
         implementation: content.implementation,
         outcomes: content.outcomes,
         stack: content.stack,
-    };
-    validate_work_case(&content, slug);
-    content
+    }
 }
 
 fn experience_roles_for_ids(
@@ -284,14 +200,20 @@ fn skill_groups_for_ids(
             site.skill_groups
                 .iter()
                 .find(|group| group.id == *group_id)
-                .unwrap_or_else(|| panic!("site_content.skill_groups must include id {}", group_id))
+                .unwrap_or_else(|| {
+                    panic!("site_content.skill_groups must include id {}", group_id)
+                })
                 .clone()
         })
         .collect()
 }
 
-fn project_cards_for_slugs(site: &SiteContent, slugs: &[WorkCaseSlug]) -> Vec<WorkCardContent> {
-    slugs.iter()
+fn project_cards_for_slugs(
+    site: &SiteContent,
+    slugs: &[WorkCaseSlug],
+) -> Vec<super::types::WorkCardContent> {
+    slugs
+        .iter()
         .map(|slug| {
             site.projects
                 .iter()
@@ -320,7 +242,8 @@ fn build_resume_text(site: &SiteContent) -> String {
 
     writeln!(&mut output, "## {}", resume.experience_title).expect("resume write");
     for role in experience_roles_for_ids(site, &resume.experience_role_ids) {
-        writeln!(&mut output, "### {} — {}", role.company, role.title).expect("resume write");
+        writeln!(&mut output, "### {} — {}", role.company, role.title)
+            .expect("resume write");
         writeln!(&mut output, "{}", role.tenure).expect("resume write");
         for highlight in role.highlights {
             writeln!(&mut output, "- {}", highlight).expect("resume write");
@@ -370,7 +293,10 @@ fn contact_methods_for_ids(
                 .iter()
                 .find(|method| method.id == *contact_id)
                 .unwrap_or_else(|| {
-                    panic!("site_content.contact_methods must include id {}", contact_id)
+                    panic!(
+                        "site_content.contact_methods must include id {}",
+                        contact_id
+                    )
                 })
                 .clone()
         })
@@ -378,7 +304,8 @@ fn contact_methods_for_ids(
 }
 
 fn join_text_items(items: &[crate::types::Text]) -> String {
-    items.iter()
+    items
+        .iter()
         .map(ToString::to_string)
         .collect::<Vec<_>>()
         .join(", ")
@@ -386,6 +313,7 @@ fn join_text_items(items: &[crate::types::Text]) -> String {
 
 fn resolve_link_refs(site: &SiteContent, references: &[LinkReference]) -> Vec<CmsActionLink> {
     let mut resolved = Vec::new();
+
     for reference in references {
         match reference {
             LinkReference::Action { id } => resolved.push(resolve_action_link(site, id)),
@@ -397,7 +325,9 @@ fn resolve_link_refs(site: &SiteContent, references: &[LinkReference]) -> Vec<Cm
                     .action_bundles
                     .iter()
                     .find(|bundle| bundle.id == *id)
-                    .unwrap_or_else(|| panic!("site_content.action_bundles must include id {}", id));
+                    .unwrap_or_else(|| {
+                        panic!("site_content.action_bundles must include id {}", id)
+                    });
 
                 for reference in &bundle.references {
                     resolved.push(resolve_direct_link_ref(site, reference));
@@ -405,6 +335,7 @@ fn resolve_link_refs(site: &SiteContent, references: &[LinkReference]) -> Vec<Cm
             }
         }
     }
+
     resolved
 }
 
@@ -421,143 +352,15 @@ fn build_portfolio_hero(
     }
 }
 
-fn build_closing(site: &SiteContent, content: &super::types::ClosingCopy) -> ClosingContent {
-    ClosingContent {
+fn build_closing(
+    site: &SiteContent,
+    content: &super::types::ClosingCopy,
+) -> super::types::ClosingContent {
+    super::types::ClosingContent {
         title: content.title.clone(),
         summary: content.summary.clone(),
         actions: resolve_link_refs(site, &content.action_refs),
     }
-}
-
-fn parse_fragment<T: DeserializeOwned>(path: &str, source: &str) -> T {
-    serde_json::from_str(source)
-        .unwrap_or_else(|error| panic!("{path} fragment must be valid JSON: {error}"))
-}
-
-fn load_identity_fragment() -> IdentityContent {
-    let content = parse_fragment(
-        "site_content/identity.json",
-        include_str!("site_content/identity.json"),
-    );
-    validate_identity_fragment(&content);
-    content
-}
-
-fn load_action_library_fragment() -> ActionLibraryFragment {
-    let content = parse_fragment(
-        "site_content/actions.json",
-        include_str!("site_content/actions.json"),
-    );
-    validate_action_library_fragment(&content);
-    content
-}
-
-fn load_nav_fragment() -> Vec<LinkReference> {
-    let content = parse_fragment::<Vec<LinkReference>>(
-        "site_content/nav.json",
-        include_str!("site_content/nav.json"),
-    );
-    validate_nav_fragment(&content);
-    content
-}
-
-fn load_contact_fragment() -> Vec<ContactMethodContent> {
-    let content = parse_fragment::<Vec<ContactMethodContent>>(
-        "site_content/contact.json",
-        include_str!("site_content/contact.json"),
-    );
-    validate_contact_fragment(&content);
-    content
-}
-
-fn load_experience_fragment() -> Vec<ExperienceRoleContent> {
-    let content = parse_fragment::<Vec<ExperienceRoleContent>>(
-        "site_content/experience.json",
-        include_str!("site_content/experience.json"),
-    );
-    validate_experience_fragment(&content);
-    content
-}
-
-fn load_projects_fragment() -> Vec<WorkCardContent> {
-    let content = parse_fragment::<Vec<WorkCardContent>>(
-        "site_content/projects.json",
-        include_str!("site_content/projects.json"),
-    );
-    validate_projects_fragment(&content);
-    content
-}
-
-fn load_work_cases_fragment() -> Vec<WorkCaseRecord> {
-    let content = parse_fragment::<Vec<WorkCaseRecord>>(
-        "site_content/work_cases.json",
-        include_str!("site_content/work_cases.json"),
-    );
-    validate_work_cases_fragment(&content);
-    content
-}
-
-fn load_open_source_entries_fragment() -> Vec<CrateCardContent> {
-    let content = parse_fragment::<Vec<CrateCardContent>>(
-        "site_content/open_source.json",
-        include_str!("site_content/open_source.json"),
-    );
-    validate_open_source_entries_fragment(&content);
-    content
-}
-
-fn load_skill_groups_fragment() -> Vec<SkillGroupContent> {
-    let content = parse_fragment::<Vec<SkillGroupContent>>(
-        "site_content/skills.json",
-        include_str!("site_content/skills.json"),
-    );
-    validate_skill_groups_fragment(&content);
-    content
-}
-
-fn load_home_page_fragment() -> HomePageCopy {
-    let content = parse_fragment(
-        "site_content/pages/home.json",
-        include_str!("site_content/pages/home.json"),
-    );
-    validate_home_page_fragment(&content);
-    content
-}
-
-fn load_work_page_fragment() -> WorkIndexCopy {
-    let content = parse_fragment(
-        "site_content/pages/work.json",
-        include_str!("site_content/pages/work.json"),
-    );
-    validate_work_page_fragment(&content);
-    content
-}
-
-fn load_open_source_page_fragment() -> OpenSourceIndexCopy {
-    let content = parse_fragment(
-        "site_content/pages/open_source.json",
-        include_str!("site_content/pages/open_source.json"),
-    );
-    validate_open_source_page_fragment(&content);
-    content
-}
-
-fn load_lab_page_fragment() -> LabPageCopy {
-    let content = parse_fragment(
-        "site_content/pages/lab.json",
-        include_str!("site_content/pages/lab.json"),
-    );
-    validate_lab_page_fragment(&content);
-    content
-}
-
-fn load_resume_page_fragment() -> ResumeDocumentContent {
-    let content = parse_fragment(
-        "site_content/pages/resume.json",
-        include_str!("site_content/pages/resume.json"),
-    );
-    validate_resume_page_fragment(&content);
-    content
 }
 
 fn resolve_action_link(site: &SiteContent, id: &crate::types::Text) -> CmsActionLink {
@@ -589,11 +392,352 @@ fn resolve_contact_method_link(
     }
 }
 
-fn resolve_direct_link_ref(site: &SiteContent, reference: &DirectLinkReference) -> CmsActionLink {
+fn resolve_direct_link_ref(
+    site: &SiteContent,
+    reference: &super::types::DirectLinkReference,
+) -> CmsActionLink {
     match reference {
-        DirectLinkReference::Action { id } => resolve_action_link(site, id),
-        DirectLinkReference::ContactMethod { id, label, tone } => {
+        super::types::DirectLinkReference::Action { id } => resolve_action_link(site, id),
+        super::types::DirectLinkReference::ContactMethod { id, label, tone } => {
             resolve_contact_method_link(site, id, label.as_ref(), *tone)
         }
+    }
+}
+
+fn validate_site_content(content: &SiteContent) {
+    assert_non_empty_text("site.identity.name", &content.identity.name);
+    assert_non_empty_text("site.identity.headline", &content.identity.headline);
+    assert_unique_text_ids(
+        "site.action_links",
+        content.action_links.iter().map(|action| &action.id),
+    );
+    assert_unique_text_ids(
+        "site.action_bundles",
+        content.action_bundles.iter().map(|bundle| &bundle.id),
+    );
+    assert_unique_text_ids(
+        "site.contact_methods",
+        content.contact_methods.iter().map(|method| &method.id),
+    );
+    assert_unique_text_ids(
+        "site.experience_roles",
+        content.experience_roles.iter().map(|role| &role.id),
+    );
+    assert_unique_text_ids(
+        "site.skill_groups",
+        content.skill_groups.iter().map(|group| &group.id),
+    );
+    assert_unique_text_ids(
+        "site.open_source_entries",
+        content.open_source_entries.iter().map(|entry| &entry.name),
+    );
+    assert_unique_work_slugs(
+        "site.projects",
+        content.projects.iter().map(|project| project.slug),
+    );
+    assert_unique_work_slugs(
+        "site.work_cases",
+        content.work_cases.iter().map(|case| case.slug),
+    );
+    assert!(!content.nav_links.is_empty(), "site.nav_links must not be empty");
+    assert!(
+        !content.open_source_entries.is_empty(),
+        "site.open_source_entries must not be empty"
+    );
+    assert!(!content.projects.is_empty(), "site.projects must not be empty");
+
+    for action in &content.action_links {
+        validate_action_link(action);
+    }
+    for reference in &content.nav_links {
+        assert_link_ref_resolves(content, reference, "site.nav_links[]");
+    }
+    for bundle in &content.action_bundles {
+        for reference in &bundle.references {
+            assert_direct_link_ref_resolves(
+                content,
+                reference,
+                "site.action_bundles[].references[]",
+            );
+        }
+    }
+    assert_ui_copy_refs_resolve(content);
+
+    assert!(
+        content
+            .work_cases
+            .iter()
+            .any(|case| case.slug == WorkCaseSlug::SensitiveSync),
+        "site.work_cases must include sensitive_sync"
+    );
+}
+
+fn validate_action_link(action: &super::types::ActionLinkContent) {
+    assert_non_empty_text("site.action_links[].label", &action.link.label);
+    assert_non_empty_text("site.action_links[].href", &action.link.href);
+    if !action.link.kind.is_external() {
+        assert_internal_href_valid(&action.link.href, "site.action_links[].href");
+    }
+}
+
+fn assert_ui_copy_refs_resolve(content: &SiteContent) {
+    let home = &content.ui_copy.home;
+    assert_link_refs_resolve(
+        content,
+        &home.hero.action_refs,
+        "site.ui_copy.home.hero.action_refs[]",
+    );
+    assert_project_slugs_resolve(
+        content,
+        &home.current_proof.project_slugs,
+        "site.ui_copy.home.current_proof.project_slugs[]",
+    );
+    assert_link_refs_resolve(
+        content,
+        &home.current_proof.action_refs,
+        "site.ui_copy.home.current_proof.action_refs[]",
+    );
+
+    let work = &content.ui_copy.work;
+    assert_project_slugs_resolve(
+        content,
+        &work.supporting_cases.project_slugs,
+        "site.ui_copy.work.supporting_cases.project_slugs[]",
+    );
+    assert_link_refs_resolve(
+        content,
+        &work.supporting_cases.action_refs,
+        "site.ui_copy.work.supporting_cases.action_refs[]",
+    );
+
+    let open_source = &content.ui_copy.open_source;
+    assert_link_refs_resolve(
+        content,
+        &open_source.hero.action_refs,
+        "site.ui_copy.open_source.hero.action_refs[]",
+    );
+
+    let lab = &content.ui_copy.lab;
+    assert_link_refs_resolve(
+        content,
+        &lab.hero.action_refs,
+        "site.ui_copy.lab.hero.action_refs[]",
+    );
+    assert_link_refs_resolve(
+        content,
+        &lab.session_card.guest_action_refs,
+        "site.ui_copy.lab.session_card.guest_action_refs[]",
+    );
+    assert_link_refs_resolve(
+        content,
+        &lab.guest_chat.action_refs,
+        "site.ui_copy.lab.guest_chat.action_refs[]",
+    );
+
+    let resume = &content.ui_copy.resume;
+    assert_contact_method_ids_resolve(
+        content,
+        &resume.contact_method_ids,
+        "site.ui_copy.resume.contact_method_ids[]",
+    );
+    assert_experience_role_ids_resolve(
+        content,
+        &resume.experience_role_ids,
+        "site.ui_copy.resume.experience_role_ids[]",
+    );
+    assert_project_slugs_resolve(
+        content,
+        &resume.featured_project_slugs,
+        "site.ui_copy.resume.featured_project_slugs[]",
+    );
+    assert_skill_group_ids_resolve(
+        content,
+        &resume.skill_group_ids,
+        "site.ui_copy.resume.skill_group_ids[]",
+    );
+
+    for case in &content.work_cases {
+        assert_link_refs_resolve(
+            content,
+            &case.content.action_refs,
+            "site.work_cases[].action_refs[]",
+        );
+    }
+}
+
+fn assert_link_ref_resolves(content: &SiteContent, reference: &LinkReference, path: &str) {
+    match reference {
+        LinkReference::Action { id } => {
+            let found = content.action_links.iter().any(|action| action.id == *id);
+            assert!(found, "{path} must reference an existing action id: {id}");
+        }
+        LinkReference::ContactMethod { id, .. } => {
+            let found = content
+                .contact_methods
+                .iter()
+                .any(|method| method.id == *id);
+            assert!(found, "{path} must reference an existing contact id: {id}");
+        }
+        LinkReference::Bundle { id } => {
+            let found = content.action_bundles.iter().any(|bundle| bundle.id == *id);
+            assert!(found, "{path} must reference an existing bundle id: {id}");
+        }
+    }
+}
+
+fn assert_link_refs_resolve(content: &SiteContent, references: &[LinkReference], path: &str) {
+    for reference in references {
+        assert_link_ref_resolves(content, reference, path);
+    }
+}
+
+fn assert_direct_link_ref_resolves(
+    content: &SiteContent,
+    reference: &super::types::DirectLinkReference,
+    path: &str,
+) {
+    match reference {
+        super::types::DirectLinkReference::Action { id } => {
+            let found = content.action_links.iter().any(|action| action.id == *id);
+            assert!(found, "{path} must reference an existing action id: {id}");
+        }
+        super::types::DirectLinkReference::ContactMethod { id, .. } => {
+            let found = content
+                .contact_methods
+                .iter()
+                .any(|method| method.id == *id);
+            assert!(found, "{path} must reference an existing contact id: {id}");
+        }
+    }
+}
+
+fn assert_contact_method_ids_resolve(
+    content: &SiteContent,
+    ids: &[crate::types::Text],
+    path: &str,
+) {
+    for id in ids {
+        let found = content
+            .contact_methods
+            .iter()
+            .any(|method| method.id == *id);
+        assert!(found, "{path} must reference an existing contact id: {id}");
+    }
+}
+
+fn assert_experience_role_ids_resolve(
+    content: &SiteContent,
+    ids: &[crate::types::Text],
+    path: &str,
+) {
+    for id in ids {
+        let found = content
+            .experience_roles
+            .iter()
+            .any(|role| role.id == *id);
+        assert!(
+            found,
+            "{path} must reference an existing experience role id: {id}"
+        );
+    }
+}
+
+fn assert_skill_group_ids_resolve(
+    content: &SiteContent,
+    ids: &[crate::types::Text],
+    path: &str,
+) {
+    for id in ids {
+        let found = content.skill_groups.iter().any(|group| group.id == *id);
+        assert!(
+            found,
+            "{path} must reference an existing skill group id: {id}"
+        );
+    }
+}
+
+fn assert_project_slugs_resolve(content: &SiteContent, slugs: &[WorkCaseSlug], path: &str) {
+    for slug in slugs {
+        let found = content.projects.iter().any(|project| project.slug == *slug);
+        assert!(found, "{path} must reference an existing project slug: {slug:?}");
+    }
+}
+
+fn assert_internal_href_valid(href: &crate::types::Text, path: &str) {
+    let route = href
+        .to_string()
+        .split('#')
+        .next()
+        .unwrap_or_default()
+        .split('?')
+        .next()
+        .unwrap_or_default()
+        .to_string();
+
+    assert!(
+        Route::from_str(&route).is_ok(),
+        "{path} must reference a known internal route: {route}"
+    );
+}
+
+fn assert_non_empty_text(path: &str, value: &crate::types::Text) {
+    assert!(!value.to_string().is_empty(), "{path} must not be empty");
+}
+
+fn assert_unique_text_ids<'a, I>(path: &str, ids: I)
+where
+    I: Iterator<Item = &'a crate::types::Text>,
+{
+    let mut seen = HashSet::new();
+    for id in ids {
+        let inserted = seen.insert(id.to_string());
+        assert!(inserted, "{path} ids must be unique: {id}");
+    }
+}
+
+fn assert_unique_work_slugs<I>(path: &str, slugs: I)
+where
+    I: Iterator<Item = WorkCaseSlug>,
+{
+    let mut seen = HashSet::new();
+    for slug in slugs {
+        let inserted = seen.insert(format!("{slug:?}"));
+        assert!(inserted, "{path} slugs must be unique: {slug:?}");
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use std::panic::{AssertUnwindSafe, catch_unwind};
+
+    use super::*;
+
+    fn test_site_content() -> SiteContent {
+        serde_json::from_str(include_str!("site_content/portfolio.json"))
+            .expect("portfolio content should deserialize")
+    }
+
+    #[test]
+    fn validate_site_content_rejects_missing_ui_action_refs() {
+        let mut content = test_site_content();
+        content.ui_copy.lab.hero.action_refs = vec![LinkReference::Action {
+            id: crate::types::Text::from("missing_action"),
+        }];
+
+        let result = catch_unwind(AssertUnwindSafe(|| validate_site_content(&content)));
+
+        assert!(result.is_err(), "invalid ui_copy action refs must fail closed");
+    }
+
+    #[test]
+    fn validate_site_content_rejects_missing_project_slugs_used_by_ui_copy() {
+        let mut content = test_site_content();
+        content
+            .projects
+            .retain(|project| project.slug != WorkCaseSlug::SensitiveSync);
+
+        let result = catch_unwind(AssertUnwindSafe(|| validate_site_content(&content)));
+
+        assert!(result.is_err(), "missing referenced project slugs must fail closed");
     }
 }

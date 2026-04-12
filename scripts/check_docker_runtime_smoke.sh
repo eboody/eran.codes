@@ -14,12 +14,16 @@ image_tag="eran_codes-smoke:${USER:-local}-$$"
 network_name="${project}_net"
 postgres_container="${project}_postgres"
 app_container="${project}_app"
-browser_smoke_mode="${DOCKER_SMOKE_BROWSER_MODE:-smoke}"
-skip_browser_smoke="${DOCKER_SMOKE_SKIP_BROWSER_SMOKE:-0}"
-include_signed_in_browser_smoke="${DOCKER_SMOKE_INCLUDE_SIGNED_IN:-0}"
 session_secret="${DOCKER_SMOKE_SESSION_SECRET:-BwcHBwcHBwcHBwcHBwcHBwcHBwcHBwcHBwcHBwcHBwcHBwcHBwcHBwcHBwcHBwcHBwcHBwcHBwcHBwcHBwcHBw}"
 data_encryption_key="${DOCKER_SMOKE_DATA_ENCRYPTION_KEY:-QUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUE}"
 database_url="postgresql://app:app@postgres:5432/app"
+smoke_routes=(
+  "/"
+  "/lab"
+  "/work"
+  "/work/sensitive-sync"
+  "/open-source"
+)
 
 cleanup() {
   docker rm -f "$app_container" >/dev/null 2>&1 || true
@@ -30,7 +34,7 @@ cleanup() {
 
 trap cleanup EXIT
 
-echo "Starting ephemeral Postgres for Docker smoke check..."
+echo "Starting ephemeral Postgres..."
 docker network create "$network_name" >/dev/null
 docker run -d \
   --name "$postgres_container" \
@@ -49,15 +53,15 @@ for _attempt in $(seq 1 30); do
 done
 
 if ! docker exec "$postgres_container" pg_isready -U app -d app >/dev/null 2>&1; then
-  echo "error: postgres did not become ready for Docker smoke check" >&2
+  echo "error: postgres did not become ready" >&2
   docker logs "$postgres_container" >&2 || true
   exit 1
 fi
 
-echo "Building runtime image for Docker smoke check..."
+echo "Building runtime image..."
 docker build -t "$image_tag" . >/dev/null
 
-echo "Booting runtime image and waiting for /health..."
+echo "Booting runtime image..."
 docker run -d \
   --name "$app_container" \
   --network "$network_name" \
@@ -84,7 +88,7 @@ for _attempt in $(seq 1 30); do
 done
 
 if [[ -z "$host_port" ]]; then
-  echo "error: failed to resolve published host port for Docker smoke check" >&2
+  echo "error: failed to resolve published host port" >&2
   docker logs "$app_container" >&2 || true
   exit 1
 fi
@@ -98,7 +102,7 @@ for _attempt in $(seq 1 30); do
       break
       ;;
     unhealthy)
-      echo "error: runtime image became unhealthy during Docker smoke check" >&2
+      echo "error: runtime image became unhealthy" >&2
       docker logs "$app_container" >&2 || true
       exit 1
       ;;
@@ -111,33 +115,18 @@ health_status="$(
 )"
 
 if [[ "$health_status" != "healthy" ]]; then
-  echo "error: runtime image did not become healthy during Docker smoke check" >&2
+  echo "error: runtime image did not become healthy" >&2
   docker logs "$app_container" >&2 || true
   exit 1
 fi
 
-curl --fail --silent --show-error "http://127.0.0.1:${host_port}/health" >/dev/null
+echo "Checking retained routes..."
+for route in "${smoke_routes[@]}"; do
+  curl --fail --silent --show-error "http://127.0.0.1:${host_port}${route}" >/dev/null
+done
 
-run_browser_smoke() {
-  local session_mode="$1"
-  local current_dir="${PORTFOLIO_SMOKE_CURRENT_DIR:-artifacts/visual/current/docker-smoke}"
-
-  if [[ "$include_signed_in_browser_smoke" == "1" ]]; then
-    current_dir="${current_dir}/${session_mode}"
-  fi
-
-  echo "Running portfolio browser smoke against runtime image (${session_mode})..."
+if [[ "${DOCKER_SMOKE_SKIP_BROWSER_SMOKE:-0}" != "1" ]]; then
+  echo "Running browser smoke..."
   PORTFOLIO_SMOKE_BASE_URL="http://127.0.0.1:${host_port}" \
-  PORTFOLIO_SMOKE_MODE="$browser_smoke_mode" \
-  PORTFOLIO_SMOKE_SESSION_MODE="$session_mode" \
-  PORTFOLIO_SMOKE_CURRENT_DIR="$current_dir" \
   bash scripts/check_portfolio_browser_smoke.sh
-}
-
-if [[ "$skip_browser_smoke" != "1" ]]; then
-  run_browser_smoke guest
-
-  if [[ "$include_signed_in_browser_smoke" == "1" ]]; then
-    run_browser_smoke signed-in
-  fi
 fi

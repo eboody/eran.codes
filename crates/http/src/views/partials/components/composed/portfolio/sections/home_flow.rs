@@ -1,9 +1,11 @@
 use maud::Render;
 
-use crate::views::partials::components::portfolio::content::PortfolioHomeContent;
+use crate::views::partials::components::portfolio::content::{
+    open_source_index_content, PortfolioHomeContent,
+};
 
 use super::{
-    CurrentProofHeroAside, ExperienceSection, PortfolioHero, WorkSection, WorkSectionVariant,
+    CrateSection, FlagshipCrateHeroAside, PortfolioHero, WorkSection, WorkSectionVariant,
 };
 
 pub struct HomeFlow<'a> {
@@ -12,9 +14,10 @@ pub struct HomeFlow<'a> {
 
 impl Render for HomeFlow<'_> {
     fn render(&self) -> maud::Markup {
-        let hero_aside = self.content.current_proof_section.cards.first().map(|card| {
+        let open_source = open_source_index_content();
+        let hero_aside = open_source.crate_section.cards.first().map(|card| {
             maud::html! {
-                (CurrentProofHeroAside { card })
+                (FlagshipCrateHeroAside { card })
             }
         });
 
@@ -23,12 +26,13 @@ impl Render for HomeFlow<'_> {
                 content: &self.content.hero,
                 aside: hero_aside,
             })
+            (CrateSection {
+                content: &open_source.crate_section,
+                show_heading: false,
+            })
             (WorkSection {
                 content: &self.content.current_proof_section,
                 variant: WorkSectionVariant::CurrentProof,
-            })
-            (ExperienceSection {
-                content: &self.content.experience_section,
             })
         }
     }
@@ -46,9 +50,8 @@ mod tests {
 
         assert!(markup.contains(content.current_proof_section.title.to_string().as_str()));
         assert!(markup.contains("ui-portfolio-hero-aside"));
-        assert!(markup.contains(content.experience_section.title.to_string().as_str()));
-        assert!(!markup.contains(content.project_section.title.to_string().as_str()));
-        assert!(!markup.contains(content.skill_section.title.to_string().as_str()));
-        assert!(!markup.contains(content.open_source_teaser.title.to_string().as_str()));
+        assert!(markup.contains("ui-portfolio-crate-showcase"));
+        assert!(markup.contains("statum"));
+        assert!(!markup.contains("Most relevant experience"));
     }
 }

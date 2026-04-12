@@ -1,0 +1,10 @@
+{
+  "title": "Example content fixture",
+  "summary": "Minimal checked-in fixture for component-spec examples.",
+  "actions": [
+    {
+      "label": "Primary action",
+      "href": "/example"
+    }
+  ]
+}

@@ -1,10 +1,10 @@
 use maud::Render;
 
 use crate::views::partials::components::portfolio::content::{
-    ArchiveDetailsContent, ArchivedWorkCaseContent, WorkCaseContent, WorkCaseDetailLayout,
+    WorkCaseContent, WorkCaseDetailLayout,
 };
 
-use super::{CardGrid, InsetCard, PortfolioHero, SectionActions, SectionCopy, Surface};
+use super::{CardGrid, InsetCard, PortfolioHero};
 
 pub struct Work<'a> {
     pub content: &'a WorkCaseContent,
@@ -19,66 +19,6 @@ impl Render for Work<'_> {
                     aside: None,
                 })
                 (case_sections(self.content))
-            }
-        }
-    }
-}
-
-pub struct ArchiveCaseDetailsSection<'a> {
-    pub intro: &'a ArchiveDetailsContent,
-    pub cases: &'a [ArchivedWorkCaseContent],
-}
-
-impl Render for ArchiveCaseDetailsSection<'_> {
-    fn render(&self) -> maud::Markup {
-        maud::html! {
-            (Surface::section(maud::html! {
-                (SectionCopy {
-                    title: &self.intro.title,
-                    subtitle: &self.intro.subtitle,
-                })
-            }).extra_class("ui-portfolio-case-archive-intro"))
-            div class="ui-portfolio-showcase-stack" {
-                @for case in self.cases {
-                    (ArchivedWork {
-                        slug: case.slug,
-                        content: &case.content,
-                        entry_label: &self.intro.entry_label,
-                    })
-                }
-            }
-        }
-    }
-}
-
-struct ArchivedWork<'a> {
-    slug: crate::views::partials::components::portfolio::content::WorkCaseSlug,
-    content: &'a WorkCaseContent,
-    entry_label: &'a crate::types::Text,
-}
-
-impl Render for ArchivedWork<'_> {
-    fn render(&self) -> maud::Markup {
-        let anchor_id = self
-            .slug
-            .archive_anchor_id()
-            .expect("archived work case should expose an archive anchor id");
-
-        maud::html! {
-            div id=(anchor_id) class="ui-portfolio-showcase-stack ui-portfolio-archive-entry" {
-                p class="ui-portfolio-eyebrow ui-portfolio-archive-note" {
-                    (self.entry_label)
-                }
-                (Surface::section(maud::html! {
-                    p class="ui-portfolio-eyebrow" { (&self.content.hero.eyebrow) }
-                    h3 { (&self.content.hero.title) }
-                    p class="ui-portfolio-summary" { (&self.content.hero.summary) }
-                    @if !self.content.hero.actions.is_empty() {
-                        (SectionActions {
-                            actions: &self.content.hero.actions,
-                        })
-                    }
-                }).extra_class("ui-portfolio-lead-surface ui-portfolio-lead-surface--compact"))
             }
         }
     }

@@ -5,74 +5,18 @@ on:
   pull_request:
 
 jobs:
-  repo-checks:
+  rust-tests:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
       - uses: dtolnay/rust-toolchain@stable
-      - name: install CI tooling
-        run: |
-          packages=()
-          if ! command -v rg >/dev/null 2>&1; then
-            packages+=(ripgrep)
-          fi
-          if ! command -v jq >/dev/null 2>&1; then
-            packages+=(jq)
-          fi
-          if [ "${#packages[@]}" -gt 0 ]; then
-            SUDO=""
-            if command -v sudo >/dev/null 2>&1; then
-              SUDO="sudo"
-            fi
-            $SUDO apt-get update
-            $SUDO apt-get install -y "${packages[@]}"
-          fi
-      - name: Install modum
-        run: cargo install modum --locked
-      - name: Modum
-        run: cargo modum check --root . --mode warn
-      - name: enum + builder contract
-        run: scripts/ci/enum-builder-contract.sh
-      - name: bon usage contract
-        run: scripts/ci/bon-usage-contract.sh
-      - name: typed hasher errors
-        run: scripts/ci/typed-hasher-errors.sh
-      - name: docker runtime healthcheck contract
-        run: scripts/ci/docker-runtime-healthcheck-contract.sh
-      - name: datastar command+sse architecture
-        run: scripts/ci/datastar-command-sse-architecture.sh
-      - name: component spec content contract
-        run: scripts/ci/component-spec-content-contract.sh
-      - name: interaction protocol consistency
-        run: scripts/ci/interaction-protocol-consistency.sh
-      - name: style system consistency
-        run: scripts/ci/style-system-consistency.sh
-      - name: reusable component naming
-        run: scripts/ci/reusable-component-naming.sh
-      - name: render composition contract
-        run: scripts/ci/render-composition-contract.sh
-      - name: lean component contract
-        run: scripts/ci/lean-component-contract.sh
-      - name: log componentization contract
-        run: scripts/ci/log-componentization-contract.sh
-      - name: tab icon reference contract
-        run: scripts/ci/tab-icon-reference-contract.sh
-      - name: tab set showcase conventions
-        run: scripts/ci/tab-set-showcase-conventions.sh
-      - name: cms content model templates
-        run: scripts/ci/cms-content-model.sh
-      - name: partials render
-        run: scripts/ci/partials-render.sh
-      - name: skill agent coverage
-        run: scripts/ci/skill-agent-coverage.sh
-      - name: contradiction reconciliation policy
-        run: scripts/ci/contradiction-reconciliation-policy.sh
-      - name: quality closure policy
-        run: scripts/ci/quality-closure-policy.sh
-      - name: runtime generated duplication
-        run: scripts/ci/runtime-generated-duplication.sh
-      - name: descriptive module imports
-        run: scripts/ci/descriptive-module-imports.sh
-      - name: visual expert signoff
-        if: ${{ hashFiles('artifacts/visual/audits/latest/signoff.env') != '' }}
-        run: scripts/ci/visual-expert-signoff.sh
+      - name: workspace tests
+        run: cargo test --workspace --lib --tests
+
+  docker-smoke:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: dtolnay/rust-toolchain@stable
+      - name: docker runtime smoke
+        run: bash scripts/check_docker_runtime_smoke.sh
