@@ -650,8 +650,8 @@
       "page_title": "Eran Boodnero | Rust Crates and Applied Systems",
       "hero": {
         "eyebrow": "Los Angeles · Rust · backend systems · API design",
-        "title": "Published Rust crates with one live application proof behind them.",
-        "summary": "Start with statum, then compare nestum and modum. The live lab and secure-data case show the same taste for explicit boundaries in a running system.",
+        "title": "Rust crates backed by a live systems proof.",
+        "summary": "Start with statum. Then compare nestum and modum. The lab and secure-data case show the same boundary discipline under runtime pressure.",
         "badges": [
           "Rust",
           "typestate",
@@ -695,8 +695,8 @@
         ]
       },
       "current_proof": {
-        "title": "Current applied proof",
-        "subtitle": "The application side stays narrow: one secure-data slice with encrypted storage, explicit key custody, bounded sync, and a live lab that lets a reviewer inspect the runtime directly.",
+        "title": "Live systems proof",
+        "subtitle": "One secure-data slice: encrypted storage, explicit key custody, bounded sync, and a lab that lets a reviewer inspect the runtime directly.",
         "project_slugs": [
           "sensitive_sync"
         ],
@@ -816,8 +816,8 @@
       "page_title": "Lab",
       "hero": {
         "eyebrow": "Applied proof",
-        "title": "A narrow live system that shows the crate work in motion.",
-        "summary": "The lab keeps one running proof: encrypted records, capability-backed reads, key custody, bounded sync, and enough runtime inspection to verify the behavior without guessing.",
+        "title": "A live systems slice that makes the crate work concrete.",
+        "summary": "The lab runs one proof: encrypted records, capability-backed reads, key custody, bounded sync, and enough runtime inspection to verify behavior instead of inferring it.",
         "badges": [
           "encrypted storage",
           "key custody",
@@ -944,7 +944,7 @@
       "slug": "sensitive_sync",
       "page_title": "Current Proof | Encrypted Sensitive Record Sync",
       "eyebrow": "Current Proof · Secure Systems Runtime",
-      "title": "Encrypted records, token lifecycle, and bounded background sync",
+      "title": "Encrypted storage, token custody, and bounded sync",
       "summary": "A narrow secure-systems runtime slice: encrypted provider tokens and authorized payloads, deterministic stub sync by default, opt-in sandbox HTTPS, and a live lab that shows grants, denied reads, and audited access.",
       "challenge": {
         "title": "Challenge",

@@ -43,9 +43,9 @@ mod tests {
         assert!(
             markup.find(flagship_name).unwrap() < markup.find(proof_title.as_str()).unwrap()
         );
-        assert!(markup.contains("Published Rust crates with one live application proof behind them."));
+        assert!(markup.contains("Rust crates backed by a live systems proof."));
         assert!(markup.contains("Flagship crate"));
-        assert!(markup.contains("Current applied proof"));
+        assert!(markup.contains("Live systems proof"));
         assert!(markup.contains("href=\"/resume.txt\""));
         assert!(markup.contains("ui-portfolio-hero-aside"));
         assert!(markup.contains("ui-portfolio-crate-showcase"));

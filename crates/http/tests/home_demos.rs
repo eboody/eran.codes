@@ -369,7 +369,7 @@ impl LabContract {
         match self {
             LabContract::ProofKicker => "Applied proof",
             LabContract::ProofHeadline => {
-                "A narrow live system that shows the crate work in motion."
+                "A live systems slice that makes the crate work concrete."
             }
             LabContract::FlagshipNav => "Flagship",
             LabContract::CratesNav => "Crates",
@@ -504,11 +504,11 @@ impl PortfolioHomeContract {
             PortfolioHomeContract::PortfolioMain => "data-portfolio-page",
             PortfolioHomeContract::HeroSection => "ui-portfolio-hero",
             PortfolioHomeContract::PivotHeadline => {
-                "Published Rust crates with one live application proof behind them."
+                "Rust crates backed by a live systems proof."
             }
             PortfolioHomeContract::FlagshipAside => "Flagship crate",
             PortfolioHomeContract::CrateShowcase => "ui-portfolio-crate-showcase",
-            PortfolioHomeContract::CurrentProofTitle => "Current applied proof",
+            PortfolioHomeContract::CurrentProofTitle => "Live systems proof",
             PortfolioHomeContract::FlagshipNav => "Flagship",
             PortfolioHomeContract::CratesNav => "Crates",
             PortfolioHomeContract::LabNav => "Lab",
