@@ -1,60 +1,12 @@
+mod styles;
+#[cfg(test)]
+mod tests;
+
 use bon::Builder;
 use maud::Render;
 
 use crate::types::Text;
 use crate::views::partials;
-
-crate::views::scoped::inline_css!(
-    r#"
-me {
-  display: grid;
-  gap: var(--space-3);
-  margin-top: var(--space-2);
-  padding: var(--space-card);
-  overflow: visible;
-}
-
-me [data-op-filter-label] {
-  margin: 0;
-  font-size: var(--text-size-label-xs);
-  font-weight: 700;
-  letter-spacing: var(--text-track-caps-wide);
-  text-transform: uppercase;
-  color: var(--text-subtle);
-}
-
-me [data-op-filter-row] {
-  display: grid;
-  gap: var(--space-2);
-  grid-template-columns: minmax(0, 1fr) auto;
-}
-
-me [data-op-filter-row] > input[type='text'] {
-  margin: 0;
-  min-width: 0;
-}
-
-me [data-op-filter-row] > [data-button] {
-  margin: 0;
-}
-
-me [data-op-filter-meta] {
-  margin: 0;
-  font-size: var(--text-size-meta-md);
-  color: var(--text-muted);
-}
-
-@media (max-width: 48rem) {
-  me [data-op-filter-row] {
-    grid-template-columns: 1fr;
-  }
-
-  me [data-op-filter-row] > [data-button] {
-    width: 100%;
-  }
-}
-"#
-);
 
 const OPERATIONAL_TIMELINE_SCROLL_ASSET_URL: &str =
     "/static/operational-timeline-scroll.js?v=20260328-runtime-ownership";
@@ -78,7 +30,7 @@ impl Render for OperationalRequestFilter {
                 data-op-filter-target=(self.target_id)
                 data-signals="{operations_filter_query: ''}"
                 data-init=(request_action) {
-                (css())
+                (styles::render())
                 label data-op-filter-label for="operations-filter-query" {
                     "Filter out requests containing"
                 }
@@ -111,25 +63,4 @@ impl Render for OperationalRequestFilter {
 
 fn request_action() -> &'static str {
     "@post('/api/operations/filter', {filterSignals: {include: /^(operations_filter_query|sseTabId)$/}})"
-}
-
-#[cfg(test)]
-mod tests {
-    use super::*;
-
-    #[test]
-    fn requests_only_filter_query_and_sse_tab_id() {
-        let markup = OperationalRequestFilter::builder()
-            .target_id("network-log-target")
-            .build()
-            .render()
-            .into_string();
-
-        let request_action = request_action();
-
-        assert!(markup.contains(request_action));
-        assert!(markup.contains("$operations_filter_query = '';"));
-        assert_eq!(markup.matches(request_action).count(), 3);
-        assert!(markup.contains("/static/operational-timeline-scroll.js"));
-    }
 }

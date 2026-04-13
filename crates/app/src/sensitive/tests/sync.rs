@@ -113,7 +113,7 @@ async fn unauthorized_fetch_retries_with_refreshed_token_and_records_boundary_st
             .snapshot
             .integration_state
             .as_ref()
-        .and_then(|value| value.cursor.as_ref().map(ToString::to_string)),
+            .and_then(|value| value.cursor.as_ref().map(ToString::to_string)),
         Some("cursor-retried".to_string())
     );
 }
@@ -132,8 +132,7 @@ async fn configuration_failure_records_non_retryable_boundary_state() {
                     )
                     .auth_mode(sensitive::ProviderAuthMode::StubIssuedToken)
                     .cursor(
-                        sensitive::SyncCursor::try_new("cursor-previous")
-                            .expect("cursor"),
+                        sensitive::SyncCursor::try_new("cursor-previous").expect("cursor"),
                     )
                     .last_fetch_outcome(sensitive::FetchOutcome::Success)
                     .token_strategy(sensitive::TokenStrategy::CachedToken)
@@ -161,7 +160,10 @@ async fn configuration_failure_records_non_retryable_boundary_state() {
         }))
         .build();
 
-    let error = service.run_sync().await.expect_err("sync should fail closed");
+    let error = service
+        .run_sync()
+        .await
+        .expect_err("sync should fail closed");
 
     assert!(matches!(
         error,
@@ -177,10 +179,7 @@ async fn configuration_failure_records_non_retryable_boundary_state() {
         .integration_state
         .as_ref()
         .expect("failed integration state should persist");
-    assert_eq!(
-        integration_state.mode,
-        sensitive::ProviderMode::SandboxHttp
-    );
+    assert_eq!(integration_state.mode, sensitive::ProviderMode::SandboxHttp);
     assert_eq!(
         integration_state.last_error_category,
         Some(sensitive::RemoteErrorCategory::Configuration)
@@ -196,10 +195,7 @@ async fn configuration_failure_records_non_retryable_boundary_state() {
         Some(sensitive::ProviderMode::LocalStub)
     );
     assert_eq!(
-        integration_state
-            .cursor
-            .as_ref()
-            .map(ToString::to_string),
+        integration_state.cursor.as_ref().map(ToString::to_string),
         Some("cursor-previous".to_string())
     );
     assert_eq!(state.recorded_runs.len(), 1);

@@ -1,0 +1,112 @@
+crate::views::scoped::inline_css!(
+    r#"
+me {
+  display: grid;
+  place-items: center;
+  min-block-size: calc(100dvh - clamp(6rem, 5rem + 3vw, 8rem));
+  padding-block: clamp(1rem, 0.7rem + 1vw, 1.5rem) clamp(1.5rem, 1.15rem + 1.1vw, 2.1rem);
+}
+
+me > [data-auth-card] {
+  inline-size: min(100%, 34rem);
+  margin-top: 0;
+  gap: var(--space-4);
+  view-transition-name: auth-shell-card;
+}
+
+me > [data-auth-card][data-auth-card-variant='account'] {
+  inline-size: min(100%, 30rem);
+}
+
+me [data-auth-header] {
+  display: grid;
+  gap: var(--space-2);
+}
+
+me [data-auth-header] > :where(h1, p) {
+  margin: 0;
+  max-inline-size: 100%;
+  overflow-wrap: anywhere;
+  word-break: break-word;
+}
+
+me [data-auth-summary] {
+  max-width: 46ch;
+  color: var(--text-muted);
+}
+
+me > [data-auth-card][data-auth-card-variant='account'] [data-auth-header] > h1 {
+  text-wrap: balance;
+}
+
+me [data-auth-message] {
+  --inset-card-border: var(--ui-text-danger);
+  --inset-card-bg: var(--ui-surface-danger);
+  --inset-card-padding: var(--ui-inset-card-padding-cozy);
+  margin-top: var(--space-4);
+}
+
+me [data-auth-form] {
+  display: grid;
+  gap: var(--space-3);
+}
+
+me [data-auth-field] {
+  display: grid;
+  gap: var(--space-2);
+}
+
+me [data-auth-field] > span {
+  font-size: var(--text-size-label-md);
+  font-weight: 700;
+  letter-spacing: var(--text-track-caps-wide);
+  text-transform: uppercase;
+  color: var(--text-subtle);
+}
+
+me [data-auth-submit] {
+  inline-size: 100%;
+}
+
+me [data-auth-note] {
+  margin: 0;
+  color: var(--text-muted);
+}
+
+me [data-auth-note] a {
+  color: var(--text-strong);
+}
+
+me [data-account-actions] {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-3);
+}
+
+me [data-account-actions] > * {
+  margin: 0;
+}
+
+@media (max-width: 45rem) {
+  me {
+    min-block-size: auto;
+    place-items: start center;
+    padding-block: var(--space-4) var(--space-6);
+  }
+
+  me > [data-auth-card] {
+    inline-size: 100%;
+  }
+}
+
+@media (max-width: 520px) {
+  me > [data-auth-card] {
+    gap: var(--space-3);
+  }
+}
+"#
+);
+
+pub(super) fn render() -> maud::Markup {
+    css()
+}

@@ -23,6 +23,11 @@ pub enum Error {
         addr: String,
         source: std::io::Error,
     },
+    #[snafu(display("failed to parse sensitive provider base URL `{value}`: {source}"))]
+    ParseSensitiveProviderBaseUrl {
+        value: String,
+        source: url::ParseError,
+    },
     #[snafu(display("http server exited with an error: {source}"))]
     ServeHttp { source: std::io::Error },
 }

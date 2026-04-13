@@ -83,3 +83,57 @@ fn backend_non_db_event_summary_uses_default_format() {
         "app::chat::service: moderation check passed"
     );
 }
+
+#[test]
+fn chat_events_treat_blank_fields_as_missing() {
+    let incoming = build_flow_event(
+        log::vm::request_flow::kind::FlowEvent::ChatIncoming,
+        &entry(
+            "demo.chat",
+            "chat.message.incoming",
+            vec![
+                ("sender", "   "),
+                ("receiver", ""),
+                ("payload_bytes", " "),
+                ("user_id", " "),
+            ],
+        ),
+    );
+
+    assert_eq!(
+        incoming.summary.to_string(),
+        "Backend accepted chat message from unknown"
+    );
+    let incoming_pills = incoming
+        .pills
+        .iter()
+        .map(|pill| pill.text.to_string())
+        .collect::<Vec<_>>();
+    assert_eq!(incoming_pills, vec!["sender=unknown"]);
+
+    let broadcast = build_flow_event(
+        log::vm::request_flow::kind::FlowEvent::ChatBroadcast,
+        &entry(
+            "demo.sse",
+            "chat message broadcast",
+            vec![
+                ("selector", " "),
+                ("mode", ""),
+                ("payload_bytes", " "),
+                ("sender", ""),
+                ("receiver", " "),
+            ],
+        ),
+    );
+
+    assert_eq!(
+        broadcast.summary.to_string(),
+        "SSE broadcast to [unknown-selector]"
+    );
+    let broadcast_pills = broadcast
+        .pills
+        .iter()
+        .map(|pill| pill.text.to_string())
+        .collect::<Vec<_>>();
+    assert_eq!(broadcast_pills, vec!["selector=[unknown-selector]"]);
+}

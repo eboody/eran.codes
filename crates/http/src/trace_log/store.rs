@@ -98,8 +98,8 @@ impl TraceQueue {
             self.entries.pop_front();
         }
         self.last_touched = last_touched;
-        self.entries.push_back(entry);
-        self.entries.back().cloned().expect("trace entry")
+        self.entries.push_back(entry.clone());
+        entry
     }
 }
 
@@ -138,47 +138,12 @@ impl Store {
         let touch = self.next_touch();
         let entry = self.record_scoped_entry(&self.requests, request_id, entry, touch);
         self.prune_scoped_keys(&self.requests);
-
-        if let Some(session_id) = session_id {
-            self.record_scoped_entry(&self.sessions, session_id, entry.clone(), touch);
-            self.prune_scoped_keys(&self.sessions);
-        }
-
-        if let Ok(mut global) = self.global.lock() {
-            if global.len() >= self.max_entries {
-                global.pop_front();
-            }
-            global.push_back(entry);
-        }
-
-        if self.emit_sse
-            && let Some(session_id) = session_id
-        {
-            let entries = self.snapshot_session(session_id);
-            self.emit_session_log_panels(session_id, &entries, None);
-        }
+        self.record_session_and_global(session_id, entry, touch);
     }
 
     pub fn record_sse_event(&self, session_id: Option<&SessionId>, entry: TraceEntry) {
-        if let Some(session_id) = session_id {
-            let touch = self.next_touch();
-            self.record_scoped_entry(&self.sessions, session_id, entry.clone(), touch);
-            self.prune_scoped_keys(&self.sessions);
-        }
-
-        if let Ok(mut global) = self.global.lock() {
-            if global.len() >= self.max_entries {
-                global.pop_front();
-            }
-            global.push_back(entry);
-        }
-
-        if self.emit_sse
-            && let Some(session_id) = session_id
-        {
-            let entries = self.snapshot_session(session_id);
-            self.emit_session_log_panels(session_id, &entries, None);
-        }
+        let touch = self.next_touch();
+        self.record_session_and_global(session_id, entry, touch);
     }
 
     fn emit_session_log_panels(
@@ -296,6 +261,42 @@ impl Store {
         queue.push(entry, self.max_entries, touch)
     }
 
+    fn record_session_and_global(
+        &self,
+        session_id: Option<&SessionId>,
+        entry: TraceEntry,
+        touch: u64,
+    ) {
+        if let Some(session_id) = session_id {
+            self.record_scoped_entry(&self.sessions, session_id, entry.clone(), touch);
+            self.prune_scoped_keys(&self.sessions);
+        }
+
+        self.push_global_entry(entry);
+        self.refresh_session_panels(session_id);
+    }
+
+    fn push_global_entry(&self, entry: TraceEntry) {
+        if let Ok(mut global) = self.global.lock() {
+            if global.len() >= self.max_entries {
+                global.pop_front();
+            }
+            global.push_back(entry);
+        }
+    }
+
+    fn refresh_session_panels(&self, session_id: Option<&SessionId>) {
+        if !self.emit_sse {
+            return;
+        }
+
+        let Some(session_id) = session_id else {
+            return;
+        };
+        let entries = self.snapshot_session(session_id);
+        self.emit_session_log_panels(session_id, &entries, None);
+    }
+
     fn prune_scoped_keys<K>(&self, map: &DashMap<K, TraceQueue>)
     where
         K: Clone + Eq + Hash,
@@ -330,68 +331,4 @@ impl Store {
 }
 
 #[cfg(test)]
-mod tests {
-    use super::*;
-
-    fn trace_entry(message: &str) -> TraceEntry {
-        TraceEntry::builder()
-            .timestamp(TimestampText::new("2026-03-25 00:00:00"))
-            .level(LogLevelText::new("INFO"))
-            .target(LogTargetText::new("demo.request"))
-            .message(LogMessageText::new(message))
-            .fields(Vec::new())
-            .build()
-    }
-
-    #[test]
-    fn prunes_oldest_request_and_session_keys_at_store_bound() {
-        let store = Store::builder()
-            .with_sse(crate::sse::Registry::new())
-            .with_max_entries(2)
-            .with_emit_sse(false)
-            .build();
-        let request_a = RequestId::new("req-a");
-        let request_b = RequestId::new("req-b");
-        let request_c = RequestId::new("req-c");
-        let session_a = SessionId::new("session-a");
-        let session_b = SessionId::new("session-b");
-        let session_c = SessionId::new("session-c");
-
-        store.record_with_session(&request_a, Some(&session_a), trace_entry("request-a"));
-        store.record_with_session(&request_b, Some(&session_b), trace_entry("request-b"));
-        store.record_with_session(&request_c, Some(&session_c), trace_entry("request-c"));
-
-        assert!(store.snapshot_request(&request_a).is_empty());
-        assert_eq!(store.snapshot_request(&request_b).len(), 1);
-        assert_eq!(store.snapshot_request(&request_c).len(), 1);
-
-        assert!(store.snapshot_session(&session_a).is_empty());
-        assert_eq!(store.snapshot_session(&session_b).len(), 1);
-        assert_eq!(store.snapshot_session(&session_c).len(), 1);
-
-        let global = store.snapshot_global();
-        assert_eq!(global.len(), 2);
-        assert_eq!(global[0].message.to_string(), "request-b");
-        assert_eq!(global[1].message.to_string(), "request-c");
-    }
-
-    #[test]
-    fn record_sse_event_prunes_oldest_session_keys() {
-        let store = Store::builder()
-            .with_sse(crate::sse::Registry::new())
-            .with_max_entries(2)
-            .with_emit_sse(false)
-            .build();
-        let session_a = SessionId::new("session-a");
-        let session_b = SessionId::new("session-b");
-        let session_c = SessionId::new("session-c");
-
-        store.record_sse_event(Some(&session_a), trace_entry("sse-a"));
-        store.record_sse_event(Some(&session_b), trace_entry("sse-b"));
-        store.record_sse_event(Some(&session_c), trace_entry("sse-c"));
-
-        assert!(store.snapshot_session(&session_a).is_empty());
-        assert_eq!(store.snapshot_session(&session_b).len(), 1);
-        assert_eq!(store.snapshot_session(&session_c).len(), 1);
-    }
-}
+mod tests;

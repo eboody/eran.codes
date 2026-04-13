@@ -81,9 +81,9 @@ fn context_from_request(req: &http::Request<Body>, key: &Key) -> Context {
         session_id,
         sse_tab_id,
     )
-        .resolve_headers()
-        .build_context()
-        .into_context()
+    .resolve_headers()
+    .build_context()
+    .into_context()
 }
 
 fn ensure_session_id(cookies: &Cookies, key: &Key) -> SessionId {

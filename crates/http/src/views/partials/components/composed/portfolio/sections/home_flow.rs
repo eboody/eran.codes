@@ -4,9 +4,7 @@ use crate::views::partials::components::portfolio::content::{
     open_source_index_content, PortfolioHomeContent,
 };
 
-use super::{
-    CrateSection, FlagshipCrateHeroAside, PortfolioHero, WorkSection, WorkSectionVariant,
-};
+use super::{CrateSection, FlagshipCrateHeroAside, PortfolioHero, WorkSection};
 
 pub struct HomeFlow<'a> {
     pub content: &'a PortfolioHomeContent,
@@ -26,14 +24,8 @@ impl Render for HomeFlow<'_> {
                 content: &self.content.hero,
                 aside: hero_aside,
             })
-            (CrateSection {
-                content: &open_source.crate_section,
-                show_heading: false,
-            })
-            (WorkSection {
-                content: &self.content.current_proof_section,
-                variant: WorkSectionVariant::CurrentProof,
-            })
+            (CrateSection::standalone(&open_source.crate_section))
+            (WorkSection::current_proof(&self.content.current_proof_section))
         }
     }
 }

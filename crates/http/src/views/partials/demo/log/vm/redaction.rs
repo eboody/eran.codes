@@ -1,5 +1,3 @@
-use crate::trace_log::demo_chat::Sender as ChatSender;
-use crate::types::Text;
 use crate::views::partials::components;
 
 pub(super) fn authenticated_user_pill() -> components::Pill {
@@ -8,25 +6,6 @@ pub(super) fn authenticated_user_pill() -> components::Pill {
 
 pub(super) fn redacted_bind_pill(index: usize) -> components::Pill {
     components::Pill::fields(format!("${index}=(redacted)"))
-}
-
-pub(super) fn chat_user_pill(
-    sender: ChatSender,
-    user_id: Option<&Text>,
-) -> components::Pill {
-    if user_id.is_none() {
-        return components::Pill::fields("user:unknown");
-    }
-
-    let (label, kind) = match sender {
-        ChatSender::You => (Text::from("You (redacted)"), components::BadgeKind::You),
-        ChatSender::Demo => (Text::from("Demo (redacted)"), components::BadgeKind::Demo),
-        ChatSender::Unknown => (
-            Text::from("User (redacted)"),
-            components::BadgeKind::Secondary,
-        ),
-    };
-    components::Pill::badge(label, kind)
 }
 
 #[cfg(test)]

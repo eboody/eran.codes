@@ -1,3 +1,7 @@
+mod styles;
+#[cfg(test)]
+mod tests;
+
 use bon::Builder;
 use maud::Render;
 
@@ -8,65 +12,6 @@ use crate::views::partials::components;
 use crate::views::proper_theme::THEME;
 
 use super::{GuestChatFallback, OperationsSurface, RequestBurstDemo};
-
-crate::views::scoped::inline_css!(
-    r#"
-me {
-  display: grid;
-  gap: var(--space-4);
-}
-
-me [data-supporting-proof-intro] {
-  display: grid;
-  gap: var(--space-2);
-  max-width: 60ch;
-}
-
-me [data-supporting-proof-kicker] {
-  margin: 0;
-  font-size: var(--text-size-label-xs);
-  font-weight: 700;
-  letter-spacing: var(--text-track-caps-wider);
-  text-transform: uppercase;
-  color: var(--text-subtle);
-}
-
-me [data-supporting-proof-intro] h2 {
-  margin: 0;
-}
-
-me [data-supporting-proof-summary] {
-  margin: 0;
-  color: color-mix(in srgb, var(--text-body) 88%, var(--text-muted) 12%);
-}
-
-me [data-supporting-proof-panel] {
-  display: grid;
-}
-
-me [data-supporting-proof-panel][data-local-tab-entering='1'] {
-  animation: supporting-proof-panel-enter var(--motion-slow) var(--ease-out-3);
-}
-
-@keyframes supporting-proof-panel-enter {
-  from {
-    opacity: 0;
-    transform: translateY(0.35rem);
-  }
-
-  to {
-    opacity: 1;
-    transform: translateY(0);
-  }
-}
-
-@media (max-width: 48rem) {
-  me {
-    gap: var(--space-3);
-  }
-}
-"#
-);
 
 #[derive(Clone, Debug, Builder)]
 pub struct SupportingProofTabs {
@@ -98,7 +43,7 @@ impl Render for SupportingProofTabs {
             ),
             active_tab_id: SupportingProofTab::DEFAULT.value(),
             content: maud::html! {
-                (css())
+                (styles::render())
                 div data-supporting-proof-intro {
                     p data-supporting-proof-kicker { "Supporting views" }
                     h2 { "Validate the main proof from other angles" }
@@ -189,22 +134,5 @@ impl SupportingProofTab {
 
     fn panel_dom_id(self) -> Text {
         Text::from(format!("supporting-proof-panel-{}", self.key()))
-    }
-}
-
-#[cfg(test)]
-mod tests {
-    use super::*;
-
-    #[test]
-    fn renders_local_tab_root_with_runtime_selected_by_default() {
-        let markup = SupportingProofTabs::builder().build().render().into_string();
-
-        assert!(markup.contains("id=\"supporting-proof-tabs\""));
-        assert!(markup.contains("data-local-tabs-root"));
-        assert!(markup.contains("data-local-tabs-active=\"runtime_inspection\""));
-        assert!(markup.contains("Validate the main proof from other angles"));
-        assert!(markup.contains("role=\"tablist\""));
-        assert!(markup.contains("role=\"tabpanel\""));
     }
 }

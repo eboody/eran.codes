@@ -1,9 +1,8 @@
 use std::collections::BTreeMap;
 
-use aes_gcm::aead::{Aead, KeyInit};
+use aes_gcm::aead::{Aead, AeadCore, KeyInit, OsRng};
 use aes_gcm::{Aes256Gcm, Nonce};
 use domain::sensitive;
-use rand_core::{OsRng, RngCore};
 use snafu::Snafu;
 
 pub type Result<T> = core::result::Result<T, Error>;
@@ -127,20 +126,19 @@ impl Keyring {
     }
 
     pub fn encrypt(&self, plaintext: impl AsRef<[u8]>) -> Result<SealedValue> {
-        let mut nonce_bytes = [0_u8; 12];
-        OsRng.fill_bytes(&mut nonce_bytes);
+        let nonce = Aes256Gcm::generate_nonce(&mut OsRng);
         let entry = self
             .entries
             .get(&self.active_key_id)
             .expect("active key must exist after keyring initialization");
         let ciphertext = entry
             .cipher
-            .encrypt(Nonce::from_slice(&nonce_bytes), plaintext.as_ref())
+            .encrypt(&nonce, plaintext.as_ref())
             .map_err(|_| Error::Encrypt)?;
 
         Ok(SealedValue {
             key_id: self.active_key_id.clone(),
-            nonce: nonce_bytes.to_vec(),
+            nonce: nonce.to_vec(),
             ciphertext,
         })
     }

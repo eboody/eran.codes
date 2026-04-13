@@ -54,12 +54,14 @@ impl GetUserFlow<Incoming> {
 impl GetUserFlow<RecordFound> {
     fn materialize_user(self) -> GetUserFlow<UserMaterialized> {
         let record = self.state_data.record.clone();
+
         let user = AuthenticatedUser::builder()
             .id(record.id)
             .username(record.username)
             .email(record.email)
             .session_hash(record.session_hash)
             .build();
+
         self.transition_with(UserData { user })
     }
 }

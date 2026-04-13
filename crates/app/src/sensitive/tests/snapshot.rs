@@ -139,9 +139,9 @@ async fn operator_snapshot_exposes_token_sync_and_audit() {
         ],
         access_events: vec![
             sensitive::AccessEvent::builder()
-                .maybe_user_id(Some(test_user_id()))
+                .user_id(test_user_id())
                 .capability(sensitive::AccessCapability::AuthorizedRecordRead)
-                .maybe_record_id(Some(record_id))
+                .record_id(record_id)
                 .outcome(sensitive::AccessOutcome::Denied)
                 .detail(super::super::snapshot::access_detail_text(
                     "viewer lacks authorized_record_read grant",

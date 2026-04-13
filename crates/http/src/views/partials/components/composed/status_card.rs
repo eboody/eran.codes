@@ -1,3 +1,6 @@
+#[cfg(test)]
+mod tests;
+
 use bon::Builder;
 use maud::Render;
 
@@ -53,21 +56,5 @@ impl Render for StatusCard {
             })
             .build()
             .render()
-    }
-}
-
-#[cfg(test)]
-mod tests {
-    use super::*;
-
-    #[test]
-    fn optional_item_defaults_to_none() {
-        assert_eq!(
-            Item::optional("user_id", None),
-            Item {
-                label: Text::from("user_id"),
-                value: Text::from("none"),
-            }
-        );
     }
 }

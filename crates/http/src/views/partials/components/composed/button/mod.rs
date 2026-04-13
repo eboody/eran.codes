@@ -92,7 +92,10 @@ button.button[data-button] {
 "#;
 
 pub(crate) fn head_styles() -> maud::Markup {
-    crate::views::scoped::style(STYLES)
+    maud::html! {
+        (crate::views::scoped::style(STYLES))
+        (row::head_styles())
+    }
 }
 
 pub use attr::Data as DataAttr;

@@ -27,7 +27,7 @@ datastar = { version = "0.3.1", features = ["axum"] }
 async-stream = "0.3.6"
 tokio = { version = "1", features = ["sync", "time"] }
 dashmap = "6.1.0"
-uuid = { version = "1.22.0", features = ["v4"] }
+uuid = { version = "1.23.0", features = ["v4"] }
 tower-cookies = { version = "0.11.0", features = ["signed"] }
 moddef = { workspace = true }
 tower = "0.5.3"
@@ -43,8 +43,8 @@ nutype = { workspace = true, features = ["serde"] }
 strum = { workspace = true }
 strum_macros = { workspace = true }
 syntect = "5.3.0"
-modum = "0.3.1"
-statum = "0.6.1"
+modum = "0.6.6"
+statum = "0.8.5"
 
 [dev-dependencies]
 async-trait = "0.1.89"

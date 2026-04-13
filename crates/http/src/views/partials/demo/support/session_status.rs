@@ -48,8 +48,8 @@ mod tests {
     #[test]
     fn redacts_session_id() {
         let markup = SessionStatus::builder()
-            .maybe_session_id(Some(Text::from("session-1")))
-            .maybe_expiry(Some(Text::from("soon")))
+            .session_id(Text::from("session-1"))
+            .expiry(Text::from("soon"))
             .trace(Vec::new())
             .build()
             .render()

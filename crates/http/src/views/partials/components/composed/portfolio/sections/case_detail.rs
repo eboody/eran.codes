@@ -1,10 +1,28 @@
+mod section_card;
+#[cfg(test)]
+mod tests;
+
 use maud::Render;
 
+use crate::types::Text;
 use crate::views::partials::components::portfolio::content::{
     WorkCaseContent, WorkCaseDetailLayout,
 };
+use crate::views::partials::components::portfolio::content::model::CaseListSection;
 
 use super::{CardGrid, InsetCard, PortfolioHero};
+use section_card::{CaseSectionCard, ListKind};
+
+const ARCHIVE_GRID_ORDER: [CaseSectionKind; 4] = [
+    CaseSectionKind::Challenge,
+    CaseSectionKind::Implementation,
+    CaseSectionKind::Outcomes,
+    CaseSectionKind::Stack,
+];
+const CURRENT_PROOF_MAIN_ORDER: [CaseSectionKind; 2] =
+    [CaseSectionKind::Outcomes, CaseSectionKind::Implementation];
+const CURRENT_PROOF_RAIL_ORDER: [CaseSectionKind; 2] =
+    [CaseSectionKind::Challenge, CaseSectionKind::Stack];
 
 pub struct Work<'a> {
     pub content: &'a WorkCaseContent,
@@ -24,6 +42,30 @@ impl Render for Work<'_> {
     }
 }
 
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+enum CaseSectionKind {
+    Challenge,
+    Implementation,
+    Outcomes,
+    Stack,
+}
+
+#[derive(Clone, Copy, Debug)]
+struct CaseSectionRef<'a> {
+    kind: CaseSectionKind,
+    content: &'a CaseListSection,
+}
+
+impl CaseSectionRef<'_> {
+    fn title(&self) -> &Text {
+        &self.content.title
+    }
+
+    fn items(&self) -> &[Text] {
+        &self.content.items
+    }
+}
+
 fn case_sections(content: &WorkCaseContent) -> maud::Markup {
     match content.detail_layout {
         WorkCaseDetailLayout::CurrentProof => current_proof_sections(content),
@@ -31,69 +73,80 @@ fn case_sections(content: &WorkCaseContent) -> maud::Markup {
     }
 }
 
+fn section_ref<'a>(content: &'a WorkCaseContent, kind: CaseSectionKind) -> CaseSectionRef<'a> {
+    let section = match kind {
+        CaseSectionKind::Challenge => &content.challenge,
+        CaseSectionKind::Implementation => &content.implementation,
+        CaseSectionKind::Outcomes => &content.outcomes,
+        CaseSectionKind::Stack => &content.stack,
+    };
+
+    CaseSectionRef { kind, content: section }
+}
+
+fn section_refs<'a, const N: usize>(
+    content: &'a WorkCaseContent,
+    kinds: [CaseSectionKind; N],
+) -> [CaseSectionRef<'a>; N] {
+    kinds.map(|kind| section_ref(content, kind))
+}
+
 fn archive_grid_sections(content: &WorkCaseContent) -> maud::Markup {
-    let sections = [
-        (&content.challenge.title, &content.challenge.items),
-        (&content.implementation.title, &content.implementation.items),
-        (&content.outcomes.title, &content.outcomes.items),
-        (&content.stack.title, &content.stack.items),
-    ];
+    let sections = section_refs(content, ARCHIVE_GRID_ORDER);
 
     maud::html! {
         (CardGrid::new(maud::html! {
-            @for (title, items) in sections {
-                (InsetCard::new(maud::html! {
-                    h2 { (title) }
-                    ul class="ui-portfolio-list" {
-                        @for item in items {
-                            li { (item) }
-                        }
-                    }
-                }).extra_class("ui-portfolio-case-section"))
+            @for section in sections {
+                (CaseSectionCard::new(section)
+                    .extra_class("ui-portfolio-case-section"))
             }
         }).extra_class("ui-portfolio-case-grid"))
     }
 }
 
 fn current_proof_sections(content: &WorkCaseContent) -> maud::Markup {
+    let main_sections = section_refs(content, CURRENT_PROOF_MAIN_ORDER);
+    let rail_sections = section_refs(content, CURRENT_PROOF_RAIL_ORDER);
+
     maud::html! {
         section class="ui-portfolio-current-proof-detail" {
             div class="ui-portfolio-current-proof-main" {
-                (InsetCard::new(maud::html! {
-                    h2 { (&content.outcomes.title) }
-                    ul class="ui-portfolio-list" {
-                        @for item in &content.outcomes.items {
-                            li { (item) }
-                        }
-                    }
-                }).extra_class("ui-portfolio-case-section ui-portfolio-case-section--lead"))
-                (InsetCard::new(maud::html! {
-                    h2 { (&content.implementation.title) }
-                    ul class="ui-portfolio-list" {
-                        @for item in &content.implementation.items {
-                            li { (item) }
-                        }
-                    }
-                }).extra_class("ui-portfolio-case-section"))
+                @for section in main_sections {
+                    (render_current_proof_main_card(section))
+                }
             }
             aside class="ui-portfolio-current-proof-rail" {
-                (InsetCard::new(maud::html! {
-                    h2 { "Boundary and scope" }
-                    ul class="ui-portfolio-list" {
-                        @for item in &content.challenge.items {
-                            li { (item) }
-                        }
-                    }
-                }).extra_class("ui-portfolio-case-section ui-portfolio-current-proof-rail-card"))
-                (InsetCard::new(maud::html! {
-                    h2 { (&content.stack.title) }
-                    ul class="ui-portfolio-badges ui-portfolio-current-proof-stack" {
-                        @for item in &content.stack.items {
-                            li { (item) }
-                        }
-                    }
-                }).extra_class("ui-portfolio-case-section ui-portfolio-current-proof-rail-card"))
+                @for section in rail_sections {
+                    (render_current_proof_rail_card(section))
+                }
             }
         }
+    }
+}
+
+fn render_current_proof_main_card(section: CaseSectionRef<'_>) -> CaseSectionCard<'_> {
+    let extra_class = match section.kind {
+        CaseSectionKind::Outcomes => "ui-portfolio-case-section ui-portfolio-case-section--lead",
+        CaseSectionKind::Implementation => "ui-portfolio-case-section",
+        CaseSectionKind::Challenge | CaseSectionKind::Stack => unreachable!(
+            "current proof main sections should only render outcomes and implementation"
+        ),
+    };
+
+    CaseSectionCard::new(section).extra_class(extra_class)
+}
+
+fn render_current_proof_rail_card(section: CaseSectionRef<'_>) -> CaseSectionCard<'_> {
+    let card = CaseSectionCard::new(section)
+        .extra_class("ui-portfolio-case-section ui-portfolio-current-proof-rail-card");
+
+    match section.kind {
+        CaseSectionKind::Challenge => card.title_override("Boundary and scope"),
+        CaseSectionKind::Stack => card.list_kind(ListKind::Badges).extra_class(
+            "ui-portfolio-case-section ui-portfolio-current-proof-rail-card",
+        ),
+        CaseSectionKind::Implementation | CaseSectionKind::Outcomes => unreachable!(
+            "current proof rail sections should only render challenge and stack"
+        ),
     }
 }

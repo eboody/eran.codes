@@ -2,7 +2,7 @@ use maud::Render;
 
 use crate::views::partials::components::portfolio::content::WorkIndexContent;
 
-use super::{PortfolioHero, WorkSection, WorkSectionVariant};
+use super::{PortfolioHero, WorkSection};
 
 pub struct WorkFlow<'a> {
     pub content: &'a WorkIndexContent,
@@ -16,10 +16,7 @@ impl Render for WorkFlow<'_> {
                     content: &self.content.hero,
                     aside: None,
                 })
-                (WorkSection {
-                    content: &self.content.supporting_cases_section,
-                    variant: WorkSectionVariant::Standard,
-                })
+                (WorkSection::standard(&self.content.supporting_cases_section))
             }
         }
     }

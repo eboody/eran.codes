@@ -126,18 +126,6 @@ const STYLES: &str = r#"
   --pill-border: var(--ui-border-muted);
 }
 
-.ui-pill--badge-you {
-  --pill-background: color-mix(in srgb, var(--ui-accent-primary) 90%, var(--surface-field));
-  --pill-color: var(--ui-text-on-accent);
-  --pill-border: color-mix(in srgb, var(--ui-accent-primary) 82%, transparent);
-}
-
-.ui-pill--badge-demo {
-  --pill-background: color-mix(in srgb, var(--status-warn) 86%, var(--surface-field));
-  --pill-color: color-mix(in srgb, var(--text-strong) 94%, black);
-  --pill-border: color-mix(in srgb, var(--status-warn) 80%, transparent);
-}
-
 @media (max-width: 768px) {
   .ui-pill--path {
     max-width: 100%;
@@ -287,16 +275,12 @@ impl TryFrom<&Text> for LevelKind {
 
 #[derive(Clone, Copy, Debug)]
 pub enum BadgeKind {
-    You,
-    Demo,
     Secondary,
 }
 
 impl BadgeKind {
     fn classes(self) -> Vec<&'static str> {
         match self {
-            Self::You => vec!["ui-pill--badge-you"],
-            Self::Demo => vec!["ui-pill--badge-demo"],
             Self::Secondary => vec!["ui-pill--badge-secondary"],
         }
     }

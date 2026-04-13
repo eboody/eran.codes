@@ -142,15 +142,6 @@ impl Sensitive {
         })
     }
 
-    pub fn provider_base_url(&self) -> Option<String> {
-        match self.provider_mode {
-            SensitiveProviderRuntimeMode::Stub => {
-                Some(format!("http://127.0.0.1:{}/", self.provider_stub_port))
-            }
-            SensitiveProviderRuntimeMode::SandboxHttp => self.sandbox.base_url.clone(),
-        }
-    }
-
     pub fn provider_stub_addr(&self) -> String {
         format!("127.0.0.1:{}", self.provider_stub_port)
     }

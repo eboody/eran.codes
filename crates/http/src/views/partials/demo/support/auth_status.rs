@@ -79,11 +79,11 @@ mod tests {
     #[test]
     fn redacts_internal_identifiers_but_keeps_self_identity_fields() {
         let markup = AuthStatus::builder()
-            .maybe_user_id(Some(Text::from("user-1")))
-            .maybe_username(Some(Text::from("demo")))
-            .maybe_email(Some(Text::from("demo@example.com")))
-            .maybe_session_id(Some(Text::from("session-1")))
-            .maybe_expiry(Some(Text::from("soon")))
+            .user_id(Text::from("user-1"))
+            .username(Text::from("demo"))
+            .email(Text::from("demo@example.com"))
+            .session_id(Text::from("session-1"))
+            .expiry(Text::from("soon"))
             .trace(Vec::new())
             .build()
             .render()

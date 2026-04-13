@@ -35,7 +35,11 @@ pub(super) fn payload_fingerprint(
     digest.update(record.label.to_string());
     digest.update(record.last4.to_string());
     digest.update(authorized_json);
-    format!("{:x}", digest.finalize())
+    digest
+        .finalize()
+        .iter()
+        .map(|byte| format!("{byte:02x}"))
+        .collect()
 }
 
 pub(super) fn access_grant_from_row(

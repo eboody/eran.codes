@@ -1,10 +1,13 @@
 use app::auth;
 use argon2::{
-    Argon2, PasswordHash as ArgonPasswordHash, PasswordHasher as _, PasswordVerifier,
+    Argon2,
+    password_hash::{
+        self, PasswordHash as ArgonPasswordHash, PasswordHasher as _, PasswordVerifier,
+        SaltString, rand_core::OsRng,
+    },
 };
 use async_trait::async_trait;
 use domain::user;
-use rand_core::OsRng;
 use snafu::{ResultExt, Snafu};
 use sqlx::{PgPool, Row, postgres::PgRow, types::time};
 
@@ -183,7 +186,7 @@ impl Argon2Hasher {
 
 impl auth::password::Hasher for Argon2Hasher {
     fn hash(&self, password: &str) -> auth::Result<auth::password::Hash> {
-        let salt = password_hash::SaltString::generate(&mut OsRng);
+        let salt = SaltString::generate(&mut OsRng);
         let hash = self
             .inner
             .hash_password(password.as_bytes(), &salt)

@@ -277,7 +277,7 @@ impl app::sensitive::ProviderClient for SensitiveProvider {
                 domain_sensitive::DetailText::try_new("http://127.0.0.1:4002/")
                     .expect("detail"),
             )
-            .maybe_auth_mode(Some(domain_sensitive::ProviderAuthMode::StubIssuedToken))
+            .auth_mode(domain_sensitive::ProviderAuthMode::StubIssuedToken)
             .maybe_retry_backoff_secs(None)
             .build()
     }
@@ -330,9 +330,9 @@ impl SensitiveRepo {
     fn new(capabilities: Vec<domain_sensitive::AccessCapability>) -> Self {
         let record_id = domain_sensitive::Id::from(uuid::Uuid::from_u128(0x1111));
         let snapshot = app::sensitive::StoredSnapshot::builder()
-            .maybe_token(Some(token_proof()))
-            .maybe_latest_sync(Some(latest_sync()))
-            .maybe_integration_state(Some(integration_state()))
+            .token(token_proof())
+            .latest_sync(latest_sync())
+            .integration_state(integration_state())
             .records(vec![record_proof(record_id)])
             .build();
         let grants = capabilities
@@ -352,7 +352,7 @@ impl SensitiveRepo {
                         .capability(
                             domain_sensitive::AccessCapability::AuthorizedRecordRead,
                         )
-                        .maybe_record_id(Some(record_id))
+                        .record_id(record_id)
                         .outcome(domain_sensitive::AccessOutcome::Denied)
                         .detail(
                             domain_sensitive::DetailText::try_new(
@@ -722,7 +722,7 @@ fn key_custody_state() -> domain_sensitive::KeyCustodyState {
         ])
         .stale_token_count(1)
         .stale_record_count(1)
-        .maybe_last_rotation_run(Some(
+        .last_rotation_run(
             domain_sensitive::KeyRotationRun::builder()
                 .active_key_id(domain_sensitive::KeyId::try_new("active_data_key").unwrap())
                 .outcome(domain_sensitive::RotationOutcome::Success)
@@ -739,7 +739,7 @@ fn key_custody_state() -> domain_sensitive::KeyCustodyState {
                 .started_at(UNIX_EPOCH)
                 .finished_at(UNIX_EPOCH + Duration::from_secs(1))
                 .build(),
-        ))
+        )
         .build()
 }
 
@@ -765,20 +765,16 @@ fn integration_state() -> domain_sensitive::IntegrationState {
         .provider(domain_sensitive::Provider::SyntheticSecureFeed)
         .mode(domain_sensitive::ProviderMode::LocalStub)
         .endpoint(domain_sensitive::DetailText::try_new("http://127.0.0.1:4002/").unwrap())
-        .maybe_auth_mode(Some(domain_sensitive::ProviderAuthMode::StubIssuedToken))
-        .maybe_cursor(Some(
-            domain_sensitive::SyncCursor::try_new("cursor-gamma").unwrap(),
-        ))
+        .auth_mode(domain_sensitive::ProviderAuthMode::StubIssuedToken)
+        .cursor(domain_sensitive::SyncCursor::try_new("cursor-gamma").unwrap())
         .last_fetch_outcome(domain_sensitive::FetchOutcome::Success)
-        .maybe_last_auth_outcome(Some(domain_sensitive::FetchOutcome::Success))
+        .last_auth_outcome(domain_sensitive::FetchOutcome::Success)
         .token_strategy(domain_sensitive::TokenStrategy::RetryAfterUnauthorized)
-        .maybe_last_error_category(Some(
-            domain_sensitive::RemoteErrorCategory::Unauthorized,
-        ))
-        .maybe_last_remote_status_code(Some(401))
-        .maybe_retry_backoff_secs(Some(45))
-        .maybe_last_successful_mode(Some(domain_sensitive::ProviderMode::LocalStub))
-        .maybe_last_successful_fetch_at(Some(UNIX_EPOCH + Duration::from_secs(1)))
+        .last_error_category(domain_sensitive::RemoteErrorCategory::Unauthorized)
+        .last_remote_status_code(401)
+        .retry_backoff_secs(45)
+        .last_successful_mode(domain_sensitive::ProviderMode::LocalStub)
+        .last_successful_fetch_at(UNIX_EPOCH + Duration::from_secs(1))
         .last_attempted_fetch_at(UNIX_EPOCH + Duration::from_secs(2))
         .failure_count(1)
         .build()

@@ -1,10 +1,7 @@
-use std::str::FromStr;
-
 use strum_macros::{AsRefStr, EnumString};
 
 use crate::paths::Route;
-use crate::trace_log::store;
-use crate::types::{LogFieldKey, Text};
+use crate::types::Text;
 
 #[derive(Clone, Copy, Debug, Default, PartialEq, Eq, AsRefStr, EnumString)]
 pub(crate) enum Sender {
@@ -17,15 +14,6 @@ pub(crate) enum Sender {
     Unknown,
 }
 
-impl Sender {
-    pub fn from_entry(entry: &store::TraceEntry) -> Self {
-        let Some(sender) = entry.field_text(LogFieldKey::Sender) else {
-            return Self::Unknown;
-        };
-        Self::from_str(&sender.to_string()).unwrap_or_default()
-    }
-}
-
 impl TryFrom<Route> for Sender {
     type Error = ();
 
@@ -35,26 +23,6 @@ impl TryFrom<Route> for Sender {
             Route::ChatMessagesDemo => Ok(Self::Demo),
             _ => Err(()),
         }
-    }
-}
-
-#[derive(Clone, Copy, Debug, Default, PartialEq, Eq, EnumString)]
-pub(crate) enum Direction {
-    #[strum(serialize = "incoming")]
-    Incoming,
-    #[strum(serialize = "outgoing")]
-    Outgoing,
-    #[default]
-    #[strum(disabled)]
-    Unknown,
-}
-
-impl Direction {
-    pub fn from_entry(entry: &store::TraceEntry) -> Self {
-        let Some(direction) = entry.field_text(LogFieldKey::Direction) else {
-            return Self::Unknown;
-        };
-        Self::from_str(&direction.to_string()).unwrap_or_default()
     }
 }
 

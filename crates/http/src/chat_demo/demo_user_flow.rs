@@ -48,6 +48,15 @@ impl DemoUserEnsureFlow<Incoming> {
 
 #[transition]
 impl DemoUserEnsureFlow<Incoming> {
+    fn mark_identity_prepared(
+        self,
+        data: DemoIdentityData,
+    ) -> DemoUserEnsureFlow<IdentityPrepared> {
+        self.transition_with(data)
+    }
+}
+
+impl DemoUserEnsureFlow<Incoming> {
     pub(super) fn prepare_identity(
         self,
         email_literal: &str,
@@ -61,7 +70,7 @@ impl DemoUserEnsureFlow<Incoming> {
             tracing::error!(%error, username_literal, "demo user username literal is invalid");
             crate::Error::Internal
         })?;
-        Ok(self.transition_with(DemoIdentityData { email, username }))
+        Ok(self.mark_identity_prepared(DemoIdentityData { email, username }))
     }
 }
 

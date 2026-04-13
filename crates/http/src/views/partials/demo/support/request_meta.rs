@@ -63,11 +63,11 @@ mod tests {
     #[test]
     fn redacts_internal_request_metadata_values() {
         let markup = RequestMeta::builder()
-            .maybe_request_id(Some(Text::from("req-123")))
-            .maybe_session_id(Some(Text::from("session-abc")))
-            .maybe_user_id(Some(Text::from("user-xyz")))
-            .maybe_client_ip(Some(Text::from("203.0.113.5")))
-            .maybe_user_agent(Some(Text::from("ExampleBrowser/1.0")))
+            .request_id(Text::from("req-123"))
+            .session_id(Text::from("session-abc"))
+            .user_id(Text::from("user-xyz"))
+            .client_ip(Text::from("203.0.113.5"))
+            .user_agent(Text::from("ExampleBrowser/1.0"))
             .trace(Vec::new())
             .build()
             .render()

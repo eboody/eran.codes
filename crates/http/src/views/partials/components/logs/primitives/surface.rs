@@ -109,30 +109,6 @@ me .ui-pill-cluster {
   min-width: 0;
 }
 
-me .ui-log-table {
-  width: 100%;
-  border-collapse: collapse;
-  font-size: var(--text-size-meta-sm);
-}
-
-me .ui-log-table th,
-me .ui-log-table td {
-  padding: var(--space-2);
-  border-bottom: 1px solid color-mix(in srgb, var(--ui-text-muted) 28%, transparent);
-  vertical-align: top;
-}
-
-me .ui-log-table th {
-  text-align: left;
-  color: var(--ui-text-muted);
-  font-weight: 600;
-  white-space: nowrap;
-}
-
-me .ui-log-table[data-chat-flow] td:last-child {
-  min-width: 8.75rem;
-}
-
 me .ui-log-groups {
   display: flex;
   flex-direction: column;
@@ -378,10 +354,6 @@ me .ui-log-flow-event-summary-inline {
     box-shadow: var(--log-scroll-shadow-mobile, none);
   }
 
-  me .ui-log-table {
-    min-width: 35rem;
-  }
-
   me .ui-log-group-header {
     flex-wrap: wrap;
   }
@@ -396,11 +368,6 @@ me .ui-log-flow-event-summary-inline {
 @media (max-width: 30rem) {
   me .ui-log-scroll {
     max-height: var(--log-scroll-max-height-compact, 13.75rem);
-  }
-
-  me .ui-log-table {
-    min-width: 32.5rem;
-    font-size: var(--text-size-label-sm);
   }
 
   me .ui-log-entry {

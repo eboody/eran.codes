@@ -21,7 +21,7 @@ use url::Url;
 struct Args {
     #[arg(long, default_value = "http://127.0.0.1:3000/")]
     url: Url,
-    #[arg(long, default_value = "artifacts/visual/current/home.png")]
+    #[arg(long, default_value = ".tmp/visual-snapshot/current/home.png")]
     output: PathBuf,
     #[arg(long)]
     baseline: Option<PathBuf>,
@@ -73,6 +73,7 @@ struct Args {
 
 const PIXEL_DIFF_TOLERANCE_ABSOLUTE: u64 = 16;
 const PIXEL_DIFF_TOLERANCE_RATIO: f64 = 0.000_01;
+const CSS_SCOPE_INLINE_JS: &str = include_str!("../../../http/static/css-scope-inline.js");
 
 #[tokio::main]
 async fn main() -> Result<(), Box<dyn std::error::Error>> {
@@ -113,6 +114,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
     }
     install_data_init_strip_script(&page, &args.remove_data_init_selector).await?;
     install_text_normalizer_script(&page, &args.normalize_text_selector).await?;
+    install_css_scope_inline_script(&page).await?;
     open_snapshot_target(&page, &mut events, &args).await?;
 
     if let Some(selector) = &args.click_selector {
@@ -563,6 +565,13 @@ async fn install_text_normalizer_script(
     Ok(())
 }
 
+async fn install_css_scope_inline_script(
+    page: &playwright::api::Page,
+) -> Result<(), Box<dyn std::error::Error>> {
+    page.add_init_script(CSS_SCOPE_INLINE_JS).await?;
+    Ok(())
+}
+
 async fn stabilize_page_for_snapshot(
     page: &playwright::api::Page,
 ) -> Result<(), Box<dyn std::error::Error>> {
@@ -614,6 +623,22 @@ html {
   await new Promise((resolve) =>
     requestAnimationFrame(() => requestAnimationFrame(resolve))
   );
+
+  const rawScopeSelector =
+    /(^|[^a-zA-Z0-9_-])(me|this|self)(?=($|[^a-zA-Z0-9_-]))/m;
+  const hasPendingScopedInlineStyles = () =>
+    Array.from(document.body?.querySelectorAll('style:not([ready])') ?? []).some(
+      (style) => rawScopeSelector.test(style.textContent || '')
+    );
+
+  if (hasPendingScopedInlineStyles()) {
+    const deadline = performance.now() + 4_000;
+    while (hasPendingScopedInlineStyles() && performance.now() < deadline) {
+      await new Promise((resolve) =>
+        requestAnimationFrame(() => requestAnimationFrame(resolve))
+      );
+    }
+  }
 
   return true;
 }"#,
@@ -985,7 +1010,7 @@ mod tests {
             "--url",
             "http://127.0.0.1:3000/work",
             "--output",
-            "artifacts/visual/current/test.png",
+            ".tmp/visual-snapshot/current/test.png",
         ]);
 
         assert_eq!(

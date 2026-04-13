@@ -25,14 +25,16 @@ tokio = { version = "1", features = [
 ] }
 axum = { version = "0.8.8" }
 tower-sessions-sqlx-store = { version = "0.15.0", features = ["postgres"] }
-tower-sessions = "0.14.0"
+tower-sessions-compat = { package = "tower-sessions", version = "0.14.0" }
 tower-cookies = "0.11.0"
 
 tracing-subscriber = { version = "0.3.23", features = ["env-filter", "json"] }
 tracing = "0.1.44"
 snafu = "0.9.0"
 serde = { version = "1.0.228", features = ["derive"] }
-serde_json = "1.0.145"
+serde_json = "1.0.149"
+reqwest = { version = "0.13.2", features = ["json"] }
+url = "2.5.8"
 
 [workspace.dependencies]
 nutype = "0.6.2"

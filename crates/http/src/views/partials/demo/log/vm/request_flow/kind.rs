@@ -3,6 +3,7 @@ use crate::trace_log::{
     log::{message, target},
 };
 use crate::types::LogFieldKey;
+use crate::views::partials::demo::log::vm::entry_fields::non_empty_field_text;
 
 #[derive(Clone, Copy, Debug)]
 pub(super) enum FlowEvent {
@@ -42,7 +43,7 @@ pub(super) fn flow_event(entry: &store::TraceEntry) -> Option<FlowEvent> {
             Some(FlowEvent::Backend)
         }
         (target::Kind::Other(_), _)
-            if entry.field_text(LogFieldKey::RequestId).is_some() =>
+            if non_empty_field_text(entry, LogFieldKey::RequestId).is_some() =>
         {
             Some(FlowEvent::Backend)
         }

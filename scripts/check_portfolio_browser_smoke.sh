@@ -5,7 +5,7 @@ repo_root=$(git rev-parse --show-toplevel)
 cd "$repo_root"
 
 base_url="${PORTFOLIO_SMOKE_BASE_URL:-http://127.0.0.1:3000}"
-current_dir="${PORTFOLIO_SMOKE_CURRENT_DIR:-artifacts/visual/current/portfolio-smoke}"
+current_dir="${PORTFOLIO_SMOKE_CURRENT_DIR:-.tmp/portfolio-smoke}"
 baseline_dir="${PORTFOLIO_SMOKE_BASELINE_DIR:-artifacts/visual/baseline/portfolio-smoke}"
 wait_ms="${PORTFOLIO_SMOKE_WAIT_MS:-1400}"
 assert_timeout_ms="${PORTFOLIO_SMOKE_ASSERT_TIMEOUT_MS:-6000}"
@@ -63,11 +63,17 @@ run_case() {
     shift
   done
 
-  if [[ "$use_baselines" == "1" && ( -f "$baseline" || "$update_baselines" == "1" ) ]]; then
+  if [[ "$update_baselines" == "1" ]]; then
     args+=(--baseline "$baseline")
-    if [[ "$update_baselines" == "1" ]]; then
-      args+=(--update-baseline)
+    args+=(--update-baseline)
+  elif [[ "$use_baselines" == "1" ]]; then
+    if [[ ! -f "$baseline" ]]; then
+      echo "portfolio-browser-smoke: missing baseline ${baseline}" >&2
+      echo "Set PORTFOLIO_SMOKE_UPDATE_BASELINE=1 to create it." >&2
+      exit 2
     fi
+
+    args+=(--baseline "$baseline")
   fi
 
   echo "portfolio-browser-smoke: capturing ${name}"
