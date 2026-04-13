@@ -1,5 +1,6 @@
 use bon::Builder;
 
+use crate::paths::Route;
 use crate::views::{page, partials};
 
 #[derive(Builder)]
@@ -24,6 +25,8 @@ impl maud::Render for Lab {
             .title(&content_model.page_title.to_string())
             .content(content)
             .sse_mode(page::SseMode::Enabled)
+            .nav_mode(page::NavMode::Portfolio)
+            .current_route(Route::Lab)
             .maybe_with_user(self.user.clone())
             .maybe_sse_tab_id(self.sse_tab_id.clone())
             .build()
@@ -43,5 +46,6 @@ mod tests {
 
         assert!(markup.contains("class=\"u-page-stack u-page-stack--spacious\""));
         assert!(markup.contains("data-lab-page"));
+        assert!(markup.contains("href=\"/lab\" aria-current=\"page\""));
     }
 }
